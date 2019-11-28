@@ -1,0 +1,208 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+      	<div class="container pb50 bg-min-height height-size-667 height-size-731 height-size-812 height-size-823" >
+            <div class="row">
+                <div class="col-md-12 mb40">
+                
+	                    <h2 class="text-center">儲值點數</h2> 
+	                   
+	                    <hr>
+	                 <ul class="nav  tabs-circle-icon justify-content-center" role="tablist">
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link active show" href="#t7" id="am-s1-link" aria-controls="home" role="tab" data-toggle="tab" aria-selected="true"> 
+				         		<i class="ti-money"></i>
+				         		<h4 class="mt5 font15">確認儲值內容</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t8" id="am-s2-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-lock"></i>
+				         		<h4 class="mt5 font15">取得儲值代碼</h4>
+				         </a>
+				        </li>
+				        
+				        <!-- <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t9" id="am-slast-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-check"></i>
+				         		<h4 class="mt5 font15">完成儲值申請</h4>
+				         </a>
+				        </li> -->
+				    </ul> 
+			        <div class="tab-content">
+			        <!-- 確認儲值內容 -->
+                        <div role="tabpanel" class="tab-pane fade active show" id="t7">
+                        	<div class="col-md-6 mr-auto ml-auto">
+                        		<div class=" smart-wrap">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action="__APP__/PointRecharge/formPointRecharge" id="formPointRecharge" novalidate="novalidate">
+						                    <div class="form-body">
+						                    
+							                       <div class="section ">
+							                       		<h6>儲值方式</h6>
+							                            
+							                            <select class="form-control" id="exampleSelect1" name="code">
+							                                
+							                                <VOLIST name="showArray" id="vo">
+																<option value="{$vo.code}">{$vo.name}</option>
+															</VOLIST>
+							                            </select>
+							                        </div>
+							                        <div class="section ">
+							                        	<h6>儲值點數</h6>
+							                            <label class="field prepend-icon">
+							                                <input type="text" name="money" id="am-s1-pass" pattern="^{4,12}$" class="gui-input" 
+							                                       data-minlength="4" maxlength="12" placeholder="請輸入儲值點數">
+							                                 <span class="field-icon"><i class="ti-money"></i></span>
+							                            </label>
+							                            <small id="emailHelp" class="form-text text-muted">單筆儲值最低1000點，超商最高為5000。</small>
+							                        </div><!-- end section -->
+							                     
+							                        
+							                        <div class="section ">
+							                            <label class="form-check-label">
+							                                <a href="#" class="btn btn-link btn-block">超商儲值流程</a>
+							                            </label>
+						                        	</div>
+							                      
+							                       <div class="result"></div><!-- end .result  section --> 
+						                                                                                                                    
+						                    </div><!-- end .form-body section -->
+						                    <div class="form-footer text-center">
+						                        <button type="button" id="am-s1-confirm" class="btn btn-outline-primary mb5">取消</button>
+						                        <button type="submit" id="am-s1-cancel" onclick="getPoint()" class="btn btn-outline-primary mb5">取得代碼</button>
+						                    </div><!-- end .form-footer section -->
+
+						                    <div class="alert alert-info" role="alert">
+						                    	<h6>儲值注意事項:</h6>
+								              	<p>
+									              	1. 繳費完成後點數將自動派入您的電子錢包。<br><br>
+													2. 使用ATM儲值需使用線上託售所綁定的銀行帳戶進行儲值，<br>
+													&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如欲新增第二組儲值帳戶請洽線上客服。<br><br>
+													3. ATM儲值請勿使用無卡存款，<br>
+													&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;若使用無卡存款一律視為詐騙帳號停權處分。
+								              	</p>
+								            </div>
+						                </form>
+						            </div><!-- end .smart-forms section -->
+			        			</div><!-- end .smart-wrap section -->
+			        		</div>
+			        		<div class="row">
+				            	<div class="card card-body">
+				                    <h4 class="card-title">
+				                      	  四星彩活動說明：
+				                    </h4>
+				                    <p class="card-text">
+				                    1、每充值一筆3000元以上金額並確認繳款後，系統即配發一組四位數獎號可供您與台彩四星彩獎號對獎。<br>
+									2、中獎規則視當期四星彩二個號碼以上才算中獎！中獎點數會充值至您的電子錢包中。例如您的獎號為1123，本期四星獎號為2023，這樣即中二星。需中由個位數到千位數順序才算。若開獎號為1132 這樣則視為不中獎。<br>
+									3、四星彩官方開獎時間為星期一至六每天晚上20:30開始開獎，實際開獎時間一切依台彩公佈為準。<br>
+									4、未加入公司LINE: yes5168net 即尚失資格領取。<br>
+									5、財神娛樂保有四星彩活動的最終解釋及更改權利。<br></p>
+				                    <a href="http://www.taiwanlottery.com.tw/lotto/4D/history.aspx" target="_blank" class="btn btn-primary">台灣彩卷4星彩<br>各期獎號查詢</a>
+				                    
+				                </div>
+                        	</div>
+                        </div>
+                        <!-- /確認儲值內容 -->
+                        
+                        <!-- 取得儲值代碼 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t8">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp  text-center RegistPage_border animated" data-wow-duration="1.5s" data-wow-delay=".2s" style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	    尚未取得儲值代碼，<br>請至步驟1選擇後按下『取得代碼』
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s1-link').click();">返回</button>
+		                        </div>
+		                        <!-- <div id="am-s2-divComeplete" class=" smart-wrap" style="">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action="smart-form/contact/php/smartprocess.php" id="am-frmRegister" novalidate="novalidate">
+						                    <div class="form-body">
+						                    	
+												
+						                        <div class="section">
+						                        	<h6>儲值代碼</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" id="am-s2-phone" readonly="readonly" name="sendername" class="gui-input" placeholder="">
+						                                <span class="field-icon"><i class="ti-lock"></i></span>  
+						                            </label>
+						                        </div>
+						                        
+						                        <div class="section">
+						                        	<h6>金額(元)</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" id="am-s2-verifyCode" data-minlength="6" maxlength="6" 
+						                                       name="emailaddress" class="gui-input" placeholder="">
+						                                <span class="field-icon"><i class="ti-money"></i></span>
+						                            </label>
+						                            
+						                        </div>
+						                        
+						                      
+						                       <div class="result"></div> 
+						                                                                                                                    
+						                    </div>
+						                    <div class="form-footer text-center">
+						                        <button type="submit" id="am-s2-confirm" class="btn btn-outline-primary mb5">下一步</button>
+						                        
+						                    </div>
+						                    
+						                    <div class="alert alert-info" role="alert">
+								              	<i class="ti-info-alt"> </i>超商繳費方式流程有所不同，若遇繳費問題，請連絡客服為您即時解決。
+								            </div>
+						                </form>
+						            </div>
+			        			</div> -->
+                        	</div>
+                        </div>
+                        <!-- /取得儲值代碼 -->
+                        
+                        <!-- 完成儲值申請  -->
+                        <!-- <div role="tabpanel" class="tab-pane fade" id="t9">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            
+                            	<div id="am-s3-divNotComepleteS1" class="wow  fadeInUp animated text-center" data-wow-duration="1.5s" data-wow-delay=".2s" 
+                            		 style="display: none; visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0">
+		                               	 尚未取得儲值代碼，<br>請至步驟1選擇後按下『取得代碼』
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 btn-3d" onclick="$('#am-s1-link').click();">返回</button>
+		                        </div>
+                            	
+                        		<div id="am-s3-divComeplete" class=" smart-wrap" style="">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action="smart-form/contact/php/smartprocess.php" id="smart-form" novalidate="novalidate">
+						                    <div class="form-body">
+						                    
+						                    <p class="text-center">
+												此次儲值紀錄請至<a href="#">會員中心--儲值紀錄</a>查詢，<br><span id="remind-to-inform-paid">若您已儲值完成請點擊『通知已繳款』</span>
+											</p>
+																		                      
+						                       <div class="result"></div> 
+						                                                                                                                    
+						                    </div>
+						                    <div class="form-footer text-center">
+						                        <button type="button" href="/index.php" class="btn btn-outline-primary mb5">完成</button>
+						                    </div>
+						                    
+						                </form>
+						            </div>
+			        			</div>
+                        	</div>
+                        </div>   -->
+                        <!--/完成儲值申請 --> 
+                        
+                                              
+                    </div>
+                </div>
+            </div>
+        </div>
+ <include file="Common:footer"/>
+ <script>
+ /*
+function getPoint(){
+	var htmlav = window.open('', 'freeVideo');
+	$("#formPointRecharge").submit();
+}*/
+ </script>

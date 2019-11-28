@@ -1,0 +1,139 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	
+	<div id="content" class="content">
+	
+	
+		<div class="form-group row m-b-5">
+			<div class="col-md-12 col-sm-12 m-b-2">
+				<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+			</div>
+		</div>
+		<form class="" method="post" id="formInquire" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<div class="form-group row m-b-2">
+				<div class="col-md-4 col-sm-4 m-b-2"> 
+					<input id="startTime" name="startTime" type="text" class="form-control div-style m-b-5" style="width: 175px;" value="{$startTime}"/> 至
+					<input id="endTime"   name="endTime"   type="text" class="form-control div-style m-b-5" style="width: 175px;" value="{$endTime}"/>
+				</div>
+				<div class="col-md-4">
+					<label class="col-form-label div-style m-b-5">會員帳號</label>
+					<input class="form-control m-b-10 div-style width-auto m-l-10 m-b-5" type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+					<button type="submit" name="addbtn" class="btn btn-info m-l-10 m-b-5 ">會員搜尋</button>
+				</div>
+				
+			</div>
+		</form>
+		
+		<div class="row">
+			<IF condition='$walletLogBool eq "true"'>
+        <div class="col-lg-12 ui-sortable">
+			<!-- begin panel -->
+			<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+				<!-- begin panel-heading -->
+				<div class="panel-heading ui-sortable-handle">
+					<div class="panel-heading-btn">
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+					</div>
+					<h4 class="panel-title">帳變查詢</h4>
+				</div>
+				<!-- end panel-heading -->
+				
+				
+					<div class="panel-body">
+							<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table1" class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+			                        	<th>帳號</th>
+			                        	<th>帳變操作</th>
+			                        	<th>帳變類型</th>
+			                        	<th>帳變前</th>
+			                        	<th>帳變金額</th>
+			                        	<th>帳變後金額</th>
+			                        	<th>建立時間</th>
+										<th>操作內容</th>
+										<th>IP</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+				                        	<td>{$key+1}</td>
+											<td>{$vo.account}</td>
+											<td>{$vo.operating}</td>
+											<td>{$vo.type}</td>
+											<td>{$vo.before}</td>
+											<td>{$vo.money}</td>
+											<td>{$vo.after}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.main}</td>
+											<td>{$vo.ip}</td>
+										</tr>
+			                        </VOLIST>
+			                        <tr><td id="showMessage" colspan="10" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+					</div>
+					<!-- end panel-body -->
+				
+					<div class="col-md-12 panel-body text-center">
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">1</button>
+							<button type="button" class="btn btn-white active">2</button>
+							<button type="button" class="btn btn-white">3</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">4</button>
+							<button type="button" class="btn btn-white">5</button>
+							<button type="button" class="btn btn-white">6</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">7</button>
+						</div>
+					</div>
+				
+			</div>
+			<!-- end panel -->
+		</div>
+        </IF>
+		</div>
+        
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+	</div>
+	<!-- end #content -->
+<include file="Common:footer"/>
+<script type="text/javascript">
+
+$(document).ready(function(){
+	$('#member_account').typeahead({
+        ajax: {
+            url: '__URL__/searchMemberName',
+            timeout: 200
+        }
+    });
+	$("#"+"財務部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+</script>
+

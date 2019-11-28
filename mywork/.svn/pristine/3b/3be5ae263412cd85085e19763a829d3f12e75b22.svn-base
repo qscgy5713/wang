@@ -1,0 +1,197 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+			
+					<button type="button" class="btn btn-secondary btn-shadow-1 loading mb-10" onclick="self.location.href='__APP__/{$Think.MODULE_NAME}/index'">{$Think.lang.MemberDetail1}</button>
+					
+					<form class="mb-10" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+        				
+						<input type="hidden" name="gameCode" value="{$gameCode}"/>
+						<input type="hidden" id="pageNumber" name="pageNumber" value="{$pageNumber}"/>
+						<div class="row">
+							<div class="row col-lg-6 col-xl-4 pr-0 pl-0 mr-0 ml-0 mb-5 pl-15">
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p loading" style="width:100%;" type="button" value="{$Think.lang.MemberDetail37}" onClick="formTime('{$today}','{$today}')"/>
+			                  </div>
+			                 
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p loading" style="width:100%;" type="button" value="{$Think.lang.MemberDetail38}" onClick="formTime('{$yesterday}','{$yesterday}')"/>
+			                  </div>
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p loading" style="width:100%;" type="button" value="{$Think.lang.MemberDetail39}" onClick="formTime('{$tomorrow}','{$tomorrow}')"/>
+			                  </div>
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p loading" style="width:100%;" type="button" value="{$Think.lang.MemberDetail40}" onClick="formTime('{$thisWeekA}','{$thisWeekB}')"/>
+			                  </div>
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p loading" style="width:100%;" type="button" value="{$Think.lang.MemberDetail41}" onClick="formTime('{$lastWeekA}','{$lastWeekB}')"/>
+			                  </div>
+							</div>
+			                
+							<div class="row col-lg-6 col-xl-4 pr-5 pl-5 mr-0 ml-0 mb-5">
+			                  <div class="col-5 p-0">
+			                    <input id="startTime" name="startTime" type="text" class="form-control text-center" style="width:100%;" value="{$startTime}"/>
+			                  </div>
+			                  <div class="col-2 text-center p-0"><label class="p-5 mt-5">{$Think.lang.MemberDetail2}</label></div>
+			                  <div class="col-5 p-0">
+			                    <input id="endTime"   name="endTime" type="text" class="form-control text-center" style="width:100%;" value="{$endTime}"/>
+			                  </div>
+							</div>
+							<div class="row col-lg-6 col-xl-2 pr-5 pl-5 mr-0 ml-0 mb-5">
+			                  <div class="col-md-6 col-sm-12 col-12 pl-0 pr-0 mt-3">
+			                    <input class="btn btn-secondary btn-shadow-1 pr-0 pl-0 loading" style="width:100%;" type='submit' value='{$Think.lang.MemberDetail3}'>
+			                  </div>
+							</div>
+						</div>
+					</form>
+					<div class="tab-content">
+						<div class="tab-pane active" id="">
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle">
+									<thead>
+										<IF condition='$sumBettimgMoney neq ""'>
+											<tr style="background-color: rgba(102, 102, 102, 0.43137254901960786);">
+												<th colspan="100">
+													<span class="mr-10 fw-600">{$Think.lang.MemberDetail4}:{$sumBettimgMoney}</span>
+													<span class="mr-10 fw-600">{$Think.lang.MemberDetail5}:{$sumSurplus}</span>
+													<span class="fw-600">{$Think.lang.MemberDetail6}:{$sumEffective}</span>
+												</th>
+											</tr>
+										</IF>
+					                    <tr>
+					                        <th>{$Think.lang.MemberDetail7}</th>
+					                        <VOLIST name="FieldChange" id="field">
+					                      	   <th>{$field.cnName}</th>
+					                        </VOLIST>
+				                        </tr>
+				                	</thead>
+									<tbody>
+					                	<VOLIST name="showArray" id="vo" empty="$showEmpty" key="k">
+											<tr>
+												<td>{$k}</td>
+												<VOLIST name="FieldChange" id="field">
+													<td>{$vo[$field['newField']]}</td>
+												</VOLIST>
+											</tr>
+										</VOLIST>
+			                        </tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="col-lg-12 text-center">
+	                  		<nav aria-label="Page navigation">
+				                <ul class="pagination justify-content-center">
+
+				                <if condition="$pageNumber-1 neq 0">
+				                  <li class="page-item">
+				                    <a class="page-link loading" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+				                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+				                      <span class="sr-only">Previous</span>
+				                    </a>
+				                  </li>
+				                 </if>
+
+				                 <volist name="pageArray" id="vo" >
+	                                <IF condition="$pageNumber eq $vo" >
+	                                	<li id="{$vo}Page" class="page-item active"><a class="page-link loading" href="#" onClick="goPage('{$vo}')" >{$vo}</a></li>
+	                                <else/>
+	                                	<li id="{$vo}Page" class="page-item"><a class="page-link loading" href="#" onClick="goPage('{$vo}')" >{$vo}</a></li>
+	                                </IF>
+	                             </volist>
+
+
+				                  <if condition="$pageNumber+1 elt $totalPage ">
+					                  <li class="page-item">
+					                    <a class="page-link loading" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+					                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+					                      <span class="sr-only">Next</span>
+					                    </a>
+					                  </li>
+				                  </if>
+				                </ul>
+				              </nav>
+		                  </div>
+	                  </div>
+	               </if>
+				</div>
+		</section>
+
+<include file="Common:footer"/>
+<!-- 時間選擇器 -->
+<script src="__CSS__/timepicker/jquery-ui-timepicker-addon.js"></script>
+<script>
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function (){
+	jQuery.datepicker.regional['zh-TW']={
+	   dayNames:["{$Think.lang.MemberDetail8}","{$Think.lang.MemberDetail9}","{$Think.lang.MemberDetail10}","{$Think.lang.MemberDetail11}","{$Think.lang.MemberDetail12}","{$Think.lang.MemberDetail13}","{$Think.lang.MemberDetail14}"],
+	   dayNamesMin:["{$Think.lang.MemberDetail15}","{$Think.lang.MemberDetail16}","{$Think.lang.MemberDetail17}","{$Think.lang.MemberDetail18}","{$Think.lang.MemberDetail19}","{$Think.lang.MemberDetail20}","{$Think.lang.MemberDetail21}"],
+	   monthNames:["{$Think.lang.MemberDetail22}","{$Think.lang.MemberDetail23}","{$Think.lang.MemberDetail24}","{$Think.lang.MemberDetail25}","{$Think.lang.MemberDetail26}","{$Think.lang.MemberDetail27}","{$Think.lang.MemberDetail28}","{$Think.lang.MemberDetail29}","{$Think.lang.MemberDetail30}","{$Think.lang.MemberDetail31}","{$Think.lang.MemberDetail32}","{$Think.lang.MemberDetail33}"],
+	   monthNamesShort:["{$Think.lang.MemberDetail22}","{$Think.lang.MemberDetail23}","{$Think.lang.MemberDetail24}","{$Think.lang.MemberDetail25}","{$Think.lang.MemberDetail26}","{$Think.lang.MemberDetail27}","{$Think.lang.MemberDetail28}","{$Think.lang.MemberDetail29}","{$Think.lang.MemberDetail30}","{$Think.lang.MemberDetail31}","{$Think.lang.MemberDetail32}","{$Think.lang.MemberDetail33}"],
+	   prevText:"{$Think.lang.MemberDetail34}",
+	   nextText:"{$Think.lang.MemberDetail35}",
+	   weekHeader:"{$Think.lang.MemberDetail36}"
+	};
+	datetimePicker("startTime","endTime","endTime","startTime");
+	jQuery.datepicker.setDefaults(jQuery.datepicker.regional['zh-TW']);
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function datetimePicker(time1, onCloseTime1, time2, onCloseTime2){
+	jQuery( "#"+time1 ).datepicker({
+		dateFormat: "yy-mm-dd",
+   	 	maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+      	onClose: function( selectedDate ) {
+        	jQuery( "#"+onCloseTime1 ).datepicker( "option", "minDate", selectedDate );
+        }
+   });
+    
+    jQuery( "#"+time2 ).datepicker({
+    	dateFormat: "yy-mm-dd",
+   	 	maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        onClose: function( selectedDate ) {
+            $( "#"+onCloseTime2 ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

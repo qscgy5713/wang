@@ -1,0 +1,265 @@
+<include file="Common:header" />
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+    <include file="Common:menu" />
+    <include file="Common:menu2" />
+    <div id="content" class="content">
+        <div class="row">
+            <div class="col-md-2">
+                <div>
+                    <h6>重整倒數 &nbsp;<span id="min"></span>:<span id="sec"></span></h6>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check p-t-0">
+                    <input class="form-check-input is-valid" type="checkbox" id="noRenew" name="noRenew">
+                    <label class="form-check-label" for="validCheckbox">不重整</label>
+                </div>
+            </div>
+            <div>
+                <div id="newMessageDIV" style="display:none">
+                    <audio id="play">
+                        <source src="__CSS__/mp3/Question.mp3"' type="audio/wav"/>
+                        <source src="__CSS__/mp3/Question.mp3" type="audio/mpeg"/>
+                    </audio>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-info m-b-10" onclick="self.location.href='__APP__/{$Think.MODULE_NAME}/eventDetail'">活動歷史紀錄</button>
+        <div class="row">
+            <div class="col-lg-12 ui-sortable">
+                <div class="panel panel-inverse">
+                    <div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+                        <div class="panel-heading-btn">
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+                        </div>
+                        <h4 class="panel-title">活動未處理</h4>
+                    </div>
+                    <div class="panel-body">
+                        <!-- begin table-responsive -->
+                        <div class="table-responsive">
+                            <table id="table1" class="table table-striped m-b-0">
+                                <thead>
+                                    <tr>
+                                        <th>遊戲名稱</th>
+                                        <th>單號</th>
+                                        <th>會員帳號</th>
+                                        <th>狀態</th>
+                                        <th>總儲值</th>
+                                        <th>總託售</th>
+                                        <th>建立時間</th>
+                                        <th>申請IP</th>
+                                        <th>贈點金額</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <VOLIST name="showArray" id="vo" empty="$showEmpty">
+                                        <tr id='{$vo.eventId}-{$vo.id}trid'>
+                                            <td>{$vo.eventName}</td>
+                                            <td>{$vo.id}</td>
+                                            <td>{$vo.memberAccount}</td>
+                                            <td>{$vo.status}</td>
+                                            <td>{$vo.totalRecharge}</td>
+                                            <td>{$vo.totalWithdraw}</td>
+                                            <td>{$vo.createTime}</td>
+                                            <td>{$vo.ip}</td>
+                                            <td>
+                                                <IF condition="$vo.money eq 0">
+                                                    <input class="form-control" type="text" value="" id="{$vo.eventId}-{$vo.id}eventMoney">
+                                                    <ELSE />
+                                                    {$vo.money}
+                                                </IF>
+                                            </td>
+                                            <td>
+                                                <form id="{$vo.eventId}-{$vo.id}FormAddGive" class="div-style" method="POST" action='__APP__/{$Think.MODULE_NAME}/addGiveMoney'>
+                                                    <input type="hidden" name="infoId" value="{$vo.id}">
+                                                    <input type="hidden" name="eventId" value="{$vo.eventId}">
+                                                    <IF condition="$vo.money eq 0">
+                                                        <input type="hidden" id="{$vo.eventId}-{$vo.id}hiddenEventMoney" name="eventMoney" value="">
+                                                        <input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" onClick="eventAddGiveMoney('{$vo.eventId}-{$vo.id}')" value="自動完成">
+                                                        <ElSE />
+                                                        <input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="submit" value="自動完成">
+                                                    </IF>
+                                                </form>
+                                                <form method="POST" class="div-style" action='__APP__/{$Think.MODULE_NAME}/formSetEventProcess'>
+                                                    <input type="hidden" name="infoId" value="{$vo.id}">
+                                                    <input type="hidden" name="eventId" value="{$vo.eventId}">
+                                                    <input class="btn btn-warning f-s-13 p-5 m-r-5 m-b-5" type="submit" value="取消申請">
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </VOLIST>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<!-- end #content -->
+<include file="Common:footer" />
+<script type="text/javascript">
+var audio = document.getElementById("play");
+var t, count = 10;
+var allDataId = "{$allDataId}";
+var dataIdArray = allDataId.split(",");
+$(document).ready(function() {
+
+    t = setInterval(showAuto, 1000);
+
+    $("#noRenew").change(function() {
+        var noRenew = $('#noRenew:checked').val();
+        if (noRenew == "on") {
+            clearInterval(t);
+        } else {
+            t = setInterval(showAuto, 1000);
+        }
+    });
+
+    $("#startTime").datetimepicker({
+        dateFormat: "yy-mm-dd",
+        timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function(selectedDate) {
+            $("#endtime").datepicker("option", "minDate", selectedDate);
+        }
+    });
+    $("#endTime").datetimepicker({
+        dateFormat: "yy-mm-dd",
+        timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function(selectedDate) {
+            $("#begintime").datepicker("option", "maxDate", selectedDate);
+        }
+    });
+});
+function showAuto() {
+    var min = Math.floor(count / 60);
+    var sec = count % 60;
+    if (sec < 10) {
+        sec = '0' + sec;
+    }
+    $('#min').html(min);
+    $('#sec').html(sec);
+    if (count == 0) {
+        clearInterval(t);
+        count = 10;
+        var noRenew = $('#noRenew:checked').val();
+        if (noRenew != "on") {
+            getajaxNewData();
+        }
+    }
+    --count;
+}
+var trText = '無活動資料';
+function getajaxNewData() {
+
+    $.ajax({
+        type: "POST",
+        dataType: "text",
+        url: "__URL__/getAjaxUnprocessedForm",
+        success: function(data) {
+            //alert(1);
+            splitArray = data.split(";;");
+            if (splitArray[0] == 'err') {
+                errorMsgShow(splitArray[1]);
+                t = setInterval(showAuto, 1000);
+                return;
+            }
+            ajaxDataId = splitArray[0]; //資料id
+            ajaxDataStr = splitArray[1]; //資料明細
+            ajaxDataIdArray = ajaxDataId.split(",");
+            ajaxDataStrArray = ajaxDataStr.split(",");
+            for (var i = 0; i < ajaxDataIdArray.length; i++) {
+                var instr = $.inArray(dataIdArray[i], ajaxDataIdArray);
+
+                if (instr == -1) {
+                    $('#' + dataIdArray[i] + 'trid').remove();
+                }
+            }
+            var tr0 = $($('table > tbody > tr')[0]).text();
+            if(ajaxDataIdArray != ""){
+            	if(tr0 == trText){
+            		$("#table1 tr:not(:first)").html("");
+            	}
+            	for (var i = 0; i < ajaxDataIdArray.length; i++) {
+                    var instr = $.inArray(ajaxDataIdArray[i], dataIdArray);
+                    if (instr == -1) {
+                        fieldDatastrArray = ajaxDataStrArray[i].split(";");
+                        splitArray = ajaxDataIdArray[i].split("-");
+                        infoId = splitArray[1];
+                        eventId = splitArray[0];
+                        var trData = "<tr id=" + ajaxDataIdArray[i] + "trid>";
+                        for (var j = 0; j < fieldDatastrArray.length; j++) {
+                            if (j == (fieldDatastrArray.length - 1)) {
+                                trData = trData + "";
+                                if (fieldDatastrArray[j] == '0') {
+                                    trData = trData + "<td><input typt='text' value='' id='" + ajaxDataIdArray[i] + "eventMoney'></td>";
+                                } else {
+                                    trData = trData + "<td>" + fieldDatastrArray[j] + "</td>";
+                                }
+                                trData = trData + "<td><form id='" + ajaxDataIdArray[i] + "FormAddGive' method='POST' class='div-style' action='__APP__/" + "{$Think.MODULE_NAME}" + "/addGiveMoney'>";
+                                trData = trData + "<input type='hidden' name='infoId' value='" + infoId + "'>";
+                                trData = trData + "<input type='hidden' name='eventId' value='" + eventId + "'>";
+
+                                if (fieldDatastrArray[j] == '0') {
+                                    trData = trData + "<input type='hidden' id='" + ajaxDataIdArray[i] + "hiddenEventMoney' name='eventMoney' value=''>";
+                                    trData = trData + "<input class='btn btn-info f-s-13 p-5 m-r-5 m-b-5' type='button' onClick=\"eventAddGiveMoney('" + ajaxDataIdArray[i] + "')\" value='自動完成'>";
+                                } else {
+                                    trData = trData + "<input class='btn btn-info f-s-13 p-5 m-r-5 m-b-5' type='submit' value='自動完成'>";
+                                }
+                                trData = trData + "</form><form method='POST' class='div-style' action='__APP__/" + "{$Think.MODULE_NAME}" + "/formSetEventProcess'>";
+                                trData = trData + "<input type='hidden' name='infoId' value='" + infoId + "'>";
+                                trData = trData + "<input type='hidden' name='eventId' value='" + eventId + "'>";
+                                trData = trData + "<input class='btn btn-warning f-s-13 p-5 m-r-5 m-b-5' type='submit' value='取消申請'></from></td>";
+                            } else {
+                                trData = trData + "<td>" + fieldDatastrArray[j] + "</td>";
+                            }
+                        }
+                        trData = trData + '</tr>';
+                        $($('table > tbody > tr')[0]).before(trData);
+                        audio.play();
+                    }
+                }
+            } else {
+            	if(tr0 != trText){
+            		$("#table1 tr:not(:first)").html("<td colspan='10' style='text-align:center;'>"+trText+"</td>");
+            	}
+            }
+            dataIdArray = ajaxDataIdArray;
+
+            t = setInterval(showAuto, 1000);
+        },
+        error: function() {
+            alert("網路連線錯誤，請檢查您的網路狀況");
+        }
+    });
+}
+
+function formTime(startTime, endTime) {
+    $("#startTime").val(startTime);
+    $("#endTime").val(endTime);
+    $("#formInquire").submit();
+}
+
+function eventAddGiveMoney(id) {
+    var eventMoney = jQuery("#" + id + 'eventMoney').val();
+
+    var r = /^\+?[1-9][0-9]*$/;
+    if (!r.test(eventMoney)) {
+        errorMsgShow('金額需為正整數')
+        return;
+    }
+    jQuery("#" + id + "hiddenEventMoney").val(eventMoney);
+    jQuery("#" + id + "FormAddGive").submit();
+}
+</script>

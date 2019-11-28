@@ -1,0 +1,193 @@
+<footer id="footer" class="clearfix dark light hidden-sm-down">
+  <!-- .subfooter start -->
+  <!-- ================ -->
+  <div class="subfooter">
+    <div class="container">
+      <div class="subfooter-inner">
+        <div class="row">
+          <div class="col-md-12">
+            <p class="text-center">Copyright © 2018. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- .subfooter end -->
+</footer>
+      
+<footer id="md-footer" class="clearfix dark light md-footer hidden-lg-up ">
+  <!-- .subfooter start -->
+  <!-- ================ -->
+  <div class="subfooter md-subfooter">
+    <div class="container">
+      <div class="subfooter-inner">
+        <div class="row">
+          <div class="col-3">
+            <a class="a-color" href="__APP__/MemberIndex/index">
+            	<i class="fa fa-home md-footer-i"></i>
+            	<p class="md-footer-p">首頁</p>
+            </a>
+          </div>
+          
+          <div class="col-3">
+             <a class="a-color" href="__APP__/RebateEvent/index">
+            	<i class="fa fa-gift md-footer-i"></i>
+            	<p class="md-footer-p">優惠</p>
+            </a>
+          </div>
+          
+          <if condition='$isLogin eq "true"'>
+          	<div class="col-3">
+	             <a class="a-color" href="__APP__/PointRecharge/index">
+	            	<i class="fa fa-credit-card md-footer-i"></i>
+	            	<p class="md-footer-p">充值</p>
+	            </a>
+	          </div>
+          <else/>
+          	<div class="col-3">
+	            <a class="a-color" href="__APP__/RegistPage/index.html">
+	            	<i class="fa fa-user md-footer-i"></i>
+	            	<p class="md-footer-p">註冊</p>
+	            </a>
+	         </div>
+          </if>
+          
+          <div class="col-3">
+             <a class="a-color" href="__APP__/OnlineService/index">
+            	<i class="icomoon icon-telemarketer md-footer-i"></i>
+            	<p class="md-footer-p">客服</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- .subfooter end -->
+</footer>
+    </div>
+    <!-- page-wrapper end -->
+
+    <!-- Jquery and Bootstap core js files -->
+    <script src="__CSS__/plugins/jquery.min.js"></script>
+    <script src="__CSS__/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery Revolution Slider  -->
+    <script src="__CSS__/plugins/rs-plugin-5/js/jquery.themepunch.tools.min.js"></script>
+    <script src="__CSS__/plugins/rs-plugin-5/js/jquery.themepunch.revolution.min.js"></script>
+    <!-- Isotope javascript -->
+    <script src="__CSS__/plugins/isotope/imagesloaded.pkgd.min.js"></script>
+    <script src="__CSS__/plugins/isotope/isotope.pkgd.min.js"></script>
+    <!-- Magnific Popup javascript -->
+    <script src="__CSS__/plugins/magnific-popup/jquery.magnific-popup.min.js"></script>
+    <!-- Appear javascript -->
+    <script src="__CSS__/plugins/waypoints/jquery.waypoints.min.js"></script>
+    <script src="__CSS__/plugins/waypoints/sticky.min.js"></script>
+    <!-- Count To javascript -->
+    <script src="__CSS__/plugins/countTo/jquery.countTo.js"></script>
+    <!-- Slick carousel javascript -->
+    <script src="__CSS__/plugins/slick/slick.min.js"></script>
+    <!-- Initialization of Plugins -->
+    <script src="__CSS__/js/template.js"></script>
+    <!-- Custom Scripts -->
+    <script src="__CSS__/js/custom.js"></script>
+    <!-- Color Switcher (Remove these lines) -->
+    <script src="__CSS__/style-switcher/style-switcher.js"></script>
+    <!-- 字體動畫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
+    <!-- 搜尋拉霸 -->
+    <script src="__CSS__/select2/select2.js"></script>
+  </body>
+</html>
+
+<script>
+ $(".game-item").click(function(){
+	 var isLogin = "{$isLogin}";
+	 if( isLogin == "false"){
+			alert("請先登入會員!");
+		}else{
+			//var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+		}	
+ });
+ $(".game-maintain").click(function(){
+	 var isLogin = "{$isLogin}";
+	 if( isLogin == "false"){
+			alert("請先登入會員!");
+		}else{
+			alert("遊戲維護中!");
+		}	
+ });
+ 
+ $(document).ready(function(){
+	var isLogin = "{$isLogin}";
+	
+  	$('#Login-movie').click(function(){
+  		//alert({$isLogin});
+  		if( isLogin == "false"){
+  			alert("請先登入會員來瀏覽免費影城");
+  		}else{
+  			if (confirm('確定要瀏覽影城?(各館遊戲有投注就可免費瀏覽影城)')==true){
+  				$("#loader-bg").hide();
+				$("#loader-text").hide();
+	  			var htmlav = window.open('', 'freeVideo');
+				htmlav.document.location.href='{$movieUrl}';
+				
+	  		}
+  		}
+  		
+  		
+  	});
+  	$('#Login-movie-phone').click(function(){
+  		//alert({$isLogin});
+  		
+  		if( isLogin == "false"){
+  			alert("請先登入會員來瀏覽免費影城");
+  		}else{
+  			if (confirm('確定要瀏覽影城?(各館遊戲有投注就可免費瀏覽影城)')==true){
+  				$("#loader-bg").hide();
+				$("#loader-text").hide();
+	  			var htmlav = window.open('', 'freeVideo');
+				htmlav.document.location.href='{$movieUrl}';
+				
+	  		}
+  		}
+  		
+  	});
+  	
+  	//手機板logo樣式
+  	if(isLogin == "false"){
+  	   $('#index_header').addClass( "md-header" );
+  	}
+  	
+  	var h = $(window).height();
+	  $("#modalbody").css("max-height",h-200+"px");
+	  $(".bg-color").css("min-height",h-195+"px");
+	  
+	  $("#loader-bg").hide();
+	  $("#loader-text").hide();
+});      
+//Wrap every letter in a span
+ $('.ml9 .letters').each(function(){
+   $(this).html($(this).text().replace(/([^\x00-\x80]|\w)/g, "<span class='letter'>$&</span>"));
+ });
+
+ anime.timeline({loop: true})
+   .add({
+     targets: '.ml9 .letter',
+     scale: [0, 1],
+     duration: 1500,
+     elasticity: 600,
+     delay: function(el, i) {
+       return 45 * (i+1)
+     }
+   }).add({
+     targets: '.ml9',
+     opacity: 0,
+     duration: 1000,
+     easing: "easeOutExpo",
+     delay: 1000
+   });
+$('.loading').click(function(){
+ 		$("#loader-bg").show();
+ 		$("#loader-text").show();
+ 	});
+
+</script>

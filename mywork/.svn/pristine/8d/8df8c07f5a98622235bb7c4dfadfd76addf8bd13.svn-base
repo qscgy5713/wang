@@ -1,0 +1,138 @@
+<?php
+/*
+ * 代理帳號
+ */
+class CommonAgentModel extends AgentModel {
+    /*
+     * 取得 未有TREE全部代理 資料
+     */
+    public function getAllAgentData(){
+        
+        $sql = "SELECT a.agent_id as agent_OnlyId,a.agent_account,a.agent_bossId FROM `common_agent` a
+                LEFT JOIN `common_agent_tree` b ON a.`agent_id` = b.`agent_id`
+                WHERE b.`agent_tree` is null LIMIT 1500;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    public function getAgentBossData($data){
+        
+        $sql = "SELECT * FROM `common_agent`
+                WHERE `agent_id` = '".$data['agent_id']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    
+    /*
+     * 取得 代理 資料
+     */
+    public function getAgentDataByAccount($data){
+        if(empty($data['agent_account']) && $data['agent_account'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `common_agent`
+                WHERE `agent_account` = '".$data['agent_account']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    public function getMd5Password($password){
+        return md5($password . C("HASH_KEY"));
+    }
+    /*
+     * 新增 代理 資料
+     */
+    public function addAgentData($data){
+        $sql = "INSERT INTO `common_agent` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改 代理 資料
+     * 使用會員ID
+     */
+    public function setAgentDataById($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'agent_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_agent` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `agent_id` = '{$data['agent_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改 代理 資料
+     * 使用會員帳號
+     */
+    public function setAgentDataByAccount($data){
+        if(empty($data['agent_account']) && $data['agent_account'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'agent_account'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_agent` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `agent_account` = '{$data['agent_account']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 代理下級 代理資訊
+     */
+    public function getAgentUnderDataById($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `common_agent`
+                WHERE `agent_bossId` = '".$data['agent_id']."'
+                ;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    public function getAgentMaxBodysByHead($data){
+        if(empty($data['agent_head']) && $data['agent_head'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT max(`agent_bodys`) as MaxBodys FROM `common_agent`
+                WHERE `agent_head` = '".$data['agent_head']."' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+}

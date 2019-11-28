@@ -1,0 +1,218 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	
+	<div id="content" class="content">
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<div class="row">
+			<div class="col-md-2">
+				<div><h6>重整倒數 &nbsp;<span id="min"></span>:<span id="sec"></span></h6></div>
+			</div>
+			<div class="col-md-2">
+				<if condition="$noRenew eq 1">
+					<div class="form-check p-t-0">
+						<input class="form-check-input is-valid" type="checkbox" checked name="noRenew">
+						<label class="form-check-label" for="validCheckbox">不重整</label>
+					</div>
+				<else />
+					<div class="form-check p-t-0">
+						<input class="form-check-input is-valid" type="checkbox" name="noRenew">
+						<label class="form-check-label" for="validCheckbox">不重整</label>
+					</div>
+				</if>
+			</div>
+		</div>
+	
+		<div class="form-group row m-b-5">
+			<div class="col-md-12 col-sm-12 m-b-2">
+				<input class="btn btn-info f-s-13 m-r-5 m-b-5 p-5" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 m-r-5 m-b-5 p-5" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 m-r-5 m-b-5 p-5" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 m-r-5 m-b-5 p-5" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 m-r-5 m-b-5 p-5" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+				<input class="btn btn-info f-s-13 m-r-5 m-b-5 p-5" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+			</div>
+		</div>
+		
+		<div class="row m-b-5">
+			<div class="col-md-4 m-b-5">
+				<div class="row row-space-10">
+					<div class="col-md-5">
+						<input type="text" class="form-control text-center" id="startTime" placeholder="開始日" name="startTime" value="{$startTime}" autocomplete="off" disableautocomplete>
+					</div>
+					<div class="col-md-1 m-t-10">
+					 	<h6 class="text-center">至</h6>
+					</div>
+					
+					<div class="col-md-5">
+						<input type="text" class="form-control text-center" id="endTime" placeholder="結束日" name="endTime" value="{$endTime}" autocomplete="off" disableautocomplete>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-md-3">
+				<select name="selectEventStarus" class="form-control div-style width-auto" data-size="10" data-live-search="true" data-style="btn-info">
+					<if condition="$selectEventStarus eq '0'">
+						<option selected value="0">未處理</option>
+					<else />
+						<option value="0">未處理</option>
+					</if>
+					<if condition="$selectEventStarus eq 1">
+						<option selected value="1">已取消</option>
+					<else />
+						<option value="1">已取消</option>
+					</if>
+					<if condition="$selectEventStarus eq 2">
+						<option selected value="2">已贈點</option>
+					<else />
+						<option value="2">已贈點</option>
+					</if>
+					<if condition="$selectEventStarus eq 'all'">
+						<option selected value="all">全顯示</option>
+					<else />
+						<option value="all">全顯示</option>
+					</if>
+				</select>
+				<input class="btn btn-info m-l-10 div-style m-b-5" type='submit' value='查詢'>
+			</div>
+		</div>
+			<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		</form>
+		
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">活動處理</h4>
+					</div>
+					<!-- end panel-heading -->
+						<div class="panel-body">
+								<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table id="table1" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+											<th>單號</th>
+											<th>會員帳號</th>
+											<th>狀態</th>
+											<th>總儲值</th>
+											<th>總託售</th>
+											<th>建立時間</th>
+											<th>申請IP</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="showArray" id="vo" empty="$showEmpty">
+				                        	<tr>
+												<td>{$key+1}</td>
+												<td>
+													{$vo.id}
+												</td>
+												<td>{$vo.memberAccount}</td>
+												<td>{$vo.status}</td>
+												<td>{$vo.totalRecharge}</td>
+												<td>{$vo.totalWithdraw}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.ip}</td>
+												<td>
+													<if condition="$vo.status eq '未處理'">
+														<form method="POST" action='__APP__/{$Think.MODULE_NAME}/addGiveMoney'>
+															<input type="hidden" name="storegiftId" value="{$vo.id}">
+															<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="submit" value="自動完成">
+														</form>
+														<form method="POST" action='__APP__/{$Think.MODULE_NAME}/formSetEventProcess'>
+															<input type="hidden" name="storegiftId" value="{$vo.id}">
+															<input class="btn btn-warning f-s-13 p-5 m-r-5 m-b-5" type="submit" value="取消申請">
+														</form>
+													<else/>
+														上點金額:{$vo.money}&nbsp;&nbsp;
+														上點帳號:{$vo.adminAccount}
+													</if>
+												</td>
+													
+											</tr>
+				                        </VOLIST>
+				                        
+									</tbody>
+								</table>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+        
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+	</div>
+	<!-- end #content -->
+<include file="Common:footer"/>
+<script type="text/javascript">
+var t,n,count = 30;
+$(document).ready(function(){
+	function showAuto(){
+    	var min = Math.floor(count/60);
+    	var sec = count%60;
+    	if(sec<10){
+    		sec = '0' + sec;
+    	}
+    	$('#min').html(min);
+        $('#sec').html(sec);
+        
+        if(count == 0){
+        	clearInterval(t);
+        	var noRenew=$('input:checkbox[name="noRenew"]:checked').val();
+        	if(noRenew != "on"){
+        		$("#formInquire").submit();
+        	}
+        }
+        --count;
+    }
+    t = setInterval(showAuto, 1000); 
+    
+	$("#"+"風控部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	
+	
+	
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+</script>

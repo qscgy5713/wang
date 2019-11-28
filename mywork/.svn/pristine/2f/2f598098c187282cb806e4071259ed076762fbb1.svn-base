@@ -1,0 +1,39 @@
+<?php
+/**
+ * 公司變更紀錄
+ */
+class InternalAdminOperateLogModel extends AdminModel{
+	protected $tableName = "internal_admin_operate_log";
+	/**
+	 * 檢視 操作紀錄
+	 */
+	public function getAdminOperateLogData(){
+		$sql = "SELECT * FROM `{$this->tableName}`";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+	/**
+	 * 新增 操作紀錄
+	 */
+	public function addAdminOperateLogData($data){
+		$sql ="INSERT INTO `{$this->tableName}`";
+		$keySql = "";
+		$valSql = "";
+		foreach ($data as $key => $value) {
+			if(empty($keySql)){
+				$keySql = "(`{$key}`";
+			} else {
+				$keySql .= ",`{$key}`";
+			}
+			if(empty($valSql)){
+				$valSql = "('{$value}'";
+			} else {
+				$valSql .= ",'{$value}'";
+			}
+		}
+		$sql .= "{$keySql} ) VALUES {$valSql});";
+		$return = $this->query($sql);
+		return $return;
+	}
+}

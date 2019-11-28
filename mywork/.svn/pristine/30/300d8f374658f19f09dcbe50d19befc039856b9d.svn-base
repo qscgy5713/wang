@@ -1,0 +1,1565 @@
+<?php
+
+class GameDgModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+	protected $cfg_base_url = 'https://api.dg99web.com';  //https://api.dg99api.com
+	protected $cfg_agent = 'DG00160201';
+	protected $cfg_app_name_postfix = 'CSA';
+	protected $cfg_api_key = '5b8fd934c8f8469b9b23c4593f181f3a';
+
+  const DG_DEFAULT_CURRENCY_ID = 'TWD';
+  const DG_RESPONSE_SUCCESS_CODE = 0;
+  const DG_MEMBER_STATUS_FREEZE = 0;  //會員狀態:停用
+  const DG_MEMBER_STATUS_NORMAL = 1;  //會員狀態:正常
+  const DG_MEMBER_STATUS_LOCKED = 2;  //會員狀態:鎖定(不能下注)
+  const DG_TRANS_SUCCESS_CODE = 0;
+  const DG_TRANS_FAILED_CODE = 324;
+  const DG_DEFAULT_LANG_ID = 'tw';
+  const DG_DEFAULT_REQUEST_METHOD = 'POST';
+  const DG_CURL_CONNECTTIMEOUT_MS = 5000;
+  const DG_CURL_TIMEOUT_MS = 15000;
+  const DG_APP_ACCOUNT_PREFIX = 'CSY';
+  const DG_HASH_METHOD = 'md5';
+  const DG_REPORT_BETS_RETRIEVE_MAX_NUM = 1000;  //每次抓取注明細, 最多可能回傳的注數量
+  const DG_REPORT_BETDETAILSTR_SPLITTER = '<br/>';  //如有多筆投注項目,分隔個項目的符號
+  const DG_REPORT_REVOCATION_UNSETTLED_CODE = 0;  //尚未結算的代碼
+
+  const DG_DEVICES = array(
+    1 => 'web',  //网站Flash
+    2 => 'ios',  //IOS客户端登入
+    3 => 'android',  //Android客户端登入
+    5 => 'wap',  //网站html5登入
+  );
+
+  const DG_WIN_LIMITS = array(
+    'A' => array(100, 250000),
+    'B' => array(50, 5000),
+    'C' => array(50, 10000),
+    'D' => array(100, 10000),
+    'E' => array(100, 20000),
+    'F' => array(100, 50000),
+    'G' => array(100, 100000),
+  );
+
+  const DG_CURRENCY_CODES = array(
+      1 => 'CNY',  //人民币
+      2 => 'USD',  //美元
+      3 => 'MYR',  //马来西亚币
+      4 => 'HKD',  //港币
+      5 => 'THB',  //泰珠
+      6 => 'SGD',  //新加坡元
+      7 => 'PHP',  //菲律宾比索
+      8 => 'TWD',  //台币
+      9 => 'VND',  //越南盾
+     10 => 'IDR',  //印尼(盾)
+     11 => 'JPY',  //日元
+     12 => 'KHR',  //柬埔寨币
+     13 => 'KWR',  //韩元
+     16 => 'AUD',  //澳大利亚元
+     19 => 'INR',  //印度卢比
+     20 => 'EUR',  //欧元
+     21 => 'GBP',  //英镑
+     22 => 'CAD',  //加拿大
+     23 => 'KRW2',   //韩元 已去除3个0，游戏中1块，等同于实际1000块
+     24 => 'MMK',  //缅甸币
+     25 => 'MMK2',   //缅甸币  已去除3个0，游戏中1块，等同于实际1000块
+     29 => 'VND2',   //越南盾  已去除3个0，游戏中1块，等同于实际1000块
+     30 => 'IDR2',   //印尼(盾)  已去除3个0，游戏中1块，等同于实际1000块
+    100 => 'TEST',   //测试币
+  );
+
+  const DG_LANGS = array(
+    0 => 'en',  //英文
+    1 => 'cn',  //中文简体
+    2 => 'tw',  //中文繁体
+    3 => 'kr',  //韩语
+    4 => 'my',  //缅甸语
+    5 => 'th',  //泰语
+  );
+
+  const DG_API_ERRORS = array(
+      0 => '操作成功 ',
+      1 => '參數錯誤',
+      2 => 'Token驗證失敗',
+      4 => '非法操作',
+     10 => '日期格式錯誤',
+     11 => '數據格式錯誤',
+     97 => '沒有權限',
+     98 => '操作失敗',
+     99 => '未知錯誤',
+    100 => '帳號被鎖定',
+    101 => '帳號格式錯誤',
+    102 => '帳號不存在',
+    103 => '此帳號被佔用',
+    104 => '密碼格式錯誤',
+    105 => '密碼錯誤',
+    106 => '新舊密碼相同',
+    107 => '會員帳號不可用',
+    108 => '登入失敗',
+    109 => '註冊失敗',
+    113 => '傳入的代理帳號不是代理',
+    114 => '找不到會員',
+    116 => '帳號已佔用',
+    117 => '找不到會員所屬的分公司',
+    118 => '找不到指定的代理',
+    119 => '存取款操作時代理點數不足',
+    120 => '餘額不足',
+    121 => '盈利限制必須大於或等於0',
+    150 => '免費試玩帳號用完',
+    300 => '系統維護',
+    320 => 'API Key 錯誤',
+    321 => '找不到相應的限紅組',
+    322 => '找不到指定的貨幣類型',
+    323 => '轉賬流水號佔用',
+    324 => '轉賬失敗',
+    325 => '代理狀態不可用',
+    326 => '會員代理沒有視頻組',
+    328 => 'API 類型找不到',
+    329 => '會員代理信息不完整',
+    400 => '客戶端IP 受限',
+    401 => '網絡延遲',
+    402 => '連接關閉',
+    403 => '客戶端來源受限',
+    404 => '請求的資源不存在',
+    405 => '請求太頻繁',
+    406 => '請求超時',
+    407 => '找不到遊戲地址',
+    500 => '空指針異常',
+    501 => '系統異常',
+    502 => '系統忙',
+    503 => '數據操作異常',
+  );
+
+  const ARR_LOBBY_ID = array(
+    1 => '旗艦廳',
+    2 => '竟咪廳',
+  );
+
+  const ARR_REVOCATION_ID = array(
+    0 => '未結',
+    1 => '已結',
+    2 => '撤銷',
+  );
+
+  const ARR_SMALL_BIG = array(
+    1 => '小',
+    2 => '大',
+  );
+
+  const ARR_POKER_WIN = array(
+    1 => '莊贏',
+    2 => '閒贏',
+    3 => '和',
+  );
+
+  const ARR_BACCARAT_RESULTS = array(
+     1 => '莊',
+     2 => '莊', //莊對',
+     3 => '莊', //閒對',
+     4 => '莊', //莊對閒對',
+     5 => '閒',
+     6 => '閒', //莊對',
+     7 => '閒', //閒對',
+     8 => '閒', //莊對閒對',
+     9 => '和',
+    10 => '和', //莊對',
+    11 => '和', //閒對',
+    12 => '和', //莊對閒',
+  );
+
+  const ARR_DRAGON_TIGER_RESULTS = array(
+     1 => '龍',
+     2 => '虎',
+     3 => '和',
+  );
+
+  const ARR_GOLDEN_FLOWER_RESULTS = array(
+     1 => '龍',
+     2 => '虎',
+     3 => '和',
+  );
+
+  //$arrPokerPoint = array('A' => 1,'2' => 2,'3' => 3,'4' => 4,'5' => 5,'6' => 6,'7' => 7,'8' => 8,'9' => 9,'10' => 10,'K' => 11,'Q' => 12,'J' => 13,);
+
+  //[1-13]黑桃A-K, [14-26]红桃A-K, [27-39]梅花A-K, [39-52]方块A-K
+  const ARR_POKERS = array(
+      1=>'黑桃A', 2=>'黑桃2', 3=>'黑桃3', 4=>'黑桃4', 5=>'黑桃5', 6=>'黑桃6', 7=>'黑桃7', 8=>'黑桃8', 9=>'黑桃9',10=>'黑桃10',11=>'黑桃J',12=>'黑桃Q',13=>'黑桃K',
+     14=>'紅心A',15=>'紅心2',16=>'紅心3',17=>'紅心4',18=>'紅心5',19=>'紅心6',20=>'紅心7',21=>'紅心8',22=>'紅心9',23=>'紅心10',24=>'紅心J',25=>'紅心Q',26=>'紅心K',
+     27=>'梅花A',28=>'梅花2',29=>'梅花3',30=>'梅花4',31=>'梅花5',32=>'梅花6',33=>'梅花7',34=>'梅花8',35=>'梅花9',36=>'梅花10',37=>'梅花J',38=>'梅花Q',39=>'梅花K',
+     40=>'方塊A',41=>'方塊2',42=>'方塊3',43=>'方塊4',44=>'方塊5',45=>'方塊6',46=>'方塊7',47=>'方塊8',48=>'方塊9',49=>'方塊10',50=>'方塊J',51=>'方塊Q',52=>'方塊K'
+  );
+
+  const ARR_BACCARAT_BETS = array(  //百家投注
+    'banker' => '莊',
+    'banker6' => '莊 (免佣)',
+    'player' => '閒',
+    'tie' => '和',
+    'pPair' => '閒對',
+    'bPair' => '莊對',
+    'big' => '大',
+    'small' => '小',
+  );
+  const ARR_INSURANCE_BACCARAT_BETS = array(  //"保險百家樂" 投注
+    'banker' => '莊',
+    'banker6' => '莊 (免佣)',
+    'player' => '閒',
+    'tie' => '和',
+    'bPair' => '莊對',
+    'pPair' => '閒對',
+    'big' => '大',
+    'small' => '小',
+    'bBX' => '莊家保險',
+    'pBX' => '閒家保險',
+  );
+
+  const ARR_DRAGON_BETS = array(  //龍虎投注
+    'dragon' => '龍',
+    'tiger' => '虎',
+    'tie' => '和',
+    'dragonRed' => '龍红',
+    'dragonBlack' => '龍黑',
+    'tigerRed' => '虎红',
+    'tigerBlack' => '虎黑',
+    'dragonOdd' => '龍單',
+    'tigerOdd' => '虎單',
+    'dragonEven' => '龍雙',
+    'tigerEven' => '虎雙',
+  );
+
+  const ARR_ROULETTE_BETS = array(  //輪盤投注
+    'direct' => '直注',
+    'separate' => '分注',
+    'street' => '街注',
+    'angle' => '角注',
+    'line' => '線注',
+    'three' => '三數注',
+    'four' => '四個號碼',
+    'firstRow' => '行注一',
+    'sndRow' => '行注二',
+    'thrRow' => '行注三',
+    'firstCol' => '打注一',
+    'sndCol' => '打注二',
+    'thrCol' => '打注三',
+    'red' => '红',
+    'black' => '黑',
+    'odd' => '單',
+    'even' => '雙',
+    'low' => '小',
+    'high' => '大',
+  );
+
+  const ARR_SICBO_BETS = array(  //骰寶投注
+    'big' => '大',
+    'small' => '小',
+    'odd' => '單',
+    'even' => '雙',
+    'allDices' => '全團',
+    'threeForces' => '三軍',
+    'nineWayGards' => '段牌',
+    'pairs' => '長牌',
+    'surroundDices' => '團骰',
+    'points' => '點數',
+  );
+
+  const ARR_GOLDEN_FLOWER_BETS = array(  //炸金花投注
+    'red' => '紅',
+    'black' => '黑',
+    'luck' => '幸運一擊',
+  );
+
+  const ARR_BULL_BETS = array(  //妞妞投注
+    'banker1Double' => '莊一翻倍',
+    'banker2Double' => '莊二翻倍',
+    'banker3Double' => '莊三翻倍',
+    'banker1Equal' => '莊一平倍',
+    'banker2Equal' => '莊二平倍',
+    'banker3Equal' => '莊三平倍',
+    'banker1Many' => '莊一多倍',
+    'banker2Many' => '莊二多倍',
+    'banker3Many' => '莊三多倍',
+    'player1Double' => '閒一翻倍',
+    'player2Double' => '閒二翻倍',
+    'player3Double' => '閒三翻倍',
+    'player1Equal' => '閒一平倍',
+    'player2Equal' => '閒二平倍',
+    'player3Equal' => '閒三平倍',
+    'player1Many' => '閒一多倍',
+    'player2Many' => '閒二多倍',
+    'player3Many' => '閒三多倍',
+  );
+
+  const ARR_POKER_BETS = array(  //真人撲克投注
+    'bonus' => '獎金',
+    'ante' => '底注',
+    'bid' => '叫牌',
+    'hasBid' => array(
+      0 => '未叫牌',
+      1 => '叫牌',
+    ),
+  );
+
+  const ARR_POKER_RESULTS = array(  //真人撲克結果
+    0 => array(
+       1 => '無獎金',
+       2 => '一對A',
+       3 => '兩對',
+       4 => '三條',
+       5 => '順子',
+       6 => '同花',
+       7 => '葫蘆',
+       8 => '四條',
+       9 => '同花順',
+      10 => '皇家同花順',
+    ),
+    1 => array(
+      1 => '莊贏',
+      2 => '閒贏',
+      3 => '和局',
+    ),
+    2 => array(
+      1 => '高牌',
+      2 => '一對',
+      3 => '兩對',
+      4 => '三條',
+      5 => '順子',
+      6 => '同花',
+      7 => '葫蘆',
+      8 => '四條',
+      9 => '同花順',
+      10 => '皇家同花順',
+    ),
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['password'] 會員密碼
+   * @param $data['daily_win_limit'] 每日限紅
+   * @param $data['win_limit'] 盤口
+   * @param $data['currency_id'] 貨幣代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 盤口(array)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'daily_win_limit' => array('required'=>1,),
+      'win_limit' => array('required'=>1,),
+      'currency_id' => array('required'=>0,'default'=>self::DG_DEFAULT_CURRENCY_ID),
+    );
+    //$err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無帳號
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $arrDatas[$dk];
+          }
+        }
+      }
+    }
+
+		$passwordHash = self::_getDgHash($_password);
+		$dailyWinLimit = intval(trim($_daily_win_limit));
+    $winLimitId = strtoupper(trim($_win_limit));
+
+		$arrMember = array(
+			'username' => $_user_name,
+			'password' => $passwordHash,
+			'currencyName' => $_currency_id,
+			'winLimit' => $dailyWinLimit,
+		);
+		$arrParam = array(
+			'data' => $winLimitId,
+			'member' => $arrMember
+		);
+
+		$agName = $this->cfg_agent;
+		$url = "{$this->cfg_base_url}/user/signup/{$agName}/";
+		$result = $this->_sendRequest($url,$arrParam);
+
+		if ($result!==false) {
+			if ($result && isset($result['codeId']) && ($result['codeId']===self::DG_RESPONSE_SUCCESS_CODE)) {  //成功
+				if (isset($result['data'])) {
+					$actualWinLimitCode = $result['data'];  //回傳實際限紅組
+					$actualWinLimit = self::DG_WIN_LIMITS[$actualWinLimitCode];
+					return $actualWinLimit;  //回傳限紅的上下限陣列
+				} else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //必需的KEY不存在
+          return false;
+				}
+			} else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+        return false;
+			}
+		}
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));  //CURL 不成功
+		return false;
+	}
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['is_mobile'] 手機板?(非必須)
+   * @param $data['is_apk'] 用APP進行遊戲?(非必須)
+   * @param $data['lang_code'] 語系代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'is_mobile' => array('required'=>0,'default'=>false),
+      'is_apk' => array('required'=>0,'default'=>false),
+      'lang_code' => array('required'=>0,'default'=>self::DG_DEFAULT_LANG_ID),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $arrDatas[$dk];
+          }
+        }
+      }
+    }
+
+    $passwordHash = self::_getDgHash($argPassword);
+    $arrMember = array(
+      'username' => $_user_name,
+      'password' => $passwordHash,
+    );
+    $arrParam = array(
+      'lang' => $_lang_code,
+      'member' => $arrMember
+    );
+
+    $agName = $this->cfg_agent;
+    $url = "{$this->cfg_base_url}/user/login/{$agName}/";
+    $result = $this->_sendRequest($url,$arrParam);
+
+    if ($result!==false) {
+      if (
+        $result &&
+        isset($result['codeId']) && ($result['codeId']===self::DG_RESPONSE_SUCCESS_CODE)&&
+        !empty($result['token'])&&
+        !empty($result['list'])
+        ) {  //成功
+        if (isset($result['list'])) {
+          $gameToken = $result['token'];
+          $gameLinkList = $result['list'];  //0=flash 登入地址, 1=wap登入地址, 2=直接打开APP地址
+          if ($argIsMobile) {  //手機版
+            if ($argIsApk) {
+              if (!empty($gameLinkList[2])) {
+                $gameLink = $gameLinkList[2].$gameToken;
+              } else {
+                $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //陣列缺少key 2
+                return false;
+              }
+            } else {
+              if (!empty($gameLinkList[1])) {
+                $gameLink = $gameLinkList[1].$gameToken;
+              } else {
+                $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //陣列缺少KEY 1
+                return false;
+              }
+            }
+          } else {  //電腦版
+            $gameLink = $gameLinkList[0].$gameToken;
+          }
+          $this->err = null;
+          if (strpos($gameLink,'http://')===false) {  //找不到http
+            if (strpos($gameLink,'https://')===false) {  //找不到https
+              $gameLink = "https://{$gameLink}";
+            }
+          } else {  //有找到http://
+            //$gameLink = str_replace('http://','https://',$gameLink);
+          }
+          return $gameLink;  //回傳對應的遊戲連結
+        } else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));  //缺少key: list
+          return false;
+        }
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));  //CURL 不成功
+    return false;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $arrDatas[$dk];
+          }
+        }
+      }
+    }
+
+    $arrMember = array(
+      'username' => $_user_name,
+    );
+    $arrParam = array(
+      'member' => $arrMember
+    );
+
+    $agName = $this->cfg_agent;
+    $url = "{$this->cfg_base_url}/user/getBalance/{$agName}/";
+    $result = $this->_sendRequest($url,$arrParam);
+
+    if ($result!==false) {
+      if ($result && isset($result['codeId']) && ($result['codeId']===self::DG_RESPONSE_SUCCESS_CODE)) {  //成功
+        if (isset($result['member'])) {
+          $arrRetMember = $result['member'];
+          $retAccount = $arrRetMember['username'];  //用戶名稱
+          $retBal = $arrRetMember['balance'];  //用戶餘額
+
+          if ( strtolower($retAccount) == strtolower($_user_name) ) {
+            $this->err = null;
+            return $retBal;
+          } else {
+            $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳的username不同於查詢的用戶名稱
+            return false;
+          }
+        } else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回傳陣列的鍵未定義: member
+          return false;
+        }
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));  //CURL 不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $transType = 'OUT';
+
+    return $this->_transfer(
+      $transType,
+      $arrDatas,
+      $argErr
+    );
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $transType = 'IN';
+
+    return $this->_transfer(
+      $transType,
+      $arrDatas,
+      $argErr
+    );
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+	 */
+	public function getGameRecord(&$argErr = null){
+    $arrParam = array();
+
+    $agName = $this->cfg_agent;
+    $url = "{$this->cfg_base_url}/game/getReport/{$agName}/";
+    $result = $this->_sendRequest($url,$arrParam);
+    if ($result!==false) {
+      if ($result && isset($result['codeId']) && ($result['codeId']===self::DG_RESPONSE_SUCCESS_CODE)) {  //成功
+        if (isset($result['list'])) {
+          $arrReports = $result['list'];
+          return $arrReports;
+        } else {
+          //$errCode = -1;
+          //$errMsg = '回傳陣列的鍵未定義: list';
+          //$argErr = $this->produceError($errCode, $errMsg);
+          return array();
+        }
+      } else {  //失敗
+        $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01') . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02');  //CURL結果為不成功
+    return false;
+	}
+
+  /**
+   * 抓取注單報表
+   * @param $arrBetIds 要標記的注單ID 陣列(array)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 執行結果(bool)
+   */
+  public function markBets(
+    $argArrBetIds,
+    &$argErr = null
+    ) {
+    $arrParam = array(
+      'list' => $argArrBetIds
+    );
+
+    $agName = $this->cfg_agent;
+    $url = "{$this->cfg_base_url}/game/markReport/{$agName}/";
+    $result = $this->_sendRequest($url,$arrParam);
+    if ($result!==false) {
+      if ($result && isset($result['codeId']) && ($result['codeId']===self::DG_RESPONSE_SUCCESS_CODE)) {  //成功
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + gameName        遊戲名稱
+   * + tableId         桌號
+   * + betDetailStr    投注
+   * + resultStr       遊戲結果
+   * + isRevocation    狀態
+   * + sb_html         有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $bet['detail_bettingMoney'] = round(floatVal($bet['detail_bettingMoney']),3);
+        $bet['detail_effective'] = round(floatVal($bet['detail_effective']),3);
+        $bet['detail_surplus'] = round(floatVal($bet['detail_surplus']),3);
+
+        $bet['sb_html'] = '';
+        $bet_id = $bet['detail_id'];
+
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        //$arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+
+        //Dbgr::preout($bet['detail_dataInJson']);
+        //Dbgr::preout($arrBetContents);
+
+        $result = trim(str_replace('#', '"', $arrBetContents['result']));
+        $betDetail = trim(str_replace('#', '"', $arrBetContents['betDetail']));
+        $gameType = $arrBetContents['gameType'];
+        $gameId = $arrBetContents['gameId'];
+        $tableId = $arrBetContents['tableId'];
+        $gameName = self::getGameName($gameType, $gameId, $tableId);
+
+        if ($gameType==1) {  //一般遊戲
+          $resultStr = self::getGameResultStr($gameId, $result);
+          $betDetailStr = self::getBetDetailStr($gameId, $betDetail);
+        } elseif ($gameType==2) {  //紅包小費
+          if (strlen($betDetail)) {
+            $betDetailStr = self::__getGiftStr($gameId, $betDetail);
+          } else {
+            $betDetailStr = null;
+          }
+        }
+
+        $bet['gameName'] = $gameName;
+        $bet['tableId'] = $tableId;
+
+        if (strpos($gameName,'百家樂')!==false) {  //只針對百家樂類做著色
+          //著色結果
+          $arrRes = explode(' (',$resultStr);  //ex.'閒 (莊2點:黑桃10,梅花Q,方塊2;閒5點:方塊5,梅花J,方塊K)'
+          if (sizeof($arrRes) > 1) {
+            $winnerStr = $arrRes[0];
+            $pointsStr = $arrRes[1];
+            if (strpos($winnerStr,'閒')!==false) {
+              $winnerStr = "<div class=\"ab-res-winner-player\">{$winnerStr}</div>";
+            } elseif (strpos($winnerStr,'莊')!==false) {
+              $winnerStr = "<div class=\"ab-res-winner-banker\">{$winnerStr}</div>";
+            } elseif (strpos($winnerStr,'和')!==false) {
+              $winnerStr = "<div class=\"ab-res-winner-none\">{$winnerStr}</div>";
+            }
+
+            $pointsStr = str_replace('閒',"<div class=\"ab-res-points-player\">閒</div>",$pointsStr);
+            $pointsStr = str_replace('莊',"<div class=\"ab-res-points-banker\">莊</div>",$pointsStr);
+            $bet['resultStr'] = "{$winnerStr} ({$pointsStr}";
+            $bet['resultStr'] = $winnerStr;
+          }
+        //著色投注
+          $bettingStrTemp = '';
+          $arrBettings = explode(self::DG_REPORT_BETDETAILSTR_SPLITTER, $betDetailStr);
+          $i = 1;
+          foreach ($arrBettings as $bKey => $bettingStr) {
+            if (strpos($bettingStr,'閒對')!==false) {$bettingStr = str_replace('閒對',"<div class=\"ab-betting-bac-player\">閒對</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'閒')!==false) {$bettingStr = str_replace('閒',"<div class=\"ab-betting-bac-player\">閒</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'莊對')!==false) {$bettingStr = str_replace('莊對',"<div class=\"ab-betting-bac-banker\">莊對</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'莊 (免佣)')!==false) {$bettingStr = str_replace('莊 (免佣)',"<div class=\"ab-betting-bac-banker\">莊 (免佣)</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'莊')!==false) {$bettingStr = str_replace('莊',"<div class=\"ab-betting-bac-banker\">莊</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'和')!==false) {$bettingStr = str_replace('和',"<div class=\"ab-betting-bac-none\">和</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'大')!==false) {$bettingStr = str_replace('大',"<div class=\"ab-betting-bac-big\">大</div>",$bettingStr);}
+            elseif (strpos($bettingStr,'小')!==false) {$bettingStr = str_replace('小',"<div class=\"ab-betting-bac-small\">小</div>",$bettingStr);}
+            if (sizeof($arrBettings) > 1) {
+              $bettingStr = "<div class=\"dg-multi-bet-wrapper\"><span class=\"dg-multi-bet-num\">({$i})</span> {$bettingStr}</div>";
+              //$bettingStrTemp .= self::DG_REPORT_BETDETAILSTR_SPLITTER;
+            }
+            $bettingStrTemp .= $bettingStr;
+            ++$i;
+          }
+          $bet['betDetailStr'] = $bettingStrTemp;
+        } else {  //著色多投注項目
+          $bettingStrTemp = '';
+          $arrBettings = explode(self::DG_REPORT_BETDETAILSTR_SPLITTER, $arrBetContents['betDetailStr']);
+          $i = 1;
+          foreach ($arrBettings as $bKey => $bettingStr) {
+            if (sizeof($arrBettings) > 1) {
+              $bettingStr = "<div class=\"dg-multi-bet-wrapper\"><span class=\"dg-multi-bet-num\">({$i})</span> {$bettingStr}</div>";
+            }
+            $bettingStrTemp .= $bettingStr;
+            ++$i;
+          }
+          $bet['betDetailStr'] = $bettingStrTemp;
+        }
+        //注單狀態
+        $bet['isRevocation'] = self::__getRevocationStr($arrBetContents['isRevocation']);
+
+        //幣種
+        //$bet['currencyId'] = getCurrencyStr($bet['currencyId']);
+
+        $arrBets[$bet_id] = $bet;
+      }  //rowBetDetails foreach
+      return $arrBets;
+    } else {  //if ($argArrRowBetDetails)
+      return false;
+    }
+  }
+
+
+  //==================================雜七雜八函數================================
+
+  public static function getGameName($argGameType, $argGameId, $argTableId='') {
+    $gameName = "<不明的遊戲({$argGameType},{$argGameId})>";
+    if ($argGameType == 1) {  //一般遊戲
+      if ($argGameId == 1) {  //百家樂
+        $gameName = "百家樂";
+      }
+      elseif ($argGameId == 2) {  //保險百家樂
+        $gameName = "保險百家樂";
+      }
+      elseif ($argGameId == 3) {  //龍虎
+        $gameName = "龍虎";
+      }
+      elseif ($argGameId == 4) {  //輪盤
+        $gameName = "輪盤";
+      }
+      elseif ($argGameId == 5) {  //骰寶
+        $gameName = "骰寶";
+      }
+      elseif ($argGameId == 7) {  //妞妞
+        $gameName = "妞妞";
+      }
+      elseif ($argGameId == 8) {  //竟咪百家樂
+        $gameName = "竟咪百家樂";
+      }
+      elseif ($argGameId == 9) {  //真人撲克
+        $gameName = "真人撲克";
+      }
+      elseif ($argGameId == 11) {  //炸金花
+        $gameName = "炸金花";
+      }
+      elseif ($argGameId == 12) {  //極速骰寶
+        $gameName = "極速骰寶";
+      }
+      else {
+        $gameName = "<不明的一般遊戲({$argGameType},{$argGameId})>";
+      }
+    } elseif ($argGameType == 2) {
+      if ($argGameId == 1) {  //会员发红包
+        $gameName = "會員發紅包";
+      }
+      elseif ($argGameId == 2) {  //会员抢红包
+        $gameName = "會員搶紅包";
+      }
+      elseif ($argGameId == 3) {  //小费
+        $gameName = "小費";
+      }
+      elseif ($argGameId == 4) {  //公司发红包
+        $gameName = "公司發紅包";
+      }
+      else {
+        $gameName = "<不明的禮物({$argGameType},{$argGameId})>";
+      }
+    }
+    return $gameName;
+  }
+
+  //將投注項目陣列轉為可讀字串
+  public static function getBetDetailStr($argGameId, $argBetDetailStrInJson, $argParam=null) {
+
+
+    $betStr = '';
+    $arrBets = json_decode($argBetDetailStrInJson, true);
+    $arrWinBets = array();
+    foreach ($arrBets as $bKey => $bVal) {  //過濾出結尾為W的投注項目, 代表該投注所贏金額
+      $lastCh = substr($bKey, -1);
+      if ($lastCh == 'W') {
+        $arrWinBets[$bKey] = $bVal;
+        unset($arrBets[$bKey]);
+      }
+    }
+
+    $arrTargetGame = array();
+    if (($argGameId == 1) || ($argGameId == 8)) {  //百家樂 竟咪百家樂
+      $arrTargetGame = self::ARR_BACCARAT_BETS;
+    } elseif ($argGameId == 2) {  //保險百家樂
+      $arrTargetGame = self::ARR_INSURANCE_BACCARAT_BETS;
+    } elseif ($argGameId == 3) {  //龍虎
+      $arrTargetGame = self::ARR_DRAGON_BETS;
+    } elseif ($argGameId == 4) {  //輪盤
+      $arrTargetGame = self::ARR_ROULETTE_BETS;
+    } elseif (($argGameId == 5)||($argGameId == 12)) {  //骰寶
+      $arrTargetGame = self::ARR_SICBO_BETS;
+    } elseif ($argGameId == 7) {  //妞妞
+      $arrTargetGame = self::ARR_BULL_BETS;
+    } elseif ($argGameId == 9) {  //真人撲克
+      $arrTargetGame = self::ARR_POKER_BETS;
+    } elseif ($argGameId == 11) {  //炸金花
+      $arrTargetGame = self::ARR_GOLDEN_FLOWER_BETS;
+      //$betStr = "炸金花:{$argBetDetailStrInJson}";
+    } else {  //不明的gameType
+      $betStr = "<不明的遊戲({$argGameId})>";
+      return $betStr;
+    }
+
+    $betsNum = sizeof($arrBets);
+    //$i = 1;
+    foreach ($arrBets as $bKey => $bVal) {
+      $curntBetStr = '';
+      if ($betsNum > 1) {  //超過1個投注項目
+        if (array_key_exists($bKey, $arrTargetGame)) {
+          if (is_array($bVal)) {  //若項目投注額為陣列, 目前投注額若為陣列, 其內元素的key=號碼, val=金額
+            $tStr = '';
+            foreach ($bVal as $bbk => $bbv) {
+              if (strlen($tStr)) {$tStr .= ',';}
+              $betValue = "【{$bbk}】x {$bbv}";
+              $tStr .=  "{$betValue}";
+            }
+            if ((($argGameId == 9)) && ($bKey == 'hasBid') ) {  //hasBid  Integer 1:有叫牌,其他为未叫牌
+              if ($bVal == 1) {
+                $curntBetStr .= $arrTargetGame[$bKey][$bVal] . $tStr;
+              } else {
+                $curntBetStr .= $arrTargetGame[$bKey][0] . $tStr;
+              }
+            } else {
+              $curntBetStr .= $arrTargetGame[$bKey] . $tStr;
+            }
+          } else {
+            $betItemStr = '';
+            if ((($argGameId == 9)) && ($bKey == 'hasBid') ) {  //hasBid  Integer 1:有叫牌,其他为未叫牌
+              if ($bVal == 1) {
+                $curntBetStr .= $arrTargetGame[$bKey][$bVal];
+              } else {
+                $curntBetStr .= $arrTargetGame[$bKey][0];
+              }
+            } else {
+              $betValue = $bVal;
+              $curntBetStr .= $arrTargetGame[$bKey] . "x{$betValue}";
+            }
+          }
+        } else {
+          $curntBetStr = "<不明的投注項目({$bKey})x{$bVal}>";
+        }
+        if (strlen($betStr)) {$betStr .= self::DG_REPORT_BETDETAILSTR_SPLITTER;}
+      } else {  //僅1個投注項目
+        if (array_key_exists($bKey, $arrTargetGame)) {
+          $curntBetStr = $arrTargetGame[$bKey];
+        } else {
+          $curntBetStr = "<不明的投注項目({$bKey})>";
+        }
+      }
+      $betStr .= "{$curntBetStr}";
+      //++$i;
+    }
+    return $betStr;
+  }
+
+  //將結果項目陣列轉為可讀字串
+  public static function getGameResultStr($argGameId, $argGameResStrInJson, $argParam=null) {
+
+    $resStr = '';
+    $arrGameRes = json_decode($argGameResStrInJson, true);
+    if (
+      ($argGameId == 1)  //百家樂
+      || ($argGameId == 2)  //保險百家樂
+      || ($argGameId == 8)  //竟咪百家樂
+    ) {
+    /*
+    {
+        "result":"5,2,7",
+        "poker":{"
+            "banker":"17-12-47",
+            "player":"50-33-0"
+        }
+    }
+    Result定义:
+    [0] 取值范围[1-12]
+     1:庄赢,2:庄赢庄对,3:庄赢閒对,4:庄赢庄对閒对
+     5:閒赢,6:閒赢庄对,7:閒赢閒对,8:閒赢庄对閒对
+     9:和赢,10:和赢庄对,11:和赢閒对,12:和赢庄对閒对
+    [1]:1:小,2:大
+    [2]:赢方的点数
+
+    Poker定义:
+    poker顺序为出牌顺序
+
+    ==> 閒 (莊3點:梅花3,黑桃J;閒9點:方塊10,紅心9)
+    */
+      $r = explode(',', $arrGameRes['result']);
+      $r1 = self::ARR_BACCARAT_RESULTS[$r[0]];
+      $r2 = self::ARR_SMALL_BIG[$r[1]];
+      $r3 = $r[2];
+
+      $bankerPoint = 0;
+      $pBanker = explode('-', $arrGameRes['poker']['banker']);
+      $pBankerStr = '';
+      $point = 0;
+      foreach ($pBanker as $pb) {
+        if ($pb > 0) {  //0代表沒牌
+          $poker = self::ARR_POKERS[$pb];
+          if (strlen($pBankerStr)) {$pBankerStr .= ',';}
+          $pBankerStr .= "{$poker}";
+          $p = ($pb%13);  //0~12 = J~Q
+          if ($p >= 10) {
+            $p = 0;
+          }
+          $point += $p;  //banker point
+        }
+      }
+      $pBankerStr = "莊{$point}點:{$pBankerStr}";
+
+      $playerPoint = 0;
+      $pPlayer = explode('-', $arrGameRes['poker']['player']);
+      $pPlayerStr = '';
+      $point = 0;
+      foreach ($pPlayer as $pp) {
+        if ($pp > 0) {  //0代表沒牌
+          $poker = self::ARR_POKERS[$pp];
+          if (strlen($pPlayerStr)) {$pPlayerStr .= ',';}
+          $pPlayerStr .= "{$poker}";
+          $p = ($pp%13);  //0~12 = J~Q
+          if ($p >= 10) {
+            $p = 0;
+          }
+          $point += $p;  //banker point
+        }
+      }
+      $pPlayerStr = "閒{$point}點:{$pPlayerStr}";
+      $resStr = "{$r1} ({$pBankerStr};{$pPlayerStr};{$r2})";
+    } elseif ($argGameId == 3) {  //龍虎
+    /*
+    {
+        "result":"1,5",
+        "poker":{"
+            "dragon":"21",
+            "tiger":"35"
+        }
+    }
+    Result定义:
+    [0]: 1:龍赢,2:虎赢,3:和赢
+    [1]: 赢方的点数
+
+    Poker定义:
+    J:11点, Q:12点, K:13点
+
+    ==> 虎 (龍3點:梅花3;虎9點:方塊9)
+    */
+      $r = explode(',', $arrGameRes['result']);
+      $r1 = self::ARR_DRAGON_TIGER_RESULTS[$r[0]];
+      $r2 = $r[1];
+
+      $dragonPoint = ($arrGameRes['poker']['dragon'] % 13)?($arrGameRes['poker']['dragon'] % 13):(13);
+      $tigerPoint = ($arrGameRes['poker']['tiger'] % 13)?($arrGameRes['poker']['tiger'] % 13):(13);
+
+      $dragonCard = self::ARR_POKERS[$arrGameRes['poker']['dragon']];
+      $tigerCard = self::ARR_POKERS[$arrGameRes['poker']['tiger']];
+
+      $resStr = "【{$r1}】 (龍{$dragonPoint}點:{$dragonCard};虎{$tigerPoint}點:{$tigerCard})";
+    } elseif ($argGameId == 4) {  //輪盤
+    /*
+    {
+        "result":"23"
+    }
+    Result定义: 游戏结果数字
+
+    ==> 23點
+    */
+      $r1 = $arrGameRes['result'];
+      $resStr = "【{$r1}】";
+      } elseif (($argGameId == 5)||($argGameId == 12)) {  //骰寶
+    /*
+    {
+        "result":"146"
+    }
+    Result定义:
+    各个骰子的点数
+
+    ==> [1,4,6]
+    */
+      $r = str_split($arrGameRes['result'], 1);  //split every 1 character
+      $resStr = implode(',', $r);
+      $resStr = "【{$resStr}】";
+    } elseif ($argGameId == 7) {  //妞妞
+    /*
+
+    {
+       "result":"2,0,9,9|0,1,1",
+        poker":{"
+            "firstcard":"37"// 头牌,
+            "banker":"25-12-47-24-30",
+            "player1":"17-9-27-14-22",
+            "player2":"31-15-10-46-5",
+            "player3":"41-36-20-33-16"
+        }
+    }
+    Result定义:
+    前4位0表示没牛
+        [0]庄点数,[1]閒1点数,[2]閒2点数,[3]閒3点数
+    后3位1表示赢,0表示输:
+        [4]閒1,[5]閒2,[6]閒3
+
+    Poker定义:
+    poker顺序为出牌顺序
+
+    ==>複雜: 閒2,閒3 (頭牌:梅花K;莊2點:梅花3,黑桃J,紅心2,方塊10,紅心9;閒一0點:梅花3,黑桃J,紅心2,方塊10,紅心9;閒二9點:梅花3,黑桃J,紅心2,方塊10,紅心9;閒三9點:梅花3,黑桃J,紅心2,方塊10,紅心9)
+    ==>簡易: 閒2,閒3 (莊2點;閒一0點;閒二9點;閒三9點)
+    */
+      $r = explode('|', $arrGameRes['result']);
+      $rPoints = $r[0];  //各家點數
+      $rWins = $r[1];  //閒家輸贏
+      $rPoints = explode(',',$rPoints);
+      $rWins = explode(',',$rWins);
+      $arrHouses = array(0=>'莊',1=>'閒一',2=>'閒二',3=>'閒三');
+
+      $winnersStr = '';
+      foreach ($rWins as $rKey => $rVal) {
+        if ($rVal) {
+          if (strlen($winnersStr)){$winnersStr.=',';}
+          $house = $arrHouses[$rKey+1];  //略過0
+          $winnersStr .= $house;
+        }
+      }
+      if (!strlen($winnersStr)) {  //3閒家均輸
+        $winnersStr = '無';
+      }
+
+      $pointsStr = '';
+      foreach ($rPoints as $rKey => $rVal) {
+        if (strlen($pointsStr)){$pointsStr.=';';}
+        $house = $arrHouses[$rKey];
+        $pointsStr .= "{$house}{$rVal}點";
+      }
+
+      $resStr = "【{$winnersStr}】 ({$pointsStr})";
+    } elseif ($argGameId == 9) {  //真人撲克
+    /*
+
+    {
+     "result":"1,1,5,2,24-10-35-34-33",
+      poker":{"
+          "banker":"31-10",
+          "player":"2-5",
+          "community":"8-33-35-34-24"  //community: 公牌
+      }
+    }
+  Result定义:
+  [0] 1:无奖金,2一对A,3:两对,4:三条,5:顺子,6:同花,7:葫芦,8:四条,9:同花顺,10:皇家同花顺
+  [1] 1:庄赢,2:闲赢,3:和局
+  [2]庄牌型
+  [3]闲牌型
+  牌型:1,高牌,2:一对,3:两对,4:三条,5:顺子,6:同花,7:葫芦,8:四条,9:同花顺,10:皇家同花顺
+  24-10-35-34-33: 最大牌值
+
+  self::ARR_POKER_RESULTS = array(  //真人撲克結果
+    0 => array(
+       1 => '無獎金',
+       2 => '一對A',
+       3 => '兩對',
+       4 => '三條',
+       5 => '順子',
+       6 => '同花',
+       7 => '葫蘆',
+       8 => '四條',
+       9 => '同花順',
+      10 => '皇家同花順',
+    ),
+    1 => array(
+      1 => '莊贏',
+      2 => '閒贏',
+      3 => '和局',
+      {"result":"
+
+      r_s1 = 1,2,3,3
+      seg_2_reasult = 1-40-20-7-38
+
+      ","poker":{"banker":"34-43","player":"36-38","community":"44-20-40-1-7"}}
+    ),{"bonus":20,"ante":20,"bid":40,"bidW":40}
+  );
+    */
+      $r = explode('|', $arrGameRes['result']);
+      $seg_1_reasult = $r[0];
+      $seg_2_reasult = $r[1];
+      $r_s1 = explode(',', $seg_1_reasult);
+      $prize_str = self::ARR_POKER_RESULTS[0][$r_s1[0]];  //1:无奖金,2一对A,3:两对,4:三条,5:顺子,6:同花,7:葫芦,8:四条,9:同花顺,10:皇家同花顺
+      $winner_str = self::ARR_POKER_RESULTS[1][$r_s1[1]];  //1:庄赢,2:闲赢,3:和局
+      $banker_card_type_str = self::ARR_POKER_RESULTS[2][$r_s1[2]];  //庄牌型
+      $player_card_type_str = self::ARR_POKER_RESULTS[2][$r_s1[3]];  //闲牌型
+      $max_card_str = self::__getPokerStr($seg_2_reasult);  //最大牌值
+
+      $resStr = "【{$winner_str}】- 獎勵:{$prize_str}, 莊:{$banker_card_type_str}, 閒:{$player_card_type_str}";
+
+    } elseif ($argGameId==11) {
+      //$resStr = "炸金花:{$argGameResStrInJson}";
+      $r = explode(',', $arrGameRes['result']);
+      $r1 = self::ARR_BACCARAT_RESULTS[$r[0]];
+      $r2 = self::ARR_SMALL_BIG[$r[1]];
+      $r3 = $r[2];
+
+      $xxStr = '';
+      foreach ($r as $rx) {
+        if ($rx > 0) {  //0代表沒牌
+          $poker = self::ARR_POKERS[$rx];
+          if (strlen($xxStr)) {$xxStr .= ',';}
+          $xxStr .= "{$poker}";
+        }
+      }
+
+      $bankerPoint = 0;
+      $pBanker = explode('-', $arrGameRes['poker']['black']);
+      $pBankerStr = '';
+      $point = 0;
+      foreach ($pBanker as $pb) {
+        if ($pb > 0) {  //0代表沒牌
+          $poker = self::ARR_POKERS[$pb];
+          if (strlen($pBankerStr)) {$pBankerStr .= ',';}
+          $pBankerStr .= "{$poker}";
+          $p = ($pb%13);  //0~12 = J~Q
+          if ($p >= 10) {
+            $p = 0;
+          }
+          $point += $p;  //banker point
+        }
+      }
+      $pBankerStr = "<b>黑</b>:{$pBankerStr}";
+
+      $playerPoint = 0;
+      $pPlayer = explode('-', $arrGameRes['poker']['red']);
+      $pPlayerStr = '';
+      $point = 0;
+      foreach ($pPlayer as $pp) {
+        if ($pp > 0) {  //0代表沒牌
+          $poker = self::ARR_POKERS[$pp];
+          if (strlen($pPlayerStr)) {$pPlayerStr .= ',';}
+          $pPlayerStr .= "{$poker}";
+          $p = ($pp%13);  //0~12 = J~Q
+          if ($p >= 10) {
+            $p = 0;
+          }
+          $point += $p;  //banker point
+        }
+      }
+      $pPlayerStr = "<b>紅</b>:{$pPlayerStr}";
+      $resStr = "{$pBankerStr};{$pPlayerStr}";
+    } else {  //不明的gameType
+      $resStr = "<不明的遊戲({$argGameId})>";
+    }
+    return $resStr;
+  }
+	//--------------------非通用函數--------------------
+
+  /* _getDgHash: */
+  protected function _getDgHash($argStr) {
+    return hash(self::DG_HASH_METHOD, $argStr);
+  }
+
+  /* _transfer: 上下點 */
+  protected function _transfer(
+    $argTransType, //IN=存款, OUT=提款
+    $argDatas,
+    &$argErr = null
+    ) {
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'trans_id' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $argDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $argDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $argDatas[$dk];
+          }
+        }
+      }
+    }
+
+    if ( array_key_exists('trans_id', $argDatas) ) {
+      $transId = $argDatas['trans_id'];
+    } else {
+      $transId = $this->_getTid($_user_name, $argTransType);
+    }
+
+    $transType = strtoupper($argTransType);
+    if ($transType == 'IN') {
+      $amount = abs($_amount);  //正數存點
+    } else {  //OUT
+      $amount = abs($_amount);
+      $amount = $amount - ($amount*2);  //正數提點
+    }
+
+    $arrMember = array(
+      'username' => $_user_name,
+      'amount' => $amount,
+    );
+    $arrParam = array(
+      'data' => $transId,
+      'member' => $arrMember
+    );
+
+
+    $agName = $this->cfg_agent;
+    $url = "{$this->cfg_base_url}/account/transfer/{$agName}/";
+    $result = $this->_sendRequest($url,$arrParam);
+
+    if ($result !== false) {
+      if ($result && isset($result['codeId']) && ($result['codeId']===self::DG_RESPONSE_SUCCESS_CODE)) {  //成功
+        $retTid = trim($result['data']);
+        if ( $retTid != $transId ) {  //不同
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳的交易號不同於傳入值
+          return false;
+        } else {
+          if (isset($result['member'])) {
+            $arrRetMember = $result['member'];
+            $retAccount = $arrRetMember['username'];  //用戶名稱
+            $retBal = $arrRetMember['balance'];  //用戶餘額
+            if ( strtolower($retAccount) == strtolower($_user_name) ) {
+              $this->err = null;
+              $arrRet = array(
+                'account' => $_user_name,
+                'amount' => $amount,
+                'balance' => $retBal,
+                'transid' => $retTid,
+              );
+              return $arrRet;  //回傳餘額
+            } else {
+              $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回傳的username不同於查詢的用戶名稱
+              return false;
+            }
+          } else {
+            $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));  //回傳陣列的鍵未定義: member
+            return false;
+          }
+        }
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));  //CURL結果為不成功
+    return false;
+  }
+
+  /* get key for every action */
+  protected function _getKey($argAgName=null, $argApiKey=null) {
+    if ($argAgName===null) {
+      $agName = $this->cfg_agent;
+    }
+    if ($argApiKey===null) {
+      $apiKey = $this->cfg_api_key;
+    }
+    //$key = hash('md5',"{$agName}{$apiKey}");
+    $key = self::_getDgHash("{$agName}{$apiKey}");
+    return $key;
+  }
+
+  /* produce error */
+  protected function _produceError($argErrCode,$argErrMsg=null) {
+    if ($this->err) {
+      /*return array(
+        'errorCode' => $argErrCode,
+        'errorMsg' => $argErrMsg,
+      );*/
+      return "{$argErrMsg} (code {$argErrCode})";
+    } else {
+      if ( self::DG_API_ERRORS === null) {
+        /*return array(
+          'errorCode' => -1,
+          'errorMsg' => 'DG errors definition is not found',
+        );*/
+        return 'DG errors definition is not found';
+      }
+      $arrErrorMsgs = self::DG_API_ERRORS;  //DG.inc.php
+      if (array_key_exists($argErrCode,$arrErrorMsgs)) {
+        /*return array(
+          'errorCode' => $argErrCode,
+          'errorMsg' => $arrErrorMsgs[$argErrCode],
+        );*/
+        return "{$arrErrorMsgs[$argErrCode]} (code {$argErrCode})";
+      } else {
+        /*return array(
+          'errorCode' => $argErrCode,
+          'errorMsg' => '錯誤說明未定義, 錯誤代碼: '.$argErrCode,
+        );*/
+        return '錯誤說明未定義, 錯誤代碼: '.$argErrCode;
+      }
+    }
+  }
+  /* send request */
+  protected function _sendRequest($argUrl,$argArrData,$argMethod=self::DG_DEFAULT_REQUEST_METHOD) {
+    $key = $this->_getKey();
+    $arrData = $argArrData;
+    $arrData['token'] = $key;
+    $method = strtoupper($argMethod);
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::DG_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::DG_CURL_TIMEOUT_MS,
+      CURLOPT_HTTPHEADER => array(
+        'Content-Type: application/json',
+      )
+    );
+    if ( $method == 'GET') {  //GET
+      $queryStr = http_build_query($arrData);
+      $url = "{$argUrl}?{$queryStr}";
+    } else {  //POST
+      $url = $argUrl;
+      $dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStrInJson;
+    }
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+
+    //Dbgr::preout($url);
+    //Dbgr::preout($arrCurlDatas);
+    //echo '[[[[[';
+    //var_dump($result);
+    //echo ']]]]]';
+    //Dbgr::preout($curlError);
+    //Dbgr::preout($url);
+    //Dbgr::preout($result);
+
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //echo "sendRequest::curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+  /* get transaction id */
+  protected function _getTid($argAccount, $argTransactionType='IN') {
+    $transactionType = strtoupper($argTransactionType);
+    $tidTime = $this->_getTidTime();
+    $rnd = rand(1,999);
+    $tid = "DG-{$transactionType}-{$tidTime}{$rnd}-{$argAccount}";
+    return $tid;
+  }
+
+  /* get formatted time for transaction id */
+  protected function _getTidTime() {
+    $time = date('YmdHis');
+    return $time;
+  }
+
+  //--------------------PRIVATE--------------------
+
+  private static function __getGiftStr($argGameId, $argArrGiftStr) {
+    $giftStr = '';
+    $arrGift = json_decode($argArrGiftStr, true);
+    if ($argGameId == 1) {  //会员发红包
+      $gameName = "會員發紅包";
+    } elseif ($argGameId == 2) {  //会员抢红包
+      $gameName = "會員搶紅包";
+    } elseif ($argGameId == 3) {  //小费
+      $gameName = "小費";
+    } elseif ($argGameId == 4) {  //公司发红包
+      $gameName = "公司發紅包";
+    } else {
+      $gameName = "<不明的禮物(gameId={$argGameId})>";
+    }
+    if (is_array($arrGift)) {
+      if (array_key_exists('id',$arrGift)) {
+        $id = $arrGift['id'];
+        $userName = $arrGift['userName'];
+        $type = $arrGift['type'];
+        $typeStr = '???';
+        if ($type==1) {$typeStr = '隨分';}
+        elseif ($type==2) {$typeStr = '均分';}
+        $points = $arrGift['points'];
+        $count = $arrGift['count'];
+        $currencyId = $arrGift['currencyId'];
+        $currency = getCurrencyStr($currencyId);
+        $currencyRate = $arrGift['currencyRate'];
+        $message = $arrGift['message'];
+        $giftStr = <<<END
+  {$gameName}({$typeStr})-{$count}個 {$currency}\$ {$points}. {$message}
+END;
+      } else {
+        $giftStr = '紅包格式不正確';
+      }
+    } else {
+      $giftStr = '紅包解譯失敗';
+    }
+    return $giftStr . $argArrGiftStr;
+  }
+
+  private static function __getRevocationStr($argRevocationId) {
+
+    $revStr = '';
+    if (array_key_exists($argRevocationId, self::ARR_REVOCATION_ID)) {
+      $revStr = self::ARR_REVOCATION_ID[$argRevocationId];
+    } else {
+      $revStr = "不明的狀態({$argRevocationId})";
+    }
+    return $revStr;
+  }
+
+  //傳入撲克牌字串(如:3-15-31) 回傳牌色&點數字串
+  private static function __getPokerStr($argCardStr) {
+
+    $ret = '';
+    $r = explode('-', $argCardStr);
+    foreach ($r as $card_idx) {
+      $card_idx = intVal($card_idx);
+      if (strlen($ret)) {$ret .= ',';}
+      $ret .= self::ARR_POKERS[$card_idx];
+    }
+    return $ret;
+  }
+
+}

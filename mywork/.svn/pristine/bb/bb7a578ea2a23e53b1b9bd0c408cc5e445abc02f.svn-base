@@ -1,0 +1,258 @@
+<?php
+/*
+ * 託售單
+ */
+class CashflowWithdrawModel extends MemberModel {
+    protected $tableName = "cashflow_withdraw";
+    protected $tableId = "withdraw_id";
+    /*
+     * 取得會員本日託售資料
+     */
+    public function getMemberTodayWithdrawDataById($data,&$err=""){
+        if(empty($data['startTime']) && $data['startTime'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['endTime']) && $data['endTime'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                AND (`withdraw_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得託售單資料
+     */
+    public function getWithdrawData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        
+        $WHERESQL = "";
+        foreach ($data as $key => $value) {
+            if($key == "member_id"){ continue;}
+            $WHERESQL .= " AND `{$key}` = '{$value}'";
+        }
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'{$WHERESQL}
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    public function getWithdrawStatusStr($data){
+        $return = "";
+        switch($data){
+            case 0:
+                $return = "審核中";
+                break;
+            case 1:
+                $return = "處理中";
+                break;
+            case 2:
+                $return = "完成";
+                break;
+            case 3:
+                $return = "已取消";
+                break;
+        }
+        return $return;
+    }
+    /*
+     * 取得託售單資料筆數
+     */
+    public function getTotalNumberWithdrawData($data,&$err = ""){
+        
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `withdraw_createTime` > '{$data['withdraw_createTime']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 會員 託售單資料
+     */
+    public function getMemberWithdrawData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' 
+                    AND `withdraw_createTime` > '{$data['withdraw_createTime']}'
+                ORDER BY `withdraw_createTime` DESC
+                {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 新增 託售單
+     * 對電子錢包 提款
+     * 寫帳變紀錄
+     */
+    public function addWithdrawData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['withdraw_money']) && $data['withdraw_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//
+            return false;
+        }
+        
+        //開始事務處理
+        $this->startTrans();
+        //新增 託售單
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return false;
+        }
+        
+        $member_id = $data["member_id"];//會員ID
+        $agent_id = $data["agent_id"];//代理ID
+        $agentTree = $data['agent_tree'];
+        $agentRatio = $data['ratio_tree'];
+        $withdraw_money = $data["withdraw_money"];//託售金額
+        $nowTime = $data["withdraw_createTime"];//創建時間
+        $ip = $data["withdraw_memberIp"];
+        
+        //讀取 託售單 號
+        $insertId = $this->getLastInsertId();
+        if($insertId === false) {
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_05"));
+            return false;
+        }
+        $withdraw_id = $insertId;//託售單號
+        
+        //讀取電子錢包餘額
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $data = array(
+            "member_id" => $member_id
+        );
+        $return = $CommonMemberWallet->getWalletData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        
+        $walletLog_before = $return['wallet_money'];
+        $walletLog_after = $return['wallet_money'] - $withdraw_money;
+        if($walletLog_after < 0){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+            return false;
+        }
+        //對電子錢包 扣款
+        $data = array(
+            "member_id" => $member_id,
+            "wallet_money" => -$withdraw_money
+        );
+        $return = $CommonMemberWallet->setWalletDataByDeductMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_07"));
+            return false;
+        }
+        //讀取扣點之後金額
+        $data = array(
+            "member_id" => $member_id
+        );
+        $return = $CommonMemberWallet->getWalletData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return['wallet_money'] != $walletLog_after){
+            //扣款後金額不一致 回退
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_08"));
+            return false;
+        }
+        
+        //寫帳變紀錄
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        $data = array(
+            "member_id" => $member_id,
+            "agent_id" => $agent_id,
+            "agent_tree"=>$agentTree,
+            "ratio_tree"=>$agentRatio,
+            "walletLog_operating" => 2,
+            "walletLog_type" => 2,//帳變類型 1儲值表 2託售表
+            "walletLog_type_class"=>1,//type=2 1系統自動扣點OR上點 2後台操作上點下點 
+            "walletLog_item_id" => $withdraw_id,//託售單號
+            "walletLog_money" => -$withdraw_money,
+            "walletLog_before" => $walletLog_before,
+            "walletLog_after" => $walletLog_after,
+            "walletLog_main" => "託售單生成扣款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $this->commit();//事務處理成功
+        return true;
+    }
+}

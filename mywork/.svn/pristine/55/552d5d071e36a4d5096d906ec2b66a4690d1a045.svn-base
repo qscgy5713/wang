@@ -1,0 +1,133 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">儲值點數</h2>
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link active show" href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 確認儲值內容</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1 loading"></i>取得儲值代碼</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                  <div class="tab-pane active" id="pill-pr-1">
+	                  			 <form method="post" action="__APP__/PointRecharge/formPointRecharge" id="formPointRecharge">
+					                <fieldset >
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">儲值方式</label>
+					                    <select id="code" name="code" class="form-control">
+					                        <VOLIST name="showArray" id="vo">
+												<option value="{$vo.code}">{$vo.name}</option>
+											</VOLIST>
+					                    </select>
+					                  </div>
+					                  <div class="form-group">
+					                    <label for="disabledSelect">儲值點數</label>
+					                    <input type="text" id="disabledTextInput" name="money" class="form-control" placeholder="請輸入儲值點數">
+					                    <div class="warning-feedback" style="display: block;">單筆儲值最低1000點，超商最高為5000。</div>
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                  	<a target="_blank" class="a-color" href="#">超商儲值流程</a>
+					                  </div>
+					                  
+					                  <button type="button" id="am-s1-confirm" onclick="location.href='index.php';" class="btn btn-outline-danger loading">取消</button>
+						              <button type="button" name="btnok" id="am-s1-cancel" onclick="getPoint()" class="btn btn-outline-danger">取得代碼</button>
+						              <button type="button" id="am-s1-cancel" onclick="self.location.href='__APP__/MemberCenter/rechargeRecords'" class="btn btn-outline-danger loading">歷史儲值</button>
+						              
+						              <div class="separator-2"></div>
+							              
+							              <div class="form-group">
+							              	<h4 class="text-white">儲值注意事項:</h4>
+						              		<p>
+						              			1. 繳費完成後點數將自動派入您的電子錢包。<br>
+						              			2. 使用ATM儲值需使用線上託售所綁定的銀行帳戶進行儲值，如欲新增第二組儲值帳戶請洽線上客服。<br>
+						              			3. ATM儲值請勿使用無卡存款，若使用無卡存款一律視為詐騙帳號停權處分。<br>
+						              		</p>
+							              </div>
+					                </fieldset>
+					              </form>
+					              
+					              <div class="alert  alert-icon alert-danger" role="alert">
+					                <i class="fa fa-info-circle"></i>
+					                	 四星彩活動說明：<br>
+					                	 1、每充值一筆3000元以上金額並確認繳款後，系統即配發一組四位數獎號可供您與台彩四星彩獎號對獎。<br>
+										 2、中獎規則視當期四星彩二個號碼以上才算中獎！中獎點數會充值至您的電子錢包中。例如您的獎號為1123，本期四星獎號為2023，這樣即中二星。需中由個位數到千位數順序才算。若開獎號為1132 這樣則視為不中獎。<br>
+										 3、四星彩官方開獎時間為星期一至六每天晚上20:30開始開獎，實際開獎時間一切依台彩公佈為準。<br>
+										 4、未加入公司LINE: yes5168net 即尚失資格領取。<br>
+										 5、財神娛樂保有四星彩活動的最終解釋及更改權利。<br>
+								    <a href="http://www.taiwanlottery.com.tw/lotto/4D/history.aspx" target="_blank" class="btn btn-outline-danger">台灣彩卷4星彩<br>各期獎號查詢</a>
+					              </div>
+			                  </div>
+			                  
+			                  
+			                  <div class="tab-pane" id="pill-pr-2">
+			                    
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">尚未取得儲值代碼，<br>請至步驟1選擇後按下『取得代碼』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-1-a').click();" >返回</button>
+					                </div>
+					              
+			                  </div>
+			                  
+			                </div>
+		                		
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+
+<script>
+$(document).ready(function(){
+	//送出
+	$("button[name='btnok']").click(function(){
+		var money = $("input[name='money']").val();//儲值點數
+		var code = $('#code').val();
+		
+		
+		if(parseInt(money) < 1000){
+			 alert("單筆儲值最低1000點!");
+			 return;
+		}
+		
+		if(code == 'YP_Store' || code == 'NP_Store'){
+			if(parseInt(money) > 5000){
+				alert("超商儲值最高為5000點!");
+				 return;
+			}
+		}
+		
+		$("#formPointRecharge").submit();
+		 $("#loader-bg").show();
+		 $("#loader-text").show();
+		
+	 })
+	
+});
+/*
+function getPoint(){
+	var htmlav = window.open('', 'freeVideo');
+	$("#formPointRecharge").submit();
+}*/
+ </script>

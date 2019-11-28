@@ -1,0 +1,236 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div class="form-group row m-b-15">
+			<ol class="breadcrumb pull-left">
+				<VOLIST name="loginArray" id="vo">
+					<li class="breadcrumb-item">
+						<a onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')" href="#" >{$vo.agentAccount}</a>
+					</li>
+				</VOLIST>
+			</ol>
+		</div>
+		
+		<form class="form-inline m-b-20" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+        
+        
+			<div class="row form-inline" style="width:100%;">
+				<!--<div class="row col-md-12 col-xl-1 p-l-0 p-r-10 m-r-0 m-l-0 m-b-10"> 註冊時間:</div>-->
+				<div class="row col-lg-6 col-xl-5 p-r-0 p-l-0 m-r-0 m-l-0 m-b-10">
+                  
+                  <div class="col-2 p-r-5 p-l-5">
+                    <input class="btn btn-pink p-r-0 p-l-0 f-s-13 time-btn-rwd" style="width:100%;" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+                  </div>
+                 
+                  <div class="col-2 p-r-5 p-l-5">
+                    <input class="btn btn-pink p-r-0 p-l-0 f-s-13 time-btn-rwd" style="width:100%;" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+                  </div>
+                  
+                  <div class="col-2 p-r-5 p-l-5">
+                    <input class="btn btn-pink p-r-0 p-l-0 f-s-13 time-btn-rwd" style="width:100%;" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+                  </div>
+                  
+                  <div class="col-2 p-r-5 p-l-5">
+                    <input class="btn btn-pink p-r-0 p-l-0 f-s-13 time-btn-rwd" style="width:100%;" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+                  </div>
+                  
+                  <div class="col-2 p-r-5 p-l-5">
+                    <input class="btn btn-pink p-r-0 p-l-0 f-s-13 time-btn-rwd" style="width:100%;" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+                  </div>
+                  
+                  <div class="col-2 p-r-5 p-l-5">
+                    <input class="btn btn-pink p-r-0 p-l-0 f-s-13 time-btn-rwd" style="width:100%;" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+                  </div>
+                  
+				</div>
+                
+				<div class="row col-lg-6 col-xl-3 p-r-5 p-l-5 m-r-0 m-l-0 m-b-10">
+                  <div class="col-5 p-0">
+                    <input id="startTime" name="startTime" type="text" class="form-control div-style" style="width:100%;" value="{$startTime}"/>
+                  </div>
+                  <div class="col-2 text-center p-0"><label class="p-5">至</label></div>
+                  <div class="col-5 p-0">
+                    <input id="endTime"   name="endTime" type="text" class="form-control div-style" style="width:100%;" value="{$endTime}"/>
+                  </div>
+				</div>
+                  
+				<div class="row col-lg-12 col-xl-4 p-r-5 p-l-5 m-r-0 m-l-0">
+                  <div class="col-3 col-md-2 col-xl-4 text-center p-0 m-b-10"><label class="p-5">搜索帳號:</label></div>
+                  
+                  <div class="col-9 col-md-7 col-xl-6 p-r-0 p-l-0 m-b-10">
+                    <input class="form-control" style="width:100%;" type="text" name="searchMemberAccount" id="searchMemberAccount" placeholder="請填寫完整會員帳號" value='{$searchMemberAccount}' >
+                  </div>
+                  
+                  <div class="row col-12 col-md-3 col-xl-2 p-r-0 p-l-0 m-r-0 m-l-0">
+                    <div class="col-md-12 col-xl-10 p-l-0 p-r-0 m-b-10"><input class="btn btn-pink p-r-0 p-l-0 m-r-5 m-l-5" style="width:100%;" type='submit' value='查詢'></div>
+                    
+                    <input id="agentTree" type='hidden' name='agentTree' value='{$comeAgentTree}'>
+                    <input id="agentAccount" type='hidden' name='agentAccount' value='{$comeAgentAccount}'>
+
+                  </div>
+				</div>
+                
+
+			</div>
+
+		</form>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">代理帳務</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="agentTable" class="table table-striped m-b-0">
+							   <thead>
+							   	 <tr><td>合計</td><td colspan="4">{$agentTotalMoney}</td></tr>
+								<tr><td>總儲值</td><td colspan="4">{$agentTotalRechargeMoney}</td></tr>
+								<tr><td>總託售</td><td colspan="4">{$agentTotalWithdrawMoney}</td></tr>
+								<tr><td>筆數</td><td colspan="4">{$agentTotalNumber}</td></tr>
+								
+			                      <tr>
+				                      <th>序</th>
+				                      <th>代理</th>
+				                      <th>筆數</th>
+				                      <th>點數</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="agentArray" id="vo" empty="">
+										<tr>
+											<td>{$i}</td>
+											<td>
+												<input class="btn btn-pink f-s-13 p-5" type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+											</td>
+											<td>{$vo.sumNumber}</td>
+											<td>{$vo.sumMoney}</td>
+										</tr>
+									</VOLIST>
+										<tr><td id="agentShowMessage" colspan="4" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">{$comeAgentAccount} 會員帳務</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="memberTable" class="table table-striped m-b-0">
+							   <thead>
+							   	 <tr><td>合計</td><td colspan="4">{$memberTotalMoney}</td></tr>
+								<tr><td>總儲值</td><td colspan="4">{$memberTotalRechargeMoney}</td></tr>
+								<tr><td>總託售</td><td colspan="4">{$memberTotalWithdrawMoney}</td></tr>
+								<tr><td">筆數</td><td colspan="4">{$memberTotalNumber}</td></tr>
+								
+			                      <tr>
+				                      <th>序</th>
+				                      <th>會員帳號</th>
+				                      <th>筆數</th>
+				                      <th>點數</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="memberArray" id="vo" empty="">
+										<tr>
+											<td>{$i}</td>
+											<td>{$key}</td>
+											<td>{$vo.sumNumber}</td>
+											<td>{$vo.sumMoney}</td>
+										</tr>
+									</VOLIST>
+										<tr><td id="memberShowMessage" colspan="4" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/>
+
+<script>
+$(function(){
+	if("{$searchMemberErr}" == 'true'){
+		errorMsgShow("{$searchMemberErrMessage}");
+	}
+	
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+    if($("#agentTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#agentShowMessage").show()
+	}
+    if($("#memberTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#memberShowMessage").show()
+	}
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function formAgent(agentAccount,agentTree){
+	$("#agentAccount").val(agentAccount);
+	$("#agentTree").val(agentTree);
+	$("#formInquire").submit();
+}
+</script>
+	

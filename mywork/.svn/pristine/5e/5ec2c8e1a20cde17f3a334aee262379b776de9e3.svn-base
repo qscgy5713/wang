@@ -1,0 +1,592 @@
+<?php
+/*
+ * PA平博體育抓帳
+ * 抓帳限制: 
+ *     每次長度:
+ *     每次間隔:
+ *     最遠時間:
+ */
+class ScriptGameReportPaAction extends ScriptGameReportAction {
+
+    protected $arrAffectedDates = array();  //儲存注單內
+    
+    protected function _initialize() {
+        $this->gameCode = 'Pa';
+        $request = $this->getRequest();
+        if (isset($request['startTime']) && isset($request['endTime'])) {
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+        } else {  //沒給時的預設抓帳起始
+            $nowTs = time();
+            if ($nowTs < strtotime(date('Y-m-d').' 12:00:00')) {  //未超過當日12點: 前日到當日
+                $this->startTime = date('Y-m-d', $nowTs-60*60*24*1);
+                $this->endTime = date('Y-m-d', $nowTs);
+            } else {  //已超過當日12點: 當日到明日
+                $this->startTime = date('Y-m-d', $nowTs);
+                $this->endTime = date('Y-m-d', $nowTs+60*60*24*1);
+            }
+        }
+        //parent::setTime($this->startTime, $this->endTime);
+
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function index() {
+        if (!$this->power) {exit();}
+
+        $GameReportData = D("GameReportData");
+        $GameModel = D("Game".$this->gameCode);
+        if (!method_exists($GameModel,'getGameRecord')) {
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'無此代號(Err000)</span>');
+            $this->display();
+            exit();
+        }
+        
+        $this->getPaGameReportData($err);//抓前一天的
+        //if ($this->startTime != date('Y-m-d', time()) && $this->endTime != date('Y-m-d', strtotime('+1 days'))) {
+        //    $this->setTime(date('Y-m-d', strtotime($this->endTime)),date('Y-m-d', strtotime('+1 days',strtotime($this->endTime))));//修改時間
+        //    $this->getPaGameReportData($err);
+        //}
+
+        //設定抓總結的起始時間
+        $this->reportStartTime = $this->getBetDate($this->startTime).' 00:00:00';
+        $this->reportEndTime = $this->getBetDate($this->endTime).' 23:59:59';
+
+        $return = $this->getReportApi();
+        if ($return === false) {
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err002) Err=>'.$this->err.'</span>');
+            $this->display();
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        $this->assign("detailNumber",count($this->allDetailArray));//更新總注單
+        $this->assign("allDetailArray",$this->allDetailArray);
+        
+        $this->assign("reportNumber",count($this->allReportArray));//更新總統整
+        $this->assign("allReportArray",$this->allReportArray);
+        
+        $this->assign("status","<span style='color:Blue;'>".$this->gameCode.$this->success.'</span>');
+        $this->display();
+    }
+    
+    /*
+     * 抓帳
+     */
+    protected function getPaGameReportData(&$err='') {
+        $this->timeStr .= ((!empty($this->timeStr))? '<BR>' : '').$this->startTime.' ~ '.$this->endTime;
+        
+        $GameModel = D("Game".$this->gameCode);
+
+        $round = 1;
+        $arrRawBets = array();
+        $isContinue = false;
+        $eachDate = $this->startTime;
+
+        do {
+            $getBetsBeginDatetime = date('Y-m-d 00:00:00',strtotime($eachDate));
+            $getBetsEndDatetime = date('Y-m-d 23:59:59',strtotime($eachDate));
+
+            $arrParams = array(
+                'begin_datetime' => $getBetsBeginDatetime,
+                'end_datetime' => $getBetsEndDatetime,
+            );
+            $arrBets = $GameModel->getGameRecord($arrParams,$err);
+            if ($arrBets === false) {
+                //紀錄錯誤到Db
+                $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err001) Err=>'.$err.'</span>');
+                $this->display();
+                exit();
+            }
+
+            if (sizeof($arrBets)) {
+                $arrRawBets = array_merge($arrRawBets, $arrBets);
+            }
+
+            $eachDate = date('Y-m-d',strtotime($eachDate)+60*60*24*1);
+            ++$round;
+        } while (strtotime($eachDate) <= strtotime($this->endTime));
+
+        //self::_preprocessBets($arrRawBets);  //處理注單明細格式
+
+        foreach ($arrRawBets as $bk => $bv) {
+            //把遊戲帳號 加入 搜尋會員帳號陣列 Start
+            if (!in_array($bv['userCode'], $this->allMemberGameAccount)) {
+                array_push($this->allMemberGameAccount, $bv['userCode']);
+            }
+            //把遊戲帳號 加入 搜尋會員帳號陣列 End
+            
+            $arrMbAndSb = self::_splitSingleBet($bv);
+            $data = array(
+                "detail_id" => $bv['wagerId'],
+                "detail_gameAccount" => $bv['userCode'],
+                "detail_createTime" => strtotime($bv['wagerDateFm']),
+                "detail_bettingMoney" => $bv['stake'],
+                "detail_surplus" => $bv['winLoss'],
+                "detail_effective" => $bv['turnover'],
+                "detail_needBackWater"=> 0,
+                "detail_isBackWater" => 0,
+                "detail_dataInJson" => $arrMbAndSb['dataInJson'],  //json_encode($dataInJson, JSON_UNESCAPED_UNICODE),
+                "detail_subbetInJson" => $arrMbAndSb['subbetInJson'],  //json_encode($arrSubbets, JSON_UNESCAPED_UNICODE),
+            );
+            $eventDateFm = date('Y-m-d', strtotime($bv['eventDateFm']));  //賽事日期
+            if ($bv['settleDateFm']) {  //已結算
+                $settleDateFm = date('Y-m-d', strtotime($bv['settleDateFm']));  //賽果日期
+                $orderDate = $settleDateFm;
+                //今天已結算且新歸帳日跟舊歸帳日不同-->原本歸帳日要刪除
+                if (($settleDateFm==date('Y-m-d')&&($eventDateFm!=$settleDateFm)) {
+                    $this->arrAffectedDates[$eventDateFm] = strtotime("{$eventDateFm} 12:00:00");
+                    //$this->arrAffectedDates[$settleDateFm] = strtotime("{$settleDateFm} 12:00:00");
+                }
+            } else {
+                $orderDate = $eventDateFm;
+            }
+
+            //foreach ($this->arrAffectedDates as $ak => $av) {
+            $delOrderDateArray = $this->arrAffectedDates;
+            //}
+
+            $data["detail_orderDate"] = strtotime($orderDate.' 12:00:00');
+            array_push($this->allDetailArray, $data);
+        }
+    }
+
+    //-----------------------------------------------
+    //找出一個時間的歸帳日
+    public static function getBetDate($argTime) {
+        if (date('Y-m-d',strtotime($argTime))==$argTime) {
+            return $argTime;
+        }
+        $splitTimeS = '12:00:00';  //區分不同歸帳日的時間點
+        $orderDate = null;
+        if (is_int($argTime)&&($argTime >= strtotime('1970-01-01 00:00:00'))) {  //傳入timestamp
+            $dateTime = $argTime;
+        } else {  //傳入日期時間字串
+            $dateTime = strtotime($argTime);
+        }
+        $splitDatetime = date("Y-m-d {$splitTimeS}", $dateTime);
+        $splitTime = strtotime($splitDatetime);
+
+        if ($dateTime >= $splitTime) {  //若已經跨越區分不同歸帳日的時間點-->當日
+            $orderDate = date("Y-m-d", $splitTime);
+        } else {  //未跨越-->前一日
+            $orderDate = date("Y-m-d", $splitTime-60*60*24*1);
+        }
+        //echo "getBetDate({$argTime})={$orderDate}<br/>";
+        return $orderDate;
+    }  //--function getBetDate
+
+    //-----------------------------------------------
+    //把原始API抓回的注單格式處理轉換為我們的格式
+    protected function _preprocessBets(&$argBets) {
+        if ($argBets&&is_array($argBets)) {
+            foreach ($argBets as &$bet) {
+                //...
+            }
+        }
+    }
+
+    //-----------------------------------------------
+    //將單一筆注單(含子注單或不含)轉為注單、子注單結構方便寫入，然後傳回
+    protected function _splitSingleBet($argBet) {
+
+        //將單一筆注單(含子注單或不含)轉為注單、子注單結構方便寫入，然後傳回
+        /*
+        *************************************** ex.不含子注單:
+        *** (1) without Parlay 没有过关
+        [
+            {
+                "wagerId": 6719824,
+                "eventName": "Brisbane Olympic United SSC-vs-Moreton Bay United FC",
+                "parentEventName": null,
+                "headToHead": null,
+                "wagerDateFm": "2017-04-13 05:13:04",
+                "eventDateFm": "2017-04-13",
+                "settleDateFm": "2017-04-13",
+                "status": "SETTLED",
+                "homeTeam": "Brisbane Olympic United SSC",
+                "awayTeam": "Moreton Bay United FC",
+                "selection": "Moreton Bay United FC",
+                "handicap": 0.75,
+                "odds": 1.99,
+                "oddsFormat": 1,
+                "betType": 2,
+                "league": "Australia NPL - Queensland",
+                "stake": 7,
+                "sport": "Soccer",
+                "currencyCode": "CNY",
+                "inplayScore": "0-1", //the live event's current score
+                "inPlay": true, //indicate that the wager is placed on In Play event
+                "homePitcher": null,
+                "awayPitcher": null,
+                "homePitcherName": null,
+                "awayPitcherName": null,
+                "period": 0,
+                "cancellationStatus": null,
+                "parlaySelections": [],
+                "category": null,
+                "toWin": 6.93, //is the amount that player will win if he wins the best
+                "toRisk": 7, //is the amount that player will lose if he loses the bet
+                "product": "SB",
+                "parlayMixOdds": 1.99,
+                "competitors": [],
+                "userCode": "Q23100000D",
+                "loginId": "Q231.0D",
+                "winLoss": -3.5,
+                "turnover": 3.5,
+                "commission": 0,
+                "scores": [
+                    {
+                        "period": 1,
+                        "score": "0-1"
+                    },
+                    {
+                        "period": 0,
+                        "score": "2-2"
+                    }
+                ],
+                "result": "LOSE"
+            }
+        ]
+
+        ------------------------------------------------------------
+        *** (3) with Outright 有优胜冠军
+        [
+            {
+                "wagerId": 6862959,
+                "eventName": "Both Teams To Score 1st Half",
+                "parentEventName": "Middlesbrough-vs-Arsenal",
+                "headToHead": null,
+                "wagerDateFm": "2017-04-17 07:15:42",
+                "eventDateFm": "2017-04-17",
+                "settleDateFm": "2017-04-17",
+                "status": "SETTLED",
+                "homeTeam": "No",
+                "awayTeam": "Both Teams To Score 1st Half",
+                "selection": "No",
+                "handicap": 0,
+                "odds": 1.199,
+                "oddsFormat": 1,
+                "betType": 99,
+                "league": "England - Premier League",
+                "stake": 10,
+                "sport": "Soccer",
+                "currencyCode": "CNY",
+                "inplayScore": "", //the live event's current score
+                "inPlay": false, //indicate that the wager is placed on In Play event
+                "homePitcher": null,
+                "awayPitcher": null,
+                "homePitcherName": null,
+                "awayPitcherName": null,
+                "period": 0,
+                "cancellationStatus": null,
+                "parlaySelections": [],
+                "category": "Both Teams To Score ",
+                "toWin": 1.99, //is the amount that player will win if he wins the best
+                "toRisk": 10, //is the amount that player will lose if he loses the best
+                "product": "SB",
+                "parlayMixOdds": 1.199,
+                "competitors": [],
+                "userCode": "Q23100000D",
+                "loginId": "Q231.0D",
+                "winLoss": 1.99,
+                "commission": 0.002,
+                "scores": [],
+                "turnover": 10,
+                "result": "WIN"
+            }
+        ]
+
+        *************************************** ex.含子注單:
+        *** (2) with Parlay 有过关
+        [
+            {
+                "wagerId": 6719844,
+                "eventName": null,
+                "parentEventName": null,
+                "headToHead": null,
+                "wagerDateFm": "2017-04-13 05:19:37",
+                "eventDateFm": "2017-04-13",
+                "settleDateFm": "2017-04-13",
+                "status": "SETTLED",
+                "homeTeam": null,
+                "awayTeam": null,
+                "selection": "",
+                "handicap": 0,
+                "odds": 5.597,
+                "oddsFormat": 1,
+                "betType": 6,
+                "league": null,
+                "stake": 7,
+                "sport": null,
+                "currencyCode": "CNY",
+                "inplayScore": "0", //the live event's current score
+                "inPlay": false, //indicate that the wager is placed on In Play event
+                "homePitcher": null,
+                "awayPitcher": null,
+                "homePitcherName": null,
+                "awayPitcherName": null,
+                "period": 0,
+                "cancellationStatus": null,
+                "category": null,
+                "parlaySelections": [
+                    {
+                        "selection": "Banyule City",
+                        "eventDateFm": "2017-04-13",
+                        "scores": [
+                            {
+                                "period": 1,
+                                "score": "1-1"
+                            },
+                            {
+                                "period": 0,
+                                "score": "1-1"
+                            }
+                        ],
+                        "sport": "Soccer",
+                        "league": "Australia - FFA Cup Qualifiers",
+                        "eventName": "Banyule City –vs- Melbourne Knights",
+                        "homeTeam": "Banyule City",
+                        "awayTeam": "Melbourne Knights",
+                        "betType": 2,
+                        "wagerId": 6719844,
+                        "inplayScore": null, //the live event's current score
+                        "inPlay": false, //indicate that the wager is placed on In Play event
+                        "odds": 1.952,
+                        "handicap": 2.25,
+                        "homePitcher": null,
+                        "awayPitcher": null,
+                        "homePitcherName": null,
+                        "awayPitcherName": null,
+                        "period": 0,
+                        "legStatus": "WON"
+                    },
+                    {
+                        "selection": "Brisbane Wolves",
+                        "eventDateFm": "2017-04-13",
+                        "scores": [
+                            {
+                                "period": 1,
+                                "score": "0-1"
+                            },
+                            {
+                                "period": 0,
+                                "score": "0-4"
+                            }
+                        ],
+                        "sport": "Soccer",
+                        "league": "Australia - FFA Cup Qualifiers",
+                        "eventName": "Brisbane Wolves –vs- Peninsula Power",
+                        "homeTeam": "Brisbane Wolves",
+                        "awayTeam": "Peninsula Power",
+                        "betType": 2,
+                        "wagerId": 6719844,
+                        "inplayScore": null, //the live event's current score
+                        "inPlay": false, //indicate that the wager is placed on In Play event
+                        "odds": 1.769,
+                        "handicap": 1.25,
+                        "homePitcher": null,
+                        "awayPitcher": null,
+                        "homePitcherName": null,
+                        "awayPitcherName": null,
+                        "period": 0,
+                        "legStatus": "LOSE"
+                    },
+                    {
+                        "selection": "AZS UJ Krakow (women)",
+                        "eventDateFm": "2017-04-13",
+                        "scores": [
+                            {
+                                "period": 0,
+                                "score": "4-1"
+                            }
+                        ],
+                        "sport": "Soccer",
+                        "league": "Poland - Ekstraliga Women",
+                        "eventName": "Gks Gornik Leczna (W) –vs- AZS UJ Krakow (women)",
+                        "homeTeam": "Gks Gornik Leczna (W)",
+                        "awayTeam": "AZS UJ Krakow (women)",
+                        "betType": 2,
+                        "wagerId": 6719844,
+                        "inplayScore": null, //the live event's current score
+                        "inPlay": false, //indicate that the wager is placed on In Play event
+                        "odds": 1.621,
+                        "handicap": 4.5,
+                        "homePitcher": null,
+                        "awayPitcher": null,
+                        "homePitcherName": null,
+                        "awayPitcherName": null,
+                        "period": 0,
+                        "legStatus": "WON"
+                    }
+                ],
+                "toWin": 32.179, //is the amount that player will win if he wins the best
+                "toRisk": 7, //is the amount that player will lose if he loses the best
+                "product": "SB",
+                "parlayMixOdds": 5.597,
+                "competitors": [],
+                "userCode": "Q23100000D",
+                "loginId": "Q231.0D",
+                "winLoss": -7,
+                "commission": 0,
+                "scores": [],
+                "turnover": 7,
+                "result": "LOSE"
+            }
+        ]
+        */
+        $arrMainBet = array();
+        $arrSubbets = array();
+
+        $wagerId = $argBet["wagerId"];
+        if (isset($argBet['parlaySelections'])&&is_array($argBet['parlaySelections'])&&sizeof($argBet['parlaySelections'])) {   //含子注單
+            $parlaySelections = $argBet['parlaySelections'];    //子注單們
+
+            //Dbgr::preout($arrMatters);
+            $idxMatter = 0;
+
+            $arrMainBet = array(
+                'wagerId' => $argBet['wagerId'],
+                'eventName' => $argBet['eventName'],
+                'parentEventName' => $argBet['parentEventName'],
+                'headToHead' => $argBet['headToHead'],
+                'wagerDateFm' => $argBet['wagerDateFm'],
+                'eventDateFm' => $argBet['eventDateFm'],
+                'settleDateFm' => $argBet['settleDateFm'],
+                'status' => $argBet['status'],
+                'homeTeam' => $argBet['homeTeam'],
+                'awayTeam' => $argBet['awayTeam'],
+                'selection' => $argBet['selection'],
+                'handicap' => $argBet['handicap'],
+                'odds' => $argBet['odds'],
+                'oddsFormat' => $argBet['oddsFormat'],
+                'betType' => $argBet['betType'],
+                'league' => $argBet['league'],
+                'stake' => $argBet['stake'],
+                'sport' => $argBet['sport'],
+                'currencyCode' => $argBet['currencyCode'],
+                'inplayScore' => $argBet['inplayScore'],
+                'inPlay' => $argBet['inPlay'],
+                'homePitcherName' => $argBet['homePitcherName'],
+                'awayPitcherName' => $argBet['awayPitcherName'],
+                'period' => $argBet['period'],
+                'cancellationStatus' => $argBet['cancellationStatus'],
+                'category' => $argBet['category'],
+                'toWin' => $argBet['toWin'],
+                'toRisk' => $argBet['toRisk'],
+                'product' => $argBet['product'],
+                'parlayMixOdds' => $argBet['parlayMixOdds'],
+                'competitors' => $argBet['competitors'],
+                'userCode' => $argBet['userCode'],
+                'winLoss' => $argBet['winLoss'],
+                'turnover' => $argBet['turnover'],
+                //'commission' => $argBet['commission'],
+                'scores' => $argBet['scores'],
+                'result' => $argBet['result'],
+            );
+
+            foreach ($parlaySelections as $sb) {
+                //$sbMatter     = $arrMatters[$idxMatter+1];
+                //$idxMatter += 2;
+
+                $subbet = array(
+                    'wagerId' => $sb['wagerId'],
+                    'selection' => $sb['selection'],
+                    'eventDateFm' => date(GamePaModel::PA_REPORT_DATE_FORMAT, strtotime($sb['eventDateFm'])+(60*60*GamePaModel::PA_UTC_OFFSET)-(60*60*GamePaModel::PA_DATETIME_OFFSET)),  //-4時區轉為+8
+                    'scores' => $sb['scores'],
+                    'sport' => $sb['sport'],
+                    'league' => $sb['league'],
+                    'eventName' => $sb['eventName'],
+                    'homeTeam' => $sb['homeTeam'],
+                    'awayTeam' => $sb['awayTeam'],
+                    'betType' => $sb['betType'],
+                    'inplayScore' => $sb['inplayScore'],
+                    'inPlay' => $sb['inPlay'],
+                    'homePitcherName' => $sb['homePitcherName'],
+                    'awayPitcherName' => $sb['awayPitcherName'],
+                    'odds' => $sb['odds'],
+                    'handicap' => $sb['handicap'],
+                    'legStatus' => $sb['legStatus'],
+                );
+                //$subbetId = createSubbetId($subbet);
+                //$subbet['subbet_id'] = $subbetId;
+                $arrSubbets[] = $subbet;
+            }
+        } else {    //不含子注單
+
+            $arrMainBet = array(
+                'wagerId' => $argBet['wagerId'],
+                'eventName' => $argBet['eventName'],
+                'parentEventName' => $argBet['parentEventName'],
+                'headToHead' => $argBet['headToHead'],
+                'wagerDateFm' => $argBet['wagerDateFm'],
+                'eventDateFm' => $argBet['eventDateFm'],
+                'settleDateFm' => $argBet['settleDateFm'],
+                'status' => $argBet['status'],
+                'homeTeam' => $argBet['homeTeam'],
+                'awayTeam' => $argBet['awayTeam'],
+                'selection' => $argBet['selection'],
+                'handicap' => $argBet['handicap'],
+                'odds' => $argBet['odds'],
+                'oddsFormat' => $argBet['oddsFormat'],
+                'betType' => $argBet['betType'],
+                'league' => $argBet['league'],
+                'stake' => $argBet['stake'],
+                'sport' => $argBet['sport'],
+                'currencyCode' => $argBet['currencyCode'],
+                'inplayScore' => $argBet['inplayScore'],
+                'inPlay' => $argBet['inPlay'],
+                'homePitcherName' => $argBet['homePitcherName'],
+                'awayPitcherName' => $argBet['awayPitcherName'],
+                'period' => $argBet['period'],
+                'cancellationStatus' => $argBet['cancellationStatus'],
+                'category' => $argBet['category'],
+                'toWin' => $argBet['toWin'],
+                'toRisk' => $argBet['toRisk'],
+                'product' => $argBet['product'],
+                'parlayMixOdds' => $argBet['parlayMixOdds'],
+                'competitors' => $argBet['competitors'],
+                'userCode' => $argBet['userCode'],
+                'winLoss' => $argBet['winLoss'],
+                'turnover' => $argBet['turnover'],
+                //'commission' => $argBet['commission'],
+                'scores' => $argBet['scores'],
+                'result' => $argBet['result'],
+            );
+
+            $subbet = array(
+                'wagerId' => $argBet['wagerId'],
+                'selection' => $argBet['selection'],
+                'eventDateFm' => $argBet['eventDateFm'],
+                'scores' => $argBet['scores'],
+                'sport' => $argBet['sport'],
+                'league' => $argBet['league'],
+                'eventName' => $argBet['eventName'],
+                'homeTeam' => $argBet['homeTeam'],
+                'awayTeam' => $argBet['awayTeam'],
+                'betType' => $argBet['betType'],
+                'inplayScore' => $argBet['inplayScore'],
+                'inPlay' => $argBet['inPlay'],
+                'homePitcherName' => $argBet['homePitcherName'],
+                'awayPitcherName' => $argBet['awayPitcherName'],
+                'odds' => $argBet['odds'],
+                'handicap' => $argBet['handicap'],
+                'legStatus' => $argBet['result'],  //$argBet['legStatus'],
+            );
+            //$subbetId = createSubbetId($subbet);
+            //$subbet['subbet_id'] = $subbetId;
+            $arrSubbets[] = $subbet;
+        }
+
+        //$arrMainBet['subbetInJson'] = $arrSubbets;
+
+        return array(
+            'dataInJson' => json_encode($arrMainBet, JSON_UNESCAPED_UNICODE),
+            'subbetInJson' => json_encode($arrSubbets, JSON_UNESCAPED_UNICODE),
+        );
+
+    }  //--function _splitSingleBet
+}

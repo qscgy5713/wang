@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ProcessRecharge首頁</title>
+</head>
+
+<body>
+<div id="ind" ></div>
+<span> Test ProcessRecharge Index  </span>
+<BR>
+<input type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<input id="startTime" name="startTime" type="text" value="{$startTime}"/> 至
+		<input id="endTime"   name="endTime"   type="text" value="{$endTime}"/>
+		<select name="selectEventStarus">
+			<if condition="$selectEventStarus eq '0'">
+				<option selected value="0">未處理</option>
+			<else />
+				<option value="0">未處理</option>
+			</if>
+			<if condition="$selectEventStarus eq 1">
+				<option selected value="1">已取消</option>
+			<else />
+				<option value="1">已取消</option>
+			</if>
+			<if condition="$selectEventStarus eq 2">
+				<option selected value="2">已贈點</option>
+			<else />
+				<option value="2">已贈點</option>
+			</if>
+			<if condition="$selectEventStarus eq 'all'">
+				<option selected value="all">全顯示</option>
+			<else />
+				<option value="all">全顯示</option>
+			</if>
+		</select>
+		<input type='submit' value='查詢'>
+		<if condition="$noRenew eq 1">
+			<input type="checkbox" checked name="noRenew" />不重整
+		<else />
+			<input type="checkbox" name="noRenew" />不重整
+		</if>
+		
+	</form>
+	
+	<table>
+		<tr>
+			<th>序</th><th>單號</th><th>會員帳號</th><th>狀態</th><th>總儲值</th><th>總託售</th>
+			<th>建立時間</th><th>申請IP</th><th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+					<td>{$key+1}</td>
+					<td>
+						{$vo.id}
+					</td>
+					<td>{$vo.memberAccount}</td>
+					<td>{$vo.status}</td>
+					<td>{$vo.totalRecharge}</td>
+					<td>{$vo.totalWithdraw}</td>
+					<td>{$vo.createTime}</td>
+					<td>{$vo.ip}</td>
+					<td>
+						<if condition="$vo.status eq '未處理'">
+							<form method="POST" action='__APP__/{$Think.MODULE_NAME}/addGiveMoney'>
+								<input type="hidden" name="storegiftId" value="{$vo.id}">
+								<input type="submit" value="自動完成">
+							</form>
+						<else/>
+							上點金額:{$vo.money}
+							上點帳號:{$vo.adminAccount}
+						</if>
+					</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>
+<include file="Common:footer"/> 
+<script type="text/javascript">
+/*
+$(document).ready(function(){
+	
+});*/
+var t,n,count = 30;
+$(function(){
+    function showAuto(){
+        $('#ind').html(--count);
+        if(count == 0){
+        	clearInterval(t);
+        	var noRenew=$('input:checkbox[name="noRenew"]:checked').val();
+        	if(noRenew != "on"){
+        		$("#formInquire").submit();
+        	}
+        }
+    }
+    t = setInterval(showAuto, 1000); 
+})
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+</script>

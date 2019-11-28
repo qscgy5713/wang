@@ -1,0 +1,121 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-20">
+					<h2 class="mb-20 mt-20">電子遊戲 激情放送</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>	
+				</header>
+				
+				<!-- 返水級別 -->
+				<if condition='$isLogin eq "true"'>
+					<h4 class="text-center mb-0">本月級別&nbsp;&nbsp;<img class="medal-img lastLevel-img" src="__CSS__/images/medal-{$lastLevel}.png">,上月累積投注量:{$lastEffective}</h4>
+					<div class="row mb-10">
+						<div class="col-2 m-auto ml-0 medal-div"><img class="medal-img" src="__CSS__/images/medal-{$startLevel}.png"></div>
+						<div class="col-2 m-auto mr-0 text-right medal-div"><img class="medal-img" src="__CSS__/images/medal-{$endLevel}.png"></div>
+						<div class="col-12 medal-div2">
+							<div class="progress">
+								<div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: {$percentageEffective}%">
+								</div>
+							</div>
+						</div>
+						<div class="col-1 col-xl-2 medal-div startEffective-style"><span class="fs-25 fw-800 medal-span">{$startEffective}</span></div>
+						<div class="col-8 col-xl-5 m-auto medal-div2 text-center"><span class="fs-18 medal-span2">您 {$thisMonth} 月份累積有效的投注量：{$thisEffective}</span></div>
+						<div class="col-3 col-xl-2 text-right medal-div endEffective-style"><span class="fs-25 fw-800 medal-span">{$endEffective}</span></div>
+					</div>
+					<div class="row mb-10">
+						<div class="col-2 m-auto mr-0 medal-div"><img class="medal-img2" src="__CSS__/images/medal-1.png"></div>
+						<div class="col-2 medal-div"><img class="medal-img2" src="__CSS__/images/medal-2.png"></div>
+						<div class="col-2 medal-div"><img class="medal-img2" src="__CSS__/images/medal-3.png"></div>
+						<div class="col-2 m-auto ml-0 medal-div"><img class="medal-img2" src="__CSS__/images/medal-4.png"></div>
+					</div>
+				</if>
+				
+				
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30"><!-- DEFAULT -->
+							<strong class="text-warning">活動規則：</strong><BR>
+							<strong>電子遊戲下注立即返點最高返點千分之七。</strong><BR><BR>
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle" style="background-color: #0000000f;">
+									<thead>
+										<tr>
+											<th>投注量</th>
+											<th>基本</th>
+											<th>350萬/月</th>
+											<th>1500萬/月</th>
+											<th>通過邀約</th>
+											
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>級別</td>
+											<td>尊榮</td>
+											<td>白金</td>
+											<td>鑽石</td>
+											<td>尊貴VIP</td>
+										</tr>
+										<tr>
+											<td>電子返水</td>
+											<td>0.3％</td>
+											<td>0.5％</td>
+											<td>0.6％</td>
+											<td>0.7％</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							
+							<br>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;" class="">當月累計投注量計算時間為當月1日至當月31日，為一個月計算。</li>
+		                        <li style="list-style:decimal;" class="">電子館有效投注量系統皆分開計算，系統會於每月初審核，若有一館達到升級門檻，系統將直接為您提升等級並發出訊息通知。</li>
+		                        <li style="list-style:decimal;" class="">將於每月初審核會員升、降級資格，如白金會員月投注量未達到350萬，若鑽石級會員月投注量未達到1500萬，將取消鑽石會員資格變成白金會員（依此類推）。</li>
+		                        <li style="list-style:decimal;" class="">小牛捕魚不適用於此優惠。</li>
+		                    </ul>
+		                    <BR>
+							<strong class="text-warning">注意事項：</strong>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">本優惠活動僅限同一帳戶/家庭/電話號碼/儲值地點/銀行帳戶/相似或同一IP位置/共享電腦/網路環境。</li>
+		                        <li style="list-style:decimal;" >本娛樂城有權單方面決定會員是否利用點數進行異常或無風險投注對會員行為作出嚴格監控，發現有任何違背、欺騙或利用規則與條款進行非法獲利的會員，本娛樂城有權終止會員登入，跟暫停使用本網站，和沒收彩金及盈利的權利無須通知。</li>
+		                        <li style="list-style:decimal;">為避免對文字的理解差異或活動如有任何異動，本娛樂城有權在任何時間，修改、暫停或取消優惠活動。並保有活動最終解釋及更改權利。</li>
+		                    </ul>
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	if("{$isMobile}" == "1"){
+		if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		}else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		}
+		
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

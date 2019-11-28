@@ -1,0 +1,101 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+		
+		<button type="button" class="btn btn-info m-b-10" onclick="self.location.href='__APP__/{$Think.MODULE_NAME}/index'">回上一頁</button>
+		<form class="form-inline m-b-10" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<input type="hidden" id="pageNumber" name="pageNumber" value="">
+		</form>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+			<!-- begin panel -->
+			<div class="panel panel-inverse">
+				<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+					<div class="panel-heading-btn">
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+					</div>
+					<h4 class="panel-title">四星彩獎</h4>
+				</div>
+
+				<div class="panel-body">
+					<div class="table-responsive">
+						<table id="table1" class="table table-striped m-b-0">
+							<thead>
+								<tr>
+									<th>序</th>
+									<th>開獎時間</th>
+									<th>建立時間</th>
+									<th>開獎號碼</th>
+								</tr>
+							</thead>
+							<tbody>
+								<VOLIST name="showArray" id="vo" empty="$showEmpty">
+		                        	<tr>
+			                        	<td>{$key+1}</td>
+										<td>{$vo.lotterTime}</td>
+										<td>{$vo.createTime}</td>
+										<td>{$vo.lotteryNumber}</td>
+									</tr>
+		                        </VOLIST>
+							</tbody>
+						</table>
+					</div>
+					<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="main col-lg-12">
+		                  		<nav aria-label="Page navigation">
+					                <ul class="pagination justify-content-center">
+	
+					                <if condition="$pageNumber-1 neq 0">
+					                  <li id="" class="page-item"><a class="page-link" href="#" onClick="goPage('1')">第一頁</a></li>
+					                  <li class="page-item">
+					                    <a class="page-link" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+					                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+					                      <span class="sr-only">Previous</span>
+					                    </a>
+					                  </li>
+					                 </if>
+	
+					                  <volist name="pageArray" id="vo" >
+		                                <IF condition="$pageNumber eq $vo" >
+		                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+		                                <else/>
+		                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+		                                </IF>
+		                              </volist>
+	
+					                  <if condition="$pageNumber+1 elt $totalPage ">
+						                  <li class="page-item">
+						                    <a class="page-link" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+						                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+						                      <span class="sr-only">Next</span>
+						                    </a>
+						                  </li>
+						                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$totalPage}')">最末頁</a></li>
+					                  </if>
+					                </ul>
+					            </nav>
+		                  </div>
+	                  </div>
+	               </if>
+				</div>
+			</div>
+		</div>
+		</div>
+	</div>
+
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

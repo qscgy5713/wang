@@ -1,0 +1,74 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:menuRwd"/>
+			<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up" style="margin-top: 54px;">
+				
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/baccaratWinningPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/baccaratWinningPageRWD.png">
+					</a>
+				</div>
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/backWaterElectronicPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/backWaterElectronicPageRWD.jpg">
+					</a>
+					
+				</div>
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/backWaterRealityPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/backWaterRealityPageRWD.jpg">
+					</a>
+					
+				</div>
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/backWaterSportsPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/backWaterSportsPageRWD.jpg">
+					</a>
+					
+				</div>
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/lottoFourPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/lottoFourPageRWD.png">
+					</a>
+					
+				</div>
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/reversalPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/reversalPageRWD.jpg">
+					</a>
+					
+				</div>
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/storeGiftPage" >
+						<img class="" style="width: 100%;" src="__CSS__/images/promotions/storeGiftPageRWD.jpg">
+					</a>
+					
+				</div>
+				
+				
+			</section>
+		<include file="Common:footer"/>
+<script>
+$(".gameNewHtml").click(function(){
+	var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+});
+//RWD調整畫面高度
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	
+	//var md_footer_h = jQuery('#md-footer').height();
+	//alert(h);
+	//alert(banner_h);
+	if(isLogin == "true"){
+		jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+	}else{
+		jQuery("#md-login-bg").css("min-height",h-home_page_rwd_h+"px");
+	}
+		   
+}
+</script>

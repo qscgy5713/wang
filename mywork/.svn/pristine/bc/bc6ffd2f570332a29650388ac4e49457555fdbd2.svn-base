@@ -1,0 +1,34 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameBngMenuModel extends MemberModel {
+    /*
+     * 取得 遊戲菜單資料 資料
+     */
+    public function getGameBngMenuData(){
+        $sql = "SELECT
+                    game_id, title_zhtw, title_enus, title_name, game_type, is_html5, is_mobile
+                FROM `game_bng_menu`
+                WHERE
+                    ((is_html5=1) OR (is_mobile=1))
+                		AND is_active=1
+                	ORDER BY
+                		game_id";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得遊戲名稱
+     */
+    public function getGameChNameDataById($data){
+        
+        $sql = "SELECT `title_name`
+                FROM `{$this->tableName}`
+                WHERE `game_id` = '{$data['game_id']}'";
+        $return = $this->cacheQuery($sql,600);
+        $gameName = json_decode($return[0]['title_name'], true);
+        $gameName = $gameName[$_COOKIE['think_language']];
+        return $gameName;
+    }
+}

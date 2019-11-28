@@ -1,0 +1,68 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+<include file="Common:MemberCenterMenu"/>
+
+	 		<div class="row">
+	 			 <div class="col-lg-4 col-md-6 mr-auto ml-auto col-sm-8">
+                    <h4 class="mb30"> Stripped Table</h4>  
+                    <table class="table table-bordered">
+                    <!-- <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>First Name</th>
+                            </tr>
+                        </thead> -->
+                        
+                        <tbody>
+                            <tr>
+                                <th scope="row">會員帳號</th>
+                                <td>{$memberAccount}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">電子錢包</th>
+                                <td>{$memberWallet}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">會員電話</th>
+                                <td>{$memberPhone}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+	 		</div>
+	 		
+	 		<div class="row">
+	 			<div class="col-lg-4 col-md-6 mr-auto ml-auto col-sm-8 ">
+	 				<div id="popup-register" class="popup-content-area white-popup">
+                        <h4>變更會員密碼</h4><hr>
+                        <form method="post" action='__APP__/MemberCenter/formChangePassword'>
+                           <div class="form-group">
+                               
+                                <label for="email1">原始密碼</label>
+                                <input type="password" class="form-control" id="email1" name="oldPassword" placeholder="請輸入舊密碼">
+                            </div>
+                            <div class="form-group">                
+                                <label for="pass1">修改密碼</label>
+                                <input type="password" class="form-control" id="pass1" name="newPassword" placeholder="請輸入新密碼">
+                            </div>
+                             <div class="form-group">                
+                                <label for="pass2">確認密碼</label>
+                                <input type="password" class="form-control" id="pass2" name="new2Password" placeholder="請再次輸入新密碼">
+                            </div>
+                            <div class="clearfix text-center">
+                               
+                                <button type="submit" class="btn btn-primary">確認變更</button>
+                            </div>
+                        </form>
+                    	
+                    </div>
+	 			</div>
+	 		</div>
+	 	</div>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	//alert("{$actionName}");
+	$("#"+"{$actionName}").addClass("active");
+})
+</script>

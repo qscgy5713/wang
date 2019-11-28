@@ -1,0 +1,20 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameBngMenuModel extends MemberModel {
+    protected $tableName = "game_bng_menu";
+    /*
+     * 取得遊戲名稱
+     */
+    public function getGameChNameDataById($data){
+        
+        $sql = "SELECT `title_name`
+                FROM `{$this->tableName}`
+                WHERE `game_id` = '{$data['game_id']}'";
+        $return = $this->cacheQuery($sql,600);
+        $gameName = json_decode($return[0]['title_name'], true);
+        $gameName = $gameName[$_COOKIE['think_language']];
+        return $gameName;
+    }
+}

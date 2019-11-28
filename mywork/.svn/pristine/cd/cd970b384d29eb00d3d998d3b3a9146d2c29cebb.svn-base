@@ -1,0 +1,467 @@
+<?php
+class AgentManageAction extends AdminAction {
+    //TODO:4 代理管理頁面
+    public function index(){
+        //讀取 代理 下線代理
+        $CommonAgent = D("CommonAgent");
+        $data = array(
+            "agent_id" => $_SESSION['Admin']['agentId'] //登入的帳號
+        );
+        //CommonAgent getAgentUnderDataById取得下線代理資料
+        $return = $CommonAgent->getAgentUnderDataById($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "agent_id"=>"id",
+            "agent_account"=>"account",
+            "agent_mode"=>"mode",
+            "agent_status"=>"status",
+            "agent_createTime"=>"createTime",
+            "agent_phone"=>"phone",
+            "agent_contact"=>"contact",
+            "agent_contactWay"=>"contactWay",
+            "agent_ratioRemark"=>"ratioRemark",
+            "agent_remark"=>"remark",
+            "ratio_superiorGiving"=>"superiorGiving"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'agent_status'://代理狀態  轉換 文字
+                        if($value[$key1] == 1){
+                            $showStr = "停權代理";
+                            break;
+                        }
+                        $showStr = "正常代理";
+                        break;
+                    case 'agent_createTime'://代理建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'agent_mode'://代理建立時間 時間戳 轉換 日期
+                        if($value[$key1] == 0){
+                            $showStr = "自訂佔成";
+                        } else {
+                            $showStr = "制度佔成";
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        
+        $return = $this->getAgentHighestRatioData($_SESSION['Admin']['agentId']);//取得代理最高可設定佔成
+        $highestRatio = $return["ratio_superiorGiving"];
+        cookie('highestRatio',$highestRatio,'expire=600&prefix=agentManage_');
+        cookie('ratioTree',$return["ratio_tree"],'expire=600&prefix=agentManage_');
+        $this->assign("highestRatio",$highestRatio);
+        
+        //var_dump($showArray);
+        //取得新的代理帳號
+        $newAgentAcoountDataArray = $this->getNewAgentAccount();
+        $this->assign("newAgentAccount",$newAgentAcoountDataArray['newAgentAccount']);
+        $this->assign("showArray",$showArray);
+        //var_dump($showArray);exit();
+        $this->display();
+    }
+    
+    //TODO: iframe語法範例
+    public function iframeIndex(){
+        $this->display();
+    }
+    protected function agentTreeAdd($value){
+        $CommonAgent = D("CommonAgent");
+        $CommonAgentTree = D("CommonAgentTree");
+        
+        $agentTreeStr = $value['agent_OnlyId'];
+        $bool = true;
+        $boss = $value['agent_bossId'];
+        //echo $value['agent_OnlyId'].'   ';
+        do {
+            $data = array(
+                "agent_id" => $value['agent_bossId']
+            );
+            $return2 = $CommonAgentTree->getAgentTreeDataByAgentId($data);
+            if($return2 === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            }
+            if(empty($return2['agent_tree'])){
+                $return1 = $CommonAgent->getAgentBossData($data);
+                if($return1 === false){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                }
+                if(!empty($return1['agent_id'])){
+                    $agentTreeStr = $value['agent_bossId'].','.$agentTreeStr;
+                    $value['agent_bossId'] = $return1['agent_bossId'];
+                } else {
+                    $agentTreeStr = $agentTreeStr.',';
+                    $bool = false;
+                }
+            } else {
+                $agentTreeStr = $return2['agent_tree'].$agentTreeStr.',';
+                $bool = false;
+            }
+            
+        } while ($bool);
+        $data = array(
+            "agent_id" => $value['agent_OnlyId'],
+            "agent_boss" => $boss,
+            "agent_tree" => $agentTreeStr
+        );
+        $return3 = $CommonAgentTree->addAgentTreeData($data);
+        if($return3 === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //echo $agentTreeStr.'<BR>';
+    }
+    //TODO: 代理樹新增 第一次建立使用
+    protected function agentTreeCreat(){
+        
+        $CommonAgent = D("CommonAgent");
+        $CommonAgentTree = D("CommonAgentTree");
+        /*
+        //CommonAgent getAllAgentData取得下線代理資料
+        $return = $CommonAgent->getAllAgentData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }*/
+        //var_dump($return);exit();
+        $data = array(
+            "agent_OnlyId"=>'1342',
+            "agent_bossId"=>'1190',
+        );
+        $return = $data;
+        foreach($return as $value){
+            $agentTreeStr = $value['agent_OnlyId'];
+            $bool = true;
+            $boss = $value['agent_bossId'];
+            echo $value['agent_OnlyId'].'   ';
+            do {
+                $data = array(
+                    "agent_id" => $value['agent_bossId']
+                );
+                $return2 = $CommonAgentTree->getAgentTreeDataByAgentId($data);
+                if($return2 === false){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                }
+                if(empty($return2['agent_tree'])){
+                    $return1 = $CommonAgent->getAgentBossData($data);
+                    if($return1 === false){
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                    }
+                    if(!empty($return1['agent_id'])){
+                        $agentTreeStr = $value['agent_bossId'].','.$agentTreeStr;
+                        $value['agent_bossId'] = $return1['agent_bossId'];
+                    } else {
+                        $agentTreeStr = $agentTreeStr.',';
+                        $bool = false;
+                    }
+                } else {
+                    $agentTreeStr = $return2['agent_tree'].$agentTreeStr.',';
+                    $bool = false;
+                }
+                
+            } while ($bool);
+            $data = array(
+                "agent_id" => $value['agent_OnlyId'],
+                "agent_boss" => $boss,
+                "agent_tree" => $agentTreeStr
+            );
+            $return3 = $CommonAgentTree->addAgentTreeData($data);
+            if($return3 === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            }
+            echo $agentTreeStr.'<BR>';
+        }
+    }
+    //TODO: 代理新增
+    public function formAddAgent(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 addPassword 傳入 並且不為空
+        if(!isset($request['addPassword']) || empty($request['addPassword'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//密碼為空，請重新輸入
+        }
+        if($request['addPassword'] !== $request['addCheckPassword']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼與確認密碼不符，請重新輸入。
+        }
+        if(!isset($request['addRatio']) || empty($request['addRatio'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//密碼為空，請重新輸入
+        }
+        if(!isset($request['addAgentMode']) || empty($request['addAgentMode'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//代理模式為空，請重新選擇。
+        }
+        
+        
+        $highestRatio = cookie('agentManage_highestRatio');
+        $ratioTree = cookie('agentManage_ratioTree');
+        if(empty($highestRatio) || empty($ratioTree)){
+            $return = $this->getAgentHighestRatioData($_SESSION['Admin']['agentId']);//取得代理最高可設定佔成
+            $highestRatio = $return["ratio_superiorGiving"];
+            $ratioTree = $return["ratio_tree"];
+        }
+        if((int)$request['addRatio'] > (int)$highestRatio){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//密碼為空，請重新輸入
+        }
+        
+        //取得代理新佔成樹
+        $newRatioTree = $this->getNewAgentRatioTree($ratioTree,$request['addRatio']);
+        
+        $CommonAgent = D("CommonAgent");
+        $newAgentAccountDataArray = $this->getNewAgentAccount();
+        $nowTime = time();//取得現在時間戳
+        
+        //從 CommonAgentModel getMd5Password($password) 傳入密碼 取得加密後的密碼 作新增
+        $request['addPassword'] = strtolower($request['addPassword']);//密碼一律轉小寫儲存
+        $password = $CommonAgent->getMd5Password($request['addPassword']);
+        $data = array(
+            "agent_account" => $newAgentAccountDataArray['newAgentAccount'], //代理的帳號
+            "agent_password" => $password,
+            "agent_mode"=>$request['addAgentMode'],
+            "agent_contact" => $request['addContact'],
+            "agent_contactWay" => $request['addContactWay'],
+            "agent_phone" => $request['addPhone'],
+            "agent_remark" => $request['addRemark'],
+            "agent_status" => 0,
+            "agent_createTime" => $nowTime,
+            "agent_head" => $newAgentAccountDataArray['agent_head'],
+            "agent_bodys" => (int)$newAgentAccountDataArray['agent_bodys'],
+            "agent_bossId" => $_SESSION['Admin']['agentId'],
+            "ratio_superiorGiving"=> $request['addRatio'],
+            "ratio_tree"=>$newRatioTree
+        );
+        $return = $CommonAgent->addAgentData($data,$err);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        $value = array(
+            "agent_OnlyId"=>$return,
+            "agent_bossId"=>$_SESSION['Admin']['agentId'],
+        );
+        $this->agentTreeAdd($value);
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    protected function getAgentHighestRatioData($agentId){
+        $CommonAgentRatio = D("CommonAgentRatio");
+        $data = array(
+            "agent_id" => $agentId //登入的帳號
+        );
+        $return = $CommonAgentRatio->getAgentHighestRatioDataById($data);//取得代理最高佔成
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        if(empty($return["ratio_superiorGiving"])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        return $return;
+    }
+    protected function getNewAgentRatioTree($ratioTree,$addRatio){
+        $expArray1 = explode(",", $ratioTree);
+        $newRatioTree = "";
+        for($i=0;$i<count($expArray1);$i++){
+            if($i == (count($expArray1)-1)){
+                $expArray1[$i] = (int)$expArray1[$i] - (int)$addRatio;
+            }
+            if(empty($newRatioTree)){
+                $newRatioTree = $expArray1[$i];
+            } else {
+                $newRatioTree .= ",".$expArray1[$i];
+            }
+        }
+        $newRatioTree .= ",".$addRatio;
+        return $newRatioTree;
+    }
+    //TODO: 取得新代理帳號 規則
+    protected function getNewAgentAccount(){
+        $CommonAgent = D("CommonAgent");
+        $number = 0;//預設開頭 從0開始
+        if($_SESSION['Admin']['agentAccount'] == 'game'){//game 生成新代理
+            $az='abcdefghklmnpqrstuvwxyz';
+            
+            $data = array(
+                "agent_head" => $_SESSION['Admin']['agentAccount'] //登入的帳號
+            );
+            //用 帳號和Head比對 去找max(bodys) 帳號規則
+            $return = $CommonAgent->getAgentMaxBodysByHead($data);//回傳MaxBodys
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            if(empty($return['MaxBodys'])){
+                $data = array(
+                    "newAgentAccount" => '1'.$az[$number],
+                    "agent_bodys" => 1
+                );
+            } else {
+                $ber = intval($return['MaxBodys']);
+                do {
+                    $ber += 1;
+                    if( $ber > 22 ) {
+                        $a = intval(floor($ber / 23));
+                        $b = intval(floor($ber % 23));
+                        $firstPart = $az[$b];
+                        $secondPart = $az[$a-1];
+                        $str = "1{$firstPart}{$secondPart}";
+                    } else {
+                        $str = '1'.$az[$ber];
+                    }
+                } while (strpos($str,'l')!==false);
+                $data = array(
+                    "newAgentAccount" => $str,
+                    "agent_head" => $_SESSION['Admin']['agentAccount'],
+                    "agent_bodys" => $ber
+                );
+            }
+        }
+        return $data;
+    }
+    protected function findenglish($str) {
+        $rData = "";
+        if ($str) {
+            $diff = array("a", "b", "c", "d", "e", "f", "g","h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
+            $str1 = str_split($str);
+            foreach ($str1 as $v){
+                if (in_array($v, $diff)){
+                    $rData .= $v;
+                    break;
+                }
+            }
+        }
+        return $rData;
+    }
+    protected function findnumber($str) {
+        $az='abcdefghklmnpqrstuvwxyz';
+        $pos = strpos($az,$str);
+        return $pos;
+    }
+    //TODO: 代理修改
+    public function formSetAgent(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 account 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改帳號為空，請重新登入。
+        }
+        $CommonAgent = D("CommonAgent");
+        //檢查是否有修改密碼
+        if(!empty($request['setPassword'])){
+            if($request['setPassword'] !== $request['setCheckpassword']){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼與確認密碼不符，請重新輸入。
+            }
+            //從 CommonAgentModel getMd5Password($password) 傳入密碼 取得加密後的密碼 作修改
+            $password = $CommonAgent->getMd5Password($request['setPassword']);
+            $nowTime = time();//取得現在時間戳
+            $data = array(
+                "agent_id" => $request['setId'], //代理的帳號
+                "agent_password" => $password,
+                "agent_contact" => $request['setContact'],
+                "agent_contactWay" => $request['setContactWay'],
+                "agent_phone" => $request['setPhone'],
+                "agent_remark" => $request['setRemark'],
+                "agent_modifyTime"=> $nowTime,
+                "agent_bossId" => $_SESSION['Admin']['agentId']
+            );
+        } else {
+            $data = array(
+                "agent_id" => $request['setId'], //代理的帳號
+                "agent_contact" => $request['setContact'],
+                "agent_contactWay" => $request['setContactWay'],
+                "agent_phone" => $request['setPhone'],
+                "agent_remark" => $request['setRemark'],
+                "agent_modifyTime"=> $nowTime,
+                "agent_bossId" => $_SESSION['Admin']['agentId']
+            );
+        }
+        $return = $this->getAgentHighestRatioData($request['setId']);//取得修改代理的佔成
+        $ratioSuperiorGiving = $return["ratio_superiorGiving"];
+        if($request['setRatio'] != $ratioSuperiorGiving){
+            $highestRatio = cookie('agentManage_highestRatio');
+            $ratioTree = cookie('agentManage_ratioTree');
+            if(empty($highestRatio) || empty($ratioTree)){
+                $return = $this->getAgentHighestRatioData($_SESSION['Admin']['agentId']);
+                $highestRatio = $return["ratio_superiorGiving"];
+                $ratioTree = $return["ratio_tree"];
+            }
+            if((int)$request['setRatio'] > (int)$highestRatio){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//密碼為空，請重新輸入
+            }
+            //取得代理新佔成樹
+            $newRatioTree = $this->getNewAgentRatioTree($ratioTree,$request['setRatio']);
+            $data["ratio_superiorGiving"] = $request['setRatio'];
+            $data["ratio_tree"] = $newRatioTree;
+        }
+        $return = $CommonAgent->setAgentDataById($data,$err);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error($err);
+        }
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 代理停權
+    public function formStopAgent(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 account 傳入 並且不為空
+        if(!isset($request['stopId']) || (empty($request['stopId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CommonAgent = D("CommonAgent");
+        //檢查登入帳號權限 是否夠修改 傳入帳號
+        $data = array(
+            "agent_id" => $request['stopId'],
+            "agent_bossId" => $_SESSION['Admin']['agentId'],
+            "agent_status" => 1
+        );
+        $return = $CommonAgent->setAgentDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//權限不足或操作錯誤，請重新登入。
+    }
+    //TODO: 代理啟用
+    public function formStartAgent(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 account 傳入 並且不為空
+        if(!isset($request['stopId']) || (empty($request['stopId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CommonAgent = D("CommonAgent");
+        //檢查登入帳號權限 是否夠修改 傳入帳號
+        $data = array(
+            "agent_id" => $request['stopId'],
+            "agent_bossId" => $_SESSION['Admin']['agentId'],
+            "agent_status" => 0
+        );
+        $return = $CommonAgent->setAgentDataById($data);
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+    }
+    //TODO: 代理清除
+    public function formClearAgent(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 account 傳入 並且不為空
+        if(!isset($request['clearId']) || (empty($request['clearId']) && $request['clearId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))."(功能尚未開放)");
+    }
+}

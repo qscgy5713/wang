@@ -1,0 +1,522 @@
+<?php
+/*
+ * 轉移單
+ */
+class CashflowTransferModel extends MemberModel {
+    protected $tableName = "cashflow_transfer";
+    protected $tableId = "transfer_id";
+    
+    /*
+     * 取得轉移單資料
+     */
+    public function getTransferData($data,&$err = ""){
+        $WHERESQL = "";
+        foreach ($data as $key => $value) {
+            if(empty($WHERESQL)){
+                $WHERESQL .= "`{$key}` = '{$value}'";
+            } else {
+                $WHERESQL .= " AND `{$key}` = '{$value}'";
+            }
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE {$WHERESQL};";
+        
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得轉移單資料筆數
+     */
+    public function getTotalNumberTransferData($data,&$err = ""){
+        
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' 
+                AND `transfer_createTime` > '{$data['transfer_createTime']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 會員 轉移單資料
+     */
+    public function getMemberTransferData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' 
+                AND `transfer_createTime` > '{$data['transfer_createTime']}' 
+                ORDER BY `transfer_createTime` DESC
+                {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return;
+    }
+    public function getLastTransferDataByMemberId($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT `transfer_to` FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `transfer_to` <> 'Wallet' ORDER BY `transfer_modifyTime` DESC LIMIT 1;";        
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0]['transfer_to'];
+    }
+    /*
+     * 對第三方下點 加點到電子錢包
+     */
+    public function addTransferDataByPlusWallet($data,&$err){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['transfer_money']) && $data['transfer_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['transfer_from']) && $data['transfer_from'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['transfer_to']) && $data['transfer_to'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        if(($data['transfer_from'] != 'Wallet' && $data['transfer_to'] != 'Wallet') || ($data['transfer_from'] === $data['transfer_to'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if($data['transfer_to'] != 'Wallet'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        $memberId = $data['member_id'];
+        $agentId = $data['agent_id'];
+        $agentTree = $data['agent_tree'];
+        $agentRatio = $data['ratio_tree'];
+        $transferMoney = $data['transfer_money'];
+        $transferFrom = $data['transfer_from'];
+        $transferTo = $data['transfer_to'];
+        
+        //取得遊戲餘額 開始
+        $Api = A('Api');
+        $data = array(
+            "operValue" => 3,
+            "game_name" => $transferFrom
+        );
+        $return = $Api->modelGetApiData($data,$err);
+        if($return === false){
+            return false;
+        }
+        $memberBalance = $return;
+        //取得遊戲餘額  結束
+        //檢查轉移餘額 是否 大於 遊戲餘額
+        if($memberBalance < $transferMoney){
+            $transferMoney = intval($memberBalance);
+        }
+        
+        //對遊戲下點 開始
+        $Api = A('Api');
+        $data = array(
+            "operValue" => 4,
+            "game_name" => $transferFrom,
+            "money" => $transferMoney
+        );
+        $return = $Api->modelGetApiData($data,$err);
+        if($return === false){
+            return false;
+        }
+        //對遊戲下點 結束
+        
+        //新增轉移單 開始
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $data = array(
+            "member_id" => $memberId,
+            "transfer_money" => $transferMoney,
+            "transfer_operating"=>1,//對電子錢包操作 //1點數增加 2點數減少
+            "transfer_from" => $transferFrom,
+            "transfer_to" => $transferTo,
+            "transfer_createTime"=>$nowTime,
+            "transfer_ip"=>$ip
+        );
+        $return = $this->addTransferData($data,$err);
+        if($return === false){
+            return false;
+        }
+        $transferId = $return;//轉移單ID
+        //新增轉移單 結束
+        
+        //開始事務處理
+        $this->startTrans();
+        
+        //讀取 會員電子錢包    鎖表   開始
+        $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$memberId}'
+                FOR UPDATE;";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        if(empty($return[0])){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+            return false;
+        }
+        //讀取 會員電子錢包   鎖表   結束
+        $memberWalletDataArray = $return[0];//會員錢包資料
+        
+        $walletLogBefore = $memberWalletDataArray["wallet_money"];
+        $walletLogAfter = $walletLogBefore + $transferMoney;
+        
+        //對電子錢包 加款 開始
+        $data = array(
+            "member_id" => $memberId,
+            "wallet_money" => $transferMoney
+        );
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_09"));
+            return false;
+        }
+        //對電子錢包 加款 結束
+        
+        //新增帳變紀錄 開始
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        $data = array(
+            "member_id" => $memberId,
+            "agent_id" => $agentId,
+            "agent_tree"=>$agentTree,
+            "ratio_tree"=>$agentRatio,
+            "walletLog_operating" => 1,//1點數增加 2點數減少
+            "walletLog_type" => 3,//帳變類型 1儲值表 2託售表 3.轉移表
+            "walletLog_type_class"=>1,//type=3 1系統自動扣點OR上點 2後台操作上點下點
+            "walletLog_item_id" => $transferId,//轉移單號
+            "walletLog_money" => (int)$transferMoney,
+            "walletLog_before" => (int)$walletLogBefore,
+            "walletLog_after" => (int)$walletLogAfter,
+            "walletLog_main" => $transferFrom."->".$transferTo.";轉移單;生成;錢包;加款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $walletLogId = $return;
+        //新增帳變紀錄 結束
+        
+        //改轉移單狀態 開始
+        $data = array(
+            "transfer_id"=>$transferId,
+            "member_id" =>$memberId,
+            "transfer_status"=>1,
+            "transfer_remark"=>"轉移成功",
+            "transfer_modifyTime"=>$nowTime,
+            "walletLog_id" => $walletLogId
+        );
+        $return = $this->setTransferDataById($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_10"));
+            return false;
+        }
+        //改轉移單狀態 結束
+        $this->commit();//事務處理成功
+        return true;
+    }
+    /**
+     * 新增轉移單 電子錢包扣款 轉移到第三方
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function addTransferDataByDeductWallet($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['transfer_money']) && $data['transfer_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['transfer_from']) && $data['transfer_from'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['transfer_to']) && $data['transfer_to'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        if(($data['transfer_from'] != 'Wallet' && $data['transfer_to'] != 'Wallet') || ($data['transfer_from'] === $data['transfer_to'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if($data['transfer_from'] != 'Wallet'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        $memberId = $data['member_id'];
+        $agentId = $data['agent_id'];
+        $agentTree = $data['agent_tree'];
+        $agentRatio = $data['ratio_tree'];
+        $transferMoney = intval($data['transfer_money']);
+        $transferFrom = $data['transfer_from'];
+        $transferTo = $data['transfer_to'];
+        $transferCreateTime = $data['transfer_createTime'];
+        $transferIp = $data['transfer_ip'];
+        
+        //開始事務處理
+        $this->startTrans();
+        
+        //讀取 會員電子錢包  檢查 傳入金額 是否大於 錢包金額   鎖表   開始
+        $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$memberId}'
+                FOR UPDATE;";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        if(empty($return[0])){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+            return false;
+        }
+        //讀取 會員電子錢包   鎖表   結束
+        $memberWalletDataArray = $return[0];//會員錢包資料
+        //檢查 傳入金額 是否大於 錢包金額
+        if($transferMoney > $memberWalletDataArray["wallet_money"]){
+            //傳入金額 大於 電子錢包  將電子錢包金額取代 轉點金額
+            $transferMoney = $memberWalletDataArray["wallet_money"];
+        }
+        $walletLogBefore = $memberWalletDataArray["wallet_money"];
+        $walletLogAfter = (int)$walletLogBefore - (int)$transferMoney;
+        
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        //新增轉移單 開始
+        $data = array(
+            "member_id" => $memberId,
+            "transfer_money" => -$transferMoney,
+            "transfer_operating"=>2,
+            "transfer_from" => $transferFrom,
+            "transfer_to" => $transferTo,
+            "transfer_createTime"=>$nowTime,
+            "transfer_ip"=>$ip
+        );
+        $return = $this->addTransferData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $transferId = $return;//轉移單ID
+        //新增轉移單 結束
+        
+        //對電子錢包 扣款 開始
+        $data = array(
+            "member_id" => $memberId,
+            "wallet_money" => -$transferMoney
+        );
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $return = $CommonMemberWallet->setWalletDataByDeductMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_09"));
+            return false;
+        }
+        //對電子錢包 扣款 結束
+        
+        //新增帳變紀錄 開始
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        
+        $data = array(
+            "member_id" => $memberId,
+            "agent_id" => $agentId,
+            "agent_tree"=>$agentTree,
+            "ratio_tree"=>$agentRatio,
+            "walletLog_operating" => 2,//1點數增加 2點數減少
+            "walletLog_type" => 3,//帳變類型 1儲值表 2託售表 3.轉移表
+            "walletLog_type_class"=>1,//type=3 1系統自動扣點OR上點 2後台操作上點下點
+            "walletLog_item_id" => $transferId,//轉移單號
+            "walletLog_money" => -$transferMoney,
+            "walletLog_before" => (int)$walletLogBefore,
+            "walletLog_after" => (int)$walletLogAfter,
+            "walletLog_main" => $transferFrom."->".$transferTo.";轉移單;生成;錢包;扣款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $walletLogId = $return;
+        //新增帳變紀錄 結束
+        
+        //對遊戲上點 開始
+        $Api = A('Api');
+        $data = array(
+            "operValue" => 5,
+            "game_name" => $transferTo,
+            "money" => (int)$transferMoney
+        );
+        $return = $Api->modelGetApiData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        //對遊戲上點 結束
+        //之後就算失敗 也要commit出去
+        
+        //改轉移單狀態 開始
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "transfer_id"=>$transferId,
+            "member_id" =>$memberId,
+            "transfer_status"=>1,
+            "transfer_remark"=>"轉移成功",
+            "transfer_modifyTime"=>$nowTime,
+            "walletLog_id" => $walletLogId
+        );
+        $return = $this->setTransferDataById($data,$err);
+        if($return === false){
+            $this->commit();//事務處理成功
+            return false;
+        }
+        if($return !== 1){
+            $this->commit();//事務處理成功
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_10"));
+            return false;
+        }
+        //改轉移單狀態 結束
+        $this->commit();//事務處理成功
+        return true;
+    }
+    /**
+     * 修改轉移單狀態
+     * @param array $data
+     * @param string $err
+     * @return boolean|false
+     */
+    public function setTransferDataById($data,&$err=""){
+        if(empty($data['transfer_id']) && $data['transfer_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        //轉移單標註成功
+        
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+    
+    /*
+     * 新增 轉移單
+     */
+    public function addTransferData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        if(empty($data['transfer_money']) && $data['transfer_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['transfer_from']) && $data['transfer_from'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//
+            return false;
+        }
+        if(empty($data['transfer_to']) && $data['transfer_to'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//
+            return false;
+        }
+        if(($data['transfer_from'] != 'Wallet' && $data['transfer_to'] != 'Wallet') || ($data['transfer_from'] === $data['transfer_to'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));//
+            return false;
+        }
+        
+        //新增 轉移單
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+            return false;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        if($insertId === false) {
+            return false;
+        }
+        return $insertId;
+    }
+    
+    
+}

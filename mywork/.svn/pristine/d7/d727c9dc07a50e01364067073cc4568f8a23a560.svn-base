@@ -1,0 +1,120 @@
+<include file="Common:header"/>
+	<div id="content" class="content m-l-0">
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<IF condition='$sumBettimgMoney neq ""'>
+					<div class="text-center m-b-15">
+						<span class="m-r-15 f-w-600">總投注:{$sumBettimgMoney}</span>
+						<span class="m-r-15 f-w-600">總輸贏:{$sumSurplus}</span>
+						<span class="f-w-600">總洗碼:{$sumEffective}</span>
+					</div>
+					
+				</IF>
+				
+				<div class="table-responsive">
+					<table id="memberTable" class="table table-striped m-b-0">
+					    <thead>
+		                     <tr>
+		                        <th>序</th>
+		                        <VOLIST name="FieldChange" id="field">
+		                        	<IF condition='$field.newField neq "memberId"'>
+		                        		<th>{$field.cnName}</th>
+		                        	</IF>
+		                        </VOLIST>
+		                     </tr>
+		                </thead>
+						<tbody>
+							<VOLIST name="showArray" id="vo" empty="$showEmpty" key="k">
+								<tr>
+									<td>{$k}</td>
+									<VOLIST name="FieldChange" id="field">
+										<IF condition="$field['newField'] neq 'memberId'">
+											<IF condition="$field['newField'] eq 'memberAccount'">
+												<td><input type='button' value="{$vo[$field['newField']]}" class="btn btn-pink f-s-13 p-5" onClick="openmodal('{$vo.memberId}','{$vo.memberAccount}')"></td>
+											<ELSE/>
+												<td>{$vo[$field['newField']]}</td>
+											</IF>
+										</IF>
+									</VOLIST>
+								</tr>
+							</VOLIST>
+						</tbody>
+					</table>
+				</div>
+				
+				
+			</div>
+		</div>
+		
+		<div class="modal fade" id="memberDetailDiv" style="display: none;">
+			<div class="modal-dialog"style="max-width: 1300px;">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title">
+							<span id='memberDetailAccount'></span>明細報表
+							<input type="text" class="form-control div-style width-auto text-center m-r-5" readonly value="{$startTime}"/>~
+							<input type="text" class="form-control div-style width-auto text-center m-l-5" readonly value="{$endTime}"/>
+						</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+					<div class="modal-body">
+						<iframe id="memberDetailIframe" style="width: 100%;min-height: 800px;" src="__APP__/Common/loading" frameborder="0" scrolling="auto"></iframe>
+					</div>
+					<div class="modal-footer">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<include file="Common:footer"/>
+
+<script>
+$(function () { $('#memberDetailDiv').on('hide.bs.modal', function () {
+	 $("#memberDetailIframe").attr("src", "__APP__/Common/loading");
+  })
+});
+
+function openmodal(memberId,memberAccount){
+	$('#memberDetailAccount').html(memberAccount);
+	$('#memberDetailDiv').modal('show');
+	$("#memberDetailIframe").attr("src", "__APP__/{$Think.MODULE_NAME}/eachGameDetail&startTime={$startTime}&endTime={$endTime}&agentTree={$agentTree}&gameCode={$gameCode}&memberId="+memberId);
+}
+$(function(){
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+
+$(document).ready(function(){
+  $('#member_account').typeahead({
+    ajax: {
+      url: '__URL__/searchMemberName',
+      timeout: 200
+    }
+  });
+});
+</script>

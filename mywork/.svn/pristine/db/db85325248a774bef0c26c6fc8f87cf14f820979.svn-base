@@ -1,0 +1,72 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+			<section id="gameBg" class="b-0 section-game-rwd" style="background-image: url(__CSS__/images/game_background.jpg);padding-top: 182px;">
+					<div class="container">
+						
+						<ul class="nav nav-tabs nav-top-border game-ul-ts-rwd">
+							<VOLIST name="GameRtgMenu" id="data" key="k">
+						   		<if condition='$k eq "1"'>
+						   			<li class="nav-item">
+							   			<a class="nav-link active" href="#tab{$k}" data-toggle="tab">
+							   				{$key}({$GameRtgMenuCount[$key]})
+							   			</a>
+						   			</li>
+						   		<else/>
+						   			<li class="nav-item">
+							   			<a class="nav-link" href="#tab{$k}" data-toggle="tab">
+							   			{$key}({$GameRtgMenuCount[$key]})
+							   			</a>
+						   			</li>
+						   		</if>
+						    </VOLIST>
+						</ul>
+						
+						<div class="tab-content">
+							<VOLIST name="GameRtgMenu" id="data" key="k">
+				           		<if condition='$k eq "1"'>
+				           			<div class="tab-pane active" id="tab{$k}">
+				           		<else/>
+				           			<div class="tab-pane" id="tab{$k}">
+				           		</if>
+			           				<div class="row">
+			           					<VOLIST name="data" id="vo">
+			           					
+			           						<div class="col-lg-2 col-md-2 col-sm-2 col-width-rwd mb-10">
+												<a href="#" onclick="openWindow({$vo.mach_id},{$vo.game_id})" class="image-hover-zoom image-hover-overlay game-a">
+													<img class="img-fluid" src="__CSS__/images/rtg/{$vo.image_src}.png" alt="">
+												</a>
+												<p class="text-center mt-10 mb-10">{$vo.game_name_ch}</p>
+											</div>
+			           					</VOLIST>
+			           				</div>
+				           		</div>
+				           </VOLIST>
+						</div>
+					</div>
+				</section>
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	jQuery("#gameBg").css("min-height",h+"px");
+}
+function openWindow(mi,gi){
+	 $.ajax({
+	      type:"POST",
+	      url:"__URL__/getGameLink",
+	      data:{machId:mi,gameId:gi},
+	      success:function(data){
+	      alert(data);
+	       windows.open(data, '_blank');
+	      }
+	  });
+}
+</script>

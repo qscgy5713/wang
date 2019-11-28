@@ -1,0 +1,18 @@
+<?php
+/*
+ * 遊戲類別
+ */
+class GameClassModel extends AdminModel {
+    protected $tableName = "game_class";
+    protected $tableId = "gameClass_id";
+    /*
+     * 取得 遊戲類別
+     * 會員階層使用
+     */
+    public function getGameClassData(){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                ORDER BY `gameClass_id` ASC;";
+        $return = $this->cacheQuery($sql,3000);
+        return $return;
+    }
+}

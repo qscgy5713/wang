@@ -1,0 +1,114 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	
+	
+	<div id="content" class="content">
+		
+		<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<div class="row m-b-5">
+		    <div class="col-md-3 m-b-10">
+				<select name="selectClass" class="form-control width-auto div-style">
+					<if condition="$selectClass eq 'Member'">
+						<option selected value="Member">會員</option>
+					<else />
+						<option value="Member">會員</option>
+					</if>
+					<if condition="$selectClass eq 'Agent'">
+						<option selected value="Agent">代理</option>
+					<else />
+						<option value="Agent">代理</option>
+					</if>
+					 <if condition="$selectClass eq 'Admin'">
+						<option selected value="Admin">公司</option>
+					<else />
+						<option value="Admin">公司</option>
+					</if>
+					<if condition="$selectClass eq 'all'">
+						<option selected value="all">全顯示</option>
+					<else />
+						<option value="all">全顯示</option>
+					</if> 
+				</select>
+			
+				<input type='submit' value='查詢'  class="btn btn-info f-s-15 div-style m-b-5">
+			</div>
+		</div>
+	    
+	</form>
+		
+        <div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">線上名單</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class=" table-responsive">
+							<table id="showtable" class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+										<th>登入帳號</th>
+										<th>登入時間</th>
+										<th>IP</th>
+										<th>瀏覽器/版本/裝置</th>
+										<th>連線時間</th>
+										<th>登入網址</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+				                        	<td>{$key+1}</td>
+											<td>{$vo.Account}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.ip}</td>
+											<td>{$vo.os}</td>
+											<td>{$vo.onlineTime}</td>
+											<td>{$vo.url}</td>
+										</tr>
+			                        </VOLIST>
+			                        <tr><td id="showMessage" colspan="7" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+	</div>
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	$("#"+"其他部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	
+	if($("#showtable tbody tr").length <= 1){
+    	//alert($("#test tbody tr").length);
+    	$("#showMessage").show()
+    }
+});
+</script>

@@ -1,0 +1,44 @@
+<?php
+//會員統計腳本
+class ScriptMemberStatisticsAction extends ScriptAction {
+    /*
+       common_member_statistics 會員統計資料
+    	statistics_year int 4 年
+    	statistics_month int 2 月
+    	statistics_day int 2 日
+    	statistics_hour int 2 時
+    	
+    	statistics_onlineNumber int 11 總線上人數
+    	statistics_pcUseNumber int 11 電腦使用人數
+    	statistics_phoneUseNumber int 11 手機使用人數
+    	statistics_allUseNumber int 11 電腦手機都使用人數
+    	statistics_appleNumber int 11 蘋果系統人數
+    	statistics_androidNumber int 11 安卓系統人數
+    	statistics_allSystemNumber int 11 手機系統都使用人數
+    	
+    	statistics_totalRechargeMoney int 11 總儲值金額
+    	statistics_totalRechargeNumber int 11 總儲值數量
+    	statistics_totalWithdrawMoney int 11 總託售金額
+    	statistics_totalWithdrawNumber int 11 總託售數量
+    	statistics_totalRegisteredNumber int 11 總註冊人數
+     */
+    public function index(){
+        
+        //總線上人數
+        //抓取  common_member_online    online_modifyTime 在一個小時內的 
+        //加上 common_member_login_log  loginLog_createTime 在一個小時內的  loginLog_status 等於 1
+        //同樣的會員   人數算一個   但OS 不同的話 要統計
+        
+        
+        //statistics_totalRechargeMoney int 11 總儲值金額  statistics_totalRechargeNumber int 11 總儲值數量
+        //讀取 cashflow_recharge    recharge_modifyTime  在一個小時內的  recharge_status 等於  1
+        
+        //statistics_totalWithdrawMoney int 11 總託售金額  statistics_totalWithdrawNumber int 11 總託售數量
+        //讀取 cashflow_withdraw   withdraw_modifyTime  在一個小時內的  withdraw_status 等於  1
+        
+        //statistics_totalRegisteredNumber int 11 總註冊人數   讀取 common_member   member_createTime  在一個小時內的
+        
+        
+        //統計好資料  做沒有此資料新增  有此資料 就執行更新
+    }
+}

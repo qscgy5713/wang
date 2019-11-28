@@ -1,0 +1,423 @@
+<include file="Common:header" />
+<include file="Common:menu" />
+<section class="main-container md-main-container-RE">
+
+	<div class="container">
+		<div class="row">
+			<include file="Common:marquee" />
+			<!-- main start -->
+			<!-- ================ -->
+			<div class="main col-12">
+
+				<!-- page-title start -->
+				<!-- ================ -->
+				<h2 class="mt-4 text-white">優惠活動</h2>
+				<div class="separator-2"></div>
+				<!-- page-title end -->
+
+				<!-- timeline grid start -->
+				<!-- ================ -->
+				<div class="timeline clearfix md-timeline timeline-m ">
+
+
+					<!-- timeline grid item start -->
+					<div class="timeline-item pull-right">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/888.png" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('myModal888')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('myModal888')">翻本金888</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('myModal888')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="myModal888" tabindex="-1"
+									role="dialog" aria-labelledby="myModal888"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">翻本金888</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/4888.png">
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+					<!-- timeline grid item end -->
+
+					<!-- timeline grid item start -->
+					<div class="timeline-item">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/44477.png" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('ModalLong4234')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('ModalLong4234')">四星彩加碼送點數，儲值3000元三萬點數等你拿
+										!</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('ModalLong4234')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="ModalLong4234" tabindex="-1"
+									role="dialog" aria-labelledby="ModalLong4234"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">四星彩加碼送點數，儲值3000元三萬點數等你拿
+													!</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/4234.png">
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+					<!-- timeline grid item end -->
+
+					<!-- timeline grid item start -->
+					<div class="timeline-item pull-right">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/10001.jpg" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('ModalLong10001')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('ModalLong10001')">新會員首次儲值1000點，送1000點數</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('ModalLong10001')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="ModalLong10001" tabindex="-1"
+									role="dialog" aria-labelledby="ModalLong10001"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">新會員首次儲值1000點，送1000點數</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/1000.png">
+											</div>
+											<div class="modal-footer">
+												<IF condition='$storeGift eq "true"'>
+												<button type="button"
+													onclick="self.location.href='__APP__/RebateEvent/eventStoreGift'"
+													class="btn btn-sm btn-dark" data-dismiss="modal">申請</button>
+												<else /> <span class="text-white">{$storeGift}</span> </IF>
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+					<!-- timeline grid item end -->
+
+					<!-- timeline grid item start -->
+					<div class="timeline-item">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/eee.png" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('ModalLongeee')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('ModalLongeee')">電子遊戲，激情放送</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('ModalLongeee')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="ModalLongeee" tabindex="-1"
+									role="dialog" aria-labelledby="ModalLongeee"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">電子遊戲，激情放送</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/4ee.png">
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+					<!-- timeline grid item end -->
+
+					<!-- timeline grid item start -->
+					<div class="timeline-item pull-right">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/pe.png" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('ModalLongpe')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('ModalLongpe')">體育高額返點，下注立即返</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('ModalLongpe')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="ModalLongpe" tabindex="-1"
+									role="dialog" aria-labelledby="ModalLongpe"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">體育高額返點，下注立即返</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/pe-1.png">
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+
+					<div class="timeline-item">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/666.png" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('ModalLong666')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('ModalLong666')">真人百家廳下注立即返，最高返點千分之六</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('ModalLong666')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="ModalLong666" tabindex="-1"
+									role="dialog" aria-labelledby="ModalLong666"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">真人百家廳下注立即返，最高返點千分之六</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/102-1.png">
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+					<!-- timeline grid item end -->
+
+					<!-- timeline grid item start -->
+					<div class="timeline-item pull-right">
+						<!-- blogpost start -->
+						<article
+							class="blogpost md-blogpost hc-shadow-2 light-gray-bg bordered hc-element-invisible animated hc-element-visible fadeInUpSmall"
+							data-animation-effect="fadeInUpSmall" data-effect-delay="100">
+							<div class="overlay-container">
+								<img src="__CSS__/images/promotions/111.png" alt=""> <a
+									class="overlay-link" href="#" data-toggle="modal"
+									onclick="openmodal('ModalLong111')"></a>
+							</div>
+							<header class="header-style">
+								<h4>
+									<a class="text-white" href="#" data-toggle="modal"
+										onclick="openmodal('ModalLong111')">百家樂連贏加送點數</a>
+								</h4>
+
+							</header>
+
+							<footer class="clearfix">
+								<a data-toggle="modal" onclick="openmodal('ModalLong111')"
+									class="btn btn-outline-danger btn-sm" href="#">立即申請</a>
+
+								<div class="modal fade" id="ModalLong111" tabindex="-1"
+									role="dialog" aria-labelledby="ModalLong111"
+									style="display: none;" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-m" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h4 class="modal-title" id="myModalLabel">百家樂連贏加送點數</h4>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">×</span><span class="sr-only">Close</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<img class="img-w" id="" src="__CSS__/images/11111.png">
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-sm btn-dark"
+													data-dismiss="modal">Close</button>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</footer>
+						</article>
+						<!-- blogpost end -->
+					</div>
+					<!-- timeline grid item end -->
+
+
+				</div>
+				<!-- timeline grid end -->
+
+			</div>
+			<!-- main end -->
+
+		</div>
+	</div>
+</section>
+<include file="Common:footer" />
+<script>
+function openmodal(id) {
+	//alert(id);
+	$('#' + id).modal('show')
+}
+$(document).ready(function(){
+	 var showMsg = "{$_GET['showMsg']}";
+	 if($.trim(showMsg) != ""){
+		// alert(showMsg);
+		 $('#' + showMsg).modal('show')
+	 }
+});
+</script>
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,82 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">註冊送300</h2>
+					<h2 class="mb-20 mt-20">10倍流水可提款</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>
+				</header>
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30"><!-- DEFAULT -->
+							
+							<if condition='$isLogin eq "true"'>
+		                    	<form method="post" action='__APP__/RebateEvent/formExperience'>
+				                     <if condition='$eventEnabled eq "true"'>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center mt-10">
+					                    	<button type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">{$Think.lang.StoreGift4}</button>
+					                    </div>
+				                     <else/>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center mt-10">
+					                    	<button disabled type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">{$Think.lang.StoreGift4}</button>
+					                    	<p>{$eventErrMessage}</p>
+					                    </div>
+				                     </if>
+			                    </form>
+		                    </if>
+							<strong class="text-warning">領取資格:&nbsp;&nbsp;</strong><strong>適用於新註冊會員。</strong><BR>
+							<strong class="text-warning">託售資格:&nbsp;&nbsp;</strong><strong>託售上限最高3000點，託售完畢後點數全額歸零。</strong><BR><BR>
+							<strong class="text-warning">活動內容:&nbsp;&nbsp;</strong><BR>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">會員完成註冊後，點擊「立即申請」領取300點體驗金，系統將會自動派入電子錢包內。</li>
+		                        <li style="list-style:decimal;">領取體驗金後須達到10倍有效投注量(投注量300x10=3,000)即可進行線上託售。</li>
+		                    </ul>
+							<strong class="text-warning">注意事項:&nbsp;&nbsp;</strong>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;" class="text-danger">領取本優惠最高提款上限為3000點，若提款金額或盈利超出3000點則以3000點計算，其餘盈利將會歸零。</li>
+		                        <li style="list-style:decimal;" class="text-danger">若會員領取體驗金後即進行首次儲值，則館內點數需要低於100點才可領取首存贈點優惠。</li>
+		                        <li style="list-style:decimal;">同一 帳號/銀行帳戶/電話號碼/相似或同IP位置/網路環境，僅限領取一次。</li>
+		                        <li style="list-style:decimal;">為秉持公平公正原則，本娛樂平台有權對會員進行監控，若發生違背、欺騙或利用不正當手段進行非法獲利者，我們將有權凍結您帳號內點數。</li>
+		                        <li style="list-style:decimal;">所有和局、無風險投注、或被取消之注單，將不計算為有效投注。</li>
+		                   		<li style="list-style:decimal;">本娛樂平台對活動保有最終解釋權，有權於任何時間修改、暫停或取消優惠活動。</li>
+
+		                    </ul>
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		}else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		}
+
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

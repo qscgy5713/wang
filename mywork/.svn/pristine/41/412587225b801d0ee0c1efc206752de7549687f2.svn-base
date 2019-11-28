@@ -1,0 +1,17 @@
+<?php
+/*
+ * 系統參數
+ */
+class CommonSystemInfoModel extends CommonModel {
+    protected $tableName = "common_system_info";
+    
+    /*
+     * 讀取系統資料
+     */
+    public function getSystemInfoData(){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `info_id` = '1' LIMIT 1";
+        $return = $this->cacheQuery($sql, 3);//緩存查詢 3秒內有效
+        return $return[0];
+    }
+}

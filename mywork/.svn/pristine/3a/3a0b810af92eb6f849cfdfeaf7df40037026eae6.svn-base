@@ -1,0 +1,84 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">翻本金888</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>	
+				</header>
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30"><!-- DEFAULT -->
+							<strong>活動規則：</strong><BR><BR>
+							<strong>當月會員由1號至31號於遊戲館內輸1萬點玩家，在各遊戲館總點數100點以內</strong><BR>
+							<strong>即可申請888得優惠活動。</strong><strong class="text-warning"> 【六合彩館不計算在內】</strong><BR>
+							<strong>會員每月限定領取一次，並累積10倍有效投注量即可進行線上託售。</strong><BR><BR>
+							<strong>注意事項：</strong>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">提出申請後，將由系統完成審核後自動補入帳戶內。</li>
+		                        <li style="list-style:decimal;" class="text-warning">領取優惠後，累積有效投注量需達10倍。例如：存款為888點數。若要申請需有效投注為888×10＝8880點。</li>
+		                        <li style="list-style:decimal;">所有和局、無效、被取消或對賭單將不計算有效投注量內。</li>
+		                        <li style="list-style:decimal;">同一帳戶/家庭/電話號碼/儲值地點/銀行帳戶/相似或同一IP位置/共享電腦/網路環境，僅限申請一次。</li>
+		                        <li style="list-style:decimal;">為秉持會員公平公正之原則本娛樂平台有權對會員行為進行嚴格監控，若發生任何 違背、欺騙或利用規則與條款進行非法獲利者，我們將保留無限期審核扣回點數及 所產生優惠之權利。</li>
+		                   		<li style="list-style:decimal;">本娛樂平台對本活動保有最終解釋權，有權在任何時間修改、暫停或取消優惠活動。</li>
+		                   		
+		                   		
+		                    </ul>
+		                    <if condition='$isLogin eq "true"'>
+		                    	<form method="post" action='__APP__/RebateEvent/formReversal'>
+				                     <if condition='$eventEnabled eq "true"'>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center">
+					                    	<button type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">立即申請</button>
+					                    </div>
+				                     <else/>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center">
+					                    	<button disabled type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">立即申請</button>
+					                    	<p>{$eventErrMessage}</p>
+					                    </div>
+				                     </if>
+			                    </form>
+		                    </if>
+		                    
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	
+	//算畫面高度
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+jQuery(document).ready(function(){
+	
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

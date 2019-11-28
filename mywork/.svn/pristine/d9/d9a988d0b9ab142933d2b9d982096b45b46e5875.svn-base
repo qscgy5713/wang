@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{$Think.MODULE_NAME}首頁</title>
+</head>
+
+<body>
+<span> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME}  </span>
+<BR>
+
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<select name="selectClass">
+			<if condition="$selectClass eq 'Member'">
+				<option selected value="Member">會員</option>
+			<else />
+				<option value="Member">會員</option>
+			</if>
+			<if condition="$selectClass eq 'Agent'">
+				<option selected value="Agent">代理</option>
+			<else />
+				<option value="Agent">代理</option>
+			</if>
+			<!-- <if condition="$selectClass eq 'Admin'">
+				<option selected value="Admin">公司</option>
+			<else />
+				<option value="Admin">公司</option>
+			</if>
+			<if condition="$selectClass eq 'all'">
+				<option selected value="all">全顯示</option>
+			<else />
+				<option value="all">全顯示</option>
+			</if> -->
+		</select>
+		<input type='submit' value='查詢'>
+	</form>
+	
+	<table>
+		<tr>
+			<th>序</th><th>登入帳號</th><th>登入時間</th><th>IP</th><th>瀏覽器/版本/裝置</th>
+			<th>連線時間</th><th>登入網址</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.Account}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.ip}</td>
+				<td>{$vo.os}</td>
+				<td>{$vo.onlineTime}</td>
+				<td>{$vo.url}</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>

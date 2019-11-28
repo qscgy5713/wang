@@ -1,0 +1,52 @@
+<?php
+/*
+ * 儲值單
+ */
+class CashflowRechargeModel extends AgentModel {
+    protected $tableName = "cashflow_recharge";
+    protected $tableId = "recharge_id";
+    /*
+     * 取得儲值資料
+     * 註冊充託使用
+     */
+    public function getMemberRechargeDataByAgentTree($data,&$err=""){
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $searchMemberIdSql = "";
+        if(!empty($data['searchMemberId'])){
+            $searchMemberIdSql = "AND a.`member_id` = '{$data['searchMemberId']}'";
+        }
+
+        $memberIdSql = "";
+        if(isset($data['memberIdArray'])){
+            if(count($data['memberIdArray']) != 0){
+                foreach ($data['memberIdArray'] as $value){
+                    if(empty($memberIdSql)){
+                        $memberIdSql = "AND (a.`member_id` = '{$value}'";
+                    } else {
+                        $memberIdSql .= " or a.`member_id` = '{$value}'";
+                    }
+                }
+                $memberIdSql .= ")";
+            }
+        }
+        $sql = "SELECT a.*,sum(a.`recharge_money`) as sumMoney,count(*) as sumNumber,b.`member_phone`,
+                   GROUP_CONCAT(a.`member_account`,';',a.`recharge_createTime`,';',a.`recharge_money`,';',a.`cashflow_showName`) AS allpLog
+                FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (a.`recharge_createTime` BETWEEN '{$data['recharge_createTime']['startTime']}' AND '{$data['recharge_createTime']['endTime']}')
+                AND (a.`recharge_status` = 2)
+                AND (a.`agent_tree` REGEXP '^{$data['agent_tree']}')
+                {$memberIdSql}
+                {$searchMemberIdSql}
+                GROUP BY a.`member_id`,a.`agent_tree`;";//recharge_status 要改2
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+}

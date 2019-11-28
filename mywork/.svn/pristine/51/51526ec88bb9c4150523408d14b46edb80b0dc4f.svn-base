@@ -1,0 +1,428 @@
+<?php
+class MemberManageAction extends AdminAction {
+    protected $memberManage = 10; //分頁筆數
+    protected $pageMoreNumber = 5; //一頁最多幾筆
+    protected $memberManageMem = 10; //分頁筆數
+    protected $pageMoreNumberMem = 5; //一頁最多幾筆
+    //TODO: 會員管理 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        $agent1Account = "";
+        if(isset($request['agent1Account']) && !empty($request['agent1Account'])){
+            $agent1Account = $request['agent1Account'];
+        }
+
+        $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+
+        if(!empty($memberAccount)){
+            $CommonMember = D("CommonMember");
+            if(!empty($agent1Account)){
+                $memberAccount = "";
+            }
+            $data = array(
+                'member_account' => $memberAccount
+            );
+            $return = $CommonMember->searchCommonMemberForAgentAccount($data);
+            $request["agentTree"] = $return['agent_tree'];
+            $agentId = $return['agent_id'];
+        }
+
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        //代理線開始
+        $CommonAgentTree = D("CommonAgentTree");
+        $loginArray = array(
+            0 => array(
+                "agentTree"=>$_SESSION['Admin']['agentTree'],
+                "agentAccount"=>$_SESSION['Admin']['agentAccount']
+            )
+        );
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Admin']['agentTree']."/i", $request["agentTree"])
+            || $request["agentTree"] == $_SESSION['Admin']['agentTree']
+           ){
+            $comeAgentTree = $_SESSION['Admin']['agentTree'];
+            $comeAgentAccount = $_SESSION['Admin']['agentAccount'];
+        } else {
+            $comeAgentTree = $request["agentTree"];
+            $comeReplace = str_replace ($_SESSION['Admin']['agentTree'],"",$comeAgentTree);
+            $exArray = explode(",",$comeReplace);
+            $return = $CommonAgentTree->getAgentTreeDataByManyAgentId($exArray);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            //var_dump($return);
+            foreach ($return as $value){
+                array_push($loginArray,$value);
+            }
+            //var_dump($loginArray);
+            $comeAgentAccount = $request["agentAccount"];
+        }
+        $exArray = explode(",",$comeAgentTree);
+        $comeAgentId = $exArray[count($exArray)-2];
+        //代理線結束
+
+        //用於會員帳號搜索
+        $agentTree = $request['agentTree'];
+        $agentAccount = $request['agentAccount'];
+        if(!empty($memberAccount) && empty($agent1Account)){
+            $comeAgentId = $agentId;
+        }
+        $data = array(
+            "agent_account" => $agent1Account,
+            "agent_boss" => $comeAgentId,
+        );
+        //取得總頁數
+        $return = $CommonAgentTree->getTotalNumberAgentDataByAgentBoss($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+
+        $totalNumber = $return['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->memberManage);
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //去得頁數陣列
+
+        $data = array(
+            "agent_account" => $agent1Account,
+            "agent_boss" => $comeAgentId,
+            'page' => array(
+                'number' => $this->memberManage,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $CommonAgentTree->getAgentDataByAgentBossNumber($data);
+
+        $agentArray = array();
+        $FieldChange = array(
+            "agent_id"=>"agentId",
+            "agent_tree"=>"agentTree",
+            "agent_account"=>"agentAccount",
+            "agent_status"=>"status",
+            "agent_createTime"=>"createTime"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'agent_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $agentArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($agentArray);
+        //製作分頁
+        if(empty($request['pageNumberMem'])){
+            $pageNumberMem = 1;
+        } else {
+            $pageNumberMem = $request['pageNumberMem'];
+        }
+
+        $CommonMember = D("CommonMember");
+        //表明 getManageBankData()取得資料
+        $data = array(
+            "member_account" => $memberAccount,
+            "agent_id" => $comeAgentId,
+        );
+        $return = $CommonMember->getAllTotalMemberData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+
+        $totalNumberMem = $return['totalNumber']; //總筆數
+        $totalPageMem = ceil($totalNumberMem / $this->memberManageMem);
+        $pageArrayMem = getPageArray($pageNumberMem, $totalPageMem, $this->pageMoreNumberMem); //去得頁數陣列
+
+        $data = array(
+            "member_account" => $memberAccount,
+            "agent_id" => $comeAgentId,
+            'page' => array(
+                'number' => $this->memberManageMem,
+                'pageNumber' => $pageNumberMem,
+            ),
+        );
+        $return = $CommonMember->getAllMemberDataPageNumber($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        //var_dump($return);
+        $memberArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "member_id"=>"id",
+            "agent_id"=>"agentId",
+            "agent_account"=>"agentAccount",
+            "member_account"=>"account",
+            "member_status"=>"status",
+            "member_createTime"=>"createTime",
+            "member_ip"=>"ip"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'member_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $memberArray[$key][$value1] = $showStr;
+                $memberArray[$key]['memberstatus'] = $CommonMember->getMemberStatusStr($memberArray[$key]['status']);
+            }
+        }
+        // var_dump($memberArray);die;
+        $this->assign("agentAccount",$agentAccount); //紀錄agentAccount
+        $this->assign("agentTree",$agentTree); //紀錄agentTree
+        $this->assign("loginArray",$loginArray);
+        $this->assign("agent1Account",$agent1Account); //代理搜索
+        $this->assign("memberAccount",$memberAccount); //會員搜索
+        $this->assign("comeAgentAccount",$comeAgentAccount);
+        $this->assign("agentArray",$agentArray);
+        $this->assign("memberArray",$memberArray);
+        $this->assign("totalPage", $totalPage); //代理總頁數
+        $this->assign("pageNumber", $pageNumber); //代理目前頁數
+        $this->assign("pageArray", $pageArray); //代理頁數陣列
+
+        $this->assign("totalPageMem", $totalPageMem); //會員總頁數
+        $this->assign("pageNumberMem", $pageNumberMem); //會員目前頁數
+        $this->assign("pageArrayMem", $pageArrayMem); //會員頁數陣列
+        $this->assign("agentEmpty", '<tr><td colspan="5" align="center">無代理資料</td></tr>');
+        if($_SESSION['Admin']['account'] == 'game'){
+            $this->assign("memberEmpty", '<tr><td colspan="9" align="center">無會員資料</td></tr>');
+        } else {
+            $this->assign("memberEmpty", '<tr><td colspan="8" align="center">無會員資料</td></tr>');
+        }
+        $this->display();
+    }
+    //TODO: 搜索 代理帳號
+    public function searchAgentName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonAgent = D("CommonAgent");
+        $limit = 7;
+        $agentTree = $_SESSION['Agent']['tree'];
+        $data = array(
+            'agent_tree' => $agentTree,
+            "agent_account" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonAgent->searchAgentByAgentAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["agent_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    //TODO: 搜索 會員帳號
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMember = D("CommonMember");
+        $limit = 7;
+        $data = array(
+            "member_acount" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    //TODO: 開關AJAX
+    public function ajaxSwitchMember(){
+        $request = $this->getRequest();
+        $CommonMember = D("CommonMember");
+        switch($request['mode_id']){
+            case 'stopId':
+                $data = array(
+                    "member_id" => $request['stopId'],
+                    "member_status" => 1,
+                );
+                $return = $CommonMember->setMemberById($data);
+                $addData = array(
+                    'operateLog_class'=>41,
+                    'operateLog_objectId'=>$request['stopId'],
+                    'operateLog_objectAccount'=>$request['acc'],
+                    'operateLog_main'=> array(
+                        'member_id' => $request['stopId'],
+                        'member_account' => $request['acc'],
+                        'member_status' => 0,
+                    ),
+                );
+                $this->addAdminOperateLog($addData);
+                break;
+            case 'startId':
+                $data = array(
+                    "member_id" => $request['startId'],
+                    "member_status" => 0,
+                );
+                $return = $CommonMember->setMemberById($data);
+                $addData = array(
+                    'operateLog_class'=>42,
+                    'operateLog_objectId'=>$request['startId'],
+                    'operateLog_objectAccount'=>$request['acc'],
+                    'operateLog_main'=> array(
+                        'member_id' => $request['startId'],
+                        'member_account' => $request['acc'],
+                        'member_status' => 1,
+                    ),
+                );
+                $this->addAdminOperateLog($addData);
+                break;
+            case 'REstopId':
+                $data = array(
+                    "member_id" => $request['REstopId'],
+                    "member_status" => 3,
+                );
+                $return = $CommonMember->setMemberById($data);
+                $addData = array(
+                    'operateLog_class'=>42,
+                    'operateLog_objectId'=>$request['REstopId'],
+                    'operateLog_objectAccount'=>$request['acc'],
+                    'operateLog_main'=> array(
+                        'member_id' => $request['REstopId'],
+                        'member_account' => $request['acc'],
+                        'member_status' => 0,
+                    ),
+                );
+                $this->addAdminOperateLog($addData);
+                break;
+            case 'REstartId':
+                $data = array(
+                    "member_id" => $request['REstartId'],
+                    "member_status" => 0,
+                );
+                $return = $CommonMember->setMemberById($data);
+                $addData = array(
+                    'operateLog_class'=>42,
+                    'operateLog_objectId'=>$request['REstartId'],
+                    'operateLog_objectAccount'=>$request['acc'],
+                    'operateLog_main'=> array(
+                        'member_id' => $request['REstartId'],
+                        'member_account' => $request['acc'],
+                        'member_status' => 3,
+                    ),
+                );
+                $this->addAdminOperateLog($addData);
+                break;
+            case 'TEstartId':
+                if($_SESSION['Admin']['account'] == 'game'){
+                    $data = array(
+                        "member_id" => $request['TEstartId'],
+                        "member_status" => 0,
+                    );
+                    $return = $CommonMember->setMemberById($data);
+                    $addData = array(
+                        'operateLog_class'=>42,
+                        'operateLog_objectId'=>$request['TEstartId'],
+                        'operateLog_objectAccount'=>$request['acc'],
+                        'operateLog_main'=> array(
+                            'member_id' => $request['TEstartId'],
+                            'member_account' => $request['acc'],
+                            'member_status' => 2,
+                        ),
+                    );
+                    $this->addAdminOperateLog($addData);
+                }
+                break;
+            case 'TEstopId':
+                if($_SESSION['Admin']['account'] == 'game'){
+                    $data = array(
+                        "member_id" => $request['TEstopId'],
+                        "member_status" => 2,
+                    );
+                    $return = $CommonMember->setMemberById($data);
+                    $addData = array(
+                        'operateLog_class'=>42,
+                        'operateLog_objectId'=>$request['TEstopId'],
+                        'operateLog_objectAccount'=>$request['acc'],
+                        'operateLog_main'=> array(
+                            'member_id' => $request['TEstopId'],
+                            'member_account' => $request['acc'],
+                            'member_status' => 0,
+                        ),
+                    );
+                    $this->addAdminOperateLog($addData);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    //TODO: 開關AJAX
+    public function ajaxSwitchAgent(){
+        $request = $this->getRequest();
+        $CommonAgent = D("CommonAgent");
+        switch($request['mode_id']){
+            case 'stopId':
+                $data = array(
+                    "agent_id" => $request['stopId'],
+                    "agent_status" => 1,
+                );
+                $return = $CommonAgent->setAgentDataById($data);
+                $addData = array(
+                    'operateLog_class'=>41, //
+                    'operateLog_objectId'=>$request['stopId'],
+                    'operateLog_objectAccount'=>$request['acc'],
+                    'operateLog_main'=> array(
+                        'agent_id' => $request['stopId'],
+                        'agent_account' => $request['acc'],
+                        'agent_status' => 1,
+                    ),
+                );
+                $this->addAdminOperateLog($addData);
+                break;
+            case 'startId':
+                $data = array(
+                    "agent_id" => $request['startId'],
+                    "agent_status" => 0,
+                );
+                $return = $CommonAgent->setAgentDataById($data);
+                $addData = array(
+                    'operateLog_class'=>42, //
+                    'operateLog_objectId'=>$request['startId'],
+                    'operateLog_objectAccount'=>$request['acc'],
+                    'operateLog_main'=> array(
+                        'agent_id' => $request['startId'],
+                        'agent_account' => $request['acc'],
+                        'agent_status' => 1,
+                    ),
+                );
+                $this->addAdminOperateLog($addData);
+                break;
+            default:
+                break;
+        }
+    }
+}

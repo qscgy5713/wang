@@ -1,0 +1,25 @@
+<?php
+/*
+ * 網域
+ */
+class CommonAgentDomainModel extends AgentModel {
+    public function getAgentDomainData(){
+        $sql = "SELECT * FROM `common_agent_domain`
+                WHERE `domain_enable` = 1;";
+        //$return = $this->query($sql);
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    public function getAgentDomainDataByDomainId($data){
+        if(empty($data['domain_id']) && $data['domain_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT * FROM `common_agent_domain`
+                WHERE `domain_enable` = 1 AND `domain_id` = '".$data['domain_id']."' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+}

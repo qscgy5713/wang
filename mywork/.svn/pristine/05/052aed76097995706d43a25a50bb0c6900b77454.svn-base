@@ -1,0 +1,184 @@
+<?php
+class EventLottofourAction extends AdminAction {
+    //TODO: 四星彩管理 首頁
+    public function index(){
+        $request = $this->getRequest();
+        
+        //讀取 頁面資料
+        
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        
+        $CommonEventLottofourMemberNumber = D("CommonEventLottofourMemberNumber");
+        $data = array(
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime)
+        );
+        $return = $CommonEventLottofourMemberNumber->getAllLottofourMemberNumberDataByTime($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "memberNumber_id"=>"id",
+            "member_id"=>"memberId",
+            "member_account"=>"memberAccount",
+            "recharge_id"=>"rechargeId",
+            "recharge_money"=>"rechargeMoney",
+            "memberNumber_number"=>"number",
+            "event_status"=>"status",
+            "event_money"=>"money",
+            "memberNumber_lottofour"=>"lottofour",
+            "event_createTime"=>"createTime",
+            "memberNumber_lotterTime"=>"lotterTime",
+            "memberNumber_result"=>"result",
+            "memberNumber_openLotteryTime"=>"openLotteryTime",
+            "memberNumber_modifyTime"=>"modifyTime"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                $showStr = "";
+                switch ($key1){
+                    case 'event_money':
+                        if($value['memberNumber_manyStar'] > 0 && empty($value['event_money'])){
+                            $showStr = "true";
+                        } else {
+                            $showStr = $value['event_money'];
+                        }
+                        break;
+                    case 'event_status':
+                        $showStr = $CommonEventLottofourMemberNumber->getLottofourMemberNumberStatusStr($value[$key1]);
+                        break;
+                    case 'event_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'memberNumber_modifyTime'://建立時間 時間戳 轉換 日期
+                        if(!empty($value[$key1])){
+                            $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        }
+                        break;
+                    case 'memberNumber_openLotteryTime'://開獎時間 時間戳 轉換 日期
+                        if(!empty($value[$key1])){
+                            $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+            
+        }
+        //var_dump($showArray);
+        $this->assign("showArray",$showArray);
+        $this->display();
+    }
+    public function addLottofour(){
+        $request = $this->getRequest();
+        if(!isset($request['addLottofour']) || empty($request['addLottofour'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//開獎號碼為空，請重新輸入。
+        }
+        if(!strlen($request['addLottofour']) == 4){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//開獎號碼4位數，請重新輸入。
+        }
+        if(!isset($request['addLotterTime']) || empty($request['addLotterTime'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//開獎日期為空，請重新輸入。
+        }
+        if(!isDate($request['addLotterTime'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//開獎日期格式錯誤，請重新輸入。
+        }
+        
+        $CommonEventLottofour = D("CommonEventLottofour");
+        $data = array(
+            'lottofour_createTime'=>time(),
+            'lottofour_lotterTime'=>strtotime($request['addLotterTime']),
+            'lottofour_lotteryNumber'=>$request['addLottofour']
+        );
+        $return = $CommonEventLottofour->addEventLottofourData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    public function addGiveMoney(){
+        $request = $this->getRequest();
+        if(!isset($request['memberNumberId']) || empty($request['memberNumberId'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//開獎ID為空，請重新輸入。
+        }
+        if(!isset($request['eventMoney']) || empty($request['eventMoney'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//給獎金額為空，請重新輸入。
+        }
+        //使用ID尋找四星彩資料
+        $CommonEventLottofourMemberNumber = D("CommonEventLottofourMemberNumber");
+        $data = array(
+            "memberNumber_id"=>$request['memberNumberId']
+        );
+        $return = $CommonEventLottofourMemberNumber->getLottofourMemberNumberDataById($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        //var_dump($return);
+        if($return['memberNumber_manyStar'] == 0 && $return['event_status'] != 3){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//此筆四星彩無中獎，請重新選擇。
+        }
+        
+        //對會員錢包上點 改四星彩 (admin_id,memberNumber_lottoMoney,memberNumber_modifyTime) 資料
+        $data = array(
+            'memberNumber_id'=>$return['memberNumber_id'],
+            'member_id'=>$return['member_id'],
+            'agent_id'=>$return['agent_id'],
+            'agent_tree'=>$return['agent_tree'],
+            'ratio_tree'=>$return['ratio_tree'],
+            'admin_id'=>$_SESSION['Admin']['id'],
+            'event_money'=>$request['eventMoney'],
+            'memberNumber_modifyTime'=>time(),
+            'event_status'=>2 //改為2已贈點
+        );
+        $return = $CommonEventLottofourMemberNumber->setLottofourMemberNumberDataByIdUseGiveMoney($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+}

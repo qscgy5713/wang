@@ -1,0 +1,134 @@
+<?php
+return array(
+	//API
+    "ERROR_APIACTION_GETMEMBERINFODATA_01" => "Please login to the member account first",
+    "ERROR_APIACTION_CREATEMEMBER_01" => "No game selected",
+
+    //Game
+	'ERROR_GAMEDGACTION_INDEX_01' => 'G001 DGTEST Error message.',
+    "ERROR_GAMEDGMODEL_CREATEMEMBER_01" => "",
+    "ERROR_GAMEDGMODEL_CREATEMEMBER_03" => "Error, please contact customer service.",
+
+     //CommonKotsmsModel
+    "ERROR_COMMONKOTSMSMODEL_SENDAPIKOSTMS_01"=>"The content of the text message is empty!",
+    "ERROR_COMMONKOTSMSMODEL_SENDAPIKOSTMS_02"=>"Phone format error!",
+
+    //
+    "ERROR_KOTSMSINFOMODEL_SENDKOSTMS_04" => "The maximum text message limit has been exceeded today!",
+
+    //ForgetPage 忘記密碼
+    "ERROR_FORGETPAGEACTION_FORMREMEBER_01" => "Forgot your account/password has reached the maximum limit today,please try again tomorrow.",
+    "ERROR_FORGETPAGEACTION_FORMREMEBER_02" => "The verification code is incorrect. Please re-enter.",
+    "ERROR_FORGETPAGEACTION_FORMREMEBER_03" => "The phone number entered is not in the correct format. please enter again.",
+    "ERROR_FORGETPAGEACTION_FORMREMEBER_04" => "do not have this phone to register for mwmber, please re-enter.",
+
+	//ReceptionIndex 首頁
+	'ERROR_MEMBERINDEXACTION_FORMLOGIN_01' => 'R001 Database error, please inform customer service, thank you.',
+    'ERROR_MEMBERINDEXACTION_FORMLOGIN_02' => 'R002 No such account or password is invalid, please re-enter.',
+    'ERROR_MEMBERINDEXACTION_FORMLOGIN_03' => 'The account/password is incorrect. Please re-enter.',
+    'ERROR_MEMBERINDEXACTION_FORMLOGIN_04' => 'Your account will be suspended if it violates the company\'s Terms of Service.',
+
+    'ERROR_MEMBERACTION_GETMEMBERDATA_01' => 'Database error, please inform customer service, thank you.',
+    'ERROR_MEMBERACTION_GETMEMBERDATA_02' => 'Your account will be suspended if it violates the company\'s Terms of Service.',
+    'ERROR_MEMBERACTION_GETMEMBERDATA_03' => 'Your recharge value data does not match,Temporarily turn off related features,Please contact online customer service to contact you.',
+    'ERROR_MEMBERACTION_GETMEMBERDATA_04' => 'Your account has been logged out. Please refresh and sign in again.',
+
+    //BankcodeBindingAction 銀行綁定
+    "ERROR_BANKCODEBINDINGACTION_FORMBANKCODEBINDING_01"=>"Bank code not selected! Please re-enter!",
+    "ERROR_BANKCODEBINDINGACTION_FORMBANKCODEBINDING_02"=>"Bank account not entered! Please re-enter!",
+    "ERROR_BANKCODEBINDINGACTION_FORMBANKCODEBINDING_03"=>"Account length should be between 6 and 14! Please re-enter!",
+    "ERROR_BANKCODEBINDINGACTION_FORMBANKCODEBINDING_04"=>"No bank account name entered! Please re-enter!",
+    "ERROR_BANKCODEBINDINGACTION_FORMBANKCODEBINDING_05"=>"No bank branch entered! Please re-enter!",
+    "SECCESS_BANKCODEBINDINGACTION_FORMBANKCODEBINDING_01"=>"Bind the bank card successfully!",
+
+    //PointRechargeAction 儲值
+    "ERROR_POINTRECHARGEACTION_INDEX_01"=>"The bank has not been bound. Please bind the bank card first.(Automatically enter the binding after pressing Close)",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_01"=>"No rechargeand value is entered.Please re-enter!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_02"=>"The input amount format does not match.Please re-enter!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_03"=>"The amount entered is less than the minimum amount.Please re-enter!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_04"=>"The input amount is higher than the maximum amount.Please re-enter!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_05"=>"The rechargeand value method is not selected.Please re-enter!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_06"=>"The rechargeand value method is not open.Please re-enter!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_07"=>"Failed to get the rechargeand value code, please contact customer service!",
+    "ERROR_POINTRECHARGEACTION_FORMPOINTRECHARGE_08"=>"Failed to get the rechargeand value code, please contact customer service!",
+
+    //RegistPageAction 註冊
+    "ERROR_REGISTPAGEACTION__INITIALIZE_01"=>"You have logged in successfully!",
+    "ERROR_REGISTPAGEACTION_FORMREGIST_01"=>"The member password is empty, please re-enter",
+    "ERROR_REGISTPAGEACTION_FORMREGIST_02"=>"Password does not meet the requirements between 6 and 20",
+    "ERROR_REGISTPAGEACTION_FORMREGIST_03"=>"The password does not match the confirmation password. Please re-enter.",
+    "ERROR_REGISTPAGEACTION_FORMREGIST_04"=>"The phone number is empty, please re-enter.",
+    "ERROR_REGISTPAGEACTION_FORMREGIST_05"=>"The phone number has been registered, please re-enter!",
+
+    //MemberCenterAction formChangePassword 修改會員密碼
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_01"=>"The old password is empty. Please re-enter the old password.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_02"=>"The new password is empty. Please re-enter the new password.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_03"=>"Confirm that the password is empty. Please re-enter the confirmation password.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_04"=>"The new password cannot be the same as the old password. Please re-enter it.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_05"=>"The new password does not match the confirmation password. Please re-enter.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_06"=>"Get member information error, please login again.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_07"=>"No such account, please login again.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_08"=>"Wrong password, please re-enter.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_09"=>"setting password is failure. Please login again.",
+    "ERROR_MEMBERCENTERACTION_FORMCHANGEPASSWORD_10"=>"The new password should be between 6 and 20 digits in length! please enter again.",
+    "SECCESS_MEMBERCENTERACTION_FORMCHANGEPASSWORD_01"=>"password has been updated.",
+
+    "ERROR_POINTWITHDRAWACTION_INDEX_01"=>"The bank has not been bound. Please bind the bank card first.(Automatically enter the binding after pressing Close)",
+
+    "ERROR_COMMONMEMBERWALLETMODEL_GETWALLETDATA_01"=>"Please login to the member first.",
+
+    "SUCCESS_POINTCENTERACTION_ADDMEMBERGAMEACCOUNT_01"=>"The game was successfully opened!",
+
+    "ERROR_REGISTPAGEACTION_FORMREGISTCHECK_01"=>"The verification code does not match 6 yards, please re-enter.",
+    "ERROR_REGISTPAGEACTION_FORMREGISTCHECK_02"=>"The verification code does not match, please re-enter.",
+    "ERROR_REGISTPAGEACTION_FORMREGISTCHECK_05"=>"No such agent account",
+
+    "ERROR_MEMBERACTION_CHECKKOSTMSLIMIT_01" => "The maximum  text message limit has been exceeded today!",
+    "ERROR_MEMBERACTION_CHECKKOSTMSLIMIT_02" => "Has reached the registration maximum limit today",
+    "ERROR_MEMBERACTION_CHECKKOSTMSLIMIT_03" => "Forgot your account/password has reached the maximum limit today",
+
+    "SECCESS_MEMBERCENTERACTION_FORMSERVICE_01" => "Have sent customer service, thank you for your letter!",
+
+    "ERROR_MEMBERACTION_ISMEMBERLOGINSHOWERR_01"=>"Please login to the member account first!",
+
+    "ERROR_CASHFLOWNEWEBPAYMODEL_GETNEWEBPAYSTOREDATA_05"=>"Network error, please re-operate!",
+
+    "SECCESS_POINTWITHDRAWACTION_FORMPOINTRECHARGE_01"=>"sales application has been sent!",
+
+    "SUCCESS_REBATEEVENTACTION_FORMSTOREGIFT_01"=>"If the application is successful, please wait for the customer service review.",
+    "SUCCESS_REBATEEVENTACTION_FORMBACCARATWINNING_01"=>"If the application is successful, please wait for the customer service review.",
+    "SUCCESS_REBATEEVENTACTION_FORMREVERSAL_01"=>"If the application is successful, please wait for the customer service review.",
+
+    //PointWithdraw formPointRecharge 託售處理
+    "ERROR_POINTWITHDRAWACTION_FORMPOINTRECHARGE_01"=>"The sales amount is empty. Please re-enter the amount.",
+    "ERROR_POINTWITHDRAWACTION_FORMPOINTRECHARGE_02"=>"If you exceed the e-wallet amount, you cannot sales it.",
+    "ERROR_POINTWITHDRAWACTION_FORMPOINTRECHARGE_03"=>"In the processing of the previous sale order, please apply again later.",
+    "ERROR_POINTWITHDRAWACTION_FORMPOINTRECHARGE_04"=>"Database error, please contact customer service.",
+    "ERROR_POINTWITHDRAWACTION_FORMPOINTRECHARGE_05"=>"In the maintenance of the sales system, please contact customer service.",
+    "ERROR_POINTWITHDRAWACTION_FORMPOINTRECHARGE_06"=>"The maximum sales limit for the day has been reached.",
+
+
+     //MEMBERDETAILACTION
+    'ERROR_MEMBERDETAILACTION_ONEGAMEMEMBERDETAIL_01'=>'No choice game hall',
+
+    //AgentJoin
+    'ERROR_AGENTJOINACTION_FORMAGENTJOIN_01' => 'Add failed',
+    'ERROR_AGENTJOINACTION_FORMAGENTJOIN_05' => 'Graphical verification error',
+    'SECCESS_AGENTJOINACTION_FORMAGENTJOIN_01' => 'Submitted application',
+
+    //RebateEvent
+
+
+    'SUCCESS_REBATEEVENTACTION_FORMEXPERIENCE_01' => 'Application is successful, please wait for customer service review. ',
+    'SUCCESS_REBATEEVENTACTION_FORMEXPERIENCE_02' => 'The application was successful and the experience gold has been sent to the Mavericks wallet. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_01' => 'Please login to the member first. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_02' => 'This event is closed. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_03' => 'This event is closed. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_04' => 'Database error. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_05' => 'Database error. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_06' => 'In the active order processing, please wait. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_07' => 'This event has been requested E001',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_08' => 'This activity has been applied E002',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_09' => 'The status code is incorrect. Please login again. ',
+    'ERROR_REBATEEVENTACTION_FORMEXPERIENCE_10' => 'auto code error, please login again. ',
+);

@@ -1,0 +1,414 @@
+<?php
+/**
+ * 代理Action
+ */
+class AgentAction extends ApiAction {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        
+        $request = $this->getRequest();
+        
+        //G('begin');
+        //G('end');
+        //var_dump(G('begin','end').'s');exit();測試程式跑的時間
+        
+        $returnArray = array(
+            "ajaxGetMemberPoint",//會員點數頁面 取得會員點數
+            "searchMemberName",//搜尋(下拉) 取得會員帳號
+            "searchMemberName1",
+            "memberDetail",//遊戲報表 會員明細頁面
+            "eachGameDetail",//遊戲報表 各館會員明細
+            "formDelAgentSub",//子帳號頁面 刪除子帳號
+            "formStopAgentSub",//子帳號頁面 停權子帳號
+            "formStartAgentSub",//子帳號頁面 啟用子帳號
+            "formStopAgent",//代理頁面 停權代理
+            "formStartAgent",//代理頁面 啟用代理
+        );
+        if(in_array($request['_URL_'][1], $returnArray)){
+            if(!($this->isAgentLogin())){
+                exit();
+            }
+            return;
+        }
+        
+        
+        //判斷代理是否已登入
+        if(!($this->isAgentLogin())){
+            //否，無登入狀態
+            unset($_SESSION['Agent']);
+            $this->assign("isLogin","false");
+            if($request['_URL_'][0] != 'AgentIndex'){
+                redirect(__APP__.'/AgentIndex/index');
+            }
+            return;
+        }
+        
+        //判定有 登入後 所做的事
+        $this->getAgentData();
+        $this->getAgentMarquee();//跑馬燈
+        
+        //是，登入狀態，判斷 代理 是否停權
+        if($this->isAgentLosePower()){
+            //是  倒回首頁 顯示停權 視窗
+            $status = $_SESSION['Agent']['status'];
+            unset($_SESSION['Agent']);
+            //$this->assign("waitSecond","15");
+            $this->assign("jumpUrl","__APP__/AgentIndex/index");
+            switch($status){
+                case 1://一般停權
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                    break;
+            }
+            return;
+        }
+        //判斷 代理 是否被踢登出 或 重複登入
+        if($this->isAgentOutLogin()){
+            //是  倒回首頁 顯示停權 視窗
+            $uid = $_SESSION['Agent']['uid'];
+            unset($_SESSION['Agent']);
+            //$this->assign("waitSecond","15");
+            $this->assign("jumpUrl","__APP__/AgentIndex/index");
+            switch($uid){
+                case NULL://被踢出
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                    break;
+                default://重複登入
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+                    break;
+            }
+            return;
+        }
+        
+        
+        $showPageArray = $this->getPageArray();
+        
+        //var_dump($showPageArray);
+        $actionNamePower = cookie('agentActionPower');
+        $actionNamePowerArray = explode(",", $actionNamePower);
+        
+        if(!empty($request['_URL_'][0])){
+            if(!in_array($request['_URL_'][0],$actionNamePowerArray) && $request['_URL_'][0] != 'AgentIndex' && $request['_URL_'][0] != 'Agent'){
+                var_dump($request['_URL_'][0]);
+                var_dump($actionNamePowerArray);
+                exit();
+                //redirect(__APP__.'/AgentIndex/index');
+            }
+        }
+        
+        
+        $this->assign("isLogin","true");
+        $identity = $_SESSION['Agent']['identity'];
+        switch ($identity){
+            case 1://代理
+                $this->assign("agentAccount",$_SESSION['Agent']['account']);
+                break;
+            case 2://子帳號
+                $this->assign("agentAccount",$_SESSION['Agent']['subAccount']);
+                break;
+            default:
+                unset($_SESSION['Agent']);
+                break;
+        }
+        
+        $this->assign("showPageArray",$showPageArray);
+    }
+    
+    
+    /*
+     * 讀取用戶資料
+     * 重新取得 代理 資訊
+     */
+    protected function getAgentData(){
+        if((time() - $_SESSION['Agent']['isRenewLoad']) > 30){
+            $identity = $_SESSION['Agent']['identity'];
+            switch ($identity){
+                case 1://代理
+                    $CommonAgent = D("CommonAgent");
+                    $data = array(
+                        "agent_account" => $_SESSION['Agent']['account'] //登入的帳號
+                    );
+                    $return = $CommonAgent->getAgentDataByAccount($data);
+                    if($return === false){
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                    }
+                    //var_dump($return);
+                    $_SESSION['Agent']['uid'] = $return['agent_uid'];
+                    $_SESSION['Agent']['status'] = $return['agent_status'];
+                    
+                    $upOnlineTime = cookie('upOnlineTime');
+                    if(empty($upOnlineTime)){
+                        cookie('upOnlineTime',time());
+                        $upOnlineTime = time();
+                    }
+                    if((time() - $upOnlineTime) > 1200){
+                        $CommonAgentOnline = D("CommonAgentOnline");
+                        $data = array(
+                            "agent_id"=>$_SESSION['Agent']['id'],
+                            "sub_id"=>null,
+                            "online_modifyTime"=>time()
+                        );
+                        $return = $CommonAgentOnline->setAgentOnlineDataById($data,$err);
+                        if ($return === false) {
+                            $this->error($err);
+                        }
+                    }
+                    break;
+                case 2://子帳號
+                    $CommonAgentSub = D("CommonAgentSub");
+                    $data = array(
+                        "sub_account" => $_SESSION['Agent']['subAccount'] //登入的子帳號
+                    );
+                    $return = $CommonAgentSub->getAgentSubDataPageDataByAccount($data);
+                    if($return === false){
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                    }
+                    //subPageData子帳號頁面資料     substr() 去除最後一個字元
+                    $_SESSION['Agent']['subPageData'] = substr($return['power_main'],0,-1);
+                    $_SESSION['Agent']['uid'] = $return['sub_uid'];
+                    $_SESSION['Agent']['status'] = $return['sub_status'];
+                    
+                    
+                    $upOnlineTime = cookie('upOnlineTime');
+                    if(empty($upOnlineTime)){
+                        cookie('upOnlineTime',time());
+                        $upOnlineTime = time();
+                    }
+                    if((time() - $upOnlineTime) > 1200){
+                        $CommonAgentOnline = D("CommonAgentOnline");
+                        $data = array(
+                            "agent_id"=>$_SESSION['Agent']['id'],
+                            "sub_id"=>$_SESSION['Agent']['subId'],
+                            "online_modifyTime"=>time()
+                        );
+                        $return = $CommonAgentOnline->setAgentOnlineDataById($data,$err);
+                        if ($return === false) {
+                            $this->error($err);
+                        }
+                    }
+                    break;
+                default:
+                    unset($_SESSION['Agent']);
+                    break;
+            }
+        }
+    }
+    /*
+     * 判斷 代理 是否登入
+     */
+    protected function isAgentLogin() {
+        //判斷 SESSION 是否存在
+        if(!isset($_SESSION['Agent']['account']) && !isset($_SESSION['Agent']['id'])){
+            //否，回傳 false
+            return false;
+        }
+        //是，回傳 true
+        return true;
+    }
+    /*
+     *  判斷 代理 是否被踢除或異地登入
+     */
+    protected function isAgentOutLogin() {
+        //game可以多重登入
+        if($_SESSION['Agent']['account'] == 'game'){
+            return false;
+        }
+        //判斷 uid 是否與SESSION 的 login_uid 一致
+        if($_SESSION['Agent']['uid'] === $_SESSION['Agent']['login_uid']){
+            //是，回傳 false
+            return false;
+        }
+        //否，回傳 true
+        return true;
+    }
+    /*
+     *  判斷 代理 是否停權
+     */
+    protected function isAgentLosePower() {
+        //判斷 common_member member_status 是否是停權狀態
+        if($_SESSION['Agent']['status'] == 1){
+            //是，回傳 true
+            return true;
+        }
+        //否，回傳 false
+        return false;
+    }
+    
+    /*
+     *  取得頁面資訊
+     */
+    protected function getPageArray(){
+        $CommonAgentPageclass = D("CommonAgentPageclass");//讀取頁面Class
+        $return = $CommonAgentPageclass->getAgentPageClassDataUse();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $classArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "pageclass_id"=>"id",
+            "pageclass_showName"=>"showName"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $classArray[$key][$value1] = $showStr;
+            }
+        }
+        
+        $CommonAgentPageclassPage = D("CommonAgentPageclassPage");
+        $return = $CommonAgentPageclassPage->getAgentPageDataUse();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $pageArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "page_id"=>"id",
+            "pageclass_id"=>"classId",
+            "page_actionName"=>"actionName",
+            "page_showName"=>"showName"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $pageArray[$key][$value1] = $showStr;
+            }
+        }
+        $showPageArray = array();
+        $actionNamePower = "";
+        $identity = $_SESSION['Agent']['identity'];
+        switch ($identity){
+            case 1://代理
+                foreach($classArray as $classkey => $classvalue){
+                    $i = 0;
+                    foreach($pageArray as $pagekey => $pagevalue){
+                        if($classvalue['id'] == $pagevalue['classId']){
+                            if(empty($actionNamePower)){
+                                $actionNamePower = $pagevalue['actionName'];
+                            } else {
+                                $actionNamePower .= ",".$pagevalue['actionName'];
+                            }
+                            $showPageArray[$classvalue['showName']][$i] = $pagevalue;
+                            $i++;
+                        }
+                    }
+                }
+                break;
+            case 2://子帳號
+                $powerArray = explode(",",$_SESSION['Agent']['subPageData']);
+                foreach($classArray as $classkey => $classvalue){
+                    $i = 0;
+                    foreach($pageArray as $pagekey => $pagevalue){
+                        if (in_array($pagevalue['id'], $powerArray)) {
+                            if($classvalue['id'] == $pagevalue['classId']){
+                                if(empty($actionNamePower)){
+                                    $actionNamePower = $pagevalue['actionName'];
+                                } else {
+                                    $actionNamePower .= ",".$pagevalue['actionName'];
+                                }
+                                $showPageArray[$classvalue['showName']][$i] = $pagevalue;
+                                $i++;
+                            }
+                        }
+                    }
+                }
+                break;
+            default:
+                unset($_SESSION['Agent']);
+                break;
+        }
+        cookie('agentActionPower',$actionNamePower,600); 
+        return $showPageArray;
+    }
+    //TODO: 代理登出功能
+    public function logout(){
+        $identity = $_SESSION['Agent']['identity'];
+        switch ($identity){
+            case 1://代理
+                $CommonAgent = D("CommonAgent");
+                $data = array(
+                    "agent_id" => $_SESSION['Agent']['id'],
+                    "agent_uid" => NULL
+                );
+                $CommonAgent->setAgentDataById($data);
+                $CommonAgentOnline = D("CommonAgentOnline");
+                $data = array(
+                    "agent_id"=>$_SESSION['Agent']['id'],
+                    "sub_id"=>null
+                );
+                $CommonAgentOnline->delAgentOnlineDataById($data);
+                break;
+            case 2://子帳號
+                $CommonAgentSub = D("CommonAgentSub");
+                $data = array(
+                    "sub_id" => $_SESSION['Agent']['subId'],
+                    "sub_uid" => NULL,
+                    "sub_modifyTime"=> $nowTime
+                );
+                $CommonAgentSub->setAgentSubDataById($data);
+                $CommonAgentOnline = D("CommonAgentOnline");
+                $data = array(
+                    "agent_id"=>$_SESSION['Agent']['id'],
+                    "sub_id"=>$_SESSION['Agent']['subId']
+                );
+                $CommonAgentOnline->delAgentOnlineDataById($data);
+                break;
+            default:
+                break;
+        }
+        cookie('upOnlineTime',null);
+        //清除代理資料 SESSION
+        unset($_SESSION['Agent']);
+        //顯示你已登出，重新導回首頁
+        redirect(__APP__.'/AgentIndex/index');
+    }
+    public function addAgentOperateLog($addData){
+        $CommonAgentOperateLog = D("CommonAgentOperateLog");
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            'agent_id'=>$_SESSION['Agent']['id'],
+            'agent_account'=>$_SESSION['Agent']['account'],
+            'agent_tree'=>$_SESSION['Agent']['tree'],
+            'operateLog_class'=>$addData['operateLog_class'],
+            'operateLog_objectId'=>$addData['operateLog_objectId'],
+            'operateLog_objectAccount'=>$addData['operateLog_objectAccount'],
+            'operateLog_main'=>json_encode($addData['operateLog_main']),
+            'operateLog_createTime'=>$nowTime,
+            'operateLog_ip'=>$ip,
+            'operateLog_url'=>get_url(),
+        );
+        if(!empty($_SESSION['Agent']['subId'])){
+            $data['sub_id'] = $_SESSION['Agent']['subId'];
+            $data['sub_account'] = $_SESSION['Agent']['subAccount'];
+        }
+        $return = $CommonAgentOperateLog->addAgentOperateLogData($data);
+    }
+    //TODO:跑馬燈
+    protected function getAgentMarquee(){
+        //從 CommonMarqueeModel getAgentMarquee() 取得前台跑馬燈資料
+        $CommonMarquee = D("CommonMarquee");
+        $return = $CommonMarquee->getAgentMarqueeData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->assign("marqueeArray",$return);
+    }
+}

@@ -1,0 +1,59 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/> 
+<div class="container pt180 pb50 bg-min-height" >
+     <h2 class="text-center">QT電子遊戲</h2>
+     <p class="text-center">提供最新穎的老虎機、桌面遊戲，及其他電子遊戲。</p>
+  <hr>
+  
+  <div>
+        
+        <!-- Nav tabs -->
+          
+       <ul class="nav nav-tabs tabs-default mb30" role="tablist">
+       
+	       <VOLIST name="GameQtMenu" id="data" key="k">
+	       		<if condition='$k eq "1"'>
+	       			<li class="nav-item" role="presentation"><a class="active nav-link" href="#tab{$k}" aria-controls="home" role="tab" data-toggle="tab">{$GameQtChMenu[$key]}({$GameQtMenuCount[$key]})</a></li>
+	       		<else/>
+	       			<li class="nav-item" role="presentation"><a class=" nav-link" href="#tab{$k}" aria-controls="home" role="tab" data-toggle="tab">{$GameQtChMenu[$key]}({$GameQtMenuCount[$key]})</a></li>
+	       		</if>
+	       		
+	       </VOLIST>
+       </ul>
+
+       <!-- Tab panes -->
+       <div class="tab-content">
+       		<VOLIST name="GameQtMenu" id="data" key="k">
+	       		<if condition='$k eq "1"'>
+	       			<div role="tabpanel" class="tab-pane active show fade" id="tab{$k}">
+	       		<else/>
+	       			<div role="tabpanel" class="tab-pane show fade" id="tab{$k}">
+	       		</if>
+       					<div class="row">
+			                <VOLIST name="data" id="vo">
+			                
+			                    <div class="col-lg-2 mb30 wow fadeInUp" data-wow-delay=".2s" style="visibility: visible; animation-delay: 0.2s; animation-name: fadeInUp;">
+				                      <div class="entry-card">
+				                      	<a href="#" class="entry-thumb simple-hover">
+				                      	
+				                           <img src="__CSS__/images/qt/{$vo.image_src}.png" alt="" class="img-fluid game-img-size-qt"> 
+				                      	</a>
+				                      	<div class="entry-content">
+				                      		<h4 class="entry-title text-capitalize text-center">
+				                              <a href="#">
+				                                  {$vo.game_name_ch}
+				                              </a>
+				                          </h4>
+					                    </div>
+					                  </div>
+					              </div>
+			                </VOLIST>
+		                </div>
+	            </div>
+	        </VOLIST>
+	        
+         </div>
+   </div>
+ </div>
+   
+ <include file="Common:footer"/> 

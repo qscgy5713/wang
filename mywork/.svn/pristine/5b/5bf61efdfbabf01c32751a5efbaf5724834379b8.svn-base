@@ -1,0 +1,153 @@
+<?php
+/*
+ * 簡訊資訊
+ */
+class KotsmsInfoModel extends MemberModel {
+    protected $tableName = "kotsms_info";
+    protected $tableId = "info_account";
+    
+    protected $apiUrl = "http://api.kotsms.com.tw/kotsmsapi-1.php?";//API網址
+    protected $account = "wukong01";//簡訊王帳號
+    protected $password = "qwer55369";//簡訊王密碼
+    
+    protected $response = "http://";//回報網址  未加入API內
+    
+    
+    protected $codeStrStart = "小牛遊戲 感謝您的註冊。驗證碼【";
+    protected $codeStrEnd = "】，請於10分鐘內輸入。若非本人，請忽略此簡訊!首次充值1000點以上即送1000點。";
+    
+    protected $forgetStart = "小牛遊戲  忘記帳密 請在畫面上輸入 驗證碼【";
+    protected $forgetEnd = "】，請於10分鐘內輸入。若非本人，請忽略此簡訊!";
+    
+    protected $registStr = "娛樂 感謝您的註冊。帳號【3g18029】您的密碼【as555555】帳號也能手機號碼登入，首儲1000點立即申請加贈1000點";
+    
+    
+    public function sendKostms($data,&$err = ""){
+        if(empty($data['phone']) || !preg_match('/^09([0-9]{8})$/', $data['phone'])){//驗證是否為電話
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        if(empty($data['code']) && $data['code'] !== 0){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        
+        
+        $phone = $data['phone'];
+        $code = $data['code'];
+        $main = $data['main'];
+        
+        $ip = get_ip_inet_pton(getIp());
+        $KotsmsLog = D("KotsmsLog");
+        $data = array(
+            "startTime" => strtotime(date("Y-m-d 00:00:00")),
+            "endTime" => strtotime(date("Y-m-d 23:59:59")),
+            "log_ip" => $ip,
+        );
+        $return = $KotsmsLog->getKotsmsNumberData($data);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));//資料庫錯誤
+            return false;
+        }
+        if(!empty($return['totalNumber'])){
+            if($return['totalNumber'] >= 5){
+                $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));//本日已超過簡訊上限
+                return false;
+            }
+        }
+        
+        $kostmsMain = "";
+        $KotsmsMain = D("KotsmsMain");
+        $data = array(
+            'main_code' => $code
+        );
+        $return = $KotsmsMain->getKotsmsMainData($data);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_05"));//取得預設內容失敗
+            return false;
+        }
+        $kostmsMain = $return['main_text'];
+        
+        if(isset($main['memberAccount'])){
+            $kostmsMain = str_replace("memberAccount",$main['memberAccount'],$kostmsMain);
+        }
+        if(isset($main['memberPassword'])){
+            $kostmsMain = str_replace("memberPassword",$main['memberPassword'],$kostmsMain);
+        }
+        if(isset($main['siteUrl'])){
+            $kostmsMain = str_replace("siteUrl",$main['siteUrl'],$kostmsMain);
+        }
+        if(isset($main['verificationCode'])){
+            $kostmsMain = str_replace("verificationCode",$main['verificationCode'],$kostmsMain);
+        }
+                
+        $data = array(
+            "smbody" => $kostmsMain, //內容
+            "dstaddr" => $phone //電話
+        );
+        $return = $this->sendApiKostms($data,$err);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+            return false;
+        }
+        
+        
+        $data = array(
+            "log_createTime" => time(),
+            "main_code" => $code,
+            "log_url" => get_url(),
+            "log_ip" => $ip,
+            "log_main" => $kostmsMain,
+            "log_phone" => $phone,
+            "log_mainJson" => json_encode($main),
+        );
+        $KotsmsLog->addKotsmsLogData($data);
+        
+    }
+    
+    /**
+     * 寄送簡訊
+     * 必要包含
+     *  $data['smbody'] 簡訊內容
+     *  $data['dstaddr'] 傳送電話
+     */
+    public function sendApiKostms($data,&$err = ""){
+        if(empty($data['smbody']) && $data['smbody'] !== 0){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));//簡訊內容為空
+            return false;
+        }
+        if(empty($data['dstaddr']) || !preg_match('/^09([0-9]{8})$/', $data['dstaddr'])){//驗證是否為電話
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                LIMIT 1";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));//資料庫錯物
+            return false;
+        }
+        
+        
+        $data['username'] = $return[0]['info_account'];
+        $data['password'] = $return[0]['info_password'];
+        
+        $data['smbody'] = iconv("UTF-8","big5//TRANSLIT",$data['smbody']);
+        
+        $querystring = http_build_query($data);
+        
+        //var_dump($data);
+        //var_dump($querystring);
+        
+        //kmsgid=214229524
+        //kmsgid=214229557
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->apiUrl.$querystring);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        
+        //var_dump('傳送成功');
+        return $result;
+    }
+}

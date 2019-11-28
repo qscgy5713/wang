@@ -1,0 +1,27 @@
+<?php
+/*
+ * 會員洗碼
+ */
+class CommonGameWaterrankModel extends MemberModel {
+    protected $tableName = "common_game_waterrank";
+    protected $tableId = "waterRank_id";
+    /*
+     * 取得 階層 預設資料
+     */
+    public function getGameWaterrankData($data,&$err=""){
+        if(empty($data['gameClass_id']) && $data['gameClass_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無遊戲類別ID
+            return false;
+        }
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                WHERE `gameClass_id` = '{$data['gameClass_id']}'
+                AND `waterRank_serial` = '{$data['waterRank_serial']}';";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//資料庫錯誤
+            return false;
+        }
+        return $return[0];
+    }
+}

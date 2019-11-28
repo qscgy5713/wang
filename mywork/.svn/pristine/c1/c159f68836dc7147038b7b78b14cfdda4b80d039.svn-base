@@ -1,0 +1,714 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+<section class="main-container padding-bottom-clear md-main-container">
+
+        <!-- section -->
+        <!-- ================ -->
+        <section class="light-gray-bg light-gray-bg-m pv-30 pt-11 padding-bottom-clear clearfix">
+        <include file="Common:marquee"/>
+          <div class="container">
+          	<div class="main col-md-12">
+              <!-- page-title start -->
+              <!-- ================ -->
+              <h1 class="page-title text-white">點數中心</h1>
+              <div class="separator-2"></div>
+              <!-- page-title end -->
+            </div>
+            
+          	<div class="container">
+	          <h3 class="mt-4 text-white">財神娛樂</h3>
+	        </div>
+            <div class="row">
+              <div class="col-md-4 ">
+                <div class="pv-20 ph-20 hc-item-box-2 boxed hc-shadow hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon without-bg"><i class="fa fa-diamond"></i></span>
+                  <div class="body">
+                    <h4 class="title text-white">電子錢包</h4>
+                    <div class="separator-2"></div>
+                    <p class="text-white">餘額:<span id="memberWallet">{$memberWallet}</span></p>
+                    <p>&nbsp;</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 ">
+                <div class="pv-20 ph-20 hc-item-box-2 boxed hc-shadow hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon without-bg"><i class="fa fa-connectdevelop"></i></span>
+                  <div class="body">
+                    <h4 class="title text-white">總和</h4>
+                    <div class="separator-2"></div>
+                    <p class="text-white"> 餘額:<span id="allMoney">0</span></p>
+                    <a class="btn btn-outline-danger btn-sm" href="#" onClick="getAllGameBalance(true)">重新整理</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <foreach name="gameArray" item="classArray">
+            	<div class="container">
+		          <h3 class="mt-4 text-white">{$key}</h3>
+		        </div>
+		        <div class="row">
+		        	<foreach name="classArray" item="nameArray">
+		        		<div class="col-md-3 ">
+		        			<div class="pv-20 ph-20 hc-item-box-2 boxed hc-shadow hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <span class="icon without-bg"><i class="fa fa-connectdevelop"></i></span>
+			                  <div class="body">
+			                    <h4 class="title text-white">{$nameArray.gameName}</h4>
+			                    <div class="separator-2"></div>
+			                    
+			                    <if condition='$nameArray.accountBool eq "true"'>
+			                    	<p class="text-white">餘額:<span id="{$key}Balance"></span></p>
+			                    	<form method="post" action='__APP__/PointCenter/setGameBalanceTransferWallet'>
+                            			<input type='hidden' name='setGameName' value='{$key}'>
+                            			<input class="btn btn-outline-danger btn-sm" type="submit" id="{$key}TransferWallet" disabled="disabled"  value="轉回"><!-- onClick="ajaxTransferWallet('{$key}')" -->
+                            		</form>
+			                    <else />
+			                    	<p>&nbsp;</p>
+			                    	<form method="post" action='__APP__/PointCenter/addMemberGameAccount'>
+	                            		<input type='hidden' name='addGameName' value='{$key}'>
+										<input class="btn btn-outline-danger btn-sm" type='submit' value='開通遊戲帳號'>
+									</form>
+			                    </if>
+			                  </div>
+			                </div>
+		        		</div>
+		        	</foreach>
+		        </div>
+            </foreach>
+            
+          </div>
+        </section>
+        <!-- section end -->
+</section>						<!-- <div class="col-lg-3 mb40">
+					                    <div class="form-group mb10">
+				                       		<h6>從此遊戲</h6>
+				                            
+				                            <select class="form-control" id="exampleSelect1">
+				                            	<option value="wallet" data-point="0" class="optionMemberWallet">電子錢包..................................{$memberWallet}點</option>
+				                            	<foreach name="gameArray" item="classArray">
+				                            		<foreach name="classArray" item="nameArray">
+				                            			<option value="{$key}" data-point="0" class="option{$key}Balance">{$nameArray.gameName}..................................讀取中</option>
+				                            		</foreach>
+				                            	</foreach>
+				                            </select>
+				                        </div>
+				                        <div class="form-group mb10">
+				                       		<h6>轉移至此</h6>
+				                            
+				                            <select class="form-control" id="exampleSelect1">
+				                                <option value="wallet" data-point="0" class="optionMemberWallet">電子錢包..................................{$memberWallet}點</option>
+				                            	<foreach name="gameArray" item="classArray">
+				                            		<foreach name="classArray" item="nameArray">
+				                            			<option value="{$key}" data-point="0" class="option{$key}Balance">{$nameArray.gameName}..................................讀取中</option>
+				                            		</foreach>
+				                            	</foreach>
+				                            </select>
+				                        </div>
+				                        <div class="form-group mb10">
+				                            <h6>轉移點數</h6>
+				                            <input type="text" class="form-control" id="exampleInputEmail1"  placeholder="請輸入轉移點數">
+				                        </div>
+				                        
+				                        <div>
+				                        	<a href="#" data-toggle="modal" data-target="#ModalLong666" class="btn btn-link btn-block text-left">流程教學</a>
+				                        	
+				                        	<div class="modal fade" id="ModalLong666" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+							                    <div class="modal-dialog" role="document">
+							                        <div class="modal-content">
+							                            <div class="modal-header">
+							                                <h5 class="modal-title" id="exampleModalLongTitle">轉移流程</h5>
+							                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							                                    <span aria-hidden="true">×</span>
+							                                </button>
+							                            </div>
+							                            
+							                            <div class="modal-body">
+							                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/mp_moveProcess.jpg">
+							                            </div>
+							                            
+							                            <div class="modal-footer"></div>
+							                        </div>
+							                    </div>
+							                </div>
+				                        </div>
+				                        
+				                        <div class="mt14 text-center">
+			                        		<button class="btn btn-primary btn-style" data-toggle="modal" data-target=".bd-example-modal-lg">確認轉移</button>
+			                        	</div>
+					                </div> -->
+							            
+					                
+					                
+					                
+					       
+                        <!-- /確認轉移內容 -->
+                        
+                        <!-- 完成託售申請 -->
+                        <!-- <div role="tabpanel" class="tab-pane fade" id="t8">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            
+                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp animated text-center" data-wow-duration="1.5s" data-wow-delay=".2s" 
+                            		 style="display: none; visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0">
+		                               	 尚未送出轉移申請，<br>請至步驟1選擇後按下『確認轉移』
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 btn-3d" onclick="$('#am-s1-link').click();">返回</button>
+		                        </div>
+		                        
+		                         <div id="am-s3-divComeplete" class=" smart-wrap" style="">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action="smart-form/contact/php/smartprocess.php" id="smart-form" novalidate="novalidate">
+						                    <div class="form-body">
+							                    <p class="text-center">
+							                    	已成功送出轉移申請，<br>
+													此次轉移紀錄請至<a href="#">會員中心--轉移紀錄</a>查詢。<br>
+												</p>						                      
+							                    <div class="result"></div>                                      
+						                    </div>
+						                    <div class="form-footer text-center">
+						                    	<button type="button" href="/index.php" class="btn btn-outline-primary mb5">繼續轉移</button>
+						                        <button type="button" href="/index.php" class="btn btn-outline-primary mb5">完成</button>
+						                    </div>
+						                    
+						                </form>
+						            </div>
+			        			</div> 
+                            
+                        		
+			        			
+                        	</div>
+                        </div> -->
+                        
+                        <!-- /完成託售申請 -->
+                 
+            
+            <!-- 手機板 -->
+            <!-- <div class="row hidden-md-up">
+            	<div class="col-12 mb40">
+            		<div class="title-heading1 mb10">
+	                    <h3>電子錢包&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0</h3>
+	                </div>
+	            	
+	            	<div class="row">
+                     	 <div class="col-12 mb10 text-center pl65">
+		                    <div class="media">
+		                        <div class="media-body media-body-sytle pt5 pb5">
+		                            <h3 class="mt-0 mb5 ">總和</h3>
+		                                  <p class="font-size15 mb5">餘額:0</p>
+		                            <div class="text-center">
+		                        		<button class="btn btn-primary btn-style" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+		                        	</div>
+		                        </div>
+		                    </div>
+		                </div>
+                    </div>
+                    
+                    <div class="fancy-title">
+		                <h4>體育</h4>
+		                <div class="fancy-title-sep gray-sep"></div>
+		            </div>
+						            
+		            <div class="row text-center">
+		            	<div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                       	   美金盤
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         	鑫寶體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         SP體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+		            </div>
+	                <div class="fancy-title">
+		                <h4>真人娛樂</h4>
+		                <div class="fancy-title-sep gray-sep"></div>
+		            </div>
+		             <div class="row text-center">
+		            	<div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                       	   美金盤
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         	鑫寶體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         SP體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+		            </div>
+	                <div class="fancy-title">
+		                <h4>彩票賓果</h4>
+		                <div class="fancy-title-sep gray-sep"></div>
+		            </div>
+		             <div class="row text-center">
+		            	<div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                       	   美金盤
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         	鑫寶體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         SP體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+		            </div>
+	                <div class="fancy-title">
+		                <h4>電子遊戲</h4>
+		                <div class="fancy-title-sep gray-sep"></div>
+		            </div>
+		             <div class="row text-center">
+		            	<div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                       	   美金盤
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         	鑫寶體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-4 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         SP體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+		            </div>
+		             <div class="row text-center">
+		            	
+			              <div class="col-6 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         	鑫寶體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+			              <div class="col-6 mb30">
+			                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+			                      <h6 class="card-title">
+			                         SP體育
+			                      </h6>
+			                      <p class="card-text mb10">0</p>
+			                     <button class="btn btn-primary btn-style-xs" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+			                  </div>
+			              </div>
+		            </div> -->
+            
+            		
+            		<!-- <div id="accordion" class="mb10" role="tablist" aria-multiselectable="true">
+		                <div class="card mb10">
+		                    <div class="card-header accordion-header" role="tab" id="headingThree">
+		                        <h5 class="mb-0">
+		                            <a class="collapsed text-center" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+		                               	電子錢包&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0
+		                            </a>
+		                        </h5>
+		                    </div>
+		                    <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree" style="">
+		                        <div class="card-body">
+			                        <div class="row">
+			                        	 <div class="col-12 mb10 text-center pl65">
+						                    <div class="media">
+						                       
+						                        
+						                        <div class="media-body media-body-sytle pt5 pb5">
+						                            <h3 class="mt-0 mb5 ">總和</h3>
+						                                  <p class="font-size15 mb5">餘額:0</p>
+						                            <div class="text-center">
+						                        		<button class="btn btn-primary btn-style" data-toggle="modal" data-target=".bd-example-modal-lg">重新整理</button>
+						                        	</div>
+						                        </div>
+						                    </div>
+						                </div>
+			                        </div>
+		                           
+					                <div class="fancy-title">
+						                <h4>體育</h4>
+						                <div class="fancy-title-sep gray-sep"></div>
+						            </div>
+						            
+						            <div class="row text-center">
+						            	<div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                       	   美金盤
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         	鑫寶體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                      
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         SP體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+						            </div>
+					                <div class="fancy-title">
+						                <h4>真人娛樂</h4>
+						                <div class="fancy-title-sep gray-sep"></div>
+						            </div>
+						             <div class="row text-center">
+						            	<div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                       	   美金盤
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         	鑫寶體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                      
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         SP體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+						            </div>
+					                <div class="fancy-title">
+						                <h4>彩票賓果</h4>
+						                <div class="fancy-title-sep gray-sep"></div>
+						            </div>
+						             <div class="row text-center">
+						            	<div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                       	   美金盤
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         	鑫寶體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                      
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         SP體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+						            </div>
+					                <div class="fancy-title">
+						                <h4>電子遊戲</h4>
+						                <div class="fancy-title-sep gray-sep"></div>
+						            </div>
+						             <div class="row text-center">
+						            	<div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                       	   美金盤
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         	鑫寶體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                      
+							                  </div>
+							              </div>
+							              <div class="col-4 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         SP體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+						            </div>
+						             <div class="row text-center">
+						            	
+							              <div class="col-6 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         	鑫寶體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                      
+							                  </div>
+							              </div>
+							              <div class="col-6 mb30">
+							                  <div class="card card-body pt5 pb5 pl5 pr5 box_shadow">
+							                      <h6 class="card-title">
+							                         SP體育
+							                      </h6>
+							                      <p class="card-text">0</p>
+							                     
+							                  </div>
+							              </div>
+						            </div>
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>  -->
+            		 
+            		
+		           <!-- <div class="form-group mb10">
+                     		<h6>從此遊戲</h6>
+                          
+                          <select class="form-control" id="exampleSelect1">
+                              <option value="1" data-point="0">電子錢包..................................0點</option>
+                              <option value="9" data-point="0">鑫寶體育..................................0點</option>
+                              <option value="13" data-point="0">SP 體育...............................0點</option>
+                              <option value="16" data-point="0">真人歐博..................................0點</option>
+                              <option value="11">真人沙龍</option>
+                              <option value="7" data-point="0">真人夢幻..................................0點</option>
+                              <option value="15" data-point="0">北京賽車..................................0點</option>
+                              <option value="17" data-point="0">新六合彩..................................0點</option>
+                              <option value="5" data-point="0">手機賓果..................................0點</option>
+                              <option value="3">QT 電子</option>
+                              <option value="4">RTG 電子</option>
+                              <option value="10" data-point="0">財神捕魚..................................0點</option>
+                              <option value="6" data-point="0">手機電子..................................0點</option>
+                              <option value="14">博狗電子</option>
+                          </select>
+                      </div>
+                      <div class="form-group mb10">
+                     		<h6>轉移至此</h6>
+                          
+                          <select class="form-control" id="exampleSelect1">
+                              <option value="1" data-point="0">電子錢包..................................0點</option>
+                              <option value="9" data-point="0">鑫寶體育..................................0點</option>
+                              <option value="13" data-point="0">SP 體育...............................0點</option>
+                              <option value="16" data-point="0">真人歐博..................................0點</option>
+                              <option value="11">真人沙龍</option>
+                              <option value="7" data-point="0">真人夢幻..................................0點</option>
+                              <option value="15" data-point="0">北京賽車..................................0點</option>
+                              <option value="17" data-point="0">新六合彩..................................0點</option>
+                              <option value="5" data-point="0">手機賓果..................................0點</option>
+                              <option value="3">QT 電子</option>
+                              <option value="4">RTG 電子</option>
+                              <option value="10" data-point="0">財神捕魚..................................0點</option>
+                              <option value="6" data-point="0">手機電子..................................0點</option>
+                              <option value="14">博狗電子</option>
+                          </select>
+                      </div> 
+                      <div class="form-group mb10">
+                          <h6>轉移點數</h6>
+                          <input type="text" class="form-control" id="exampleInputEmail1"  placeholder="請輸入轉移點數">
+                      </div>
+                      <div class="mt10 text-center">
+                     		<button type="submit" class="btn btn-primary phone-btn-width mb10">確定轉移</button>
+                     		
+                     		<button type="button" data-toggle="modal" data-target="#ModalLongaaaa" class="btn btn-primary phone-btn-width mb10">流程教學</button>
+                     		<div class="modal fade" id="ModalLongaaaa" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+			                    <div class="modal-dialog" role="document">
+			                        <div class="modal-content">
+			                            <div class="modal-header">
+			                                <h5 class="modal-title" id="exampleModalLongTitle">轉移流程</h5>
+			                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			                                    <span aria-hidden="true">×</span>
+			                                </button>
+			                            </div>
+			                            
+			                            <div class="modal-body">
+			                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/mp_moveProcess.jpg">
+			                            </div>
+			                            
+			                            <div class="modal-footer"></div>
+			                        </div>
+			                    </div>
+		                	</div>
+                      </div>-->
+                   
+                      
+                      
+				          <!-- <div class="card card-body mb10 phone-card-bg-color">
+		                    <h6 class="card-title">
+		                      	 注意事項:
+		                    </h6>
+		                    <p class="card-text">
+			                    	此處點數僅供參考，可能因網路或其他因素產生誤差， 實際依遊戲商紀錄為準。
+							</p>
+		                </div>
+		                
+				 </div>
+            </div>
+        </div> -->
+<include file="Common:footer"/>
+
+<script type="text/javascript">
+var allMoney = "{$memberWallet}";
+$(document).ready(function(){
+	$("#allMoney").html(allMoney);
+	getAllGameBalance(false);
+});
+function getAllGameBalance(getWalletBool){
+	var gameArray = <?=$jsonGameArray?>;
+	if(getWalletBool){
+		allMoney = 0;
+		getMembertWallet();
+	}
+	for(var key1 in gameArray){
+		for(var key2 in gameArray[key1]){
+			for(var key3 in gameArray[key1][key2]){
+				if(key3 === "accountBool"){
+					if(gameArray[key1][key2][key3]){
+						//console.log(key2);
+						getMembertBalance(key2,gameArray[key1][key2]["gameName"]);
+					}
+				}
+			}
+		}
+	}
+}
+function getMembertBalance(gameName,gameChinese){
+	$("#"+gameName+"TransferWallet").attr("disabled",true);
+	$("#"+gameName+"Balance").html("讀取中");
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxMemberGameBalance",
+        data:{gameName:gameName},
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		//alert(dataObject.err);
+        		console.log(dataObject);
+        	} else {
+        		$("#"+gameName+"Balance").html(dataObject.memberBalance);
+        		if(parseInt(dataObject.memberBalance) != 0){
+        			$("#"+gameName+"TransferWallet").attr("disabled",false);
+        			allMoney = parseInt(allMoney) + parseInt(dataObject.memberBalance);
+        			$("#allMoney").html(allMoney);
+        		}
+        		//$(".option"+gameName+"Balance").html(gameChinese+".................................."+dataObject.memberBalance+"點");
+        	}
+        },
+		error:function(){
+			//alert("網路連線錯誤，請檢查您的網路狀況。");
+			$("#"+gameName+"Balance").html("取得點數失敗");
+		}
+	});
+}
+function getMembertWallet(){
+	$("#memberWallet").html("讀取中");
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxMemberWallet",
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		//alert(dataObject.err);
+        		console.log(dataObject);
+        	} else {
+        		$("#memberWallet").html(dataObject.memberWallet);
+        		//$(".optionMemberWallet").html("電子錢包.................................."+dataObject.memberWallet+"點");
+        		allMoney = parseInt(allMoney) + parseInt(dataObject.memberWallet);
+        		$("#allMoney").html(allMoney);
+        	}
+        },
+		error:function(){
+			//alert("網路連線錯誤，請檢查您的網路狀況。");
+			$("#memberWallet").html("取得點數失敗");
+		}
+	});
+}
+function ajaxTransferWallet(gameName){
+	alert('testAjax'+gameName);
+}
+</script>

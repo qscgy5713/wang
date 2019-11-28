@@ -1,0 +1,98 @@
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ProcessWithdraw首頁</title>
+</head>
+<script src="__PUBLIC__/js/jquery.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+});
+</script>
+<body>
+<span> Test withdrawCheck Index </span>
+	<table>
+		<tr>
+			<th colspan="11">會員基本資料</th>
+		</tr>
+		<tr>
+			<th>會員帳號</th>
+			<th>創建日期</th>
+			<th>電子錢包</th>
+			<th>目前紅利</th>
+			<th>最後登入</th>
+			<th>最後IP</th>
+			<th>最後儲值</th>
+			<th>銀行帳號</th>
+			<th>累積儲值</th>
+			<th>累積託售</th>
+			<th>總計</th>
+		</tr>
+		<tr>
+			<VOLIST name="memberArray" id="vo">
+				<td>{$vo.account}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.money}</td>
+				<td>{$vo.gift}</td>
+				<td>{$vo.lastLoginTime}</td>
+				<td>{$vo.lastLoginIp}</td>
+				<td>{$vo.lastRechargeTime}</td>
+				<td>{$vo.bankCode}-{$vo.bankAccount}-{$vo.bankName}-{$vo.bankBranch}</td>
+				<td>{$vo.totalRecharge}</td>
+				<td>{$vo.totalWithdraw}</td>
+				<td>{$vo.total}</td>
+			</VOLIST>
+		</tr>
+	</table>
+	<table>
+		<tr>
+			<th colspan="5">託售單資料</th>
+		</tr>
+		<tr>
+			<th>託售單號</th>
+			<th>申請託售帳號</th>
+			<th>申請託售時間</th>
+			<th>申請託售IP</th>
+			<th>申請脫售點數</th>
+		</tr>
+		<tr>
+			<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetWithdrawProcess'>
+			<VOLIST name="showArray" id="vo">
+				<td>{$vo.id}<input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.ip}</td>
+				<td>{$vo.money}</td>
+		</tr>
+		<tr>
+			<td colspan="5">
+				<button type="submit" name="processButton" value="2" class="btn btn-primary">完成訂單</button>
+				取消備註:<input type="text" name="setRemark" name="">
+				<button type="submit" name="processButton" value="3" class="btn btn-primary">取消訂單</button>
+				<button type="submit" name="processButton" value="4" class="btn btn-primary">取消綁定</button>
+			</td>
+		</tr>
+			</VOLIST>
+			</form>
+	</table>
+	<table>
+		<th>儲值紀錄</th>
+	</table>
+	<table>
+		<th>託售紀錄</th>
+	</table>
+	<table>
+		<th>登入紀錄</th>
+	</table>
+	<table>
+		<th>信件紀錄</th>
+	</table>
+</body>
+</html>

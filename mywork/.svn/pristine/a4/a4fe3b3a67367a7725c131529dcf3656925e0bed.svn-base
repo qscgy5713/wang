@@ -1,0 +1,92 @@
+<style type="text/css">
+
+.dropdown-menu > .active > a,
+.dropdown-menu > .active > a:hover,
+.dropdown-menu > .active > a:focus,
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+  background-color: #4f708c;
+    color: #ffffff;
+}
+</style>
+
+<form method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+	會員名稱/電話/各館帳號:
+	<!-- <input type="search" id="member_account" name="memberAccount" value="{$search.member_account}" > 
+	
+	<input class="form-control font-body"  aria-controls="table1" 
+	name="member_account" id="member_account" type="text" class="form_ipt w100" 
+	value="{$search.member_account}" placeholder="用户名" />-->
+	
+	<div class="form-group search-col-center">
+        <input name="member_account" id="member_account" type="text" class="form-control font-body" value="{$search.member_account}"  placeholder="发话用户名">
+    </div>
+	
+	<input type="submit" value="查詢">
+</form>
+<IF condition='$MemberPointBool eq "true"'>
+	<div class="row">
+		<table class="table table-striped">
+				<tr>
+					<th colspan="3">會員資料</th>
+				</tr>
+				<tr>
+					<td colspan="3">電子錢包:{$walletMoney}</td>
+				</tr>
+			<VOLIST name="gameClass" id="classArray">
+				<tr>
+					<th colspan="3">{$key}</th>
+				</tr>
+				<tr>
+					<th>遊戲名稱</th>
+					<th>遊戲帳號</th>
+					<th>餘額</th>
+				</tr>
+				<VOLIST name="classArray" id="vo">
+					<tr>
+						<td>{$vo.name}</td><td>{$vo.gameAccount}</td>
+						<td id="{$key}point"></td>
+					</tr>
+				</VOLIST>
+			</VOLIST>
+		</table>
+	</div>
+</IF>
+<include file="Common:footer"/> 
+<script>
+var searchArray = {$searchJson};
+$(function(){
+	for(var i=0;i<searchArray.length;i++){
+		getMemberPoint(searchArray[i]);
+	}
+	
+	$('#member_account').typeahead({
+        ajax: {
+            url: '__URL__/searchMemberName',
+            timeout: 200
+        }
+    });
+	
+});
+function getMemberPoint(gameName){
+	$.ajax({
+		type:"POST",
+        url:"__URL__/getMemberPoint",
+        data : {
+            gameName : gameName
+        },
+        dataType: "text",
+        success:function(data){
+        	//var dataObject = JSON.parse(data);
+        	if(data === false){
+        		$("#"+gameName+"point").html("查詢點數失敗");
+        	} else {
+        		$("#"+gameName+"point").html(data);
+        	}
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+</script>

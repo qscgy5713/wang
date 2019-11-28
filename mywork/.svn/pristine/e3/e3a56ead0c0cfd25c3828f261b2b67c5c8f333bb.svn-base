@@ -1,0 +1,158 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+
+				<div class="row">
+						<!-- FORM -->
+						<div class="col-md-7 m-auto">
+							<ul class="process-steps nav nav-justified">
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-1" id="pill-pr-1-a" data-toggle="tab">1</a>
+									<h5>發送驗證碼</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-2" id="pill-pr-2-a" data-toggle="tab">2</a>
+									<h5>確認驗證碼</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link " href="#pill-pr-3" id="pill-pr-3-a" data-toggle="tab">3</a>
+									<h5>確認帳號密碼</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link active" href="#pill-pr-4" id="pill-pr-4-a" data-toggle="tab">4</a>
+									<h5>完成</h5>
+								</li>
+							</ul>
+							
+							
+							<div class="tab-content pt-0">
+								<div class="tab-pane" id="pill-pr-1">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">已取得新密碼，<br>請至步驟4確認完成</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-4-a').click();" >繼續</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane" id="pill-pr-2">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">已取得新密碼，<br>請至步驟4確認完成</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-4-a').click();" >返回</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane" id="pill-pr-3">
+									
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">已取得新密碼，<br>請至步驟4確認完成</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-4-a').click();" >返回</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane active" id="pill-pr-4">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">修改密碼成功，<br>下次登入請使用新密碼登入</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="self.location.href='__APP__/MemberIndex/index'" >完成</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- /FORM -->
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	
+	//算畫面高度
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+jQuery(document).ready(function(){
+	
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

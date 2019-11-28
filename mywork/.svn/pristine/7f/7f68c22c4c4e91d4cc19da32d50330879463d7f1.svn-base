@@ -1,0 +1,183 @@
+<include file="Common:header"/>
+<title>PromotionSite首頁</title>
+<body style="background-image: url(__CSS__/images/10.jpg);">
+<include file="Common:menu"/>
+<include file="Common:menu2"/>
+  <div class="content admin-div">
+		 <p>
+	        <button class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+	                                               新增網址
+	        </button>
+	     </p>
+		 
+		 <div class="collapse mb10" id="collapseExample" style="">
+	         <div class="card card-body pt10 pb5">
+	         
+		          <form method="post" action='__APP__/PromotionSite/formAddPromotionSite'>
+		          	<div class="form-group">
+		               <label class=" col-form-label">網址</label>
+		               <select class="form-control-m" name="addDomainId">
+                            <foreach name="newPromotionsiteArray" item="newPromotionsite">
+								<option value="{$key}">{$newPromotionsite}</option>
+							</foreach>
+                       </select>
+		               
+		               <label  class=" col-form-label">網站名稱</label>
+		               <div class="div-style">
+		                   <input class="form-control form-control-width18" type="text" name="addTitle" value="財神娛樂">
+		               </div>
+		               
+		                <label  class=" col-form-label">關鍵字</label>
+		               <div class="div-style">
+		                   <input class="form-control form-control-width18" type="text" name="addKeywords" value="財神娛樂 真人百家樂" >
+		               </div>
+		               
+		               <label  class="col-form-label ml25">網站敘述</label>
+		               <div class="div-style">
+		                   <input class="form-control form-control-width18" type="text" name="addDescription"  value="財神娛樂安全可靠" >
+		               </div>
+		               
+		               <label  class="col-form-label mt5">備註</label>
+		               <div class="div-style">
+		                   <input class="form-control form-control-width18 mt5" type="text" name="addRemark" value="">
+		               </div>
+		          	</div>
+		          	<div class="form-group mb5">
+		               <button type="submit" name="addbtn" class="btn btn-info btn-style">確認新增</button>
+		          	</div>
+		          </form>
+	          
+	         </div>
+	     </div>
+	     
+	     <div class="row">
+   			<table class="table table-striped">
+                  <thead>
+                      <tr>
+	                      <th>序</th>
+	                      <th>推廣網址</th>
+	                      <th>網站名稱</th>
+	                      <th>註冊人數</th>
+	                      <th>關鍵字</th>
+	                      <th>網站敘述</th>
+	                      <th>備註</th>
+	                      <th>建立時間</th>
+	                      <th>修改時間</th>
+	                      <th>操作</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                  <foreach name="showArray" item="showVal">
+                  	<tr>
+	                   	<td>{$key+1}</td>
+						<td><a class="text-white" href="http://{$showVal.site}" target="_blank">{$showVal.site}</a></td>
+						<td>{$showVal.title}</td>
+						<td>{$showVal.registeredUsers}</td>
+						<td>{$showVal.keywords}</td>
+						<td>{$showVal.description}</td>
+						<td>{$showVal.remark}</td>
+						<td>{$showVal.createTime}</td>
+						<td>{$showVal.modifyTime}</td>
+						<td>
+		
+						
+	                    <a class="popup-content btn btn-info btn-style ml5 mb5" href="#{$key+1}">修改</a>
+	                    <form class="div-style" method="post" action='__APP__/PromotionSite/formDelPromotionSite'>
+	                    	<input type="hidden" value="{$showVal.id}" name="delId">	
+	                    	<button type="submit" class="btn btn-info btn-style mb5">刪除</button>
+	                    </form>	
+	                    <div id="{$key+1}" class="popup-content-area white-popup mfp-hide popup-content-area-max-width">
+	                      <h4>網址:{$showVal.site}</h4><hr>
+	                      <form method="post" action='__APP__/PromotionSite/formSetPromotionSite'>
+	                         <div class="form-group mb5">
+	                              <input type="hidden" value="{$showVal.id}" name="setId">
+	                          </div>
+	                          <div class="form-group mb5">                
+	                              <label >網站名稱</label>
+	                              <input type="text" name="setTitle" value="{$showVal.title}" class="form-control">
+	                          </div>
+	                           <div class="form-group mb5">                
+	                              <label >關鍵字</label>
+	                              <input type="text" name="setKeywords" value="{$showVal.keywords}" class="form-control">
+	                           </div>
+	                           <div class="form-group mb5">                
+	                              <label >網站敘述</label>
+	                              <input type="text" name="setDescription"  value="{$showVal.description}" class="form-control">
+	                           </div>
+	                           <div class="form-group mb5">                
+	                              <label >備註</label>
+	                              <input type="text" name="setRemark"  value="{$showVal.remark}" class="form-control" >
+	                           </div>
+	                          <div class="clearfix">
+	                              <button type="submit" name ="okbtn" class="btn btn-info float-right btn-style">確認修改</button>
+	                          </div>
+	                      </form>
+	                  </div>
+                    </td>
+	               </tr>
+                  </foreach>
+                  
+                  </tbody>
+              </table>
+   		</div>
+  </div>
+<include file="Common:footer"/> 
+
+<!-- <form method="post" action='__APP__/PromotionSite/formAddPromotionSite'>
+		網址:
+		<select name="addDomainId">
+			<foreach name="newPromotionsiteArray" item="newPromotionsite">
+		　		<option value="{$key}">{$newPromotionsite}</option>
+		　	</foreach>
+		</select>
+		網站名稱:<input type="text" name="addTitle" value="財神娛樂">
+		關鍵字:<input type="text" name="addKeywords" value="財神娛樂 真人百家樂">
+		網站敘述:<input type="text" name="addDescription"  value="財神娛樂安全可靠" >
+		備註:<input type="text" name="addRemark"  value="" >
+		<button type="submit" class="btn btn-primary">確認新增</button>
+	</form>
+	<table>
+		<tr><th>序</th><th>推廣網址</th><th>網站名稱</th><th>註冊人數</th><th>關鍵字</th><th>網站敘述</th><th>備註</th><th>建立時間</th><th>修改時間</th><th>操作</th></tr>
+		<foreach name="showArray" item="showVal">
+			
+			<tr>
+				<td>{$key+1}</td>
+				<td><a href="https://{$showVal.site}" target="_blank">{$showVal.site}</a></td>
+				<td>{$showVal.title}</td>
+				<td>{$showVal.registeredUsers}</td>
+				<td>{$showVal.keywords}</td>
+				<td>{$showVal.description}</td>
+				<td>{$showVal.remark}</td>
+				<td>{$showVal.createTime}</td>
+				<td>{$showVal.modifyTime}</td>
+				<td>
+					修改資料BUTTON
+					刪除BUTTON
+					<form method="post" action='__APP__/PromotionSite/formDelPromotionSite'>
+						<input type="hidden" value="{$showVal.id}" name="delId">
+						<button type="submit" class="btn btn-primary">刪除</button>
+					</form>
+				</td>
+			</tr>
+			
+			
+			<tr>
+			<form method="post" action='__APP__/PromotionSite/formSetPromotionSite'>
+				<td></td>
+				<td>網址:{$showVal.site}
+				<input type="hidden" value="{$showVal.id}" name="setId"></td>
+				<td>網站名稱:<input type="text" name="setTitle" value="{$showVal.title}"></td>
+				<td></td>
+				<td>關鍵字:<input type="text" name="setKeywords" value="{$showVal.keywords}"></td>
+				<td>網站敘述:<input type="text" name="setDescription"  value="{$showVal.description}" ></td>
+				<td>備註:<input type="text" name="setRemark"  value="{$showVal.remark}" ></td>
+				<td></td>
+				<td></td>
+				<td><button type="submit" class="btn btn-primary">確認修改</button></td>
+			</form>
+			</tr>
+		</foreach>
+	</table>
+</body>
+</html>
+	 -->

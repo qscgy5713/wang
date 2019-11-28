@@ -1,0 +1,165 @@
+<?php
+class BackwaterRecordAction extends AdminAction {
+    protected $pageNumber = 10; //分頁筆數
+    protected $pageMoreNumber = 5;//一頁最多幾頁
+    //TODO: 返水紀錄 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        $CommonMemberBackwaterLog = D("CommonMemberBackwaterLog");
+        $data = array(
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            'member_account' => $memberAccount,
+        );
+
+        //製作分頁
+        $return = $CommonMemberBackwaterLog->getTotalNumberBackWaterLogData($data);
+        if($return === false){
+            //讀取總頁，失敗
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        $totalNumber = $return[0]['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->pageNumber); //總頁數
+        $pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得頁數陣列
+
+        $data = array(
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            'member_account' => $memberAccount,
+            'page' => array(
+                'number' => $this->pageNumber,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $CommonMemberBackwaterLog->getMemberBackWaterLogData($data, $err);
+        if($return === false){
+            //取得資料失敗
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "backWaterLog_id"=>"id",
+            "game_name"=>"gameName",
+            "backWaterLog_money"=>"money",
+            "backWaterLog_createTime"=>"createTime",
+            "member_account"=>"memberAccount",
+            "backWaterLog_status"=>"status",
+            "backWaterLog_betDetails"=>"betDetailsArray",
+            "backWaterLog_decimalPoint"=>"decimalPoint",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'backWaterLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'backWaterLog_status'://建立時間 時間戳 轉換 日期
+                        $showStr = $CommonMemberBackwaterLog->getMemberBackWaterLogStatusStr($value[$key1]);
+                        break;
+                    case 'backWaterLog_betDetails'://注單詳情
+                        $showStr = json_decode($value[$key1], true);
+                        $showStr['waterRate'] = ($showStr['waterRate']*100).'%';
+                        $showStr['allEffective'] = floor($showStr['allEffective']);
+                        //var_dump($showStr);exit();
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);exit();
+
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='11' style='text-align:center;'>無會員報表</td></tr>");
+        $this->assign("memberAccount", $memberAccount);
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //頁數陣列
+        $this->display();
+    }
+    /*
+     * 搜索 會員帳號
+     */
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+
+        $CommonMember = D("CommonMember");
+        if (empty($request["query"])) {
+            exit();
+        }
+
+        $limit = 7;
+        $data = array(
+            "member_account" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

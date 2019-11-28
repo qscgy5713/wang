@@ -1,0 +1,100 @@
+<?php
+/*
+ * 簡訊API
+ */
+class CommonKotsmsModel extends MemberModel {
+    /*
+    protected $apiUrl = "http://api.kotsms.com.tw/kotsmsapi-1.php?";//API網址
+    protected $account = "bb55123";//簡訊王帳號
+    protected $password = "asdf15668";//簡訊王密碼*/
+    
+    protected $apiUrl = "http://www.kotsms.com.tw/index.php?selectpage=pagenews&kind=4&viewnum=238";//API網址
+    
+    protected $account = "wukong01";//簡訊王帳號
+    protected $password = "qwer55369";//簡訊王密碼
+    
+    protected $response = "http://";//回報網址  未加入API內
+    
+    
+    protected $codeStrStart = "悟空娛樂 感謝您的註冊。驗證碼【";
+    protected $codeStrEnd = "】，請於10分鐘內輸入。若非本人，請忽略此簡訊!首次充值1000點以上即送1000點。";
+    
+    protected $forgetStart = "悟空娛樂  忘記帳密 請在畫面上輸入 驗證碼【";
+    protected $forgetEnd = "】，請於10分鐘內輸入。若非本人，請忽略此簡訊!";
+    
+    protected $registStr = "悟空娛樂 感謝您的註冊。帳號【3g18029】您的密碼【as555555】帳號也能手機號碼登入，首儲1000點立即申請加贈1000點http://ok6666.net";
+    /**
+     * 寄註冊驗證碼
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function sendRegistVerificationCode($data,&$err = ""){
+        $smbody = $data['smbody'];
+        $dstaddr = $data['dstaddr'];
+        $data = array(
+            "smbody" => $this->codeStrStart.$smbody.$this->codeStrEnd, //內容
+            "dstaddr" => $dstaddr //電話
+        );
+        $return = $this->sendApiKostms($data,$err);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+    }
+    /**
+     * 寄忘記帳密 驗證碼
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function sendForgetVerificationCode($data,&$err = ""){
+        $smbody = $data['smbody'];
+        $dstaddr = $data['dstaddr'];
+        $data = array(
+            "smbody" => $this->forgetStart.$smbody.$this->forgetEnd, //內容
+            "dstaddr" => $dstaddr //電話
+        );
+        $return = $this->sendApiKostms($data,$err);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+    }
+    
+    /**
+     * 寄送簡訊
+     * 必要包含
+     *  $data['smbody'] 簡訊內容
+     *  $data['dstaddr'] 傳送電話
+     */
+    public function sendApiKostms($data,&$err = ""){
+        if(empty($data['smbody']) && $data['smbody'] !== 0){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        if(empty($data['dstaddr']) || !preg_match('/^09([0-9]{8})$/', $data['dstaddr'])){//驗證是否為電話
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        $data['username'] = $this->account;
+        $data['password'] = $this->password;
+        $data['smbody'] = iconv("UTF-8","big5//TRANSLIT",$data['smbody']);
+        
+        $querystring = http_build_query($data);
+        
+        //var_dump($data);
+        //var_dump($querystring);
+        
+        //kmsgid=214229524
+        //kmsgid=214229557
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->apiUrl.$querystring);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        
+        //var_dump('傳送成功');
+        return $result;
+    }
+}

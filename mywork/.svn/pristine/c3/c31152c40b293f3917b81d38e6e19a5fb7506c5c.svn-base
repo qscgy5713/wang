@@ -1,0 +1,87 @@
+<html>
+<body> 
+	新增資料
+	<form method="post" action="__APP__/MemberNote/formAddMemberNote">
+		<input type='hidden' name='className' value="recharge">
+		會員帳號 : <input type="text" name="addMemberAccount" id="member_account2" value="{$addMemberAccount}"><br>
+		末碼 :<input type="text" name="addRechargeLastCode"><br>
+		儲值地 :<input type="text" name="addRechargeArea"><br>
+		備註 :<textarea name="addRechargeRemark"></textarea><br>
+		<input type="submit" value="提交">
+	</form>
+	<div>
+		<form method="post" action="__APP__/MemberNote/index">
+			搜索帳號 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+			<input type="hidden" name=noteRecharge value="note_recharge" id="note_recharge">
+			<input type="submit" value="查詢">
+		</form>
+	</div>
+	<table>
+		<tr>
+			<th>會員帳號</th>
+			<th>末碼</th>
+			<th>儲值地</th>
+			<th>備註</th>
+			<th>修改時間</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<if condition="$vo.recharge eq '1'">
+					<td>{$vo.memberAccount}</td>
+					<td>{$vo.rechargeLastCode}</td>
+					<td>{$vo.rechargeArea}</td>
+					<td>{$vo.rechargeRemark}</td>
+					<td>{$vo.rechargeModifyTime}</td>
+					<td>
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="recharge">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							<input type="hidden" name="setNote" value="0">
+							<input type="hidden" name="setRechargeLastCode" value="null">
+							<input type="hidden" name="setRechargeArea" value="null">
+							<input type="hidden" name="setRechargeRemark" value="null">
+							<input type="submit" value="刪除">
+						</form>
+					</td>
+				</if>
+			</tr>
+			<tr>
+				<if condition="$vo.recharge eq '1'">
+					<td>修改資料</td>
+					<td colspan="4">
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="recharge">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							末碼 :<input type="text" name="setRechargeLastCode">
+							儲值地 :<input type="text" name="setRechargeArea">
+							備註 :<textarea name="setRechargeRemark"></textarea>
+							<input type="submit" value="提交">
+						</form>
+					</td>
+				</if>
+			</tr>
+		</VOLIST>
+	</table>
+  	<volist name="classArray" id="vo">
+  		<a href="__APP__/MemberNote/{$vo}">{$key}</a>&nbsp;
+  	</volist>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	$('#member_account').typeahead({
+		ajax: {
+			url: '__URL__/searchIndexMemberName',
+			timeout: 200
+		}
+	});
+	$('#member_account2').typeahead({
+		ajax: {
+			url: '__URL__/searchMemberName',
+			timeout: 200
+		}
+	});
+});
+</script>
+</body>
+</html>

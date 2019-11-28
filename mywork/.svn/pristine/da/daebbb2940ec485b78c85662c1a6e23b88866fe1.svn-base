@@ -1,0 +1,41 @@
+		<div id="header" class="header navbar-default">
+			<!-- begin navbar-header -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed navbar-toggle-left" data-click="sidebar-minify">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<button type="button" class="navbar-toggle" data-click="sidebar-toggled">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a href="index.html" class="navbar-brand">
+					Color Admin Material
+				</a>
+			</div>
+			<!-- end navbar-header -->
+			
+			<div class="search-form">
+				<button class="search-btn" type="submit"><i class="material-icons">search</i></button>
+				<input type="text" class="form-control" placeholder="Search Something..." />
+				<a href="#" class="close" data-dismiss="navbar-search"><i class="material-icons">close</i></a>
+			</div>
+		</div>
+
+
+
+<!-- <div class="mq-height">
+			<div>
+				<marquee class="mq-style" behavior="scroll" onmousemove="this.stop()" onmouseout="this.start()" scrollamount="5" direction="left">
+					
+					<span id="mq_contents" class="mq-sp-style">
+						<VOLIST name="marqueeArray" id="marquee">
+							 <div class="mq-item">{$marquee.marquee_text}</div> 
+							<div class="mq-item">text</div>
+						</VOLIST>
+					</span>
+				</marquee>
+		 	</div>
+		</div> -->

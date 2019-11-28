@@ -1,0 +1,74 @@
+<?php
+/**
+ * 測試圖形驗證
+ */
+class VerificAction extends AdminAction{
+
+	public function index(){
+
+		$this->display();
+	}
+	public function index2(){
+	    
+	    $this->display();
+	}
+	public function captcha(){
+
+	    //設置定義為圖片
+	    ob_clean();
+	    header("Content-type: image/PNG");
+	    $this->imgcode(5,100,30);//設置產生驗證碼圖示的參數 imgcode($nums,$width,$high) $nums 生成驗證碼個數 $width 圖片寬 $high 圖片高
+	}
+	protected function imgcode($nums,$width,$high) {
+
+        //去除了數字0和1 字母小寫o和l，大寫O,I ;為了避免辨識不清楚
+        //$str = "23456789ABCDEFGHJKLMPQRSTUBWXYZ";
+        $str = "23456789";
+        $code = '';
+        for ($i = 0; $i < $nums; $i++) {
+            $code .= $str[mt_rand(0, strlen($str)-1)];
+        }
+
+        $_SESSION['check_word'] = $code;
+
+        //建立圖示，設置寬度及高度與顏色等等條件
+        $image = imagecreate($width, $high);
+        $black = imagecolorallocate($image, mt_rand(0, 200), mt_rand(0, 200), mt_rand(0, 200));
+        $border_color = imagecolorallocate($image, 21, 106, 235);
+        $background_color = imagecolorallocate($image, 235, 236, 237);
+
+        //建立圖示背景
+        imagefilledrectangle($image, 0, 0, $width, $high, $background_color);
+
+        //建立圖示邊框
+        imagerectangle($image, 0, 0, $width-1, $high-1, $border_color);
+
+        //在圖示布上隨機產生大量躁點
+        for ($i = 0; $i < 300; $i++) {
+            imagesetpixel($image, rand(0, $width), rand(0, $high), $black);
+        }
+
+        $strx = rand(3, 8);
+        for ($i = 0; $i < $nums; $i++) {
+            $strpos = rand(1, 6);
+            imagestring($image, 5, $strx, $strpos, substr($code, $i, 1), $black);
+            $strx += rand(10, 30);
+        }
+
+        imagepng($image);
+        imagedestroy($image);
+    }
+    public function checkWord(){
+        $request = $this->getRequest();
+
+		if((empty($_SESSION['check_word'])) || (empty($request['checkword']))){  //判斷此兩個變數是否為空
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		if($_SESSION['check_word'] != strtoupper($_POST['checkword'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+
+		$_SESSION['check_word'] = ''; //比對正確後，清空將check_word值
+		redirect(__APP__.'/AdminIndex/index'); //成功後自動導向
+	}
+}

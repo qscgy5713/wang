@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+<title></title>
+<link href="__CSS__/downloadPage/download.css"rel="stylesheet">
+<link href="__CSS__/downloadPage/swiper-3.3.1.min.css"rel="stylesheet">
+<link href="__CSS__/downloadPage/ab.css" rel="stylesheet">
+<style type="text/css">
+.wechat_tip, .wechat_tip>i {
+	position: absolute;
+	right: 10px
+}
+
+.wechat_tip {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	-webkit-box-pack: center;
+	-ms-flex-pack: center;
+	justify-content: center;
+	background: #3ab2a7;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 500;
+	width: 135px;
+	height: 60px;
+	border-radius: 10px;
+	top: 15px
+}
+
+.wechat_tip>i {
+	top: -10px;
+	width: 0;
+	height: 0;
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-bottom: 12px solid #3ab2a7
+}
+
+.mask img {
+	max-width: 100%;
+	height: auto
+}
+</style>
+<style type="text/css">
+	#inhouseTip {
+		left: 0;
+		top: 0;
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		z-index: 100;
+		background: #fff;
+		text-align: center;
+	}
+	
+	.close {
+		float: right;
+		border: 0;
+		font-size: 25px;
+		margin-right: 15px;
+	}
+	
+	.app_bottom_fixed {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		z-index: 3;
+		font-size: 0;
+		text-align: center;
+		background: 0 0;
+	}
+	</style>
+</head>
+<body>
+<div class="out-container">
+		<div class="main">
+			<header>
+				<div class="table-container">
+					<div class="cell-container">
+						<div class="app-brief">
+							<div class="">    
+								<img src="__CSS__/downloadPage/logo_zh-tw.png">
+							</div>
+							<p class="scan-tips">
+							</p>
+							<div class="release-info">
+								<p>2（Build 1）- 8.4 MB</p>
+								<p>更新於：2018-11-06 12:27:07</p>
+							</div>
+							<div onclick="opentip()" style="color: blue;font-weight:bold;">未受信任的企業級開發者"的解決辦法</div>
+								<div id="actions" class="actions">
+									<button onclick="install_app('itms-services://?action=download-manifest&url=https://plist.x599.net/xn_ios_app.plist',this)">
+												下載安裝
+									</button>
+								</div>
+							</div>
+					</div>
+				</div>
+			</header>
+		</div>
+	</div>
+
+	<div class="mask" style="display: none"></div>
+	
+	
+	<div class="modal fade addmodel in" id="inhouseTip" tabindex="-1"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="false"
+		style="display: none;">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" onclick="closetip()" class="close"
+						data-dismiss="modal" aria-hidden="true">×</button>
+					<h4 class="modal-title font-16">"未受信任的企業級開發者"的解決辦法</h4>
+				</div>
+				<div class="modal-body"
+					style="background: #f2f2f2; height: 600px; overflow-y: scroll;">
+					<section>
+						<div style="padding: 0 20px 20px; color: #333;">
+							<p>因蘋果公司的政策原因，在iOS系統中首次安裝企業版應用時會出現"未受信任的企業級開發者"提示</p>
+						</div>
+						<div style="padding: 0 10px 20px;">
+							<img class="img-responsive center-block mt-20 mb-20"
+								src="__CSS__/downloadPage/1.png"
+								style="width: 80%;"> <br>
+							<h4 class="font-16">解決辦法如下（以iOS11系統為例）：</h4>
+							<li style="list-style: none; color: #333;">1、在手機中打開設置功能，選擇"通用"</li>
+							<img class="img-responsive center-block mt-20 mb-20"
+								src="__CSS__/downloadPage/2.png"
+								style="width: 80%;">
+							<li style="list-style: none; color: #333;">2、在通用中，選擇"描述文件與設備管理"功能</li>
+							<img class="img-responsive center-block mt-20 mb-20"
+								src="__CSS__/downloadPage/3.png"
+								style="width: 80%;">
+							<li style="list-style: none; color: #333;">3、在描述文件與設備管理中的企業級應用分類中，選擇要安裝的企業應用的文件名稱（與打開時的提示一致），點擊進入</li>
+							<img class="img-responsive center-block mt-20 mb-20"
+								src="__CSS__/downloadPage/4.png"
+								style="width: 80%;">
+							<li style="list-style: none; color: #333;">4、進入企業簽名頁面後，確認企業簽名中的公司名稱與應用名稱後，點擊信任"企業簽名公司名稱"</li>
+							<img class="img-responsive center-block mt-20 mb-20"
+								src="__CSS__/downloadPage/5.png"
+								style="width: 80%;"> 
+							<img
+								class="img-responsive center-block mt-20 mb-20"
+								src="__CSS__/downloadPage/6.png"
+								style="width: 80%;">
+							<li style="list-style: none; color: #333;">5、回到桌面，重新打開應用即可使用</li>
+							<br>
+						</div>
+					</section>
+				</div>
+				<div class="modal-footer" style="margin-top: 0px;text-align:center;">
+					<button type="button" onclick="closetip()" class="close"
+						data-dismiss="modal" aria-hidden="true">關閉</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="__CSS__/downloadPage/zepto.min.js" type="text/javascript"></script>
+	<script src="__CSS__/downloadPage/swiper.jquery.min.js" type="text/javascript"></script>
+</body>
+</html>
+<script type="text/javascript">
+function mobile_provision(){
+	document.getElementById('actions').innerHTML = "<p>正在安裝，請按 Home 鍵在桌面查看</p><button onclick=\"location.href=\'__CSS__/downloadPage/app.mobileprovision\'\">立即信任</button>";
+}
+
+function install_app(_link,that){
+
+  	if($(that).text()=="开发者点数不足"){
+		alert('開發者點數不足');return false;
+  	}
+	if(!/android/.test(navigator.userAgent.toLowerCase())){
+    		document.getElementById('actions').innerHTML = '<button style="min-width:43px;width:43px;padding:12px 0;border-top-color:transparent;border-left-color:transparent" class="loading">&nbsp;</button>';
+    		setTimeout("mobile_provision()", 6000);
+	}
+	location.href = _link;
+}
+function install_ing(_link){
+        location.href = _link;
+        $(".text-bar")[0].innerHTML = "安装中";
+        $(".change").show();
+        $(".text-bar").attr("disabled", "true");
+        $(".top-bar").css("width", "0.1%");
+        timer = setTimeout(function() {
+                $(".top-bar").css("width", "0.1%").animate({
+                        width:"20%"
+                }, 1e3, function() {
+                        $("#mq1").hide();
+                        $(".device").show();
+                        var mySwiper = new Swiper(".swiper-container1", {
+                                nextButton:".next_btn",
+                                autoplay:3e3,
+                                autoplayStopOnLast:true
+                        });
+                        $(".top-bar").css("width", "20%").animate({
+                                width:"100%"
+                        }, 15e3, function() {
+                                $(".text-bar")[0].innerHTML = "立即信任";
+                                $(".text-bar").removeAttr("disabled");
+                                $(".text-bar").attr("href", "/static/app/app.mobileprovision");
+                        });
+                });
+        }, 1e3);
+}
+  $(document).ready(function(){
+  	setTimeout(function(){
+    	//alert(1)
+      console.log($("div[style='display:inline-block;vertical-align:middle;width:100%;']").html())
+    	$("div[style='display:inline-block;vertical-align:middle;width:100%;']").css("height","75px");
+      
+    },300)
+  });
+
+function opentip(){
+	$("#inhouseTip").css({display: 'block'});
+}
+function closetip(){
+	$("#inhouseTip").css({display: 'none'});
+}
+</script>

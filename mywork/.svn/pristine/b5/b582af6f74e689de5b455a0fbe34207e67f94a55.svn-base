@@ -1,0 +1,521 @@
+<?php
+
+class GamePxApiVeriAction extends CommonAction {
+
+  const TIMESTAMP_EXPIRE_SEC = 300;
+
+  const REPLY_SUCCESS_CODE = 0;
+
+  const IS_RECORD_TO_FILE = false;
+
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+  }
+
+  //------------------------------------------------------
+  public function login() {
+
+    $thisAction = 'login';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $errCode = self::REPLY_SUCCESS_CODE;
+    $errMsg = 'success';
+
+    $arrReqs = $_REQUEST;
+    if (isset($arrReqs['Verifier'])) {
+      $px = D('GamePx');
+      $verifier = htmlspecialchars_decode($arrReqs['Verifier']);
+      $arrVerifiers = json_decode($verifier, true);
+      if (isset($arrVerifiers['ts'])) {
+        $veriTs = $arrVerifiers['ts'];
+        if (isset($arrVerifiers['sig'])) {
+          $veriSig = $arrVerifiers['sig'];
+          $arrTemp = $arrVerifiers;
+          unset($arrTemp['sig']);
+          $trueVeriSig = $px->getVerifierSignature($arrTemp);
+          if ($veriSig == $trueVeriSig) {
+            //echo "verisig success.";
+            $nowTs = time();
+            if (abs($nowTs-$veriTs) >= self::TIMESTAMP_EXPIRE_SEC) {
+              $errCode = -5;
+              $errMsg = "Verifier::ts out-fashioned";
+            } else {
+            }
+          } else {
+            $errCode = -4;
+            $errMsg = "verisig error (true={$trueVeriSig}, visitor={$veriSig}).";
+          }
+        } else {
+          $errCode = -3;
+          $errMsg = "Verifier::sig not exists.";
+        }
+      } else {
+        $errCode = -2;
+        $errMsg = "Verifier::ts not exists.";
+      }
+    } else {
+      $errCode = -1;
+      $errMsg = "Verifier not exists.";
+    }
+
+    if (isset($arrReqs['Acc'])) {
+      $acc = $arrReqs['Acc'];
+    }else {
+      $errCode = -20;
+      $errMsg = "Acc not exists.";
+    }
+
+    if (isset($arrVerifiers['action'])) {
+      $action = $arrVerifiers['action'];
+      if ($action != $thisAction) {
+        $errCode = -22;
+        $errMsg = "Verifier::action is incorrect.";
+      }
+    }else {
+      $errCode = -21;
+      $errMsg = "Verifier::action not exists.";
+    }
+
+    $arr = array(
+      'Code' => $errCode,
+      //'TID' => $tid,  //[介接端]此次交易編號，用於後續對帳查詢(選用)
+      //'TMemo' => $tmemo,  //[介接端]此次交易備註，用於後續對帳查詢(選用)(長度 <= 100，超過會截斷)
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+msg =【{$errMsg}】
+
+END;
+
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+  }
+
+  //------------------------------------------------------
+  public function deposit() {
+
+    $thisAction = 'deposit';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $errCode = self::REPLY_SUCCESS_CODE;
+    $errMsg = 'success';
+
+    $arrReqs = $_REQUEST;
+    if (isset($arrReqs['Verifier'])) {
+      $px = D('GamePx');
+      $verifier = htmlspecialchars_decode($arrReqs['Verifier']);
+      $arrVerifiers = json_decode($verifier, true);
+      if (isset($arrVerifiers['ts'])) {
+        $veriTs = $arrVerifiers['ts'];
+        if (isset($arrVerifiers['sig'])) {
+          $veriSig = $arrVerifiers['sig'];
+          $arrTemp = $arrVerifiers;
+          unset($arrTemp['sig']);
+          $trueVeriSig = $px->getVerifierSignature($arrTemp);
+          if ($veriSig == $trueVeriSig) {
+            //echo "verisig success.";
+            $nowTs = time();
+            if (abs($nowTs-$veriTs) >= self::TIMESTAMP_EXPIRE_SEC) {
+              $errCode = -5;
+              $errMsg = "Verifier::ts out-fashioned";
+            } else {
+            }
+          } else {
+            $errCode = -4;
+            $errMsg = "verisig error (true={$trueVeriSig}, visitor={$veriSig}).";
+          }
+        } else {
+          $errCode = -3;
+          $errMsg = "Verifier::sig not exists.";
+        }
+      } else {
+        $errCode = -2;
+        $errMsg = "Verifier::ts not exists.";
+      }
+    } else {
+      $errCode = -1;
+      $errMsg = "Verifier not exists.";
+    }
+
+    if (isset($arrReqs['Acc'])) {
+      $acc = $arrReqs['Acc'];
+    }else {
+      $errCode = -20;
+      $errMsg = "Acc not exists.";
+    }
+
+    if (isset($arrReqs['STID'])) {
+      $stid = $arrReqs['STID'];
+    }else {
+      $errCode = -20;
+      $errMsg = "STID not exists.";
+    }
+
+    if (isset($arrReqs['Point'])) {
+      $point = $arrReqs['Point'];
+    }else {
+      $errCode = -20;
+      $errMsg = "Point not exists.";
+    }
+
+    if (isset($arrVerifiers['action'])) {
+      $action = $arrVerifiers['action'];
+      if ($action != $thisAction) {
+        $errCode = -22;
+        $errMsg = "Verifier::action is incorrect.";
+      }
+    }else {
+      $errCode = -21;
+      $errMsg = "Verifier::action not exists.";
+    }
+
+    if (isset($arrVerifiers['amount'])) {
+      $veriPoint = $arrVerifiers['amount'];
+      if ($point != $veriPoint) {
+        $errCode = -22;
+        $errMsg = "Verifier::amount is incompatible with source.";
+      }
+    }else {
+      $errCode = -21;
+      $errMsg = "Verifier::amount not exists.";
+    }
+
+    $arr = array(
+      'Code' => $errCode,
+      //'TID' => $tid,  //[介接端]此次交易編號，用於後續對帳查詢(選用)
+      //'TMemo' => $tmemo,  //[介接端]此次交易備註，用於後續對帳查詢(選用)(長度 <= 100，超過會截斷)
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+msg =【{$errMsg}】
+
+END;
+
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+  }
+
+  //------------------------------------------------------
+  public function withdraw() {
+
+    $thisAction = 'withdraw';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $errCode = self::REPLY_SUCCESS_CODE;
+    $errMsg = 'success';
+
+    $arrReqs = $_REQUEST;
+    if (isset($arrReqs['Verifier'])) {
+      $px = D('GamePx');
+      $verifier = htmlspecialchars_decode($arrReqs['Verifier']);
+      $arrVerifiers = json_decode($verifier, true);
+      if (isset($arrVerifiers['ts'])) {
+        $veriTs = $arrVerifiers['ts'];
+        if (isset($arrVerifiers['sig'])) {
+          $veriSig = $arrVerifiers['sig'];
+          $arrTemp = $arrVerifiers;
+          unset($arrTemp['sig']);
+          $trueVeriSig = $px->getVerifierSignature($arrTemp);
+          if ($veriSig == $trueVeriSig) {
+            //echo "verisig success.";
+            $nowTs = time();
+            if (abs($nowTs-$veriTs) >= self::TIMESTAMP_EXPIRE_SEC) {
+              $errCode = -5;
+              $errMsg = "Verifier::ts out-fashioned";
+            } else {
+            }
+          } else {
+            $errCode = -4;
+            $errMsg = "verisig error (true={$trueVeriSig}, visitor={$veriSig}).";
+          }
+        } else {
+          $errCode = -3;
+          $errMsg = "Verifier::sig not exists.";
+        }
+      } else {
+        $errCode = -2;
+        $errMsg = "Verifier::ts not exists.";
+      }
+    } else {
+      $errCode = -1;
+      $errMsg = "Verifier not exists.";
+    }
+
+    if (isset($arrReqs['Acc'])) {
+      $acc = $arrReqs['Acc'];
+    }else {
+      $errCode = -20;
+      $errMsg = "Acc not exists.";
+    }
+
+    if (isset($arrReqs['Point'])) {
+      $point = $arrReqs['Point'];
+    }else {
+      $errCode = -20;
+      $errMsg = "Point not exists.";
+    }
+
+    if (isset($arrVerifiers['action'])) {
+      $action = $arrVerifiers['action'];
+      if ($action != $thisAction) {
+        $errCode = -22;
+        $errMsg = "Verifier::action is incorrect.";
+      }
+    }else {
+      $errCode = -21;
+      $errMsg = "Verifier::action not exists.";
+    }
+
+    if (isset($arrVerifiers['amount'])) {
+      $veriPoint = $arrVerifiers['amount'];
+      if ($point != $veriPoint) {
+        $errCode = -22;
+        $errMsg = "Verifier::amount is incompatible with source.";
+      }
+    }else {
+      $errCode = -21;
+      $errMsg = "Verifier::amount not exists.";
+    }
+
+    $arr = array(
+      'Code' => $errCode,
+      //'TID' => $tid,  //[介接端]此次交易編號，用於後續對帳查詢(選用)
+      //'TMemo' => $tmemo,  //[介接端]此次交易備註，用於後續對帳查詢(選用)(長度 <= 100，超過會截斷)
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+msg =【{$errMsg}】
+
+END;
+
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+  }
+
+  //------------------------------------------------------
+  public function register() {
+
+    $thisAction = 'register';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $errCode = self::REPLY_SUCCESS_CODE;
+    $errMsg = 'success';
+
+    $arrReqs = $_REQUEST;
+    if (isset($arrReqs['Verifier'])) {
+      $px = D('GamePx');
+      $verifier = htmlspecialchars_decode($arrReqs['Verifier']);
+      $arrVerifiers = json_decode($verifier, true);
+      if (isset($arrVerifiers['ts'])) {
+        $veriTs = $arrVerifiers['ts'];
+        if (isset($arrVerifiers['sig'])) {
+          $veriSig = $arrVerifiers['sig'];
+          $arrTemp = $arrVerifiers;
+          unset($arrTemp['sig']);
+          $trueVeriSig = $px->getVerifierSignature($arrTemp);
+          if ($veriSig == $trueVeriSig) {
+            //echo "verisig success.";
+            $nowTs = time();
+            if (abs($nowTs-$veriTs) >= self::TIMESTAMP_EXPIRE_SEC) {
+              $errCode = -5;
+              $errMsg = "Verifier::ts out-fashioned";
+            } else {
+            }
+          } else {
+            $errCode = -4;
+            $errMsg = "verisig error (true={$trueVeriSig}, visitor={$veriSig}).";
+          }
+        } else {
+          $errCode = -3;
+          $errMsg = "Verifier::sig not exists.";
+        }
+      } else {
+        $errCode = -2;
+        $errMsg = "Verifier::ts not exists.";
+      }
+    } else {
+      $errCode = -1;
+      $errMsg = "Verifier not exists.";
+    }
+
+    if (isset($arrVerifiers['hr_num'])) {
+      $hr_num = $arrVerifiers['hr_num'];
+    } else {
+      $hr_num = 99;
+    }
+
+    if (isset($arrReqs['Acc'])) {
+      $acc = $arrReqs['Acc'];
+    }else {
+      $errCode = -20;
+      $errMsg = "Acc not exists.";
+    }
+
+    if (isset($arrVerifiers['action'])) {
+      $action = $arrVerifiers['action'];
+      if ($action != $thisAction) {
+        $errCode = -22;
+        $errMsg = "Verifier::action is incorrect.";
+      }
+    }else {
+      $errCode = -21;
+      $errMsg = "Verifier::action not exists.";
+    }
+  
+    $hrStr = GamePxModel::getAccHierarchy($hr_num);
+
+    if (strlen($hrStr)) { $hrStr .= '$'; }
+    $hrStr .= "{$acc}#{$acc}#{$hr_num}";
+
+    $arr = array(
+      'Code' => $errCode,
+      'Data' => $hrStr,
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+msg =【{$errMsg}】
+
+END;
+
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+  }
+
+  //------------------------------------------------------
+  public function agent_pause() {
+
+    $thisAction = 'agent_pause';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $arr = array(
+      'Code' => -1,
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+
+END;
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+
+  }
+
+  //------------------------------------------------------
+  public function bet_pause() {
+
+    $thisAction = 'bet_pause';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $arr = array(
+      'Code' => -1,
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+
+END;
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+
+  }
+
+  //------------------------------------------------------
+  public function agent_move() {
+
+    $thisAction = 'agent_move';
+
+    $d = date('Y-m-d H:i:s');
+    $fn = "px_veri_{$thisAction}.txt";
+    $q = http_build_query($_REQUEST);
+    $str .= <<<END
+[{$d}]
+【{$q}】
+
+END;
+
+    $arr = array(
+      'Code' => -1,
+    );
+
+    $this->_reply($arr, $respInJson);
+
+    $str .= <<<END
+respInJson =【{$respInJson}】
+
+END;
+    if (self::IS_RECORD_TO_FILE) file_put_contents($fn, $str, FILE_APPEND);
+
+  }
+  //------------------------------------------------------
+
+  protected function _reply($argArr, &$argRes) {
+
+  	header('Content-Type: application/json');
+    $respInJson = json_encode($argArr);
+    $argRes = $respInJson;
+    echo $respInJson;
+
+  }
+
+}

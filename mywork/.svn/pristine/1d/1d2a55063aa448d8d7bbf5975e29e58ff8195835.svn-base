@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		遊戲帳號: <input type="text" name="account" value="{$account}" /><br/>
+		點數: <input type="text" name="amount" value="{$amount}" /><br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="strlen($op_result) and is_numeric($op_result)">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			執行成功, 結果=
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+			<IF condition="$op_result2"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+	<ELSE/>
+		<IF condition="strlen($op_result)">
+			<b>結果似乎不成功:</b>
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+		<ELSE/>
+			<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+		</IF>
+	</IF>
+</body>
+</html>

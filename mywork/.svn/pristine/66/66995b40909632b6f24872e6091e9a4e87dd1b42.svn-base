@@ -1,0 +1,867 @@
+<?php
+/*
+ * 遊戲資訊
+ */
+class GameInfoModel extends AdminModel {
+    protected $tableName = "game_info";
+    protected $tableId = "game_id";
+    
+    protected $tenTwoArray = array('Uc8','Ab','Sa','Og');//時間區間 12:00~11:59
+    protected $tenTenArray = array('Dg','Bng','Rtg','Sb','Qt');//時間區間 00:00~23:59
+    
+    /*
+     * 取得 會員 明細返水資料
+     */
+    public function getMemberBackWater($data,&$err=""){
+        if(empty($data['gameClass_id']) && $data['gameClass_id'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && $data['game_code'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $datetime = $data['dateTime'];
+        
+        if(in_array($data['game_code'],$this->tenTwoArray)){
+            $monthOne = date('Y-m-01 12:00:00'); //本月第一天
+            $monthEnd = date('Y-m-d 11:59:59',strtotime('+1 month',strtotime($monthOne))); //本月最後一天
+            $year=date('Y');
+            $month=date('m');
+            if(strtotime($monthOne) > strtotime($datetime)){//上個月計算
+                $monthOne = date("Y-m-01 12:00:00", strtotime("-1 months", strtotime(date('Y-m-01 12:00:00'))));
+                $monthEnd = date('Y-m-01 11:59:59');
+                //少兩個月的計算
+                if($month == 1){
+                    $month = 11;
+                    $year = $year - 1;
+                } else if($month == 2){
+                    $month = 12;
+                    $year = $year - 1;
+                } else {
+                    $month = $month - 2;
+                }
+            } else {//本月計算
+                //少一個月的計算
+                if($month == 1){
+                    $month = 12;
+                    $year = $year - 1;
+                } else {
+                    $month = $month - 1;
+                }
+            }
+        } else {
+            $monthOne = date('Y-m-01 00:00:00'); //本月第一天
+            $monthEnd = date("Y-m-d 23:59:59", strtotime('+1 month -1 days', strtotime($monthOne))); //本月最後一天
+            
+            
+            $year=date('Y');
+            $month=date('m');
+            if(strtotime($monthOne) > strtotime($datetime)){//上個月計算
+                $monthOne = date("Y-m-01 00:00:00", strtotime("-1 months", strtotime(date('Y-m-01 00:00:00'))));
+                $monthEnd = date('Y-m-d 23:59:59',strtotime('+1 month -1 days', strtotime($monthOne)));
+                //少兩個月計算
+                if($month == 1){
+                    $month = 11;
+                    $year = $year - 1;
+                } else if($month == 2){
+                    $month = 12;
+                    $year = $year - 1;
+                } else {
+                    $month = $month - 2;
+                }
+            } else {//本月計算
+                
+                //少一個月的計算
+                if($month == 1){
+                    $month = 12;
+                    $year = $year - 1;
+                } else {
+                    $month = $month - 1;
+                }
+            }
+        }
+        
+        $monthOne = strtotime($monthOne);
+        $monthEnd = strtotime($monthEnd);
+        
+        $gameCode = strtolower($data['game_code']);
+        $sql = "SELECT
+                    GROUP_CONCAT(`detail_id`) AS AllId,a.`member_id` as memberId,a.`member_account` as memberAccount,`agent_id`,`agent_tree`,`ratio_tree`,
+                    SUM(`detail_effective`) AS AllEffective,b.`decimalPoint_money`,c.*
+                FROM `game_{$gameCode}_detail` a
+                LEFT OUTER JOIN `common_member_backWater_decimalPoint` b ON (a.`member_id` = b.`member_id`)
+                LEFT OUTER JOIN `common_member_waterRank_level` c
+                    ON (
+                        a.`member_id` = c.`member_id`
+                        AND c.`gameClass_id` = '{$data['gameClass_id']}'
+                        AND c.`level_year` = '{$year}'
+                        AND c.`level_month` = '{$month}'
+                        )
+                WHERE
+                    `detail_isBackWater` = 0
+                AND `detail_effective` > 0
+                AND `detail_needBackWater` = 1
+                AND (`detail_createTime` BETWEEN '{$monthOne}' AND '{$monthEnd}')
+                GROUP BY a.`member_id`,`agent_tree`,`ratio_tree`;";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    /**
+     * 返水程序
+     * @param array $memberWaterArray
+     * @param string $err
+     */
+    public function programBackWater($gameCode,$memberWaterArray,&$err=""){
+        //傳送 返水金額 $memberWaterArray['backWaterMoney']
+        
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $CommonMemberBackwaterDecimalpoint = D("CommonMemberBackwaterDecimalpoint");
+        $CommonMemberBackwaterLog = D("CommonMemberBackwaterLog");
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        foreach($memberWaterArray AS $key => $value){
+            echo "===============================================================<BR>";
+            echo $value['memberAccount']." 返水開始<BR>";
+            //var_dump($value);continue;
+            //紀錄返水LOG logData array
+            $logData = array(
+                "member_id"=>$value['memberId'],
+                "member_account"=>$value['memberAccount'],
+                "game_id"=>$value['game_id'],
+                "backWaterLog_type"=>1,
+                "backWaterLog_createTime"=>time(),
+                "backWaterLog_money"=>$value['backWaterMoney'],
+                "backWaterLog_decimalPoint"=>$value['decimalPoint_money'],
+                "backWaterLog_betDetails"=>json_encode($value['betDetails']),
+            );
+            //事務處理開始
+            $this->startTrans();
+            if((int)$value['backWaterMoney'] != 0){
+                //讀取 會員電子錢包    鎖表   開始
+                $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$value['memberId']}'
+                FOR UPDATE;";
+                $return = $this->query($sql);
+                if($return === false){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                if(empty($return[0])){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount']." ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                $memberWalletDataArray = $return[0];//會員錢包資料
+                
+                $walletLogBefore = $memberWalletDataArray["wallet_money"];
+                $walletLogAfter = $walletLogBefore + $value['backWaterMoney'];
+                
+                //對電子錢包 加款 開始
+                $data = array(
+                    "member_id" => $value['memberId'],
+                    "wallet_money" => (int)$value['backWaterMoney']
+                );
+                $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+                if($return === false){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                if($return !== 1){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                //對電子錢包 加款 結束
+                
+                //對會員返水上點
+                //寫入會員帳變資料
+                //新增帳變紀錄 開始
+                $CommonMemberWalletLog = D("CommonMemberWalletLog");
+                $data = array(
+                    "member_id" => $value['memberId'],
+                    "agent_id" => $value['agent_id'],
+                    "agent_tree"=> $value['agent_tree'],
+                    "ratio_tree"=> $value['ratio_tree'],
+                    "walletLog_operating" => 1,//1點數增加 2點數減少
+                    "walletLog_type" => 5,//帳變類型  1儲值表 2託售表 3轉移表 4活動表 5退水表 6其他分類
+                    "walletLog_type_class"=>1,
+                    "walletLog_item_id" => $value['game_id'],//遊戲ID
+                    "walletLog_money" => (int)$value['backWaterMoney'],
+                    "walletLog_before" => (int)$walletLogBefore,
+                    "walletLog_after" => (int)$walletLogAfter,
+                    "walletLog_main" => $gameCode.";返水;自動上點;錢包;加款",
+                    "walletLog_ip" => $ip,
+                    "walletLog_createTime" => $nowTime
+                );
+                $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+                if($return === false){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                $walletLogId = $return;
+                //新增帳變紀錄 結束
+            }
+            
+            //修改已返水注單
+            $idExpArray = explode(",",$value['AllId']);
+            
+            $return = $this->setBetsWaterReturned($gameCode,$idExpArray);
+            if($return === false){
+                $this->rollback();//事務處理失敗 回退
+                var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));
+                $logData['backWaterLog_status'] = 0;
+                $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+                $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                continue;
+            }
+            //事務結束
+            echo "返水成功<BR>";
+            $this->commit();//事務處理成功
+            
+            //修改剩餘會員小數 $memberWaterArray['decimalPoint_money']
+            $data = array(
+                "member_id" => $value['memberId'],
+                "decimalPoint_money"=>$value['decimalPoint_money'],
+            );
+            $return = $CommonMemberBackwaterDecimalpoint->setMemberDecimalPoint($data,$err);
+            if($return === false){
+                var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+                $logData['backWaterLog_status'] = 0;
+                $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+                $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                continue;
+            }
+            //紀錄返水 成功 LOG
+            $logData['backWaterLog_status'] = 1;
+            $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+        }
+    }
+    
+    /**
+     * 修改會員 反水狀態 標記已反水
+     * 傳入訂單ID 陣列
+     */
+    public function setBetsWaterReturned($gameCode,$data){
+        
+        $idStr = "";
+        foreach($data as $key => $value){
+            if(!empty($idStr)){
+                $idStr .= ",";
+            }
+            $idStr .= "'{$value}'";
+        }
+        $gameCode = strtolower($gameCode);
+        $sql = "UPDATE `game_{$gameCode}_detail` SET `detail_isBackWater` = 1
+                WHERE `detail_id` IN ({$idStr})";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * 計算會員返水階層 計算洗碼
+     * 傳入 會員id 陣列
+     * data['gameClassId'] 遊戲分類id
+     * data['gameClassShowName'] 遊戲類別名稱
+     * data['memberIdArray'] 會員ID陣列
+     */
+    public function setMemberWaterrankLevel($gameCode,$data,&$err=""){
+        $gameClassId = $data['gameClassId'];
+        $gameClassShowName = $data['gameClassShowName'];
+        $memberIdArray = $data['memberIdArray'];
+        $gameId = $data['gameId'];
+        $datetime = $data['dateTime'];
+        
+        //取得遊戲分類的分類洗碼 開始
+        $sql = "SELECT * FROM `common_game_waterrank`
+                WHERE `gameClass_id` = '{$gameClassId}'
+                ORDER BY `waterRank_effective` DESC";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));//取得 遊戲分類的分類洗碼 失敗
+            return false;
+        }
+        $waterRankArray = $return;//遊戲洗碼階層
+        //取得遊戲分類的分類洗碼 結束
+        
+        //$datetime = date('Y-m-d H:i:s');//現在時間
+        $year=date('Y');//年
+        $month=date('m');//月
+        $day=date('d');//日
+        
+        if(in_array($gameCode,$this->tenTwoArray)){
+            $monthOne = date('Y-m-01 12:00:00'); //本月第一天
+            $monthEnd = date('Y-m-d 11:59:59',strtotime('+1 month',strtotime($monthOne))); //本月最後一天
+            if(strtotime($monthOne) > strtotime($datetime)){//上個月計算
+                $monthOne = date("Y-m-01 12:00:00", strtotime("-1 months", strtotime(date('Y-m-01 12:00:00'))));
+                $monthEnd = date('Y-m-01 11:59:59');
+                //少一個月的計算
+                if($month == 1){
+                    $month = 12;
+                    $year = $year - 1;
+                } else {
+                    $month = $month - 1;
+                }
+            }
+        } else {
+            $monthOne = date('Y-m-01 00:00:00'); //本月第一天
+            $monthEnd = date("Y-m-d 23:59:59", strtotime('+1 month -1 days', strtotime($monthOne))); //本月最後一天
+            
+            $year=date('Y');
+            $month=date('m');
+            if(strtotime($monthOne) > strtotime($datetime)){//上個月計算
+                $monthOne = date("Y-m-01 00:00:00", strtotime("-1 months", strtotime(date('Y-m-01 00:00:00'))));
+                $monthEnd = date('Y-m-d 23:59:59',strtotime('+1 month -1 days', strtotime($monthOne)));
+                //少一個月的計算
+                if($month == 1){
+                    $month = 12;
+                    $year = $year - 1;
+                } else {
+                    $month = $month - 1;
+                }
+            }
+        }
+        
+//         var_dump($monthOne,$monthEnd);
+//         var_dump($year,$month);
+        $monthOne = strtotime($monthOne);
+        $monthEnd = strtotime($monthEnd);
+        
+        //取得 明細 資料 開始
+        $memberIdStr = "";
+        foreach($memberIdArray as $value){
+            if(!empty($memberIdStr)){
+                $memberIdStr .= ",";
+            }
+            $memberIdStr .= "'{$value}'";
+        }
+        $gameCode = strtolower($gameCode);
+        $sql = "SELECT a.`member_id`,a.`member_account`,
+                    sum(`detail_effective`) AS effective_effective,
+                    count(*) AS effective_number
+                FROM `game_{$gameCode}_detail` a
+                WHERE (`detail_createTime` BETWEEN '{$monthOne}' AND '{$monthEnd}')
+                    AND (a.`member_id` IN ({$memberIdStr}))
+                    AND (`detail_isBackWater` = '1')
+                GROUP BY a.`member_id`";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));//取得 會員明細 失敗
+            return false;
+        }
+        $detailArray = $return;
+        
+        //取得 明細 資料 結束
+        $memberWaterRankArray = array();
+        foreach($detailArray AS $value){
+            $memberWaterRankArray[$value['member_id']] = $value;
+            $memberWaterRankArray[$value['member_id']]['gameClass_id'] = $gameClassId;
+            $memberWaterRankArray[$value['member_id']]['gameClass_showName'] = $gameClassShowName;
+            $memberWaterRankArray[$value['member_id']]['game_id'] = $gameId;
+            $memberWaterRankArray[$value['member_id']]['level_year'] = $year;
+            $memberWaterRankArray[$value['member_id']]['level_month'] = $month;
+            $memberWaterRankArray[$value['member_id']]['effective_effective'] = floor($value['effective_effective']);
+            $memberWaterRankArray[$value['member_id']]['effective_modifyTime'] = time();
+        }
+        $CommonMemberWaterrankEffective = D("CommonMemberWaterrankEffective");
+        $return = $CommonMemberWaterrankEffective->setMemberEffectiveData($memberWaterRankArray);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));//取得 會員明細 失敗
+            return false;
+        }
+        
+        //取得會員 洗碼 計算資料 開始
+        $sql = "SELECT a.`member_id`,a.`member_account`,
+                    sum(`effective_effective`) AS totalEffective,b.`waterRank_serial`
+                FROM `common_member_waterRank_effective` a
+                LEFT OUTER JOIN `common_member_waterRank_level` b
+                    ON (
+                        a.`member_id` = b.`member_id`
+                        AND a.`gameClass_id` = b.`gameClass_id`
+                        AND a.`level_year` = b.`level_year`
+                        AND a.`level_month` = b.`level_month`
+                        )
+                WHERE (a.`member_id` IN ({$memberIdStr}))
+                    AND a.`gameClass_id` = '{$gameClassId}'
+                    AND a.`level_year` = '{$year}'
+                    AND a.`level_month` = '{$month}'
+                GROUP BY a.`member_id`";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return false;
+        }
+        $effectiveTotalArray = $return;
+        //取得會員 洗碼 計算資料 結束
+        
+        
+        $CommonMemberWaterrankLevel = D("CommonMemberWaterrankLevel");
+        //判斷是否 要 升階層
+        foreach($effectiveTotalArray AS $value){
+            foreach($waterRankArray AS $rankValue){
+                if($value['totalEffective'] > $rankValue['waterRank_effective']){
+                    if(empty($value['waterRank_serial'])){//如果會員階層資料為空  新增會員資料
+                        $data = array(
+                            "member_id" => $value['member_id'],
+                            "member_account" => $value['member_account'],
+                            "gameClass_id" => $gameClassId,
+                            "gameClass_showName" => $gameClassShowName,
+                            "waterRank_id" => $rankValue['waterRank_id'],
+                            "waterRank_serial" => $rankValue['waterRank_serial'],
+                            "waterRank_waterRate" => $rankValue['waterRank_waterRate'],
+                            "level_year" => $year,
+                            "level_month" => $month,
+                            "level_modifyTime" => time()
+                        );
+                        //var_dump($data);
+                        $return = $CommonMemberWaterrankLevel->addMemberWaterRankData($data);
+                    } else {//如果有階層資料 比對 是否 需要升階層
+                        if($value['waterRank_serial'] < $rankValue['waterRank_serial']){//階層 升等時 修改會員階層資料
+                            
+                            $levelArray = array();
+                            $data = array(
+                                "member_id" => $value['member_id'],
+                                "member_account" => $value['member_account'],
+                                "gameClass_id" => $gameClassId,
+                                "gameClass_showName" => $gameClassShowName,
+                                "waterRank_id" => $rankValue['waterRank_id'],
+                                "waterRank_serial"=>$rankValue['waterRank_serial'],
+                                "waterRank_waterRate" => $rankValue['waterRank_waterRate'],
+                                "level_year" => $year,
+                                "level_month" => $month,
+                                "level_modifyTime" => time()
+                            );
+                            array_push($levelArray, $data);
+                            
+                            
+                            $sql = "SELECT * FROM `game_class` a
+                                    JOIN `common_game_waterrank` b ON (a.`gameClass_id` = b.`gameClass_id`
+                                        AND b.`waterRank_serial` = '{$rankValue['waterRank_serial']}')
+                                    WHERE a.`gameClass_id` <> '{$gameClassId}'";
+                            $return = $this->query($sql);
+                            if($return === false){
+                                $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_05"));
+                                return false;
+                            }
+                            $gameClassDataArray = $return;
+                            foreach($gameClassDataArray AS $gameValue){
+                                $data = array(
+                                    "member_id" => $value['member_id'],
+                                    "member_account" => $value['member_account'],
+                                    "gameClass_id" => $gameValue['gameClass_id'],
+                                    "gameClass_showName" => $gameValue['gameClass_showName'],
+                                    "waterRank_id" => $gameValue['waterRank_id'],
+                                    "waterRank_serial"=>$gameValue['waterRank_serial'],
+                                    "waterRank_waterRate" => $gameValue['waterRank_waterRate'],
+                                    "level_year" => $year,
+                                    "level_month" => $month,
+                                    "level_modifyTime" => time()
+                                );
+                                array_push($levelArray, $data);
+                            }
+                                                        
+                            $return = $CommonMemberWaterrankLevel->setMemberWaterRankData($levelArray);
+                            if($return === false){
+                                $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+                                return false;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
+    /*
+     * 取得遊戲ID 使用遊戲Code
+     */
+    public function getGameIdDataByGameCode($data,&$err = ""){
+        if(empty($data['game_code']) && $data['game_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `game_code` = '{$data['game_code']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 遊戲返水 資料
+     */
+    public function getGameInfoData($data){
+        if(empty($data['game_code']) && $data['game_code'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                JOIN `common_game_waterRank` c ON (a.`gameClass_id` = c.`gameClass_id`)
+                WHERE `game_code` = '{$data['game_code']}'
+                AND `waterRank_serial` = '{$data['waterRank_serial']}';";
+        $return = $this->query($sql);
+        if($return === false || empty($return)){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 遊戲名稱 前台使用 12秒暫存
+     */
+    public function getAllGameNameData(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->cacheQuery($sql,12);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 遊戲資料 BY FeaturesManage功能管理使用
+     */
+    public function getAllGameInfoDataByManage(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_order` ASC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+
+        return $return;
+    }
+
+    /*
+     * 修改 FeaturesManage 開關功能
+     */
+    public function setFeaturesManageEnableById($data){
+        if(empty($data['game_id']) && $data['game_id'] !== 0){
+            return false;
+        }
+
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'game_id'){continue;}
+
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+
+            $sql .= "WHERE `game_id` = '{$data['game_id']}';";
+
+            $return = $this->query($sql);
+
+            return $return;
+        }
+    }
+    /*
+     * 取得全部遊戲報表
+     * 報表查詢使用
+     */
+    public function getAllGameReportData($data,&$err=""){
+        if(empty($data['agent_id']) && empty($data['agent_id'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['gameDataArray']) && empty($data['gameDataArray'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        
+        if(!empty($data['agent_tree'])){
+            $whereSql = "(`agent_tree` REGEXP '^{$data['agent_tree']}' AND `agent_id` <> '{$data['agent_id']}')";
+            $groupBySql = "a.`agent_id`,`agent_tree`,`ratio_tree`";
+        } else {
+            $whereSql = "`agent_id` = '{$data['agent_id']}'";
+            $groupBySql = "`member_id`,`agent_tree`,`ratio_tree`";
+        }
+        $searchMemberIdSql = "";
+        if(!empty($data['searchMemberId'])){
+            $searchMemberIdSql = "AND `member_id` = '{$data['searchMemberId']}'";
+        }
+        
+        $reportTableNameSql = "";
+        foreach($data['gameDataArray'] as $key => $value){
+            if($value['gameEnable'] == 1){
+                if(empty($reportTableNameSql)){
+                    $reportTableNameSql = "(SELECT * FROM `game_{$value['gameCode']}_report` WHERE (`report_orderDate` BETWEEN '{$data['report_orderDate']['startTime']}' AND '{$data['report_orderDate']['endTime']}') AND {$whereSql} {$searchMemberIdSql})";
+                } else {
+                    $reportTableNameSql .= "UNION ALL  (SELECT * FROM `game_{$value['gameCode']}_report` WHERE (`report_orderDate` BETWEEN '{$data['report_orderDate']['startTime']}' AND '{$data['report_orderDate']['endTime']}') AND {$whereSql} {$searchMemberIdSql})";
+                }
+            }
+        }
+        
+        $sql = "SELECT
+                    `member_id`,a.`agent_id`,`agent_tree`,a.`agent_account`,`ratio_tree`,`member_account`,b.`agent_ratioRemark`,b.`agent_mode`,
+                    sum(`report_bettingMoney`) as allBettingMoney,
+                    sum(`report_surplus`) as allSurplus,
+                    sum(`report_effective`) as allEffective,
+                    sum(`report_betNumber`) as allBetNumber
+                FROM ({$reportTableNameSql}) as a
+                JOIN `common_agent` b ON (a.`agent_id` = b.`agent_id`)
+                GROUP BY {$groupBySql}";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得單一遊戲報表
+     * 報表查詢使用
+     */
+    public function getOneGameReportData($data,&$err=""){
+        if(empty($data['agent_tree']) && empty($data['agent_tree'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && empty($data['game_code'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $searchMemberIdSql = "";
+        if(!empty($data['searchMemberId'])){
+            $searchMemberIdSql = "AND `member_id` = '{$data['searchMemberId']}'";
+        }
+       
+        $sql = "SELECT
+                    sum(`report_bettingMoney`) as allBettingMoney,
+                    sum(`report_surplus`) as allSurplus,
+                    sum(`report_effective`) as allEffective,
+                    sum(`report_betNumber`) as allBetNumber
+                FROM `game_{$data['game_code']}_report`
+                WHERE (`report_orderDate` BETWEEN '{$data['report_orderDate']['startTime']}' AND '{$data['report_orderDate']['endTime']}') AND
+                       `agent_tree` REGEXP '^{$data['agent_tree']}' $searchMemberIdSql";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 單一遊戲 會員總數量
+     * 報表查詢使用 遊戲明細
+     */
+    public function getOneGameAllMemberDetailDataCount($data,&$err=""){
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== 0){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && $data['game_code'] !== 0){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "SELECT `member_id`
+                FROM `game_{$data['game_code']}_detail`
+                WHERE (`detail_orderDate` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                    AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+                GROUP BY `member_id`";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return count($return);
+    }
+    /*
+     * 取得 單一遊戲 會員資料
+     * 報表查詢使用 遊戲明細
+     */
+    public function getOneGameAllMemberDetailData($data,&$err=""){
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== 0){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && $data['game_code'] !== 0){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "SELECT `member_id`,`member_account`,count(*) AS totalNumber,
+                       sum(`detail_bettingMoney`) AS sumBettimgMoney,
+                       sum(`detail_surplus`) AS sumSurplus,
+                       sum(`detail_effective`) AS sumEffective
+                FROM `game_{$data['game_code']}_detail`
+                WHERE (`detail_orderDate` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                    AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+                GROUP BY `member_id`";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 單一遊戲會員明細 總數
+     * 報表查詢使用
+     */
+    public function getOneGameDetailDataCount($data,&$err=""){
+        if(empty($data['agent_tree']) && empty($data['agent_tree'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && empty($data['game_code'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['member_id']) && empty($data['member_id'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $sql = "SELECT count(*) AS totalNumber,
+                       sum(`detail_bettingMoney`) AS sumBettimgMoney,
+                       sum(`detail_surplus`) AS sumSurplus,
+                       sum(`detail_effective`) AS sumEffective
+                FROM `game_{$data['game_code']}_detail`
+                WHERE (`detail_orderDate` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                    AND `member_id` = '{$data['member_id']}'
+                    AND `agent_tree` REGEXP '^{$data['agent_tree']}'";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 單一遊戲會員明細 資料
+     * 報表查詢使用
+     */
+    public function getOneGameDetailData($data,&$err=""){
+        if(empty($data['agent_tree']) && empty($data['agent_tree'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && empty($data['game_code'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['member_id']) && empty($data['member_id'])){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+        
+        $sql = "SELECT * FROM `game_{$data['game_code']}_detail`
+                WHERE (`detail_orderDate` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                    AND `member_id` = '{$data['member_id']}'
+                    AND `agent_tree` REGEXP '^{$data['agent_tree']}' 
+                ORDER BY `detail_createTime` DESC {$pageSql}";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = $data['game_code']."館 ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 新增維護公告
+     */
+    public function addDefendMessage($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->$tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}'";
+        $return = $this->query($sql);
+        // var_dump($data,$sql,$return);die;
+        return $return;
+    }
+    /**
+     * 排序
+     */
+    public function setSortGameInfoOrder($data){
+        $sql = "UPDATE `{$this->tableName}` a ,`{$this->tableName}` b
+            SET a.`game_order`='{$data['game_order2']}' ,
+                b.`game_order` = '{$data['game_order']}'
+            WHERE a.`game_order` = '{$data['game_order']}'
+            AND b.`game_order`='{$data['game_order2']}'
+            AND a.`gameClass_id` = '{$data['gameClass_id']}'
+            AND b.`gameClass_id` = '{$data['gameClass_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 遊戲 所有資料
+     */
+    public function getAllGameCodeData(){
+        $sql = "SELECT * FROM `{$this->tableName}`";
+        $return = $this->cacheQuery($sql,20);
+        return $return;
+    }
+    /*
+     * 使用會員遊戲帳號 找尋
+     * 會員ID
+     */
+    public function getMemberIdByGameAccount($data){
+        if(empty($data["game_account"]) && $data["game_account"] !== '0'){
+            return false;
+        }
+        $return = $this->getAllGameCodeData();
+        foreach($return as $key => $value){
+            if($value['game_showEnabled'] == '1'){
+                $sql = "SELECT * FROM `game_".strtolower($value['game_code'])."_member_info` a
+                        JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                        JOIN `common_member_wallet` c ON (b.`member_id` = c.`member_id`)
+                        WHERE `game_account` = '".$data["game_account"]."';";
+                $return = $this->query($sql);
+                if(!empty($return)){
+                    return $return[0];
+                    break;
+                }
+            }
+        }
+        return "";
+    }
+}

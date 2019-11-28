@@ -1,0 +1,177 @@
+<?php
+/*
+ * 遊戲資訊
+ */
+class GameInfoModel extends AdminModel {
+    protected $tableName = "game_info";
+    protected $tableId = "game_id";
+    /*
+     * 取得遊戲ID 使用遊戲Code
+     */
+    public function getGameIdDataByGameCode($data,&$err = ""){
+        if(empty($data['game_code']) && $data['game_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得錢包失敗
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `game_code` = '{$data['game_code']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 遊戲返水 資料
+     */
+    public function getGameInfoData($data){
+        if(empty($data['game_code']) && $data['game_code'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                JOIN `common_game_waterRank` c ON (a.`gameClass_id` = c.`gameClass_id`)
+                WHERE `game_code` = '{$data['game_code']}'
+                AND `waterRank_serial` = '{$data['waterRank_serial']}';";
+        $return = $this->query($sql);
+        if($return === false || empty($return)){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 遊戲名稱 前台使用 12秒暫存
+     */
+    public function getAllGameNameData(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->cacheQuery($sql,12);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 遊戲資料 BY FeaturesManage功能管理使用
+     */
+    public function getAllGameInfoDataByManage(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        
+        return $return;
+    }
+
+    /*
+     * 修改 FeaturesManage 開關功能
+     */
+    public function setFeaturesManageEnableById($data){
+        if(empty($data['game_id']) && $data['game_id'] !== 0){
+            return false;
+        }
+
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'game_id'){continue;}
+
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+
+            $sql .= "WHERE `game_id` = '{$data['game_id']}';";
+
+            $return = $this->query($sql);
+
+            return $return;
+        }
+    }
+    /*
+     * 取得全部遊戲報表
+     * 報表查詢使用
+     */
+    public function getAllGameReportData($data,&$err=""){
+        if(empty($data['agent_id']) && empty($data['agent_id'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['gameArray']) && empty($data['gameArray'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $reportTableNameSql = "";
+        foreach($data['gameArray'] as $key => $value){
+            if($value == 1){
+                if(empty($reportTableNameSql)){
+                    $reportTableNameSql = "(SELECT * FROM `game_{$key}_report`)";
+                } else {
+                    $reportTableNameSql .= "UNION ALL  (SELECT * FROM `game_{$key}_report`)";
+                }
+            }
+        }
+        if(!empty($data['agent_tree'])){
+            $whereSql = "(`agent_tree` REGEXP '^{$data['agent_tree']}' AND `agent_id` <> '{$data['agent_id']}')";
+            $groupBySql = "`agent_id`,`agent_tree`,`ratio_tree`";
+        } else {
+            $whereSql = "`agent_id` = '{$data['agent_id']}'";
+            $groupBySql = "`member_id`,`agent_tree`,`ratio_tree`";
+        }
+        $sql = "SELECT
+                    `member_id`,`agent_id`,`agent_tree`,`agent_account`,`ratio_tree`,`member_account`,
+                    sum(`report_bettingMoney`) as allBettingMoney,
+                    sum(`report_surplus`) as allSurplus,
+                    sum(`report_effective`) as allEffective,
+                    sum(`report_betNumber`) as allBetNumber
+                FROM ({$reportTableNameSql}) as newReport
+                WHERE (`report_orderDate` BETWEEN '{$data['report_orderDate']['startTime']}' AND '{$data['report_orderDate']['endTime']}') AND
+                     {$whereSql}
+                GROUP BY {$groupBySql}";
+                     //echo $sql;exit();
+                     $return = $this->query($sql);
+                     if($return === false){
+                         $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                         return false;
+                     }
+                     return $return;
+                     
+                     
+    }
+    /*
+     * 取得單一遊戲報表
+     * 報表查詢使用
+     */
+    public function getOneGameReportData($data,&$err=""){
+        if(empty($data['agent_tree']) && empty($data['agent_tree'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_code']) && empty($data['game_code'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        
+        $sql = "SELECT
+                    sum(`report_bettingMoney`) as allBettingMoney,
+                    sum(`report_surplus`) as allSurplus,
+                    sum(`report_effective`) as allEffective,
+                    sum(`report_betNumber`) as allBetNumber
+                FROM `game_{$data['game_code']}_report`
+                WHERE (`report_orderDate` BETWEEN '{$data['report_orderDate']['startTime']}' AND '{$data['report_orderDate']['endTime']}') AND
+                       `agent_tree` REGEXP '^{$data['agent_tree']}'";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return[0];
+    }
+}

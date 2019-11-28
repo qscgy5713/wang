@@ -1,0 +1,77 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:menuRwd"/>
+			<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up" style="margin-top: 54px;">
+				<div class="row">
+					<a href="#" class="electronicHall-game-bg-right">
+						<div class="col-6 p-0">
+							<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/Ag-game(1).png">
+						</div>
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo-Ag.png">
+						</div>
+					</a>
+				</div>
+				<div class="row">
+					<a href="#" class="electronicHall-game-bg-left">
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo-Allbet.png">
+						</div>
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/CQ9-game.png">
+						</div>
+					</a>
+				</div>
+				<div class="row">
+					<a href="#" class="electronicHall-game-bg-right">
+						<div class="col-6 p-0">
+							<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/DT-game.png">
+						</div>
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo-Bbin.png">
+						</div>
+					</a>
+				</div>
+				<div class="row">
+					<a href="#" class="electronicHall-game-bg-left">
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo-Dg.png">
+						</div>
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/VT-game.png">
+						</div>
+					</a>
+				</div>
+				<div class="row">
+					<a href="#" class="electronicHall-game-bg-right">
+						<div class="col-6 p-0">
+							<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/bbin-game(1).png">
+						</div>
+						<div class="col-6 p-0">
+							<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo-Bbin.png">
+						</div>
+					</a>
+				</div>
+			</section>
+		<include file="Common:footer"/>
+<script>
+//RWD調整畫面高度
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	
+	//var md_footer_h = jQuery('#md-footer').height();
+	//alert(h);
+	//alert(banner_h);
+	if(isLogin == "true"){
+		jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+	}else{
+		jQuery("#md-login-bg").css("min-height",h-home_page_rwd_h+"px");
+	}
+		   
+}
+</script>

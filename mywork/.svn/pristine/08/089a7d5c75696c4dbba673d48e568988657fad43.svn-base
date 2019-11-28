@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{$Think.MODULE_NAME}首頁</title>
+</head>
+
+<body>
+<div id="ind" ></div>
+<span> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME}  </span>
+<BR>
+<form method="POST" action='__APP__/{$Think.MODULE_NAME}/addLottofour'>
+	開獎日期:<input type="text" name="addLotterTime" value="{$today}"/><BR>
+	開獎獎號:<input type="text" name="addLottofour" value=""/>
+	<input type="submit" value="開獎">
+</form>
+<BR>
+	<input type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<input id="startTime" name="startTime" type="text" value="{$startTime}"/> 至
+		<input id="endTime"   name="endTime"   type="text" value="{$endTime}"/>
+		<input type='submit' value='查詢'>
+	</form>
+	
+	<table>
+		<tr>
+			<th>序</th><th>帳號</th><th>充值時間</th><th>充值金額</th><th>會員彩號</th><th>開獎結果</th>
+			<th>開獎時間</th><th>修改時間</th><th>給獎</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.rechargeMoney}</td>
+				<td>{$vo.lottofour}</td>
+				<td>{$vo.result}</td>
+				<td>{$vo.openLotteryTime}</td>
+				<td>{$vo.modifyTime}</td>
+				<td>
+				<if condition="$vo.money eq 'true' "> 
+					<form method="POST" action='__APP__/{$Think.MODULE_NAME}/addGiveMoney'>
+						<input type="hidden" name="memberNumberId" value="{$vo.id}">
+						<input type="text" name="eventMoney" value="">
+						<input type="submit" value="給獎上點">
+					</form>
+				<else /> 
+					{$vo.money}
+				</if>
+				</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>
+<include file="Common:footer"/> 
+<script type="text/javascript">
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+</script>

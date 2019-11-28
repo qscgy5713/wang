@@ -1,0 +1,196 @@
+<include file="Common:header"/>
+<title>MarqueeManage首頁</title>
+<body style="background-image: url(__CSS__/images/1.jpg);">
+<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+		  <div class="content admin-div">
+		  	 <p>
+                <button class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                       新增跑馬燈內容
+                </button>
+             </p>
+             
+             <div class="collapse mb10" id="collapseExample" style="">
+                 <div class="card card-body pt5 pb5">
+                 
+                  <form method="post" action='__APP__/MarqueeManage/formAddMarquee'>
+                  	<div class="form-group form-group-m">
+	                  	<!-- 
+						<form method="post" action='__APP__/MarqueeManage/formAddMarquee'>
+							<select name="addBelong">
+							　<option value="1">前台</option>
+							　<option value="2">代理</option>
+							　<option value="3">後台</option>
+							</select>
+							跑馬燈內容:<input type="text" name="addText">
+							<button type="submit" class="btn btn-primary">確認新增</button>
+						</form> -->
+							
+							<div class="div-style">
+	                            <select class="form-control form-control-m" name="addBelong">
+	                                <option value="1">前台</option>
+								　       <option value="2">代理</option>
+								　       <option value="3">後台</option>
+	                            </select>
+	                        </div>
+	                       <label class=" col-form-label">跑馬燈內容</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-admin" type="text" name="addText">
+	                       </div>
+	                       <button type="submit" name="addbtn" class="btn btn-info btn-style ml10">確認新增</button>
+                  	 </div>
+                  </form>
+                 </div>
+             </div>
+             
+             
+             <div class="row">
+         			<table class="table table-striped">
+                        <thead>
+	                        <tr><th colspan="8" class="text-center">跑馬燈</th></tr>
+							<tr>
+								<th>序</th>
+								<th>隸屬</th>
+								<th>排序</th>
+								<th>開關</th>
+								<th>內文</th>
+								<th>建立時間</th>
+								<th>修改時間</th>
+								<th>操作</th>
+							</tr>
+                        </thead>
+                        <tbody>
+                        <VOLIST name="showArray" id="vo">
+                        	<tr>
+	                        	<td>{$key+1}</td>
+								<td>{$vo.belong}</td>
+								<td>{$vo.order}</td>
+								<td>{$vo.enabled}</td>
+								<td>{$vo.text}</td>
+								<td>{$vo.createTime}</td>
+								<td>{$vo.modifyTime}</td>
+								<td>
+								
+								<a class="popup-content btn btn-info btn-style" href="#{$key+1}">修改</a>
+								<form class="div-style" method="post" action='__APP__/MarqueeManage/formStopMarquee'>
+									<input type="hidden" value="{$vo.id}" name="stopId">
+                                	<button type="submit" class="btn btn-info btn-style">停用</button>
+                                </form>
+                                <form class="div-style" method="post" action='__APP__/MarqueeManage/formStartMarquee'>
+                                	<input type="hidden" value="{$vo.id}" name="startId">	
+                                	<button type="submit" class="btn btn-info btn-style">啟用</button>
+                                </form>
+                                <form class="div-style" method="post" action='__APP__/MarqueeManage/formDelMarquee'>
+                                	<input type="hidden" value="{$vo.id}" name="delId">	
+                                	<button type="submit" class="btn btn-info btn-style">刪除</button>
+                                </form>	
+                                
+                                	<div id="{$key+1}" class="popup-content-area white-popup mfp-hide popup-content-area-max-width">
+				                        <h4>修改跑馬燈資料</h4><hr>
+				                        <form method="post" action='__APP__/MarqueeManage/formSetMarquee'>
+				                           <div class="form-group mb5">
+				                                <input type="hidden" value="{$vo.id}" name="setId">
+				                            </div>
+				                            <div class="form-group mb5">                
+				                                <select class="form-control" name="setBelong">
+					                                <if condition="$vo.belong eq 前台">
+														<option value="1" selected>前台</option>
+													<else />
+														<option value="1">前台</option>
+													</if>
+													<if condition="$vo.belong eq 代理">
+														<option value="2" selected>代理</option>
+													<else />
+														<option value="2">代理</option>
+													</if>
+													<if condition="$vo.belong eq 後台">
+														<option value="3" selected>後台</option>
+													<else />
+														<option value="3">後台</option>
+													</if>
+					                            </select>
+				                            </div>
+				                             <div class="form-group mb5">                
+				                                <label >內文</label>
+				                                <textarea class="form-control" name="setText" rows="3">{$vo.text}</textarea>
+				                             </div>
+				                            <div class="clearfix">
+				                                <button type="submit" name ="okbtn" class="btn btn-info float-right btn-style">確認修改</button>
+				                            </div>
+				                        </form>
+				                    </div>
+				                    
+                                </td>
+							</tr>
+                        </VOLIST>
+                        
+                        </tbody>
+                    </table>
+         		</div>
+		  </div>
+<include file="Common:footer"/> 
+
+<!-- <table>
+		<tr><th colspan="8">跑馬燈</th></tr>
+		<tr><th>序</th><th>隸屬</th><th>排序</th><th>開關</th><th>內文</th><th>建立時間</th><th>修改時間</th><th>操作</th></tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.belong}</td>
+				<td>{$vo.order}</td>
+				<td>{$vo.enabled}</td>
+				<td>{$vo.text}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.modifyTime}</td>
+				<td>
+					修改資料BUTTON
+					關閉BUTTON
+					<form method="post" action='__APP__/MarqueeManage/formStopMarquee'>
+						<input type="hidden" value="{$vo.id}" name="stopId">
+						<button type="submit" class="btn btn-primary">停用</button>
+					</form>
+					啟用BUTTON
+					<form method="post" action='__APP__/MarqueeManage/formStartMarquee'>
+						<input type="hidden" value="{$vo.id}" name="startId">
+						<button type="submit" class="btn btn-primary">啟用</button>
+					</form>
+					刪除BUTTON
+					<form method="post" action='__APP__/MarqueeManage/formDelMarquee'>
+						<input type="hidden" value="{$vo.id}" name="delId">
+						<button type="submit" class="btn btn-primary">刪除</button>
+					</form>
+				</td>
+			</tr>
+			<tr>
+			<form method="post" action='__APP__/MarqueeManage/formSetMarquee'>
+				<td><input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td>
+					<select name="setBelong">
+						<if condition="$vo.belong eq 前台">
+							<option value="1" selected>前台</option>
+						<else />
+							<option value="1">前台</option>
+						</if>
+						<if condition="$vo.belong eq 代理">
+							<option value="2" selected>代理</option>
+						<else />
+							<option value="2">代理</option>
+						</if>
+						<if condition="$vo.belong eq 後台">
+							<option value="3" selected>後台</option>
+						<else />
+							<option value="3">後台</option>
+						</if>
+					</select>
+				</td>
+				
+				<td>內文:<input type="text" name="setText"  value="{$vo.text}" ></td>
+				<td></td>
+				<td></td>
+				<td><button type="submit" class="btn btn-primary">確認修改</button></td>
+			</form>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html> -->

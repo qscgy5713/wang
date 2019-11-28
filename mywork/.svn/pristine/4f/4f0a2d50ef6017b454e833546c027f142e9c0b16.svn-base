@@ -1,0 +1,6 @@
+<?php
+return array(
+    //CommonKotsmsModel
+    "ERROR_COMMONKOTSMSMODEL_SENDAPIKOSTMS_01"=>"簡訊內容為空!",
+    "ERROR_COMMONKOTSMSMODEL_SENDAPIKOSTMS_02"=>"電話格式錯誤!",
+);

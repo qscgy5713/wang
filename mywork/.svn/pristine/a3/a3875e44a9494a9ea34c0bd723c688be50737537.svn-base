@@ -1,0 +1,182 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+<section class="main-container padding-bottom-clear md-main-container">
+
+        <!-- section -->
+        <!-- ================ -->
+        <section class="light-gray-bg light-gray-bg-m pv-30 pt-11 padding-bottom-clear clearfix">
+        <include file="Common:marquee"/>
+          <div class="container">
+          	<div class="main col-md-12">
+              <!-- page-title start -->
+              <!-- ================ -->
+              <h1 class="page-title text-white">點數中心</h1>
+              <div class="separator-2"></div>
+              <!-- page-title end -->
+            </div>
+            
+          	<div class="container">
+	          <h3 class="mt-4 text-white"></h3>
+	        </div>
+            <div class="row">
+              <div class="col-md-4 ">
+                <div class="pv-20 ph-20 hc-item-box-2 boxed hc-shadow hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon without-bg"><i class="fa fa-diamond"></i></span>
+                  <div class="body">
+                    <h4 class="title text-white">電子錢包</h4>
+                    <div class="separator-2"></div>
+                    <p class="text-white">餘額:<span id="memberWallet">{$memberWallet}</span></p>
+                    <p>&nbsp;</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 ">
+                <div class="pv-20 ph-20 hc-item-box-2 boxed hc-shadow hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon without-bg"><i class="fa fa-connectdevelop"></i></span>
+                  <div class="body">
+                    <h4 class="title text-white">總和</h4>
+                    <div class="separator-2"></div>
+                    <p class="text-white"> 餘額:<span id="allMoney">0</span></p>
+                    <a class="btn btn-outline-danger btn-sm" href="#" id="memberWallet" onClick="getAllGameBalance(true)">重新整理</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <foreach name="gameArray" item="classArray">
+            	<div class="container">
+		          <h3 class="mt-4 text-white">{$key}</h3>
+		        </div>
+		        <div class="row">
+		        	<foreach name="classArray" item="nameArray">
+		        		<div class="col-md-3 ">
+		        			<div class="pv-20 ph-20 hc-item-box-2 boxed hc-shadow hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <span class="icon without-bg"><i class="fa fa-connectdevelop"></i></span>
+			                  <div class="body">
+			                    <h4 class="title text-white">{$nameArray.gameName}</h4>
+			                    <div class="separator-2"></div>
+			                    <if condition='$nameArray.gameEnabled eq "0"'>
+			                    	<span>遊戲維護中</span>
+			                    	<p>&nbsp;</p>
+			                    	<p>&nbsp;</p>
+			                    <else />
+			                    	<if condition='$nameArray.accountBool eq "true"'>
+				                    	<p class="text-white">餘額:<span id="{$key}Balance"></span></p>
+				                    	<form method="post" action='__APP__/PointCenter/setGameBalanceTransferWallet'>
+	                            			<input type='hidden' name='setGameName' value='{$key}'>
+	                            			<input class="btn btn-outline-danger btn-sm" type="submit" id="{$key}TransferWallet" disabled="disabled"  value="轉回"><!-- onClick="ajaxTransferWallet('{$key}')" -->
+	                            		</form>
+				                    <else />
+				                    	<p>&nbsp;</p>
+				                    	<form method="post" action='__APP__/PointCenter/addMemberGameAccount'>
+		                            		<input type='hidden' name='addGameName' value='{$key}'>
+											<input class="btn btn-outline-danger btn-sm" type='submit' value='開通遊戲帳號'>
+										</form>
+				                    </if>
+			                    </if>
+			                    
+			                  </div>
+			                </div>
+		        		</div>
+		        	</foreach>
+		        </div>
+            </foreach>
+            
+          </div>
+        </section>
+        <!-- section end -->
+</section>						
+<include file="Common:footer"/>
+
+<script type="text/javascript">
+var allMoney = "{$memberWallet}";
+$(document).ready(function(){
+	$("#allMoney").html(allMoney);
+	getAllGameBalance(false);
+});
+function getAllGameBalance(getWalletBool){
+	var gameArray = <?=$jsonGameArray?>;
+	if(getWalletBool){
+		$("#allMoney").html('0');
+		getMembertWallet();
+	}
+	
+	for(var key1 in gameArray){
+		for(var key2 in gameArray[key1]){
+			for(var key3 in gameArray[key1][key2]){
+				if(key3 === "accountBool"){
+					if(gameArray[key1][key2][key3]){
+						//console.log(key2);
+						getMembertBalance(key2,gameArray[key1][key2]["gameName"]);
+					}
+				}
+			}
+		}
+	}
+}
+function getMembertBalance(gameName,gameChinese){
+	/*if($("#"+gameName+"TransferWallet").prop("disabled") == true){
+		return;
+	}*/
+	$("#"+gameName+"TransferWallet").attr("disabled",true);
+	$("#"+gameName+"Balance").html("讀取中");
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxMemberGameBalance",
+        data:{gameName:gameName},
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		//alert(dataObject.err);
+        		console.log(dataObject);
+        	} else {
+        		$("#"+gameName+"Balance").html(dataObject.memberBalance);
+        		if(parseInt(dataObject.memberBalance) != 0){
+        			$("#"+gameName+"TransferWallet").attr("disabled",false);
+        			var totalMoney = $("#allMoney").html();
+            		totalMoney = parseInt(totalMoney) + parseInt(dataObject.memberBalance);
+            		$("#allMoney").html(totalMoney);
+        		}
+        	}
+        },
+		error:function(){
+			//alert("網路連線錯誤，請檢查您的網路狀況。");
+			$("#"+gameName+"Balance").html("取得點數失敗");
+		}
+	});
+}
+function getMembertWallet(){
+	if($("#memberWallet").prop("disabled") == true){
+		return;
+	}
+	$("#memberWallet").attr("disabled",true);
+	$("#memberWallet").html("讀取中");
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxMemberWallet",
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		//alert(dataObject.err);
+        		console.log(dataObject);
+        	} else {
+        		$("#memberWallet").html(dataObject.memberWallet);
+        		var totalMoney = $("#allMoney").html();
+        		totalMoney = parseInt(totalMoney) + parseInt(dataObject.memberWallet);
+        		$("#allMoney").html(totalMoney);
+        	}
+        	$("#memberWallet").attr("disabled",false);
+        },
+		error:function(){
+			//alert("網路連線錯誤，請檢查您的網路狀況。");
+			$("#memberWallet").attr("disabled",false);
+			$("#memberWallet").html("取得點數失敗");
+		}
+	});
+}
+function ajaxTransferWallet(gameName){
+	alert('testAjax'+gameName);
+}
+</script>

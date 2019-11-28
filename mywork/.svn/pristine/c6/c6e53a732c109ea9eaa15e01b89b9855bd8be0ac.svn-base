@@ -1,0 +1,223 @@
+<?php
+/*
+ * 點數儲值頁
+ */
+class PointRechargeAction extends MemberAction {
+    protected function _initialize() {
+        parent::_initialize();
+        $this->isMemberLoginShowErr();
+        
+        $this->isBingding = $this->isBankBindingCheck();
+        
+    }
+    //TODO:9.點數儲值
+    public function index(){
+        if(!$this->isBingding){
+            $this->assign("waitSecond","0");
+            $this->assign("jumpUrl","__APP__/BankcodeBinding/index");
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        
+        $CashflowInfo = D("CashflowInfo");
+        $return = $CashflowInfo->getCashflowInfoData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "cashflow_code"=>"code",
+            "cashflow_showName"=>"name"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("showArray",$showArray);
+        //判斷 會員資格 (是否為vip用戶)
+        //讀取 可用 儲值通道 
+        //和 最低儲值金額 和 最高儲值金額  和 儲值流程 圖片的url 
+        //(前端更變儲值通道 最低最高儲值金額 和 儲值流程 要跟著變動)
+        
+        $this->display();
+    }
+    //TODO:9.1 取得儲值代碼頁面
+    public function formPointRecharge(){
+        //使用 common.php filterStr($data) 公用函數  過濾取得 使用者輸入的Data
+        $request = $this->getRequest();
+        /*
+        var_dump($request);
+        $paymentCode = "echo 'text';";
+        $this->assign("showStorCode",$paymentCode);//繳款代碼
+        $this->display();exit();*/
+        if(empty($request["money"]) && $request["money"] !== '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        
+        if(!isNumber($request['money'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        if($request['money'] < 1000){
+            //判斷是否符合 高於 最低金額
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        if(preg_match("/\Store/i", $request["code"])){
+            if($request['money'] > 5000){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+            }
+        }
+        if(empty($request["code"]) && $request["code"] !== '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        //檢查 $request["code"] 是否正確 開關是否開啟
+        
+        $CashflowInfo = D("CashflowInfo");
+        $data = array(
+            "cashflow_code" => $request["code"]
+        );
+        $return = $CashflowInfo->getCashflowInfoDataByCode($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        if(empty($return['cashflow_id']) && $return['cashflow_id'] !== '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//未選擇金流或此金流未開放。
+        }
+        $cashflow_id = $return['cashflow_id'];
+        $cashflow_handlingFee = $return['cashflow_handlingFee'];
+        $cashflow_name = $return['cashflow_name'];
+        $cashflow_showName = $return['cashflow_showName'];
+        
+        
+        $recharge_createTime = time();//取得現在時間戳
+        $recharge_number = date("Ymd");
+        $recharge_number = substr($recharge_number,2,strlen($recharge_number));
+        $recharge_number = $recharge_number.$recharge_createTime;
+        
+        $rechargeAmount = $request['money'];
+        switch ($request["code"]){
+            case "NP_Store":
+                $CashflowNewebPay = D("CashflowNewebPay");
+                $data = array(
+                    "ordernumber" => $recharge_number,
+                    "payname" => $_SESSION['Member']['account'],
+                    "payphone" => $_SESSION['Member']['phone'],
+                    "amount" => $rechargeAmount
+                );
+                $return = $CashflowNewebPay->getNewebPayStoreData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                $rechargeWay = "超商繳款";
+                break;
+            case "NP_VirAccount":
+                $CashflowNewebPay = D("CashflowNewebPay");
+                $data = array(
+                    "ordernumber" => $recharge_number,
+                    "payname" => $_SESSION['Member']['account'],
+                    "payphone" => $_SESSION['Member']['phone'],
+                    "amount" => $rechargeAmount
+                );
+                $return = $CashflowNewebPay->getNewebPayVirAccountData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                $rechargeWay = "虛擬帳戶";
+                break;
+            case "YP_Store":
+                $CashflowYipay = D("CashflowYipay");
+                $data = array(
+                    "MerTradeID" => $recharge_number,
+                    "MerUserID" => $_SESSION['Member']['account'],
+                    "Amount" => $rechargeAmount
+                );
+                $return = $CashflowYipay->getYipayStoreData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                $rechargeWay = "超商繳款";
+                break;
+            case "YP_VirAccount":
+                $CashflowYipay = D("CashflowYipay");
+                $data = array(
+                    "MerTradeID" => $recharge_number,
+                    "MerUserID" => $_SESSION['Member']['account'],
+                    "Amount" => $rechargeAmount
+                );
+                $return = $CashflowYipay->getYipayVirAccountData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                $rechargeWay = "虛擬帳戶";
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+                break;
+        }
+        $paymentCode = $return;
+        
+        $CashflowRecharge = D("CashflowRecharge");
+        //新增儲值單
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "member_account" => $_SESSION['Member']['account'],
+            "agent_id" => $_SESSION['Member']['agentId'],
+            "agent_account" => $_SESSION['Member']['agentAccount'],
+            "agent_tree" => $_SESSION['Member']['agentTree'],
+            "cashflow_id" => $cashflow_id,
+            "cashflow_handlingFee" => $cashflow_handlingFee,
+            "cashflow_name" => $cashflow_name,
+            "cashflow_showName" => $cashflow_showName,
+            "recharge_money" => $rechargeAmount,
+            "recharge_number" => $recharge_number,
+            "recharge_createTime" => $recharge_createTime
+        );
+        $return = $CashflowRecharge->addRechargeData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $insertId = $return;
+        
+        if($rechargeWay === "超商繳款"){
+            $data = array(
+                "recharge_id" => $insertId,
+                "recharge_paymentCode" => $paymentCode
+            );
+            $return = $CashflowRecharge->setRechargeDataById($data);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'))."({$request["code"]})");
+            }
+            $this->assign("showStorCode",$paymentCode);//繳款代碼
+        }else if($rechargeWay === "虛擬帳戶"){
+            $data = array(
+                "recharge_id" => $insertId,
+                "recharge_paymentCode" => $paymentCode
+            );
+            $return = $CashflowRecharge->setRechargeDataById($data);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08'))."({$request["code"]})");
+            }
+            
+            $exArray = explode('-',$paymentCode);
+            $this->assign("showBankCode",$exArray[0]);//繳款代碼
+            $this->assign("showBankAccount",$exArray[1]);//繳款代碼
+        }
+        
+        //var_dump($rechargeWay);
+        //var_dump($rechargeAmount);
+        //var_dump($openWindows);
+        //var_dump($paymentCode);
+        $this->assign("rechargeWay",$rechargeWay);//儲值方式
+        $this->assign("rechargeAmount",$rechargeAmount);//儲值金額
+        $this->display();
+    }
+}

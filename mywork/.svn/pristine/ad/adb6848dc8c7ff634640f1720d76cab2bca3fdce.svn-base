@@ -1,0 +1,21 @@
+<?php
+/*
+ * API錯誤紀錄
+ */
+class CommonAgentDomainModel extends MemberModel {
+    protected $tableName = "common_agent_domain";
+    protected $tableId = "domain_id";
+    /*
+     * 取得符合的網域資料
+     */
+    public function getDomainDataBySite($data){
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `domain_site` = '{$data['domain_site']}'";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+}

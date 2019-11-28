@@ -1,0 +1,208 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+
+
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+
+				<div class="row">
+						<!-- FORM -->
+						<div class="col-md-8 rwd-m-b">
+
+							<ul class="process-steps nav nav-justified">
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-1" id="pill-pr-1-a" data-toggle="tab">1</a>
+									<h5>{$Think.lang.PointRechargeGetRechargeContent}</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link active" href="#pill-pr-2" id="pill-pr-2-a" data-toggle="tab">2</a>
+									<h5>{$Think.lang.PointRechargeGetRechargeCode}</h5>
+								</li>
+							</ul>
+
+
+							<div class="tab-content pt-0">
+								<div class="tab-pane" id="pill-pr-1">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto mt-20 mb-20">
+													<label class="text-center">{$Think.lang.PointRechargeStep2}</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-2-a').click();" >{$Think.lang.PointRechargeContinue}</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane active" id="pill-pr-2">
+									<div class="card card-default mt-15">
+										<div class="card-block">
+											<div class="row mb-10">
+												<div class="col-md-6 col-sm-6 m-auto ">
+													<label>{$Think.lang.PointRechargeGetRechargeType}</label>
+													<input type="text" id="" readonly="readonly" value="{$rechargeWay}" class="form-control">
+												</div>
+											</div>
+											<if condition='$showStorCode neq ""'>
+												<div class="row mb-10">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointRechargeRechargeCode}</label>
+														<input type="text" id="" readonly="readonly" value="{$showStorCode}" class="form-control">
+													</div>
+												</div>
+											<else/>
+												<div class="row mb-10">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointRechargeBankCode}</label>
+														<input type="hidden" id="" readonly="readonly" class="form-control" value="{$showBankCode}">
+														<select id="addCode" name="addCode" disabled class="form-control pointer required">
+															<VOLIST name="bankCodeArray" id="bank">
+																<option value="{$bank.bankcode_code}">{$bank.bankcode_code} - {$bank.bankcode_name}</option>
+															</VOLIST>
+														</select>
+													</div>
+												</div>
+												<div class="row mb-10">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointRechargeBankAcc}</label>
+														<input type="text" id="" readonly="readonly" value="{$showBankAccount}" class="form-control">
+													</div>
+												</div>
+											</if>
+											<div class="row mb-10">
+												<div class="col-md-6 col-sm-6 m-auto">
+													<label>{$Think.lang.PointRechargeRechargeMoney}</label>
+													<input type="text" id="" readonly="readonly" value="{$rechargeAmount}" class="form-control">
+												</div>
+											</div>
+
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto">
+												  <button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1 loading mr-10" onclick="self.location.href='__APP__/MemberCenter/rechargeRecords'">{$Think.lang.PointRechargeComplete}</button>
+												  <a id="btnOne" href="#" data-toggle="modal" class="btn btn-3d btn-secondary mb-0 mr-10" style="display:none;">
+													 <i class="fa fa-question-circle-o"></i>{$Think.lang.PointRechargeRechargeMethod}
+												  </a>
+												  <a id="btnTwo" href="#" data-toggle="modal" onclick="openmyModalLabel('myModalLabel')" class="btn btn-3d btn-secondary mb-0" style="display:none;">
+													 <i class="fa fa-question-circle-o"></i>{$Think.lang.PointRechargeRechargeMethod}
+												  </a>
+												</div>
+											</div>
+											<div id="myModalLabel" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none; padding-right: 17px;">
+												<div class="modal-dialog modal-dialog-m2">
+													<div class="modal-content">
+														<!-- Modal Header -->
+														<div class="modal-header modal-bg pr-30">
+															<button type="button" class="close-style" data-dismiss="modal" ><span aria-hidden="true">×</span></button>
+
+															<h4 class="modal-title tex-black" id="">{$Think.lang.PointRechargeCodePayMoney}</h4>
+														</div>
+
+														<!-- Modal Body -->
+														<div class="modal-body modal-body-bg">
+															<h4>7-Eleven iBon {$Think.lang.PointRechargeCodePayMoneyPre}</h4>
+															<img style="width: 100%;" src="__CSS__/images/{$langStr}/ibon.jpg">
+															<h4 class="mt-10">全家FamiPort {$Think.lang.PointRechargeCodePayMoneyPre}</h4>
+															<img style="width: 100%;" src="__CSS__/images/{$langStr}/fami.jpg">
+															<h4 class="mt-10">萊爾富Life-ET {$Think.lang.PointRechargeCodePayMoneyPre}</h4>
+															<img style="width: 100%;" src="__CSS__/images/{$langStr}/life.jpg">
+															<h4 class="mt-10">OK‧go {$Think.lang.PointRechargeCodePayMoneyPre}</h4>
+															<img style="width: 100%;" src="__CSS__/images/{$langStr}/ok.jpg">
+														</div>
+														<!-- Modal Footer -->
+														<div class="modal-footer modal-bg">
+											             	<button type="button" class="btn btn-dark closeBtn" data-dismiss="modal">{$Think.lang.PointRechargeConfirm}</button>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- /FORM -->
+
+						<!-- INFO -->
+						<div class="col-md-4">
+							<h4>{$Think.lang.PointRechargeDetail1}</h4>
+							<hr>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeDetail2}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeDetail3}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeDetail4}</li>
+
+		                    </ul>
+							<h4>{$Think.lang.PointRechargeFourStart1}</h4>
+							<hr>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeFourStart2}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeFourStart3}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeFourStart5}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeFourStart6}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.PointRechargeFourStart7}</li>
+		                    </ul>
+							<a href="http://www.taiwanlottery.com.tw/lotto/4D/history.aspx" target="_blank" style="height: 61px;" class="btn btn-secondary btn-shadow-1">{$Think.lang.PointRechargeFourStart8}<br>{$Think.lang.PointRechargeFourStart9}</a>
+						</div>
+						<!-- /INFO -->
+
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	var bankCode = '{$showBankCode}';
+	var rechargeCode = '{$rechargeCode}'
+	//alert("{$rechargeWay}");
+	jQuery("#addCode").find("option[value = "+bankCode+"]").attr("selected",true);
+
+	if(rechargeCode == 'YP_Store'){
+		jQuery("#btnOne").show();
+		jQuery("#btnTwo").hide();
+	}
+	if(rechargeCode == 'NP_Store'){
+		jQuery("#btnOne").hide();
+		jQuery("#btnTwo").show();
+	}
+})
+//彈框鎖定背景不動
+function openmyModalLabel(id){
+	jQuery("body").addClass("modal-open-s");
+	jQuery('#'+id).modal('show');
+}
+jQuery(function () { jQuery('#myModalLabel').on('hide.bs.modal', function () {
+	jQuery("body").removeClass("modal-open-s");
+	})
+});
+</script>

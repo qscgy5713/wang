@@ -1,0 +1,398 @@
+<?php
+set_time_limit( 10 );
+
+class GamePxAction extends CommonAction {
+  const API_NAME = 'Px 六合彩';
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+
+    $function_links = '';
+    $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+    $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+    $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+    $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+    $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+    $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a> | ";
+    $function_links .= "<a href=\"__URL__/report2\" target=\"_self\">報表2</a>";
+    $this->assign('function_links', $function_links);
+
+    $this->assign('api_name', self::API_NAME);
+    $this->assign('op_desc', '輸入參數按下送出');
+  }
+
+  //1. 創新帳號
+  public function index(){
+
+    $user_name = 'test01';
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+      //檢查是否有 user_name 傳入 並且不為空
+      if (!isset($request['user_name']) || !strlen($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      //檢查是否有 acc_hierarchy_num 傳入 並且不為空
+      if (!isset($request['acc_hierarchy_num']) || !strlen($request['acc_hierarchy_num'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號類型為空，請重新輸入
+      }
+      $acc_hierarchy_num = $request['acc_hierarchy_num'];
+
+      $px = D('GamePx');
+
+      //$px->queryHandicap();
+
+      $err = null;
+      $res = $px->createMember(array(
+        'user_name' => $user_name,
+        'acc_hierarchy_num' => $acc_hierarchy_num,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'createMember');
+    $this->assign('method_desc', '建立一個新的遊戲帳號');
+    $this->assign('user_name', $user_name);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+  //2. 取得遊戲連結
+  public function game_link(){
+
+    $user_name = 'test01';
+    //$language = 'tw';
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if (!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      //處理 language
+      //if (isset($request['language']) && strlen($request['language'])){
+      //  $language = strtolower($request['language']);
+      //}
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->loginMember(array(
+        'user_name' => $user_name,
+        //'language' => $language,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'loginMember');
+    $this->assign('method_desc', '用現存遊戲帳號取得遊戲的連結');
+    $this->assign('user_name', $user_name);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+  //3. 取得會員餘額
+  public function balance(){
+
+    $user_name = 'test01';
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if (!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->getMemberBalance(array(
+        'user_name' => $user_name,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getMemberBalance');
+    $this->assign('method_desc', '取得會員的當前餘額');
+    $this->assign('user_name', $user_name);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+  //4. 上點
+  public function deposit(){
+
+    $user_name = 'test01';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if (!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+      }
+      $user_name = $request['user_name'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if (!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $px = D('GamePx');
+
+      $res = $px->rechargeMemberBalance(array(
+        'user_name' => $user_name,
+        'amount' => $amount,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'rechargeMemberBalance');
+    $this->assign('method_desc', '增加會員的點數餘額');
+    $this->assign('user_name', $user_name);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+  //5. 下點
+  public function withdraw(){
+
+    $user_name = 'test01';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if (!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+      }
+      $user_name = $request['user_name'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if (!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $px = D('GamePx');
+
+      $res = $px->withdrawMemberBalance(array(
+        'user_name' => $user_name,
+        'amount' => $amount,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'withdrawMemberBalance');
+    $this->assign('method_desc', '減少會員的點數餘額');
+    $this->assign('user_name', $user_name);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+  //6. 抓報表
+  public function report(){
+
+    $query_date = date('Y-m-d', time());
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 query_date 傳入 並且不為空
+      if (!isset($request['query_date']) || empty($request['query_date'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//查詢日期為空，請重新輸入帳號
+      }
+      $query_date = $request['query_date'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->getGameRecordSum(array(
+        'query_date' => $query_date,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getGameRecordSum');
+    $this->assign('method_desc', '抓取一指定日期的投注大綱。');
+    $this->assign('op_result', $op_result);
+    $this->assign('query_date', $query_date);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+  //7. 抓報表2
+  public function report2(){
+
+    $user_name = 'test01';
+    $game_id = 11;
+    $query_date = date('Y-m-d', time());
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+      //檢查是否有 user_name 傳入 並且不為空
+      if (!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+      }
+      $user_name = $request['user_name'];
+
+      //檢查是否有 game_id 傳入 並且不為空
+      if (!isset($request['game_id']) || empty($request['game_id'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//game_id 為空，請重新輸入帳號
+      }
+      $game_id = $request['game_id'];
+
+      //檢查是否有 query_date 傳入 並且不為空
+      if (!isset($request['query_date']) || empty($request['query_date'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//查詢日期為空，請重新輸入帳號
+      }
+      $query_date = $request['query_date'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->getGameRecord(array(
+        'user_name' => $user_name,
+        'game_id' => $game_id,
+        'query_date' => $query_date,
+      ), $err);
+
+      $apiCallError = $px->getApiCallError();
+      $apiCallCurlError = $px->getApiCallCurlError();
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $px->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getGameRecord');
+    $this->assign('method_desc', '抓取一指定會員、遊戲、日期的投注明細。');
+    $this->assign('user_name', $user_name);
+    $this->assign('game_id', $game_id);
+    $this->assign('query_date', $query_date);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+
+    $this->assign('api_call_error', $apiCallError);
+    $this->assign('api_call_curl_error', $apiCallCurlError);
+
+    $this->display();
+  }
+
+}

@@ -1,0 +1,432 @@
+<?php
+/*
+ * 會員錢包LOG
+ */
+class CommonMemberWalletLogModel extends AdminModel {
+    protected $tableName = "common_member_wallet_log";
+    protected $tableId = "walletLog_id";
+
+    protected $gameCodeArray = array(
+        "Wallet" => "小牛錢包",
+    );
+    /**
+     * 新增 帳變紀錄 資料
+     * @param $data //$data['member_id']
+     * @param $err //錯誤訊息
+     * @return boolean
+     */
+    public function addWalletLogData($data,&$err = ""){
+
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['walletLog_operating']) && $data['walletLog_operating'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['walletLog_type']) && $data['walletLog_type'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        if(empty($data['walletLog_type_class']) && $data['walletLog_type_class'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if(empty($data['walletLog_item_id']) && $data['walletLog_item_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        if(empty($data['walletLog_money']) && $data['walletLog_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+            return false;
+        }
+        if(empty($data['walletLog_before']) && $data['walletLog_before'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08'));
+            return false;
+        }
+        if(empty($data['walletLog_after']) && $data['walletLog_after'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_09'));
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_10"));
+            return $return;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        if($insertId === false) {
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_11"));
+            return false;
+        }
+        return $insertId;
+    }
+    /*
+     * 取得 帳變 資料
+     */
+    public function getWalletLogDataByMemberAccount($data,&$err = ""){
+        if(empty($data["member_account"]) && $data["member_account"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["startTime"]) && $data["startTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["endTime"]) && $data["endTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a JOIN `common_member` b ON (a.member_id = b.member_id)
+                WHERE `member_account` = '{$data["member_account"]}'
+                AND (`walletLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                ORDER BY `walletLog_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    public function getOperating($data){
+        $return = "";
+        switch($data){
+            case 1:
+                $return = "點數增加";
+                break;
+            case 2:
+                $return = "點數減少";
+                break;
+            default:
+                $return = $data;
+                break;
+        }
+        return $return;
+    }
+    public function getMainStr($data){
+        $returnArray = array();
+        $expLoadArray = explode(";",$data);
+        if(count($expLoadArray) == 4){
+            if($expLoadArray[1] == "後台對遊戲上點" || $expLoadArray[1] == "後台對遊戲下點"){
+                $returnArray['str'] = $expLoadArray[0];
+                $returnArray['type'] = $expLoadArray[1]." ".$expLoadArray[2];
+            } else {
+                $returnArray['str'] = $expLoadArray[0];
+                $returnArray['type'] = $expLoadArray[1];
+            }
+            return $returnArray;
+        }
+        if($expLoadArray[0] == "託售單生成扣款" || $expLoadArray[0] == "託售單取消加款"){
+            $returnArray['str'] = $expLoadArray[0];
+            $returnArray['type'] = $expLoadArray[0];
+            return $returnArray;
+        }
+        $this->getGameName();
+        switch($expLoadArray[1]){
+            case '轉移單':
+                $expLoadArray1 = explode("->",$expLoadArray[0]);
+                $returnArray['str'] = $this->gameCodeArray[$expLoadArray1[0]]." 轉移至 ".$this->gameCodeArray[$expLoadArray1[1]];
+                $returnArray['type'] = "轉移單".$expLoadArray[2];
+                break;
+            case '返水':
+                if(isset($this->gameCodeArray[$expLoadArray[0]])){
+                    $returnArray['str'] = $this->gameCodeArray[$expLoadArray[0]]." 返水";
+                } else {
+                    $gameName = json_decode($expLoadArray[0], true);
+                    if(isset($gameName[$_COOKIE['think_language']])){
+                        $gameName = $gameName[$_COOKIE['think_language']];
+                    } else {
+                        $gameName = $expLoadArray[0];
+                    }
+                    $returnArray['str'] = $gameName."返水";
+                }
+                $returnArray['type'] = $expLoadArray[2];
+                break;
+            default:
+                $returnArray = false;
+                break;
+        }
+        return $returnArray;
+    }
+    //取得遊戲名稱
+    private function getGameName(){
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameCodeData();
+        foreach ($return AS $value){
+            $gameName = json_decode($value['game_name'], true);
+            $gameName = $gameName[$_COOKIE['think_language']];
+            $this->gameCodeArray[$value['game_code']] = $gameName;
+        }
+    }
+    public function getMoneyStatus($data,$money){
+        $return = "";
+        switch($data){
+            case 1:
+                $return = '+'.$money;
+                break;
+            case 2:
+                $return = '-'.$money;
+                break;
+            default:
+                $return = $money;
+                break;
+        }
+        return $return;
+    }
+    public function getType($data){
+        $return = "";
+        //1儲值單 2託售單 3轉移單 4活動單 5返水單
+        switch($data){
+            case 1:
+                $return = "儲值單";
+                break;
+            case 2:
+                $return = "託售單";
+                break;
+            case 3:
+                $return = "轉移單";
+                break;
+            case 4:
+                $return = "活動單";
+                break;
+            case 5:
+                $return = "返水單";
+                break;
+            case 6:
+                $return = "其他";
+                break;
+            default:
+                $return = $data;
+                break;
+        }
+        return $return;
+    }
+    public function getMemberGiveDetail($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (`walletLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND a.`member_id` = '{$data['member_id']}'
+                AND (`walletLog_type` = '4' or `walletLog_type` = '5')";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得會員贈點紀錄
+     */
+    public function getMemberGivenData($data,&$err=""){
+        if(empty($data["groupBy"]) && $data["groupBy"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $joinSql = "";
+        $selectSql = "";
+        $typeSql = "";
+        switch ($data["walletLog_type"]){
+            case 4://活動表
+                $joinSql = "LEFT OUTER JOIN `common_event` c ON (a.`walletLog_item_id` = c.`event_id`)";
+                $selectSql .= "`event_name` as givenName";
+                $typeSql = "`walletLog_type` = '{$data["walletLog_type"]}'";
+                break;
+            case 5://返水表
+                $joinSql = "LEFT OUTER JOIN `game_info` d ON (a.`walletLog_item_id` = d.`game_id`)";
+                $selectSql .= "`game_name` as givenName";
+                $typeSql = "`walletLog_type` = '{$data["walletLog_type"]}'";
+                break;
+            default:
+                $typeSql = "`walletLog_type` = '4' OR `walletLog_type` = '5'";
+                break;
+        }
+
+        $groupBy = "";
+        $agentWhereSql = "";
+        $agentWhereNotOwnSql = "";
+        switch ($data["groupBy"]){
+            case 'member_id'://自己代理的 會員
+                $selectSql = "";
+                $groupBy = "a.`member_id`";
+                $agentWhereSql = "a.`agent_id` = '{$data['agent_id']}'";
+                $selectSql .= "`member_account`,a.`member_id`,`ratio_tree`,sum(`walletLog_money`) as allMoney,count(*) as allNumber";
+                break;
+            case 'agent_id'://代理
+                $selectSql = "";
+                $groupBy = "a.`agent_id`";
+                $agentWhereSql = "`agent_tree` REGEXP '^{$data['agent_tree']}'";
+                $agentWhereNotOwnSql = "AND (a.`agent_id` <> '{$data['agent_id']}')";
+                $selectSql .= "`agent_account`,`agent_tree`,sum(`walletLog_money`) as allMoney,count(*) as allNumber";
+                break;
+            case 'walletLog_item_id':
+                $groupBy = "`walletLog_item_id`";
+                $agentWhereSql = "`agent_tree` REGEXP '^{$data['agent_tree']}'";
+                $selectSql .= ",sum(`walletLog_money`) as allMoney,count(*) as allNumber";
+                break;
+            default:
+                $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                return false;
+                break;
+        }
+        $searchMemberIdSql = "";
+        if(!empty($data['searchMemberId'])){
+            $searchMemberIdSql = "AND a.`member_id` = '{$data['searchMemberId']}'";
+        }
+        $sql = "SELECT
+                    {$selectSql}
+                FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                {$joinSql}
+                WHERE ({$typeSql})
+                AND (`walletLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                AND ({$agentWhereSql})
+                {$agentWhereNotOwnSql}
+                {$searchMemberIdSql}
+                GROUP BY {$groupBy};";
+                //echo $sql;exit();
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                    return false;
+                }
+                return $return;
+    }
+    /*
+     * 取得 帳變 總筆數
+     */
+    public function getWalletLogTotalNumberByMemberAccount($data,&$err = ""){
+        if(empty($data["member_account"]) && $data["member_account"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["startTime"]) && $data["startTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["endTime"]) && $data["endTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}` a JOIN `common_member` b ON (a.member_id = b.member_id)
+                WHERE `member_account` = '{$data["member_account"]}'
+                AND (`walletLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                ORDER BY `walletLog_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 帳變 分頁資料
+     */
+    public function getWalletLogDataPageByMemberAccount($data,&$err = ""){
+        if(empty($data["member_account"]) && $data["member_account"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["startTime"]) && $data["startTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["endTime"]) && $data["endTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT {$pageStart},{$pageEnd}";
+        $sql = "SELECT * FROM `{$this->tableName}` a JOIN `common_member` b ON (a.member_id = b.member_id)
+                WHERE `member_account` = '{$data["member_account"]}'
+                AND (`walletLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                ORDER BY `walletLog_createTime` DESC {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 贈點紀錄 總筆數
+     */
+    public function getMemberGiveDetailTotalNumber($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (`walletLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND a.`member_id` = '{$data['member_id']}'
+                AND (`walletLog_type` = '4' or `walletLog_type` = '5')";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 贈點紀錄 分頁資料
+     */
+    public function getMemberGiveDetailPage($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $startSql = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $endSql = $data['page']['number'];
+        $pageSql = " LIMIT {$startSql},{$endSql}";
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (`walletLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND a.`member_id` = '{$data['member_id']}'
+                AND (`walletLog_type` = '4' or `walletLog_type` = '5') {$pageSql}";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 帳變 分頁資料
+     */
+    public function getWalletLogDataPageForRisk($data){
+        if(empty($data['member_id']) && !$data['member_id']){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a JOIN `common_member` b ON (a.member_id = b.member_id)
+            WHERE b.`member_id` = '{$data["member_id"]}'
+             ORDER BY `walletLog_createTime` DESC LIMIT 10;";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

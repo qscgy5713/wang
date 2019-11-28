@@ -1,0 +1,269 @@
+<?php
+//儲值處理
+class ProcessRechargeAction extends AdminAction {
+    protected $hashKey = "S39W6V5BP7KYYSPLPW94A9ER";//由易沛提供
+    protected $hashIv = "B3B46CHL4L4P3TL3BF9SREGRQ";//由易沛提供
+    
+    protected $code = "KR294DQq";//藍新交易密碼
+    
+    protected function _initialize() {
+        parent::_initialize();
+        //$this->assign("jumpUrl","__APP__/ProcessRecharge/index");
+    }
+    //TODO: 儲值單處理 首頁
+    public function index(){
+        $request = $this->getRequest();
+        
+        $selectRechargeStarus = 1;
+        if(isset($request['selectRechargeStarus'])){
+            $selectRechargeStarus = $request['selectRechargeStarus'];
+        }
+        $this->assign("selectRechargeStarus",$selectRechargeStarus);//單狀態
+        
+        $noRenew = 0;
+        if(isset($request['noRenew']) && $request['noRenew'] == "on"){
+            $noRenew = 1;
+        }
+        
+        $this->assign("noRenew",$noRenew);//不重整
+        
+        //時間列表 開始
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        //時間列表 結束
+        
+        //讀取 頁面資料
+        $CashflowRecharge = D("CashflowRecharge");
+        $data = array(
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "selectRechargeStarus"=>$selectRechargeStarus
+        );
+        $return = $CashflowRecharge->getRechargeData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "recharge_id"=>"id",
+            "member_id"=>"memberId",
+            "member_account"=>"memberAccount",
+            "recharge_money"=>"money",
+            "cashflow_handlingFee"=>"handlingFee",
+            "cashflow_name"=>"name",
+            "cashflow_showName"=>"showName",
+            "recharge_number"=>"number",
+            "recharge_paymentCode"=>"paymentCode",
+            "recharge_remark"=>"remark",
+            "recharge_createTime"=>"createTime",
+            "recharge_modifyTime"=>"modifyTime",
+            "recharge_ip"=>"ip",
+            "recharge_status"=>"status",
+            "recharge_adminRemark"=>"adminRemark",
+            "admin_id"=>"adminId",
+            "admin_account"=>"adminAccount"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'recharge_status':
+                        if($value[$key1] == '0' || $value[$key1] == '1'){
+                            $showArray[$key]["processingOrder"] = "true";
+                        } else {
+                            $showArray[$key]["processingOrder"] = "false";
+                        }
+                        $showStr = $CashflowRecharge->getRechargeStatusStr($value[$key1]);
+                        break;
+                    case 'recharge_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'recharge_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'recharge_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    case 'cashflow_handlingFee':
+                        $decodeArray = json_decode($value[$key1], true);
+                        $showStr = $decodeArray[1]."元";
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);exit();
+        $this->assign("showArray",$showArray);
+        $this->assign("adminAccount",$_SESSION["Admin"]["account"]);
+        $this->display();
+    }
+    
+    //TODO: 儲值單處理
+    public function formSetRechargeProcess(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        if(!isset($request['processButton']) || (empty($request['processButton']) && $request['processButton'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//權限不足，請重新登入。
+        }
+        //檢查是否有 Id 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//修改ID為空，請重新登入。
+        }
+        $CashflowRecharge = D("CashflowRecharge");
+        $data = array(
+            "recharge_id"=>$request['setId']
+        );
+        $return = $CashflowRecharge->getRechargeDataById($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $memberPhone = $return["member_phone"];
+        $rechargeStatus = $return["recharge_status"];
+        $cashflowCode = $return["cashflow_code"];
+        $rechargeNumber = $return["recharge_number"];
+        $rechargeMoney = $return["recharge_money"];
+        $memberAccount = $return["member_account"];
+        $rechargeMoney = $return["recharge_money"];
+        if($rechargeStatus != "0"){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//儲值單已完成
+        }
+        
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        
+        switch ($request['processButton']){
+            case 2://完成訂單
+                switch ($cashflowCode){
+                    case "YP_Store":
+                        $ReceiveYiPay = A("ReceiveYiPay");
+                        $hash = MD5("ValidateKey=".$this->hashIv.
+                                    "&HashKey=".$this->hashKey.
+                                    "&RtnCode=".'1'.
+                                    "&TradeID=".$rechargeNumber.
+                                    "&UserID=".$memberAccount.
+                                    "&Money=".$rechargeMoney);
+                        //var_dump($hash);
+                        $data = array(
+                            "RtnCode" => '1',
+                            "RtnMessage"=>"後台自動上點",
+                            "MerTradeID"=>$rechargeNumber,
+                            "MerProductID"=>"無",
+                            "MerUserID"=>$memberAccount,
+                            "Amount"=>$rechargeMoney,
+                            "PaymentDate"=>date("Y-m-d h:i:s"),
+                            "Validate"=>$hash,
+                            "StoreName"=>"後台",
+                            "StoreID"=>"自動上點",
+                            "adminAccount"=>$_SESSION["Admin"]["account"]
+                        );
+                        
+                        $ReceiveYiPay->index($data);
+                        break;
+                    case "YP_VirAccount":
+                        $ReceiveYiPay = A("ReceiveYiPay");
+                        $hash = MD5("ValidateKey=".$this->hashIv.
+                            "&HashKey=".$this->hashKey.
+                            "&RtnCode=".'1'.
+                            "&TradeID=".$rechargeNumber.
+                            "&UserID=".$memberAccount.
+                            "&Money=".$rechargeMoney);
+                        //var_dump($hash);
+                        $data = array(
+                            "RtnCode" => '1',
+                            "RtnMessage"=>"後台自動上點",
+                            "MerTradeID"=>$rechargeNumber,
+                            "MerProductID"=>"無",
+                            "MerUserID"=>$memberAccount,
+                            "Amount"=>$rechargeMoney,
+                            "PaymentDate"=>date("Y-m-d h:i:s"),
+                            "Validate"=>$hash,
+                            "adminAccount"=>$_SESSION["Admin"]["account"]
+                        );
+                        $ReceiveYiPay->index($data);
+                        break;
+                    case "NP_Store":
+                        $ReceiveNewebPay = A("ReceiveNewebPay");
+                        $hash = md5("merchantnumber=".'888'.
+                            "&ordernumber=".$rechargeNumber.
+                            "&serialnumber=".'888'.
+                            "&writeoffnumber=".'888'.
+                            "&timepaid=".date("Y-m-d h:i:s").
+                            "&paymenttype=".'888'.
+                            "&amount=".$rechargeMoney.
+                            "&tel=".$memberPhone.
+                            '888');
+                        $data = array(
+                            "merchantnumber" => '888',
+                            "ordernumber"=>$rechargeNumber,
+                            "serialnumber"=>"888",
+                            "writeoffnumber"=>"888",
+                            "timepaid"=>date("Y-m-d h:i:s"),
+                            "paymenttype"=>"888",
+                            "amount"=>$rechargeMoney,
+                            "tel"=>$memberPhone,
+                            "hash"=>$hash,
+                            "adminAccount"=>$_SESSION["Admin"]["account"]
+                        );
+                        //var_dump($data);
+                        $ReceiveNewebPay->index($data);
+                        break;
+                    default:
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//無此金流參數，請重新操作。
+                        break;
+                }
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//按鈕參數錯誤，請重新操作。
+                exit();
+                break;
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+}

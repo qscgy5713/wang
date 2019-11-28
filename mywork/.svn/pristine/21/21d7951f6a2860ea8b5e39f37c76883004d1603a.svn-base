@@ -1,0 +1,33 @@
+<?php
+/*
+ * 活動表
+ */
+class CommonEventModel extends MemberModel {
+    protected $tableName = "common_Event";
+    protected $tableId = "event_id";
+    /*
+     * 取得 活動 資料
+     */
+    public function getEventData(){
+        $sql = "SELECT * FROM `{$this->tableName}`;";
+        $return = $this->cacheQuery($sql,10);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return;
+    }
+    
+    /*
+     * 取得 活動 資料
+     */
+    public function getOneEventData($data){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `game_code` = '{$data['game_code']}'
+                LIMIT 1;";
+        $return = $this->cacheQuery($sql,10);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return[0];
+    }
+}

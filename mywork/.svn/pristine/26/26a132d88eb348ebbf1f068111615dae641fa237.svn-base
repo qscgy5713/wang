@@ -1,0 +1,594 @@
+<?php
+//BNG 博狗電子
+class GameBngModel extends ApiModel{
+  const BNG_BASE_URL = "http://api.power68.com";
+  const BNG_GAME_URL = "http://api.power68.com";
+  const BNG_PARTNER_ID = "wukong";
+  const BNG_SECRET = "f3d892775f9640dfcedb562ef8daec02";
+  const BNG_VENDOR_KEY = "LBQHj6SgTf";
+
+  const BNG_DEFAULT_CURRENCY_ID = 'TWD';
+  const BNG_DEFAULT_LANG_ID = 'tw';
+  const BNG_DEFAULT_REQUEST_METHOD = 'POST';
+  const BNG_CURL_CONNECTTIMEOUT_MS = 5000;
+  const BNG_CURL_TIMEOUT_MS = 15000;
+  const BNG_HASH_METHOD = 'md5';
+  const BNG_TOKEN_KEY = '771939548f45eccac28d227f3856d78d';
+  const BNG_RESPONSE_SUCCESS_CODE = 0;
+
+  const BNG_REPORT_BETS_RETRIEVE_DATETIME_FORMAT = 'y-m-d H:i:s';  //抓取明細的日期時間格式
+  const BNG_REPORT_BETS_RETRIEVE_MAX_NUM = 1000;  //每次抓取明細, 最多可能回傳的注數量
+  const BNG_REPORT_BETS_RETRIEVE_DEFAULT_PAGE = 1;  //抓取明細預設頁次
+  const BNG_REPORT_BETS_GAME_TYPE_SLOT = 1;  //game_type: 1 = SLOT (default)
+  const BNG_REPORT_BETS_GAME_TYPE_LIVE_CASINO = 2;  //game_type: 2 = Live casino
+  const BNG_REPORT_BETS_GAME_TYPE_SPORTS_BOOK = 3;  //game_type: 3 = Sportsbook
+
+  protected $BNG_CURL_DATA = array(
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_SSL_VERIFYHOST => false,
+      CURLOPT_POST => true,
+      CURLOPT_CUSTOMREQUEST => self::BNG_DEFAULT_REQUEST_METHOD,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_CONNECTTIMEOUT_MS => self::BNG_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::BNG_CURL_TIMEOUT_MS,
+      CURLOPT_HTTPHEADER => array(
+        'Content-Type: application/json',
+      )
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['account'] 會員帳號
+	 * @param $data['currency_type'] 3位貨幣代碼(非必須). 預設=TWD
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $apiUrl = self::BNG_BASE_URL ."/game/user.html";
+    $apiMethod = self::BNG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BNG_CURL_DATA;
+    $account = strtolower($account);
+    $apiArrData = array(
+      'partner_id' => self::BNG_PARTNER_ID,
+      'username' => $account,
+      'password' => $password,
+      'currency' => self::BNG_DEFAULT_CURRENCY_ID,
+    );
+    $apiArrData['hash'] = $this->_getRequestHash($apiArrData);
+    $apiArrData = json_encode($apiArrData);
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['error'] === self::BNG_RESPONSE_SUCCESS_CODE && $result['message'] === "Success"){
+        return true;
+      } else {
+        $err = $this->_produceError($result['error'], $result['message']);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 會員登入
+   * @param $data['account'] 會員帳號
+   * @param $data['game_code'] 遊戲代碼
+   * @param $data['language'] 語系代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return array(
+   * form_method => 表單 method
+   * form_action => 表單 action
+   * bng_partner_id => 表單 DOM partner_id 的值
+   * bng_token => 表單 DOM token 的值
+   * bng_lang => 表單 DOM lang 的值
+   * bng_fun => 表單 DOM fun 的值
+   * ) 表單填入這些資料送出後即可進入BNG
+	 */
+	public function loginMember($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'game_code' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $account = strtolower($account);
+    $arrData = array(
+      'form_id' => 'bng_game_form',
+      'form_method' => 'POST',
+      'form_action' => self::BNG_GAME_URL . "/open/{$game_code}",
+      'bng_partner_id' => self::BNG_PARTNER_ID,
+      'bng_token' => $this->_getGameToken($account),
+      'bng_lang' => self::BNG_DEFAULT_LANG_ID,
+    );
+    $url = self::BNG_GAME_URL . "/open/{$game_code}?partner_id={$arrData['bng_partner_id']}&token={$arrData['bng_token']}&lang={$arrData['bng_lang']}";
+    return $url;
+	}
+	/**
+	 * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $apiUrl = self::BNG_BASE_URL ."/game/balance.html";
+    $apiMethod = self::BNG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BNG_CURL_DATA;
+    $account = strtolower($account);
+    $apiArrData = array(
+      'partner_id' => self::BNG_PARTNER_ID,
+      'username' => $account,
+    );
+    $apiArrData['hash'] = $this->_getRequestHash($apiArrData);
+    $apiArrData = json_encode($apiArrData);
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['error'] === self::BNG_RESPONSE_SUCCESS_CODE && $result['message'] === "Success" && isset($result)){
+        $bal = floatVal($result['balance']);
+        return $bal;
+      } else {
+        $err = $this->_produceError($result['error'], $result['message']);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 下點(提款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+	 */
+	public function withdrawMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $apiUrl = self::BNG_BASE_URL ."/game/debit.html";
+    $apiMethod = self::BNG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BNG_CURL_DATA;
+    $userName = strtolower($account);
+    $amount = abs($amount);
+    $tid = $this->_getTid($account, 'OUT');
+    $apiArrData = array(
+      'partner_id' => self::BNG_PARTNER_ID,
+      'username' => $userName,
+      'currency' => self::BNG_DEFAULT_CURRENCY_ID,
+      'amount' => $amount,
+      'ref_id' => $tid,
+    );
+    $apiArrData['hash'] = $this->_getRequestHash($apiArrData);
+    $apiArrData = json_encode($apiArrData);
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['error'] === self::BNG_RESPONSE_SUCCESS_CODE && $result['message'] === "Success" && isset($result)){
+        return $result['balance'];
+      } else {
+        $err = $this->_produceError($result['error'], $result['message']);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 上點(加款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+   */
+	public function rechargeMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $apiUrl = self::BNG_BASE_URL ."/game/credit.html";
+    $apiMethod = self::BNG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BNG_CURL_DATA;
+    $userName = strtolower($account);
+    $amount = abs($amount);
+    $tid = $this->_getTid($userName, 'IN');
+    $apiArrData = array(
+      'partner_id' => self::BNG_PARTNER_ID,
+      'username' => $userName,
+      'currency' => self::BNG_DEFAULT_CURRENCY_ID,
+      'amount' => $amount,
+      'ref_id' => $tid,
+    );
+    $apiArrData['hash'] = $this->_getRequestHash($apiArrData);
+    $apiArrData = json_encode($apiArrData);
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['error'] === self::BNG_RESPONSE_SUCCESS_CODE && $result['message'] === "Success" && isset($result['balance'])){
+        return $result['balance'];
+      } else {
+        $err = $this->_produceError($result['error'], $result['message']);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 抓取注單報表
+   * @param $data['account'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['page'] 頁次, 自1開始
+   * @param $data['rows'] 每頁筆數, <= 1000 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($data, &$err = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'page' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $startDatetime = date(self::BNG_REPORT_BETS_RETRIEVE_DATETIME_FORMAT, strtotime($_begin_datetime));
+    $endDatetime = date(self::BNG_REPORT_BETS_RETRIEVE_DATETIME_FORMAT, strtotime($_end_datetime));
+
+    $apiUrl = self::BNG_BASE_URL."/game/history.html";
+    $apiMethod = self::BNG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BNG_CURL_DATA;
+    $apiArrData = array(
+      'partner_id' => self::BNG_PARTNER_ID,
+      'starttime' => $startDatetime,
+      'endtime' => $endDatetime,
+      'rows' => self::BNG_REPORT_BETS_RETRIEVE_MAX_NUM,
+      'page' => $page,
+      'game_type' => self::BNG_REPORT_BETS_GAME_TYPE_SLOT,
+    );
+    $apiArrData['hash'] = $this->_getRequestHash($apiArrData);
+    $apiArrData = json_encode($apiArrData);
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+    
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['error'] === self::BNG_RESPONSE_SUCCESS_CODE && $result['message'] === "Success"){
+        return $result;
+      } else {
+        $err = $this->_produceError($result['error'], $result['message']);
+        return false;
+      }
+    }
+	}
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + game_type_str     遊戲種類
+   * + game_name_zhtw    遊戲名稱
+   * + status_str        遊戲狀態
+   * + sb_html           有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+    $GameBngMenu = D("GameBngMenu");
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $bet['detail_bettingMoney'] = round(floatVal($bet['detail_bettingMoney']),3);
+        $bet['detail_effective'] = round(floatVal($bet['detail_effective']),3);
+        $bet['detail_surplus'] = round(floatVal($bet['detail_surplus']),3);
+
+        $bet['sb_html'] = '';
+        $bet_id = $bet['detail_id'];
+
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        //$arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+
+        $game_type = $arrBetContents['game_type'];
+        $status = $arrBetContents['status'];
+        $game_code = $arrBetContents['game_code'];
+
+        //$nameZhtw = BNGMenu::getGameChNameById($game_code);
+
+        $data = array(
+            "game_id"=>$game_code
+        );
+        $nameZhtw = $GameBngMenu->getGameChNameDataById($data);
+
+        $bet['game_type_str'] = self::_getGameTypeStr($game_type);
+        $bet['status_str'] = self::_getBetStatusStr($status);
+        $bet['game_name_zhtw'] = $nameZhtw;
+
+        $arrBets[$bet_id] = $bet;
+      }  //rowBetDetails foreach
+      return $arrBets;
+    } else {  //if ($argArrRowBetDetails)
+      return false;
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  protected static function _getGameTypeStr($argGameTypeId) {
+    $gameTypeStr = "不明的種類ID ({$argGameTypeId})";
+    if ($argGameTypeId == self::BNG_REPORT_BETS_GAME_TYPE_SLOT) {
+      $gameTypeStr = '斯洛';
+    } elseif ($argGameTypeId == self::BNG_REPORT_BETS_GAME_TYPE_LIVE_CASINO) {
+      $gameTypeStr = '真人視訊';
+    } elseif ($argGameTypeId == self::BNG_REPORT_BETS_GAME_TYPE_SPORTS_BOOK) {
+      $gameTypeStr = '體育';
+    }
+    return $gameTypeStr;
+  }
+
+  //----------------------
+  protected static function _getBetStatusStr($argBetStatusId) {
+    $statusStr = "不明的狀態ID ({$argBetStatusId})";
+    if ($argBetStatusId == 0) {
+      $statusStr = '未結';
+    } elseif ($argBetStatusId == 1) {
+      $statusStr = '已結';
+    } elseif ($argBetStatusId == 2) {
+      $statusStr = '無效/已退款';
+    }
+    return $statusStr;
+  }
+  //----------------------
+
+  /* send request */
+  protected function _sendRequest($argUrl,$argArrData,$argMethod=self::BNG_DEFAULT_REQUEST_METHOD) {
+    $hashForRequest = $this->_getRequestHash($argArrData);
+    $arrData = $argArrData;
+    $arrData['hash'] = $hashForRequest;
+    $method = strtoupper($argMethod);
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::BNG_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::BNG_CURL_TIMEOUT_MS,
+      CURLOPT_HTTPHEADER => array(
+        'Content-Type: application/json',
+      )
+    );
+    if ( $method == 'GET') {  //GET
+      $queryStr = http_build_query($arrData);
+      $url = "{$argUrl}?{$queryStr}";
+    } else {  //POST
+      $url = $argUrl;
+      $dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStrInJson;
+    }
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+
+    if ($result !== false) {
+      if ( strlen($result) ) {
+        $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+        $this->responseArr = $resultInAssoc;
+        return $resultInAssoc;
+      } else {
+        return '';
+      }
+    } else {
+      return false;
+    }
+  }
+
+  /* produce error */
+  protected function _produceError($errCode,$errMsg=null) {
+    if ($errMsg) {
+      return "{$errMsg} (code {$errCode})";
+    } else {
+      return "General BNG error (code {$errCode})";
+    }
+  }
+
+  /* get token for opening game */
+  public function _getGameToken($argUserName) {
+    $userName = strtolower($argUserName);
+    $time = time();
+    $str = "{$time}|{$userName}|{$time}|" . self::BNG_TOKEN_KEY;
+    $hash = hash('md5', $str);
+    return "{$hash}-{$time}-{$userName}";
+  }
+
+  /* get transaction id */
+  protected function _getTid($argAccount, $argTransactionType='IN') {
+    $transactionType = strtoupper($argTransactionType);
+    $tidTime = $this->_getTidTime();
+    $rnd = rand(1,999);
+    $tid = "BNG-{$transactionType}-{$tidTime}{$rnd}-{$argAccount}";
+    return $tid;
+  }
+
+  /* get formatted time for transaction id */
+  protected function _getTidTime() {
+    $time = date('YmdHis');
+    return $time;
+  }
+
+  /* get hash for every action */
+  protected function _getRequestHash($argArrData) {
+    ksort($argArrData);
+    $str = http_build_query($argArrData) . self::BNG_SECRET;
+    return hash(self::BNG_HASH_METHOD, $str);
+  }
+
+}

@@ -1,0 +1,332 @@
+<?php
+class AnnouncementManageAction extends AdminAction {
+    //TODO: 公告管理首頁
+    public function index(){
+        //讀取 公告
+        $CommonAnnouncement = D("CommonAnnouncement");
+        //CommonAnnouncement getAnnouncementDate 取得 公告資料
+        $return = $CommonAnnouncement->getAnnouncementDate();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        // var_dump($return);die;
+        $groupArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "announcement_id"=>"id",
+            "announcement_belong"=>"belong",
+            "announcement_enabled"=>"enabled",
+            "announcement_title"=>"title",
+            "announcement_text"=>"text",
+            "announcement_order"=>"order",
+            "announcement_createTime"=>"createTime",
+            "announcement_modifyTime"=>"modifyTime"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'announcement_belong'://公告隸屬
+                        switch($value[$key1]){
+                            case 1:
+                                $showStr = "前台";
+                                break;
+                            case 2:
+                                $showStr = "代理";
+                                break;
+                            case 3:
+                                $showStr = "後台";
+                                break;
+                        }
+                        break;
+                    case 'announcement_enabled'://開關  轉換 文字
+                        if($value[$key1] == 1){
+                            $showStr = "啟用中";
+                            break;
+                        }
+                        $showStr = "停用中";
+                        break;
+                    case 'announcement_createTime'://公告建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'announcement_modifyTime'://公告建立時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $groupArray[$key][$value1] = $showStr;
+            }
+        }
+        $showArray = array();
+        foreach ($groupArray as $key => $value) {
+            if ($value['belong'] == '前台') {
+                $showArray[$value['belong']][$key] = $value ;
+                $showCount[$value['belong']] = count($showArray[$value['belong']]);
+            } elseif ($value['belong'] == '代理') {
+                $showArray[$value['belong']][$key] = $value ;
+                $showCount[$value['belong']] = count($showArray[$value['belong']]);
+            } elseif ($value['belong'] == '後台') {
+                $showArray[$value['belong']][$key] = $value ;
+                $showCount[$value['belong']] = count($showArray[$value['belong']]);
+            }
+        }
+        // var_dump($showCount);
+        // var_dump($showArray);die;
+        $this->assign("showArray",$showArray);
+        $this->assign("showCount",$showCount); //隸屬總筆數
+        $this->display();
+    }
+    //TODO: 新增公告
+    public function formAddAnnouncement(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 addBelong 傳入 並且不為空
+        if(!isset($request['addBelong']) || empty($request['addBelong'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//隸屬為空，請重新輸入
+        }
+        if(!isset($request['addTitle']) || empty($request['addTitle'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//公告標題為空，請重新輸入
+        }
+        if(!isset($request['addText']) || empty($request['addText'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//公告內容為空，請重新輸入
+        }
+        $CommonAnnouncement = D("CommonAnnouncement");
+        //取得隸屬的最大排序
+        $data = array(
+            "announcement_belong" => $request['addBelong']
+        );
+        $return = $CommonAnnouncement->getAnnouncementBelongOrderDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//資料庫錯誤。
+        }
+        if($return['MaxOrder'] === NULL){
+            $MaxOrder = 1;
+        } else {
+            $MaxOrder = $return['MaxOrder'] + 1;
+        }
+        
+        
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "announcement_belong" => $request['addBelong'],
+            "announcement_title" => $request['addTitle'],
+            "announcement_text" => $request['addText'],
+            "announcement_order" => $MaxOrder,
+            "announcement_createTime" => $nowTime
+        );
+        $return = $CommonAnnouncement->addAnnouncementData($data,$err);
+        if($return === false){//否，顯示錯誤
+            $this->error($err);
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 修改公告
+    public function formSetAnnouncement(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 setId 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['setId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無選擇修改的公告，請重新選擇。
+        }
+        if(!isset($request['setBelong']) || empty($request['setBelong'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//隸屬為空，請重新輸入。
+        }
+        if(!isset($request['setTitle']) || empty($request['setTitle'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//公告標題為空，請重新輸入。
+        }
+        if(!isset($request['setText']) || empty($request['setText'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//公告內容為空，請重新輸入。
+        }
+        
+        $CommonAnnouncement = D("CommonAnnouncement");
+        //搜尋 修改的公告ID 隸屬是否一樣
+        $data = array(
+            "announcement_id" => $request['setId']
+        );
+        $return = $CommonAnnouncement->getAnnouncementBelongDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//資料庫錯誤。
+        }
+        if(empty($return['announcement_belong']) && $return['announcement_belong'] !== '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//修改的公告已被刪除，請重新選擇。
+        }
+        $belong = $return['announcement_belong'];
+        $data = array(
+            "announcement_belong" => $return['announcement_belong'],
+            "announcement_order" => $return['announcement_order']
+        );
+        $return = $CommonAnnouncement->setAnnouncementOrderHighLowDataByBelong($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//資料庫錯誤。
+        }
+        
+        $nowTime = time();//取得現在時間戳
+        //修改資料 有修改隸屬，查詢排序資料
+        if($belong !== $request['setBelong']){
+            $data = array(
+                "announcement_belong" => $request['setBelong']
+            );
+            $return = $CommonAnnouncement->getAnnouncementBelongOrderDataById($data);
+            if($return === false){//否，顯示錯誤
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));//資料庫錯誤。
+            }
+            if($return['MaxOrder'] === NULL){
+                $MaxOrder = 1;
+            } else {
+                $MaxOrder = $return['MaxOrder'] + 1;
+            }
+            $data = array(
+                "announcement_id" => $request['setId'],
+                "announcement_belong" => $request['setBelong'],
+                "announcement_title" => $request['setTitle'],
+                "announcement_text" => $request['setText'],
+                "announcement_order" => $MaxOrder,
+                "announcement_modifyTime" => $nowTime
+            );
+        } else {
+            $data = array(
+                "announcement_id" => $request['setId'],
+                "announcement_title" => $request['setTitle'],
+                "announcement_text" => $request['setText'],
+                "announcement_modifyTime" => $nowTime
+            );
+        }
+        $return = $CommonAnnouncement->setAnnouncementDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+    }
+    //TODO: 公告刪除
+    public function formDelAnnouncement(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 delId 傳入 並且不為空
+        if(!isset($request['delId']) || (empty($request['delId']) && $request['delId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除網址為空，請重新操作
+        }
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $data = array(
+            "announcement_id" => $request['delId']
+        );
+        $return = $CommonAnnouncement->delAnnouncementById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 公告 開啟
+    public function formStartAnnouncement(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 startId 傳入 並且不為空
+        if(!isset($request['startId']) || (empty($request['startId']) && $request['startId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無選擇修改的公告，請重新選擇。
+        }
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "announcement_id" => $request['startId'],
+            "announcement_enabled" => 1,
+            "announcement_modifyTime" => $nowTime
+        );
+        $return = $CommonAnnouncement->setAnnouncementDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+    }
+    //TODO: 公告 關閉
+    public function formStopAnnouncement(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 startId 傳入 並且不為空
+        if(!isset($request['stopId']) || (empty($request['stopId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無選擇修改的公告，請重新選擇。
+        }
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "announcement_id" => $request['stopId'],
+            "announcement_enabled" => 0,
+            "announcement_modifyTime" => $nowTime
+        );
+        $return = $CommonAnnouncement->setAnnouncementDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+    }
+    //TODO: 排序
+    public function formSortAgentPageClass(){
+        $request = $this->getRequest();
+        if($request['announcementBelong'] == "前台"){
+            $announcementBelong = '1';
+        } elseif($request['announcementBelong'] == "代理"){
+            $announcementBelong = '2';
+        } elseif($request['announcementBelong'] == "後台"){
+            $announcementBelong = '3';
+        }
+
+        switch ($request['className']) {
+            case 'upSort':
+                if(!isset($request['orderSort']) || empty($request['orderSort']) && $request['orderSort'] !== 0){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_0')));
+                }
+
+                $data = array(
+                    'announcement_order' => $request['orderSort'],
+                    'announcement_order2' => ($request['orderSort'] - 1),
+                    'announcement_belong' => $announcementBelong,
+                    'announcement_id' => $request['sortId'],
+                );
+                break;
+
+            case 'downSort':
+                if(!isset($request['orderSort']) || empty($request['orderSort']) && $request['orderSort'] !== 0){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_0')));
+                }
+
+                $data = array(
+                    'announcement_order' => $request['orderSort'],
+                    'announcement_order2' => ($request['orderSort'] + 1),
+                    'announcement_belong' => $announcementBelong,
+                    'announcement_id' => $request['sortId'],
+                );
+                break;
+            
+            default:
+                if($return === false){
+                    //否，顯示錯誤
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                }
+                break;
+        }
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $CommonAnnouncement->setSortAgentPageClassOrder($data);
+        redirect(__APP__.'/AnnouncementManage/index');
+    }
+}

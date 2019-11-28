@@ -1,0 +1,244 @@
+<?php
+//易沛接收
+class ReceiveYiPayAction extends ReceiveAction {
+    protected $cashflow_id = "";
+    
+    protected $hashKey = "";//由易沛提供
+    protected $hashIv = "";//由易沛提供
+    
+    protected $ValidateKey = "";
+    //TODO: 接收 易沛 首頁
+    //RtnCode=5&RtnMessage=取號成功&MerTradeID=181026181240200&MerProductID=MDX999&MerUserID=1XB138&Amount=2000&ExpireTime=2018-10-28 23:59:59&VatmBankCode=808&VatmAccount=9243110282172395&Validate=630503b255e73f6e8b20e0ad1c1cac9b
+    //RtnCode=1&RtnMessage=交易成功&MerTradeID=181026181240200&MerProductID=MDX999&MerUserID=1XB138&Amount=2000&PaymentDate=2018-10-27 00:04:35&Validate=6862cac01d04da3eaf969d5823aa65d3
+    
+    protected function _initialize() {
+        parent::_initialize();
+        $return = $this->getYiPayData();
+        $this->hashKey = $return['hashKey'];
+        $this->hashIv = $return['hashIv'];
+        $this->ValidateKey = $return['ValidateKey'];
+    }
+    
+    public function test($request=""){
+        if(empty($request)){
+            $request = $this->getRequest();
+        }
+        $hash = MD5("ValidateKey=".$this->ValidateKey.
+            "&HashKey=".$this->hashKey.
+            "&RtnCode=".$request['RtnCode'].
+            "&TradeID=".$request["MerTradeID"].
+            "&UserID=".$request["MerUserID"].
+            "&Money=".$request["Amount"]);
+        var_dump($hash);
+    }
+    public function index($request=""){
+        //使用 common.php filterStr($data) 公用函數  過濾取得 使用者輸入的Data
+        if(empty($request)){
+            $request = $this->getRequest();
+        }
+        if(!isset($request['RtnCode']) || empty($request['RtnCode']) && $request['RtnCode'] !== 0){
+            exit();
+        }
+        
+        $receiveComer = 1;
+        $walletLogTypeClass = 1;//金流上點
+        $receiveComerData = "YP";
+        $receiveRemark = "虛擬帳戶繳款";
+        if(isset($request['adminAccount']) && !empty($request['adminAccount']) && $request['adminAccount'] !== 0){
+            $receiveComer = 2;
+            $receiveComerData = $request['adminAccount'];
+            $receiveRemark = "後台;自動上點";
+            $walletLogTypeClass = 2;//後台上點
+        }
+        
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $receiveData = array(
+            "RtnCode" => $request["RtnCode"],//回傳代號
+            "RtnMessage" => $request["RtnMessage"],//回傳訊息
+            "MerTradeID" => $request["MerTradeID"],//店家交易編號
+            "MerProductID" => $request["MerProductID"],//店家商品代號
+            "MerUserID" => $request["MerUserID"],//店家消費者ID
+            "Amount" => $request["Amount"],//交易金額
+            "PaymentDate" => strtotime($request["PaymentDate"]),//付款時間,
+            "Validate" => $request["Validate"],//檢查碼
+        );
+        switch ($request["RtnCode"]){
+            case 1:
+                if(isset($request["StoreName"])){
+                    $this->cashflow_id = "1";
+                    $receiveData["StoreName"] = $request["StoreName"];//繳款超商
+                    $receiveData["StoreID"] = $request["StoreID"];//繳款超商門市
+                } else {
+                    $this->cashflow_id = "2";
+                }
+                break;
+            case 5:
+                if(isset($request["VatmBankCode"])){
+                    $this->cashflow_id = "1";
+                    $receiveData["ExpireTime"] = $request["ExpireTime"];//繳款期限
+                    $receiveData["VatmBankCode"] = $request["VatmBankCode"];//銀行代碼
+                    $receiveData["VatmAccount"] = $request["VatmAccount"];//銀行帳號
+                } else {
+                    $this->cashflow_id = "2";
+                    $receiveData["ExpireTime"] = $request["ExpireTime"];//繳款期限
+                    $receiveData["CodeNo"] = $request["CodeNo"];//超商繳款代碼
+                }
+                break;
+        }
+        
+        $CashflowRecharge = D("CashflowRecharge");
+        $data = array(
+            "recharge_number"=>$receiveData['MerTradeID'],
+            "recharge_money"=>$receiveData['Amount']
+        );
+        $return = $CashflowRecharge->getRechargeDataByNumberAndMoney($data,$err);
+        
+        if($return === false || empty($return['recharge_id'])){
+            $cashflowId = 0;
+            $rechargeId = 0;
+        } else {
+            $memberId = $return["member_id"];
+            $agentId = $return['agent_id'];
+            $agentTree = $return['agent_tree'];
+            $agentRatio = $return['ratio_tree'];
+            $rechargeMoney = $return["recharge_money"];
+            $cashflowId = $return['cashflow_id'];
+            $rechargeId = $return['recharge_id'];
+            $rechargeStatus = $return['recharge_status'];
+        }
+        
+        $hash = MD5("ValidateKey=".$this->ValidateKey.
+                    "&HashKey=".$this->hashKey.
+                    "&RtnCode=".$request['RtnCode'].
+                    "&TradeID=".$request["MerTradeID"].
+                    "&UserID=".$request["MerUserID"].
+                    "&Money=".$request["Amount"]);
+        //var_dump($hash);
+        //var_dump($request["Validate"]);exit();
+        $CashflowRechargeReceive = D("CashflowRechargeReceive");
+        //$mainStr = implode('&',$receiveData);
+        $mainStr = array_to_json($receiveData);
+        if ($hash != $request["Validate"]) {
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_errMessage"=>"驗證碼錯誤!",
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+            exit();
+         }
+        
+        
+        
+        //記錄完 找不到儲值單號 就停止
+        if($rechargeId === 0){
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_errMessage"=>"找不到相符的儲值單!",
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+            exit();
+        } else {
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+        }
+        
+        if($rechargeStatus != "0"){
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_errMessage"=>"儲值單已經處理，不自動上點!",
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+            exit();
+        }
+        
+        
+        switch ($receiveData["RtnCode"]){
+            case 1:
+                $data = array(
+                    "recharge_id"=>$rechargeId,
+                    "recharge_modifyTime"=>$receiveData["PaymentDate"],
+                    "receive_id"=>$receiveId,
+                    "recharge_money"=>$rechargeMoney,
+                    "member_id"=>$memberId,
+                    "agent_id"=>$agentId,
+                    "agent_tree"=>$agentTree,
+                    "ratio_tree"=>$agentRatio,
+                    "walletLog_type_class"=>$walletLogTypeClass
+                );
+                
+                if(isset($receiveData["StoreName"])){
+                    $data["recharge_remark"] = $receiveData["StoreName"].";".$receiveData["StoreID"];
+                } else {
+                    $data["recharge_remark"] = $receiveRemark;
+                }
+                $return = $CashflowRecharge->setRechargeDataAutoRechargeMoney($data,$err);
+                
+                if($return === false){
+                    $data = array(
+                        "recharge_id"=>$rechargeId,
+                        "receive_errMessage"=>$err
+                    );
+                    $CashflowRechargeReceive->setReceiveData($data,$err);
+                }
+                break;
+            case 5:
+                if(isset($receiveData["VatmBankCode"])){
+                    $data = array(
+                        "recharge_id"=>$rechargeId,
+                        "recharge_paymentCode"=>$receiveData["VatmBankCode"].'-'.$receiveData["VatmAccount"]
+                    );
+                    $CashflowRecharge->setRechargeDataById($data);
+                } else {
+                    $data = array(
+                        "recharge_id"=>$rechargeId,
+                        "recharge_paymentCode"=>$receiveData["CodeNo"]
+                    );
+                    $CashflowRecharge->setRechargeDataById($data);
+                }
+                break;
+        }
+    }
+}

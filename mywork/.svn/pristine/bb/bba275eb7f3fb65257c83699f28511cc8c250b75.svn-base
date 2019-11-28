@@ -1,0 +1,143 @@
+<?php
+class EventAction extends MemberAction {
+
+    /*
+     * 首次儲值贈點 活動
+     */
+    protected $storegift_eventId = 0;
+    protected $storegift_money = 500;
+    protected $storegift_code = "storegift";
+
+    protected $storeplus_eventId = 0;
+    protected $storeplus_money = 300;
+    protected $storeplus_code = "storeplus";
+
+    /*
+     * 端午節贈點 活動
+     */
+    protected $dragonstoreplus_eventId = 0;
+    protected $dragonstoreplus_money = 400;
+    protected $dragonstoreplus_code = "dragonstoreplus";
+
+
+    protected $experience_code = "experience";
+    protected $experience_eventId = 0;
+    protected $experience_money = 300;
+    protected $experience_auto = 1;//是否自動上點 0不自動上點 1自動上點
+
+    protected $reversal_code = "emergencymoney";
+    protected $reversal_eventId = 0;//翻本金
+    protected $reversal_money = 888;
+    protected $reversal_limitMoney = 100;
+    protected $reversal_limitSurplus = -10000;
+
+    protected $baccaratWinning_code = "baccaratwinning";
+    protected $baccaratWinning_eventId = 0;//連贏
+    protected $baccaratWinning_money = 0;//如果活動金額為0 代表由客服輸入
+
+    protected $formEnabled = false;
+    protected $eventEnabled = false;
+
+    protected $memberId = '';
+
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        if(empty($_SESSION['Member']['id'])){
+            return;
+        } else {
+            $this->memberId = $_SESSION['Member']['id'];
+            $this->formEnabled = true;//代表會員有登入 可開放功能
+        }
+    }
+    /*
+     * 取得會員返水頁面資料
+     */
+    protected function getMemberWaterPageData($gameClass_id){
+
+        $thisYear = intval(date('Y'));
+        $thisMonth = intval(date('m'));
+
+        //搜尋本月 階層 總洗碼 開始
+        $CommonMemberWaterrankEffective = D("CommonMemberWaterrankEffective");
+        $data = array(
+            'member_id' => $this->memberId,
+            'gameClass_id' => $gameClass_id,
+            'level_year' => $thisYear,
+            'level_month' => $thisMonth,
+        );
+        $return = $CommonMemberWaterrankEffective->getMemberEffectiveData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $CommonGameWaterrank = D('CommonGameWaterrank');
+        if(empty($return)){
+            $thisEffective = 0;//本月洗碼
+            $startEffective = 0;//開始有效投注
+            $startLevel = 1;//開始級別
+            $data = array(
+                'gameClass_id' => $gameClass_id,
+                'waterRank_serial' => '2'
+            );
+        } else {
+            $thisEffective = $return['allEffective'];//本月洗碼
+            $startEffective = $return['waterRank_effective'];//開始有效投注
+            $startLevel = $return['waterRank_serial'];//開始級別
+            $data = array(
+                'gameClass_id' => $gameClass_id,
+                'waterRank_serial' => ++$return['waterRank_serial']
+            );
+        }
+        $return = $CommonGameWaterrank->getGameWaterrankData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $endEffective = $return['waterRank_effective'];//結束有效投注
+        $endLevel = $return['waterRank_serial'];//結束級別
+        $percentageEffective = ceil(intval($thisEffective)/intval($endEffective)*100);//本月總%數
+        //搜尋本月 階層 總洗碼 結束
+
+        //計算上個月  階層 總洗碼 開始
+        if($thisMonth == 1){
+            $lastYear = $thisYear - 1;
+            $lastMonth = 12;
+        } else {
+            $lastYear = $thisYear;
+            $lastMonth = $thisMonth - 1;
+        }
+        $data = array(
+            'member_id' => $this->memberId,
+            'gameClass_id' => $gameClass_id,
+            'level_year' => $lastYear,
+            'level_month' => $lastMonth
+        );
+        $return = $CommonMemberWaterrankEffective->getMemberEffectiveData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        if(empty($return)){
+            //代表無返水過
+            $lastEffective = 0;//上月 有效投注
+            $lastLevel = 1;//上月級別
+        } else {
+            $lastEffective = $return['allEffective'];//上月 有效投注
+            $lastLevel = $return['waterRank_serial'];//上月級別
+        }
+
+        $this->assign('thisMonth',$thisMonth);
+        $this->assign('lastEffective',$lastEffective);//上月 有效投注
+        $this->assign('lastLevel',$lastLevel);//上月級別
+
+        $this->assign('startEffective',$startEffective);//開始有效投注
+        $this->assign('startLevel',$startLevel);//開始級別
+        $this->assign('endEffective',$endEffective);//結束有效投注
+        $this->assign('endLevel',$endLevel);//結束級別
+        $this->assign('thisEffective',$thisEffective);//本月洗碼
+        $this->assign('percentageEffective',$percentageEffective);//本月總%數
+
+    }
+
+}

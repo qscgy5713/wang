@@ -1,0 +1,150 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+ 				
+				<h2 class="mt-4 text-white">託售點數</h2>
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link active show" href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 確認託售內容</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>完成託售申請</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                
+			                  <div class="tab-pane active" id="pill-pr-1">
+	                  			 <form method="post" action='__APP__/PointWithdraw/formPointRecharge' id="formPointRecharge">
+					                <fieldset >
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">託售遊戲</label>
+					                    <input type="text" id="disabledTextInput" name="emailaddress" readonly="readonly" class="form-control" value="電子錢包：{$memberWallet}點">
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                    <label for="disabledSelect">託售點數</label>
+					                    <input type="text" id="disabledTextInput" name="addWithdraw" class="form-control" placeholder="請輸入託售點數" autocomplete="off">
+					                    <div class="warning-feedback" style="display: block;">託售最低限額為1000點。</div>
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                    <label for="disabledSelect">銀行代碼</label>
+					                    <select id="addCode" name="addCode" disabled class="form-control">
+					                    	<VOLIST name="bankCodeArray" id="bank">
+						                    		<option value="{$bank.bankcode_code}">{$bank.bankcode_code} - {$bank.bankcode_name}</option>
+						                    	</VOLIST>
+					                      </select>
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">銀行帳號</label>
+					                    <input type="text" id="disabledTextInput" name="emailaddress" class="form-control" value="{$bankAccount}" readonly>
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                  	<a data-toggle="modal" onclick="openmodal('myModalLabel')"class="popup-content" href="#">流程教學</a>
+					                  </div>
+					                  
+					                  <div class="modal fade" id="myModalLabel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+						                <div class="modal-dialog modal-dialog-m" role="document">
+						                  <div class="modal-content">
+						                    <div class="modal-header">
+						                      <h4 class="modal-title" id="myModalLabel">託售流程</h4>
+						                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+						                    </div>
+						                    <div class="modal-body">
+						                      <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/sp_sellProcess.jpg">
+						                    </div>
+						                    <div class="modal-footer">
+						                      <button type="button" class="btn btn-sm btn-dark" data-dismiss="modal">Close</button>
+						                      
+						                    </div>
+						                  </div>
+						                </div>
+						              </div>
+					                  
+					                  <button type="button" id="am-s1-confirm" onclick="location.href='index.php';" class="btn btn-outline-danger loading">取消</button>
+						              <button type="button" id="am-s1-cancel" id="btnok" name="btnok" class="btn btn-outline-danger">確認託售</button>
+						              
+						              <div class="separator-2"></div>
+							              
+							              <div class="form-group">
+							              	<h4 class="text-white">注意事項:</h4>
+						              		<p>
+						              			1.首次託售，需提供註冊時所填寫的銀行存簿封面及相關資訊，通過驗證後即可完成託售申請。<br><br>
+												2.託售帳戶填寫後即永久綁定無法進行更換，綁定前請務必確認填寫之帳號，若提供的帳號錯誤其後果將自行負責。<br><br>
+												3.單筆託售最低為1000點，會員每日限定進行1筆託售。 (首次託售需於儲值24小時候方可託售)。<br><br>
+												4.託售時須達到存款金額的100%投注量方可進行託售，如有領取活動贈點需達到活動限定規則。<br><br>
+												5.若利用本娛樂城進行任何洗錢詐騙行為，本娛樂城有權利永久終止會員服務，不另行通知。<br><br>
+												6.若經風控部門查獲任何個人或是團體利用不誠實手法獲取不當得利時,同一帳戶/家庭/電話號碼/儲值地點/銀行帳戶/相似或同一IP位置/共享電腦/網路環境等，公司保留取消或收回會員不當得利之的權利。
+						              		</p>
+							              </div>
+					                </fieldset>
+					              </form>
+			                  </div>
+			                  
+			                  
+			                  <div class="tab-pane" id="pill-pr-2">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">尚未送出託售申請，<br>請至步驟1選擇後按下『確認託售』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-1-a').click();" >返回</button>
+					                </div>
+			                  </div>
+			                  
+			                </div>
+		                		
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+<script>
+//有搜尋功能的select
+ $(document).ready(function(){
+	//$("#addCode").select2();
+	var bankCode = '{$bankCode}';
+	//alert(bankCode);
+	$("#addCode").find("option[value = "+bankCode+"]").attr("selected",true);
+});
+//確認託售
+ $("button[name='btnok']").click(function(){
+	 var addWithdraw = $("input[name='addWithdraw']").val(); //託售點數
+	 var memberWallet = "{$memberWallet}";//電子錢包
+	 
+	 if(parseInt(addWithdraw) < 1000){
+		 alert("託售最低限額為1000點");
+		 return false;
+	 }
+	 
+	 if (parseInt(memberWallet) < parseInt(addWithdraw)){
+		 alert("餘額不足");
+		 return false;
+	 }
+	 $("#loader-bg").show();
+	 $("#loader-text").show();
+	 $('#formPointRecharge').submit();
+ });
+ function openmodal(id){
+		//alert(id);
+		$('#'+id).modal('show')
+	}
+</script>

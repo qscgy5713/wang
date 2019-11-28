@@ -1,0 +1,61 @@
+<include file="Common:header"/>
+<if condition='$isLogin eq "true"'>
+	
+	<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+		<include file="Common:menu"/>
+		<include file="Common:menu2"/>
+		<div class="sidebar-bg"></div>
+		
+		<div id="content" class="content">
+		</div>
+		
+		<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+	
+	</div>
+<else />
+	<div class="login-cover">
+		<div class="login-cover-image" style="background-image: url(__CSS__/images/login-bg-17.jpg)" data-id="login-cover-image"></div>
+		<div class="login-cover-bg"></div>
+	</div>
+	<div id="page-container" class="fade show">
+		<!-- begin login -->
+		<div class="login login-v2 animated fadeIn" data-pageload-addclass="animated fadeIn">
+			<!-- begin brand -->
+			<div class="login-header">
+				<div class="brand">
+					<span class="logo"><i class="icomoon icon-smallcow f-s-60"></i></span> <b>Agent</b> 
+					
+				</div>
+				<div class="icon">
+					<i class="fa fa-lock"></i>
+				</div>
+			</div>
+			
+			<div class="login-content">
+				<form method="post" action='__APP__/AgentIndex/formLogin' class="margin-bottom-0">
+					<div class="form-group m-b-20">
+						<input type="text" name='account' class="form-control form-control-lg" placeholder="請輸入帳號" required="">
+					</div>
+					<div class="form-group m-b-20">
+						<input type="password" name='password' class="form-control form-control-lg" placeholder="請輸入密碼" required="">
+					</div>
+					
+					<!-- <div class="checkbox checkbox-css m-b-20">
+						<input type="checkbox" id="remember_checkbox"> 
+						<label for="remember_checkbox">
+							Remember Me
+						</label>
+					</div> -->
+					
+					<div class="login-buttons">
+						<button type="submit" class="btn btn-success btn-block btn-lg loading">登入</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</if>	
+<include file="Common:footer"/> 
+
+
+

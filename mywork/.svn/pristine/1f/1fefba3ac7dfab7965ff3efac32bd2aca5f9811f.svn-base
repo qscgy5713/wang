@@ -1,0 +1,188 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+			
+					<button type="button" class="btn btn-secondary btn-shadow-1 loading mb-10" onclick="self.location.href='__APP__/{$Think.MODULE_NAME}/index'">返回報表</button>
+					
+					<form class="mb-10" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+        				
+						<input type="hidden" name="gameCode" value="{$gameCode}"/>
+						<input type="hidden" id="pageNumber" name="pageNumber" value="{$pageNumber}"/>
+						<div class="row">
+							<div class="row col-lg-6 col-xl-4 pr-0 pl-0 mr-0 ml-0 mb-5 pl-15">
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+			                  </div>
+			                 
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+			                  </div>
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="明日" onClick="formTime('{$tomorrow} 00:00:00','{$tomorrow} 23:59:59')"/>
+			                  </div>
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+			                  </div>
+			                  
+			                  <div class="col-2 pr-5 pl-5">
+			                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')""/>
+			                  </div>
+							</div>
+			                
+							<div class="row col-lg-6 col-xl-5 pr-5 pl-5 mr-0 ml-0 mb-5">
+			                  <div class="col-5 p-0">
+			                    <input id="startTime" name="startTime" type="text" class="form-control text-center" style="width:100%;" value="{$startTime}"/>
+			                  </div>
+			                  <div class="col-2 text-center p-0"><label class="p-5 mt-5">至</label></div>
+			                  <div class="col-5 p-0">
+			                    <input id="endTime"   name="endTime" type="text" class="form-control text-center" style="width:100%;" value="{$endTime}"/>
+			                  </div>
+							</div>
+							<div class="row col-lg-6 col-xl-2 pr-5 pl-5 mr-0 ml-0 mb-5">
+			                  <div class="col-md-6 col-sm-12 col-12 pl-0 pr-0 mt-3">
+			                    <input class="btn btn-secondary btn-shadow-1 pr-0 pl-0" style="width:100%;" type='submit' value='查詢'>
+			                  </div>
+							</div>
+						</div>
+					</form>
+					<div class="tab-content">
+						<div class="tab-pane active" id="">
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle">
+									<thead>
+										<IF condition='$sumBettimgMoney neq ""'>
+											<tr style="background-color: rgba(102, 102, 102, 0.43137254901960786);">
+												<th colspan="2">總投注:{$sumBettimgMoney}</th>
+												<th colspan="2">總輸贏:{$sumSurplus}</th>
+												<th colspan="8">總洗碼:{$sumEffective}</th>
+											</tr>
+										</IF>
+					                    <tr>
+					                        <th>序</th>
+					                        <VOLIST name="FieldChange" id="field">
+					                      	   <th>{$field.cnName}</th>
+					                        </VOLIST>
+				                        </tr>
+				                	</thead>
+									<tbody>
+					                	<VOLIST name="showArray" id="vo" empty="$showEmpty" key="k">
+											<tr>
+												<td>{$k}</td>
+												<VOLIST name="FieldChange" id="field">
+													<td>{$vo[$field['newField']]}</td>
+												</VOLIST>
+											</tr>
+										</VOLIST>
+			                        </tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="col-lg-12 text-center">
+	                  		<nav aria-label="Page navigation">
+				                <ul class="pagination justify-content-center">
+
+				                <if condition="$pageNumber-1 neq 0">
+				                  <li class="page-item">
+				                    <a class="page-link loading" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+				                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+				                      <span class="sr-only">Previous</span>
+				                    </a>
+				                  </li>
+				                 </if>
+
+				                 <volist name="pageArray" id="vo" >
+	                                <IF condition="$pageNumber eq $vo" >
+	                                	<li id="{$vo}Page" class="page-item active"><a class="page-link loading" href="#" onClick="goPage('{$vo}')" >{$vo}</a></li>
+	                                <else/>
+	                                	<li id="{$vo}Page" class="page-item"><a class="page-link loading" href="#" onClick="goPage('{$vo}')" >{$vo}</a></li>
+	                                </IF>
+	                             </volist>
+
+
+				                  <if condition="$pageNumber+1 elt $totalPage ">
+					                  <li class="page-item">
+					                    <a class="page-link loading" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+					                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+					                      <span class="sr-only">Next</span>
+					                    </a>
+					                  </li>
+				                  </if>
+				                </ul>
+				              </nav>
+		                  </div>
+	                  </div>
+	               </if>
+				</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function (){
+	
+	datetimePicker("startTime","endTime","endTime","startTime");
+	
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function datetimePicker(time1, onCloseTime1, time2, onCloseTime2){
+	$( "#"+time1 ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#"+onCloseTime1 ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#"+time2 ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#"+onCloseTime2 ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

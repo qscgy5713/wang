@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		<h2>QT 抓報表</h2>
+		開始時間: <input type="text" name="begin_datetime" value="{$begin_datetime}" /><br/>
+		結束時間: <input type="text" name="end_datetime" value="{$end_datetime}" /><br/>
+		page: <input type="text" name="page" value="{$page}" /> 頁次，最小=0。每頁=100筆明細。<br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="sizeof($op_result)">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			執行成功, 結果=
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+			<IF condition="$op_result2"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+	<ELSE/>
+		<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+		<PHP>
+			var_dump($op_result);
+		</PHP>
+	</IF>
+</body>
+</html>

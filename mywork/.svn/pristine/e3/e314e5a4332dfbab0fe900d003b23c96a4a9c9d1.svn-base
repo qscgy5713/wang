@@ -1,0 +1,98 @@
+<?php
+/*
+ * curl 紀錄
+ */
+class CommonCurlLogModel extends CommonModel {
+    protected $tableName = "common_curl_log";
+    protected $tableId = "log_id";
+    /*
+     * 新增紀錄
+     */
+    public function addCurlLogData($data){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 取得總筆數
+     * @return [type] [description]
+     */
+    public function getCommonCurlLogDataTotal($data){
+        if(!empty($data['member_account'])){
+            switch ($data['search']) {
+                case 'member_account':
+                    $whereSql = " AND c.`member_account` LIKE '%{$data['member_account']}%'";
+                    break;
+                case 'log_function':
+                    $search = strtoupper($data['member_account']);
+                    $whereSql = " AND a.`{$data['search']}` LIKE '%{$search}%'";
+                    break;
+                default:
+                    $whereSql = " AND a.`{$data['search']}` LIKE '%{$data['member_account']}%'";
+                    break;
+            }
+            
+        }
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}` a
+                JOIN `internal_admin` b ON (a.`admin_id` = b.`admin_id`)
+                JOIN `common_member` c ON (a.`member_id` = c.`member_id`)
+                JOIN `game_info` d ON (a.`log_gameCode` = d.`game_code`)
+                WHERE a.`log_gameCode` = '{$data['log_gameCode']}' 
+                AND d.`game_riskcontrolEnabled` = '1' {$whereSql}
+                AND (a.`log_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}');";
+        $return = $this->query($sql);
+        return $return[0];
+    }
+    /**
+     * 取得所有資料
+     * @return [type] [description]
+     */
+    public function getCommonCurlLogData($data){
+        if(!empty($data['member_account'])){
+            switch ($data['search']) {
+                case 'member_account':
+                    $whereSql = " AND c.`member_account` LIKE '%{$data['member_account']}%'";
+                    break;
+                case 'log_function':
+                    $search = strtoupper($data['member_account']);
+                    $whereSql = " AND a.`{$data['search']}` LIKE '%{$search}%'";
+                    break;
+                default:
+                    $whereSql = " AND a.`{$data['search']}` LIKE '%{$data['member_account']}%'";
+                    break;
+            }
+            
+        }
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT {$pageStart},{$pageEnd}";
+        $sql = "SELECT a.*, b.`admin_account`, c.`member_account`, d.`game_name` FROM `{$this->tableName}` a
+                JOIN `internal_admin` b ON (a.`admin_id` = b.`admin_id`)
+                JOIN `common_member` c ON (a.`member_id` = c.`member_id`)
+                JOIN `game_info` d ON (a.`log_gameCode` = d.`game_code`)
+                WHERE a.`log_gameCode` = '{$data['log_gameCode']}' 
+                AND d.`game_riskcontrolEnabled` = '1' {$whereSql}
+                AND (a.`log_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}') 
+                ORDER BY a.`log_id` DESC {$pageSql};";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

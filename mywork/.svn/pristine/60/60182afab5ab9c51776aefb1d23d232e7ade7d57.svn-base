@@ -1,0 +1,267 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		
+		<div class="row">
+			<div class="col-lg-1 col-sm-3">
+				 <button class="btn btn-pink m-r-5 m-b-5" type="button" id="add_btn">
+	                                              新增網址
+	       		</button>
+			</div>
+			
+			<div class="modal fade" id="modal-dialog" style="display: none; padding-right: 16px;">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title"> 新增網址</h4>
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						</div>
+						
+						<form method="post" action='__APP__/PromotionSite/formAddPromotionSite'>
+							<div class="modal-body">
+								<div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">網址 :</label>
+									<div class="col-md-8 col-sm-8">
+										<select class="form-control" name="addDomainId" data-parsley-required="true">
+											 <foreach name="newPromotionsiteArray" item="newPromotionsite">
+												<option value="{$key}">{$newPromotionsite}</option>
+											 </foreach>
+										</select>
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">網站名稱 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" type="text" name="addTitle" value="小牛遊戲" data-parsley-type="alphanum" data-parsley-required="true">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">關鍵字 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" type="text" name="addKeywords" value="小牛遊戲 真人百家樂" data-parsley-type="alphanum" data-parsley-required="true">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">網站敘述 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addDescription"  value="小牛遊戲安全可靠" data-parsley-type="alphanum" data-parsley-required="true">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addRemark" value="" data-parsley-type="alphanum" data-parsley-required="true">
+									</div>
+							     </div>
+							</div>
+							<div class="modal-footer">
+								<a href="javascript:;" class="btn btn-danger f-s-15" data-dismiss="modal">取消</a>
+								<button type="submit" name="addbtn" class="btn btn-danger f-s-15">確認新增</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">推廣網址</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table1" class="table table-striped m-b-0">
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>推廣網址</th>
+				                      <th>操作</th>
+				                      <th>網站名稱</th>
+				                      <th>註冊人數</th>
+				                      <th>關鍵字</th>
+				                      <th>網站敘述</th>
+				                      <th>備註</th>
+				                      <th>建立時間</th>
+				                      <th>修改時間</th>
+				                      <th>操作</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<foreach name="showArray" item="showVal">
+										<tr>
+											<td>{$key+1}</td>
+											<td> 
+											   <a href="http://{$showVal.site}" target="_blank">
+											   	<input type="input" class="form-control width-auto" value="{$showVal.site}" readonly id="showValsite{$showVal.id}">
+											   </a>
+											</td>
+											<td>
+												<button type="button" class="btn btn-danger f-s-13 p-5 div-style" onclick="copyUrl2('showValsite{$showVal.id}')">複製</button>
+											</td>
+											<td>{$showVal.title}</td>
+											<td>{$showVal.registeredUsers}</td>
+											<td>{$showVal.keywords}</td>
+											<td>{$showVal.description}</td>
+											<td>{$showVal.remark}</td>
+											<td>{$showVal.createTime}</td>
+											<td>{$showVal.modifyTime}</td>
+											<td>
+												<a onclick="openmodal('setModal','{$showVal.site}','{$showVal.id}','{$showVal.title}','{$showVal.keywords}','{$showVal.description}','{$showVal.remark}')">
+													<i class="fas fa-wrench fa-fw icon-size"></i>
+												</a>
+												<form id="delform{$showVal.id}" class="div-style" method="post" action='__APP__/PromotionSite/formDelPromotionSite'>
+							                    	<input type="hidden" value="{$showVal.id}" name="delId">
+							                    	<a onclick="submit('delform{$showVal.id}')"><i class="fas fa-trash fa-fw icon-size"></i></a>
+							                    </form>
+											</td>
+										</tr>
+									</foreach>
+								</tbody>
+							</table>
+						</div>
+						<if condition="$pageNumber neq ''">
+		                  <div class="row m-t-10">
+			                  <div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+						                
+						                <if condition="$pageNumber-1 neq 0">
+						                  <li class="page-item">
+						                    <a class="page-link" href="__APP__/PromotionSite/index&pageNumber={$pageNumber-1}" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  </li>
+						                 </if>
+						                  
+						                  
+					                  	<if condition="$pageNumber+4 elt $totalPage">
+					                  		<for start="$pageNumber" end="$pageNumber+5">
+					                  			<li id="{$i}Page" class="page-item"><a class="page-link" href="__APP__/PromotionSite/index&pageNumber={$i}">{$i}</a></li>
+						                  	 </for>
+						                <else/>
+						                	<for start="$pageNumber" end="$totalPage+1">
+						                 		<li id="{$i}Page" class="page-item"><a class="page-link" href="__APP__/PromotionSite/index&pageNumber={$i}">{$i}</a></li>
+					                  		</for>
+					                  	</if>
+						                  
+						                  
+						                  <if condition="$pageNumber+1 elt $totalPage ">
+							                  <li class="page-item">
+							                    <a class="page-link" href="__APP__/PromotionSite/index&pageNumber={$pageNumber+1}" aria-label="Next">
+							                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+							                      <span class="sr-only">Next</span>
+							                    </a>
+							                  </li>
+						                  </if>
+						                </ul>
+						            </nav>
+			                  </div>
+		                  </div>
+	                  </if>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal fade" id="setModal" style="display: none; padding-right: 16px;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 id="modalTitle" class="modal-title"></h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+					
+					<form method="post" action='__APP__/PromotionSite/formSetPromotionSite'>
+						<div class="modal-body">
+							<input id="hiddenInput" type="hidden" value="" name="setId">
+							
+								
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">網站名稱 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setTitle" name="setTitle" value="" >
+								</div>
+							 </div>
+								
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">關鍵字 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setKeywords" name="setKeywords" value="" >
+								</div>
+							 </div>
+								
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">網站敘述 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setDescription" name="setDescription"  value="" >
+								</div>
+							 </div>
+								
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setRemark" name="setRemark"  value="">
+								</div>
+						     </div>
+						</div>
+						<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-danger f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name ="okbtn" class="btn btn-danger f-s-15">確認修改</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	
+});
+function openmodal(modalId,modalTitle,showValId,showValTitle,showValKeywords,showValDescription,showValRemark){
+	//alert(id);
+	$('#modalTitle').html('網址:'+modalTitle);
+	$('#hiddenInput').val(showValId);
+	$('#setTitle').val(showValTitle);
+	$('#setKeywords').val(showValKeywords);
+	$('#setDescription').val(showValDescription);
+	$('#setRemark').val(showValRemark);
+	$('#'+modalId).modal('show');
+}
+function copyUrl2(id)
+{
+var Url2=$("#"+id);
+Url2.select(); // 選擇物件
+document.execCommand("Copy"); // 執行瀏覽器複製命令
+}
+</script>

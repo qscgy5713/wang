@@ -1,0 +1,29 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div class="row">
+			<div class="col-md-7 col-sm-7 m-auto text-center">
+				<img style="width: 100%;" src="__CSS__/images/agent.jpg" >
+			</div>
+			
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	
+	$("#"+"其他部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+</script>
+
+
+

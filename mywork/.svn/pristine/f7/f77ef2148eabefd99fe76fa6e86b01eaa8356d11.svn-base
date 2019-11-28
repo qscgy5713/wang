@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MemberManage首頁</title>
+</head>
+<body>
+<span> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME} </span>
+	<VOLIST name="loginArray" id="vo">
+		<form method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<input type='hidden' name='agentTree' value='{$vo.agentTree}'>
+			<input type='hidden' name='agentAccount' value='{$vo.agentAccount}'>
+			<input type='submit' value='{$vo.agentAccount}'>
+		</form>
+	</VOLIST>
+	
+	<table>
+		<tr><th colspan="5">{$comeAgentAccount}代理</th></tr>
+		<tr><th>序</th><th>代理帳號</th><th>狀態</th><th>建立時間</th><th>操作</th></tr>
+		<VOLIST name="agentArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>
+				<form method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+					<input type='hidden' name='agentTree' value='{$vo.agentTree}'>
+					<input type='hidden' name='agentAccount' value='{$vo.agentAccount}'>
+					<input type='submit' value='{$vo.agentAccount}'>
+				</form>
+				</td>
+				<td>{$vo.status}</td>
+				<td>{$vo.createTime}</td>
+				<td>
+				</td>
+			</tr>
+		</VOLIST>
+	</table>
+	<table>
+		<tr><th colspan="7">{$comeAgentAccount}會員</th></tr>
+		<tr><th>序</th><th>會員帳號</th><th>代理</th><th>狀態</th><th>建立時間</th><th>註冊IP</th><th>操作</th></tr>
+		<VOLIST name="memberArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.account}</td>
+				<td>{$vo.agentAccount}</td>
+				<td>{$vo.status}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.ip}</td>
+				<td>
+				</td>
+			</tr>
+		</VOLIST>
+	</table>
+	
+	
+	
+</body>
+</html>

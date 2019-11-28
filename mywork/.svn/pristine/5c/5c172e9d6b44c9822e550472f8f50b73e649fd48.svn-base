@@ -1,0 +1,185 @@
+<?php
+/*
+ * 會員帳號
+ */
+class CommonMemberModel extends MemberModel {
+    protected $tableName = "common_member";
+    protected $tableId = "member_id";
+    /**
+     * 取得 會員 資料
+     * @param $data['member_account'] || $data['member_phone']
+     * @param string $err錯誤碼
+     * @return boolean|array
+     */
+    public function getMemberDataByAccount($data,&$err = ""){
+        if(!(isset($data['member_phone']) || isset($data['member_account']))){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無傳入帳號
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a 
+                LEFT OUTER JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`)
+                LEFT OUTER JOIN `common_agent_ratio` c ON (a.`agent_id` = c.`agent_id`)
+                WHERE `member_account` = '".$data['member_account']."' or `member_phone` = '".$data['member_phone']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//資料庫錯誤
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得會員資料 使用ID
+     */
+    public function getMemberDataById($data,&$err = ""){
+        if(!(isset($data['member_id']) || isset($data['member_id']))){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無傳入會員ID
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a 
+                LEFT OUTER JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`)
+                LEFT OUTER JOIN `common_agent_ratio` c ON (a.`agent_id` = c.`agent_id`)
+                WHERE `member_id` = '".$data['member_id']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//資料庫錯誤
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 加密密碼MD5
+     */
+    public function getMd5Password($password){
+        return md5($password . C("HASH_KEY"));
+    }
+    /*
+     * 新增 會員 資料
+     */
+    public function addMemberData($data,&$err = ""){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//註冊失敗
+            return false;
+        }
+        if(empty($data['member_account']) && $data['member_account'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//註冊失敗
+            return false;
+        }
+        if(empty($data['member_password']) && $data['member_password'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//註冊失敗
+            return false;
+        }
+        if(empty($data['member_phone']) && $data['member_phone'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//註冊失敗
+            return false;
+        }
+        //開始事務處理
+        $this->startTrans();
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_05"));
+            return false;
+        }
+        $insertId = $this->getLastInsertId();
+        
+        $registeUrl = $data['member_url'];//註冊網址
+        
+        //新增會員錢包資料
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $data = array(
+            "member_id"=>$insertId
+        );
+        $CommonMemberWallet->addWalletData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $data = array(
+            'promotionsite_site' => $registeUrl
+        );
+        $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+        $return = $CommonAgentDomainPromotionsite->setRegisteredUsersDataBySite($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        
+        $this->commit();//事務處理成功
+        return $insertId;
+    }
+    /*
+     * 修改 會員 資料
+     */
+    public function setMemberById($data){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'member_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    
+    /*
+     * 修改 會員 資料
+     */
+    public function setMemberByPhone($data){
+        if(empty($data['member_phone']) && $data['member_phone'] !== 0){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'member_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `member_phone` = '{$data['member_phone']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    
+    /*
+     * 查詢會員 首充送點 活動 資料
+     */
+    public function getMemberStoreGiftDatabyId($data){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                LEFT OUTER JOIN `common_member_wallet` b ON (a.`member_id` = b.`member_id`)
+                LEFT OUTER JOIN `common_event_storegift` c ON (a.`member_id` = c.`member_id`)
+                WHERE a.`member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        return $return[0];
+    }
+    
+}

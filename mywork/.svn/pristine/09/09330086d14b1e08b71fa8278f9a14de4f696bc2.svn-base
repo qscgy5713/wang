@@ -1,0 +1,257 @@
+<?php
+return array(
+//ForgetPageAction
+"STRING_FORGETPAGEACTION_SETREMEBERMEMBERDATA_01" => "修改密碼成功，下次登入請使用新密碼登入。",
+//MemberAction
+"STRING_COMMONACTION_GETSIETDATASTR_01" => "半熟牛遊戲",
+"STRING_COMMONACTION_GETSIETDATASTR_02" => "全熟牛遊戲",
+"STRING_COMMONACTION_GETSIETDATASTR_03" => "小牛遊戲-華人世界最佳遊戲品牌-x591.net",
+
+//MemberCenterAction
+"STRING_MEMBERCENTERACTION_LOTTORECORDS_01" => "尚未開獎",
+"STRING_MEMBERCENTERACTION_LOTTORECORDS_02" => "精采小牛",
+"STRING_MEMBERCENTERACTION_LOTTORECORDS_03" => "無四星彩紀錄",
+"STRING_MEMBERCENTERACTION_BOUNSRECORDS_01" => "無返水紀錄",
+"STRING_MEMBERCENTERACTION_RECHARGERECORDS_01" => "0 元",
+"STRING_MEMBERCENTERACTION_RECHARGERECORDS_02" => "元",
+"STRING_MEMBERCENTERACTION_RECHARGERECORDS_03" => "無儲值紀錄",
+"STRING_MEMBERCENTERACTION_GIVENRECORD_01" => "活動",
+"STRING_MEMBERCENTERACTION_GIVENRECORD_02" => "返水",
+"STRING_MEMBERCENTERACTION_GIVENRECORD_03" => "錯誤",
+"STRING_MEMBERCENTERACTION_GIVENRECORD_03" => "無贈點紀錄",
+"STRING_MEMBERCENTERACTION_TRANSFERRECORDS_01" => "小牛錢包",
+"STRING_MEMBERCENTERACTION_TRANSFERRECORDS_02" => "小牛錢包",
+"STRING_MEMBERCENTERACTION_TRANSFERRECORDS_03" => "無轉移紀錄",
+"STRING_MEMBERCENTERACTION_WITHDRAWRECORDS_01" => "無託售紀錄",
+"STRING_MEMBERCENTERACTION_SERVICERECORDS_01" => "無客服訊息",
+"STRING_MEMBERCENTERACTION_EVENTRECORD_01" => "無贈點紀錄",
+
+//MEMBERINDEXACTION
+"STRING_MEMBERINDEXACTION_FORMLOGIN_01" => "登入錯誤超過",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_02" => "次，請",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_03" => "後在重試！",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_04" => "錯誤次數",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_05" => "次",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_06" => "，封鎖",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_07" => "秒",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_08" => "密碼錯誤;輸入密碼;",
+"STRING_MEMBERINDEXACTION_FORMLOGIN_09" => "會員停權;無法登入",
+
+//POINTRECHARGEACTION
+"STRING_POINTRECHARGEACTION_FORMPOINTRECHARGE_01" => "超商繳款",
+"STRING_POINTRECHARGEACTION_FORMPOINTRECHARGE_02" => "虛擬帳戶",
+
+//REBATEEVENTACTION
+"STRING_REBATEEVENTACTION_STOREGIFTPAGE_01" => "活動錯誤",
+"STRING_REBATEEVENTACTION_STOREGIFTPAGE_02" => "活動未開放",
+"STRING_REBATEEVENTACTION_STOREGIFTPAGE_03" => "請先登入會員帳號",
+"STRING_REBATEEVENTACTION_STOREGIFTPAGE_04" => "您未充值，無法參加此活動!",
+"STRING_REBATEEVENTACTION_STOREGIFTPAGE_05" => "您已申請過此活動!",
+"STRING_REBATEEVENTACTION_STOREGIFTPAGE_06" => "您訂單處理中，請稍後!",
+
+"STRING_REBATEEVENTACTION_REVERSALPAGE_01" => "活動錯誤",
+"STRING_REBATEEVENTACTION_REVERSALPAGE_02" => "活動未開放",
+"STRING_REBATEEVENTACTION_REVERSALPAGE_03" => "您未達條件",
+"STRING_REBATEEVENTACTION_REVERSALPAGE_04" => "本月活動申請已達限制",
+"STRING_REBATEEVENTACTION_REVERSALPAGE_05" => "本月尚未投注",
+"STRING_REBATEEVENTACTION_REVERSALPAGE_06" => "尚未達到條件",
+
+
+"STRING_REBATEEVENTACTION_BACCARATWINNINGPAGE_01" => "活動錯誤",
+"STRING_REBATEEVENTACTION_BACCARATWINNINGPAGE_02" => "活動未開放",
+"STRING_REBATEEVENTACTION_BACCARATWINNINGPAGE_03" => "本日活動申請已達限制",
+
+"STRING_REBATEEVENTACTION_BBACKWATERELECTRONICPAGE_01" => "萬",
+"STRING_REBATEEVENTACTION_BACKWATERSPORTSPAGE_01" => "萬",
+"STRING_REBATEEVENTACTION_BACKWATERREALITYPAGEE_01" => "萬",
+
+//REGISTPAGEACTION
+"STRING_REGISTPAGEACTION_AJAXCHECKMEMBERPHONE_01" => "電話號碼格式錯誤，請重新輸入!",
+"STRING_REGISTPAGEACTION_AJAXCHECKMEMBERPHONE_02" => "電話號碼已被註冊，請重新輸入!",
+
+//CASHFLOWNEWEBPAYMODEL
+"STRING_CASHFLOWNEWEBPAYMODEL_NEWEBPAYVIRACCOUNTSENDREQUEST_01" => "404;網址錯誤，無法找到網頁!",
+"STRING_CASHFLOWNEWEBPAYMODEL_NEWEBPAYVIRACCOUNTSENDREQUEST_02" => "500;伺服器錯誤!",
+
+"STRING_CASHFLOWNEWEBPAYMODEL_NEWEBPAYSTORESENDREQUEST_01" => "404;網址錯誤，無法找到網頁!",
+"STRING_CASHFLOWNEWEBPAYMODEL_NEWEBPAYSTORESENDREQUEST_02" => "500;伺服器錯誤!",
+
+//CASHFLOWRECHARGEMODEL
+"STRING_CASHFLOWRECHARGEMODEL_GETRECHARGESTATUSSTR_01" => "等待繳款",
+"STRING_CASHFLOWRECHARGEMODEL_GETRECHARGESTATUSSTR_02" => "處理中",
+"STRING_CASHFLOWRECHARGEMODEL_GETRECHARGESTATUSSTR_03" => "完成",
+"STRING_CASHFLOWRECHARGEMODEL_GETRECHARGESTATUSSTR_04" => "已取消",
+
+//CASHFLOWTRANSFERMODEL
+"STRING_CASHFLOWTRANSFERMODEL_GETTRANSFERSTATUSSTR_01" => "轉移失敗",
+"STRING_CASHFLOWTRANSFERMODEL_GETTRANSFERSTATUSSTR_02" => "轉移成功",
+"STRING_CASHFLOWTRANSFERMODEL_GETTRANSFERSTATUSSTR_03" => "轉移失敗",
+
+//CASHFLOWTRANSFERMODEL
+"STRING_CASHFLOWWITHDRAWMODEL_GETWITHDRAWSTATUSSTR_01" => "審核中",
+"STRING_CASHFLOWWITHDRAWMODEL_GETWITHDRAWSTATUSSTR_02" => "處理中",
+"STRING_CASHFLOWWITHDRAWMODEL_GETWITHDRAWSTATUSSTR_03" => "完成",
+"STRING_CASHFLOWWITHDRAWMODEL_GETWITHDRAWSTATUSSTR_04" => "已取消",
+
+//CASHFLOWYIPAYMODEL
+"STRING_CASHFLOWYIPAYMODEL_YIPAYSTORESENDREQUEST_01" => "此儲值方式維護中，請重新選擇!",
+
+"STRING_CASHFLOWYIPAYMODEL_YIPAYVIRACCOUNTSENDREQUEST_01" => "此儲值方式維護中，請重新選擇!",
+
+//COMMONEVENTMODEL
+"STRING_COMMONEVENTMODEL_GETEVENTSTATUSSTR_01" => "審核中",
+"STRING_COMMONEVENTMODEL_GETEVENTSTATUSSTR_02" => "取消",
+"STRING_COMMONEVENTMODEL_GETEVENTSTATUSSTR_03" => "完成",
+"STRING_COMMONEVENTMODEL_GETEVENTSTATUSSTR_04" => "狀態錯誤",
+
+//COMMONMEMBERBACKWATERLOGMODEL
+"STRING_COMMONMEMBERBACKWATERLOGMODEL_GETMEMBERBACKWATERLOGSTATUSSTR_01" => "上點失敗",
+"STRING_COMMONMEMBERBACKWATERLOGMODEL_GETMEMBERBACKWATERLOGSTATUSSTR_02" => "上點成功",
+"STRING_COMMONMEMBERBACKWATERLOGMODEL_GETMEMBERBACKWATERLOGSTATUSSTR_03" => "參數錯誤",
+
+//COMMONMEMBERMAILMODEL
+"STRING_COMMONMEMBERMAILMODEL_GETMAILSTATUSSTR_01" => "<未讀>",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILSTATUSSTR_02" => "<已讀>",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILSTATUSSTR_03" => "<發問>",
+
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_01" => "預設信件",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_02" => "會員資料",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_03" => "遊戲帳號",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_04" => "儲值託售",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_05" => "紅利商城",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_06" => "優惠活動",
+"STRING_COMMONMEMBERMAILMODEL_GETMAILTYPESTR_07" => "其他問題",
+
+//共用
+"AgentJoin" => "代理加盟",
+"PointRecharge" => "點數儲值",
+"ContactService" => "聯繫客服",
+"Account" => "帳號",
+"Password" => "密碼",
+"Verification" => "請輸入驗證碼!",
+"SamrtPhne" => "手機",
+"PlzLoginNow" => "請先登入會員",
+"GameMaintaining" => "遊戲維護中",
+"AjaxErrorMessage" => "網路連線錯誤，請檢查您的網路狀況。",
+
+//AgentJoin/index.HTML
+"AgentJoinContactName" => "聯絡姓名",
+"AgentJoinEnterName" => "請輸入姓名",
+"AgentJoinContactMethod" => "聯絡方式",
+"WeChat" => "微信",
+"Other" => "其他",
+"AgentJoinRequestAMessage" => "申請留言",
+"AgentJoinAnyQuestion" => "若您有任何問題或需求，請在此留言",
+"AgentJoiningSystem" => "代理加盟制度表",
+"AgentJoinConfirm" => "確定",
+"AgentJoinSubmit" => "送出申請",
+"AgentJoinNoneName" => "您尚未填寫姓名",
+"AgentJoinNoneContacc" => "您尚未填寫聯絡方式",
+
+//BankcodeBinding/index.HTML
+"BankCode" => "銀行代號",
+"BankSelect" => "請選擇銀行",
+"BankAccoun" => "銀行帳號",
+"BankAccounHold" => "請輸入銀行帳號",
+"BankAccountLen" => "帳號長度應介於6~14位之間!",
+"BankName" => "銀行戶名",
+"BankNameHold" => "請輸入銀行戶名",
+"BankMinor" => "銀行分行",
+"BankMinorHold" => "請輸入銀行分行",
+"BankSubmit" => "送出",
+"BankAccNull" => "銀行帳號不可為空",
+"BankNameNull" => "銀行戶名不可為空",
+"BankMinorNull" => "銀行分行不可為空",
+
+//Common/foot.html
+"FootCow" => "小牛遊戲",
+"FootIndex" => "首頁",
+"FootActivity" => "優惠活動",
+"FootMemberTerms" => "會員條款",
+"FootClose" => "關閉",
+"FootNewMessage" => "最新消息",
+"FootSeeMessage" => "看到此對話窗、請通知客服",
+"FootForIphone" => "此功能只適用於行動裝置",
+"FootPlzAccOrPwd" => "請輸入帳號或密碼",
+"FootNullAgree" => "我同意未勾選",
+"FootPhoneLeng" => "電話長度不為10碼!",
+"FootPlzEntrePwd" => "請重新輸入確認密碼!",
+"FootPwdLeng" => "密碼長度應界於6~20位之間",
+
+//loading.html
+"Loading" => "小牛遊戲-華人世界最佳遊戲品牌-x591.net",
+
+//loginMenu/index.html
+"Login" => "登入",
+"LoginRegistered" => "註冊",
+"LoginRecharge" => "儲值",
+"LoginOnlineSale" => "線上託售",
+"LoginMmberCenter" => "會員中心",
+"LoginSystemMessage" => "系統消息",
+"LoginCowWallet" => "小牛錢包",
+"LoginLeaveComments" => "留言客服",
+"LoginSetPwd" => "修改密碼",
+"LoginCowTV" => "小牛影城",
+"LogOut" => "登出",
+"LoginGame" => "遊戲登入",
+"LoginAPPDown" => "APP下載",
+"LoginAgree" => "我同意",
+"LoginImmediately" => "立即登入",
+"LoginForgPwd" => "忘記帳密",
+"LoginEnterPhone" => "請輸入手機號碼",
+"LoginPhoneLeng" => "電話長度不為10碼!",
+"LoginOKPhone" => "電話號碼可以使用!",
+"LoginEnterPwd" => "請輸入密碼",
+"LoginDoublPwd" => "請再次確認密碼",
+"LoginSignUpNow" => "立即註冊",
+"LoginSubmitNow" => "立即送出",
+"LoginComplete" => "完成",
+
+//MemberCenterMean.html
+"CenterFourStart" => "四星彩",
+"CenterBackWaterRecord" => "返水紀錄",
+"CenterRechargeRecord" => "儲值紀錄",
+"CenterGiftPointRecord" => "贈點紀錄",
+"CenterActivityRecord" => "活動紀錄",
+"CenterTransferRecord" => "轉移紀錄",
+"CenterSaleRecord" => "託售紀錄",
+
+//MemberCondition
+"Condition_1" => "歡迎使用本娛樂城所提供之各項會員服務，為了保障您的權益，請詳細閱讀本服務條款內容，當您在點選【我同意】鍵，並完成註冊或開始使用本服務時，即視為您已經詳細閱讀、了解本服務條				款，並同意遵守以下服務條	款之約定。若您對於本條款內容有任何的疑慮，或是不同意時，請您不要使	用本網站。提醒您！先行審閱本條款三日以上，再按下【我已閱讀完條款】鍵。",
+"Condition_1" => "一、遵守會員規範及法律規定：",
+"Condition_2" => "您了解註冊成為會員後，即可使用本娛樂城所提供之各項服務(以下稱本服務)。當會員使用本服務時，即表示除了同意遵守本服務條款外，還同意接受本娛樂城對本娛樂城會員規範（包括遊戲				規則、公告及注意事項等）及相關法令規定之拘束。本服務之廣告、宣傳內容、費率表及遊戲管理規則視為本契約之一部分。",
+"Condition_3" => "二、服務簡介：",
+"Condition_4" => "（一）接受本服務之會員必須自行配備上網所需之各項電腦設備，並負擔包括且不限於「網際網路連線費 用」、「電話費用」等之電信相關費用。",
+"Condition_5" => "（二）當完成會員註冊程序後，即擁有本娛樂城會員資格，可以開始使用本娛樂城相關服務。",
+"Condition_6" => "（三）成為本娛樂城會員得使用之各項服務，其所有權仍屬本娛樂城及其權利人所有，會員僅得依本服務條款之約定使用，會員帳號不得出租、出借、移轉或讓與其他第三人使用。",
+"Condition_7" => "（四）本娛樂城提供之網路金流付費機制，所購買的本娛樂城遊戲點數，將可使用於本娛樂城相關服務。",
+"Condition_8" => "（五）若會員使用虛偽不正當之方式進行「儲值」、「購點」，本娛樂城保留	隨時終止該會員帳號使用各項服務之權利。 ",
+"Condition_9" => "三、真實登錄義務：",
+"Condition_10" => "基於本娛樂城所提供之各項服務，會員同意於註冊時依申請程序所提示	之項目，登錄會員本人真實、正確及完整之個人資料；當會員個人資料	有異動時，應立即使用線上服務進行更新，以維				持會員個人資料之真實、正確及完整。如因會員登錄不實資料或冒用他人名義以致於侵害他人之權利或違法時，應自負相關法律責任；會員並同意所提供之個人資料不實或個人資料有異動但沒有				更新以致於與原登錄之資料不符時，本娛樂城有權終止會員資格及使用各項會員服務之權利。",
+"Condition_11" => "四、服務之停止與更改：",
+"Condition_12" => "會員若有下列任一情形時，本娛樂城有權以書面或電子郵件通知會員停止或終止會員帳戶服務：",
+"Condition_13" => "1.會員資料登錄不實或冒用他人名義。",
+"Condition_14" => "2.使用英文及數字以外之字元或不雅文字作為本服務之名稱。",
+"Condition_15" => "3.惡意申請多個遊戲帳號破壞遊戲平衡。",
+"Condition_16" => "4.違反遊戲公平原則影響其他玩家權益。",
+"Condition_17" => "5.意圖破壞、入侵資料庫或故意散播電腦病毒程式。",
+"Condition_18" => "6.遊戲競技時，鑽研系統漏洞或利用遊戲弱點以影響結果。",
+"Condition_19" => "7.使用虛偽不正當、違法之方式進行購點、儲值。",
+"Condition_20" => "8.損害他人名譽或侵害他人智慧財產權及其他權利。",
+"Condition_21" => "9.違反公共安全、善良風俗或現行法律之行為。",
+"Condition_22" => "10.私下進行禁止之本娛樂城帳號、遊戲幣買賣。",
+"Condition_23" => "11.故意妨礙本遊戲運作或違反所約定服務條款。",
+"Condition_24" => "12.本公司系統會自動紀錄瀏覽者的網路IP位址,經系統察覺,會員若有不合理之登入及相同ip登入，公司有權力將其會員視為問題玩家。本娛樂城就停止、更改服務內容或終止會員服務，所產				生之不便或損害，對任何會員或第三人均不負任何責任。 ",
+"Condition_25" => "13.於體育館進行打水套利，打分洞及外掛程式一經審核部發現，一律停權處理，並沒收點數。 ",
+"Condition_26" => "14.若會員註冊後 1 個月內未進行儲值，本公司一律將會員帳號回收若會員於6個月內未進行登入，不論帳號內是否有點數，公司一律將會員帳號回收，本娛樂城對此不負擔任何賠償責任。 ",
+"Condition_27" => "五、服務暫停或中斷：",
+"Condition_28" => "（一）有下列情形之一時，本娛樂城得無須事前通知會員即暫停或中斷本服務之全部或一部分，本娛樂城對此不負擔任何賠償責任：",
+"Condition_29" => "1.因不可歸責於本娛樂城所造成服務停止或中斷。",
+"Condition_30" => "2.因不可抗力因素所造成服務停止或中斷。",
+"Condition_31" => "3.在緊急情況下為維護其他會員或第三人之人身、交易內容、遊戲歷程、個人資料之完整時。",
+"Condition_32" => "（二）如因本娛樂城對於本網站相關系統設備進行遷移、更換或維護而必須暫停或中斷全部或一部分之服務時，本娛樂城將於暫停或中斷前七日於網站上公告，並於會員登入時發佈停機訊息。",
+"Condition_33" => "（三）因使用者違反法令、本服務條款或因不可歸責於本娛樂城之事由，而造成本服務之全部或一部分暫停或中斷時，暫停或中斷期間之費用仍依正常標準計費。",
+"Condition_34" => "",
+"Condition_35" => "",
+);
+ // {$Think.lang.Condition_}

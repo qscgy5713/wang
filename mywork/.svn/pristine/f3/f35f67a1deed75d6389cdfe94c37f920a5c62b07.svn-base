@@ -1,0 +1,20 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameQtMenuModel extends AdminModel {
+    protected $tableName = "game_qt_menu";
+    /*
+     * 取得遊戲名稱
+     */
+    public function getGameChNameDataById($data){
+        
+        $sql = "SELECT `game_name`
+                FROM `$this->tableName`
+                WHERE `game_id` = '{$data['game_id']}'";
+        $return = $this->cacheQuery($sql,600);
+        $gameName = json_decode($return[0]['game_name'], true);
+        $gameName = $gameName[$_COOKIE['think_language']];
+        return $gameName;
+    }
+}

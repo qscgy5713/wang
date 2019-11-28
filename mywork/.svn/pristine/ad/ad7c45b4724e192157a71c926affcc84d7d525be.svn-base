@@ -1,0 +1,62 @@
+tr{
+	counter-increment: no;
+}
+
+tr td.counter:after{
+	content: counter(no)
+}
+.nav-tabs-color{
+	background:#000!important;
+}
+.switch-wrapper {
+  display: inline-block;
+  position: relative;
+  
+}
+
+.switchbtn{
+	left:-12px;
+	margin-right:10px!important;
+	margin-left:10px!important;
+	cursor: pointer;
+}
+
+
+.font-type{
+	color:#fff;
+	text-decoration:none;
+}
+.font-style{
+	font-weight:900;
+	font-size:15px;
+	line-height:2.3;
+	color:#495057;
+}
+.w-60{
+	width:60%;
+}
+.sight+.sight::before{
+	display: inline-block;
+    padding-right: .5rem;
+    color: #6c757d;
+    content: "—＞"!important;
+}
+.bord-size{
+	border-style: solid;
+	border-width:1px;
+	border-color:#e0e0e0;
+	border-radius: .25rem;
+}
+.orderpo{
+	left:10px;
+}
+
+.font-size{
+	font-size:18px;
+}
+.table-striped>tbody>tr:nth-child(even)>td{
+	background-color:#fff!important;
+}
+.liheight{
+	line-height:2;
+}

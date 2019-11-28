@@ -1,0 +1,304 @@
+<?php
+class IncomeTotalAction extends AgentAction {
+    protected $startTime = "";
+    protected $endTime = "";
+    protected $today = "";
+    protected $yesterday = "";
+    protected $thisWeekA = "";
+    protected $thisWeekB = "";
+    protected $lastWeekA = "";
+    protected $lastWeekB = "";
+    protected $thisMonthA = "";
+    protected $thisMonthB = "";
+    protected $lastMonthA = "";
+    protected $lastMonthB = "";
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+        
+        $this->today = date('Y-m-d');
+        $this->startTime = $this->today.' 00:00:00';
+        $this->endTime = $this->today.' 23:59:59';
+        
+        if(isset($request['startTime'])){
+            $this->startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $this->endTime = $request['endTime'];
+        }
+        
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $this->lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $this->lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $this->thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $this->thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $this->yesterday = date('Y-m-d',$tsYesterday);
+        $this->lastMonthA = date('Y-m-d',$tsLastMonth);
+        $this->lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($this->lastMonthA)),date("Y", strtotime($this->lastMonthA)))-1)));
+        $this->thisMonthA = date('Y-m-d',$tsThisMonth);
+        $this->thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        
+        
+        $this->assign("startTime",$this->startTime);//查詢開始時間
+        $this->assign("endTime",$this->endTime);//查詢最後時間
+        $this->assign("today",$this->today);//今日
+        $this->assign("yesterday",$this->yesterday);//昨日
+        $this->assign("thisWeekA",$this->thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$this->thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$this->lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$this->lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$this->thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$this->thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$this->lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$this->lastMonthB);//上月最後一天
+    }
+    //TODO:6 儲託總計
+    public function index(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+        $CommonAgentTree = D("CommonAgentTree");
+        $loginArray = array(
+            0 => array(
+                "agentTree"=>$_SESSION['Agent']['tree'],
+                "agentAccount"=>$_SESSION['Agent']['account']
+            )
+        );
+        //var_dump($loginArray);
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Agent']['tree']."/i", $request["agentTree"])
+            || $request["agentTree"] == $_SESSION['Agent']['tree']
+            ){
+            $comeAgentTree = $_SESSION['Agent']['tree'];
+            $comeAgentAccount = $_SESSION['Agent']['account'];
+        } else {
+            $comeAgentTree = $request["agentTree"];
+            $comeTreeExpArray = explode(",",$_SESSION['Agent']['tree']);
+            $agentTreeExpArray = explode(",",$comeAgentTree);
+            $getTreeNumber = count($agentTreeExpArray) - count($comeTreeExpArray);//要取代理樹的數量
+            $startNumber = count($comeTreeExpArray) - 1;
+            $endNumber = $startNumber + $getTreeNumber;
+            $comeReplace = "";
+            for($i=$startNumber;$i<=$endNumber;$i++){
+                $comeReplace .= $agentTreeExpArray[$i].",";
+            }
+            
+            $exArray = explode(",",$comeReplace);
+            //var_dump($exArray);
+            $return = $CommonAgentTree->getAgentTreeDataByManyAgentId($exArray);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            //var_dump($return);
+            foreach ($return as $value){
+                array_push($loginArray,$value);
+            }
+            $comeAgentAccount = $request["agentAccount"];
+        }
+        $agentArray = array();//ange_id => array('agentAccount'=>'3ab03','agentTree'=>'1,62,1199,1345,','sumMoney'=>1000,'sumNumber'=>1)
+        $memberArray = array();//gg00707 => array('sumMoney'=>1000,'sumNumber'=>1)
+        $agentTotalMoney = 0;//總金額
+        $agentTotalNumber = 0;//總筆數
+        $agentTotalWithdrawMoney = 0;//總託售
+        $agentTotalRechargeMoney = 0;//總儲值
+        
+        $memberTotalMoney = 0;//總金額
+        $memberTotalNumber = 0;//總筆數
+        $memberTotalWithdrawMoney = 0;//總託售
+        $memberTotalRechargeMoney = 0;//總儲值
+        
+        $CashflowRecharge = D("CashflowRecharge");
+        $CommonAgent = D("CommonAgent");
+        $data = array(
+            "agent_tree"=>$comeAgentTree,
+            "recharge_createTime" => array(
+                "startTime" => strtotime($this->startTime),
+                "endTime" => strtotime($this->endTime)
+            ),
+        );
+        $return = $CashflowRecharge->getMemberRechargeDataByAgentTree($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        //var_dump($return);exit();
+        foreach($return as $key => $value){
+            if($value['agent_tree'] === $comeAgentTree){
+                //會員
+                $data = array(
+                    "sumMoney" => (int)$value['sumMoney'],
+                    "sumNumber" => (int)$value['sumNumber']
+                );
+                $memberTotalMoney += (int)$value['sumMoney'];
+                $memberTotalRechargeMoney += (int)$value['sumMoney'];
+                $memberTotalNumber += (int)$value['sumNumber'];
+                
+                if(isset($memberArray[$value['member_account']])){
+                    $memberArray[$value['member_account']]["sumMoney"] += (int)$value['sumMoney'];
+                    $memberArray[$value['member_account']]["sumNumber"] += (int)$value['sumNumber'];
+                } else {
+                    $memberArray[$value['member_account']] = $data;
+                }
+            } else {
+                //$newAgnetTree = str_replace($comeAgentTree,"",$value['agent_tree']);
+                
+                $comeTreeExpArray = explode(",",$comeAgentTree);
+                $agentTreeExpArray = explode(",",$value['agent_tree']);
+                $getTreeNumber = count($agentTreeExpArray) - count($comeTreeExpArray);//要取代理樹的數量
+                $startNumber = count($comeTreeExpArray) - 1;
+                $endNumber = $startNumber + $getTreeNumber;
+                $newAgnetTree = "";
+                for($i=$startNumber;$i<=$endNumber;$i++){
+                    $newAgnetTree .= $agentTreeExpArray[$i].",";
+                }
+                //代理
+                $expArray = explode(",",$newAgnetTree);
+                
+                $agentTotalMoney += (int)$value['sumMoney'];
+                $agentTotalRechargeMoney += (int)$value['sumMoney'];
+                $agentTotalNumber += (int)$value['sumNumber'];
+                
+                if(isset($agentArray[$expArray[0]])){
+                    $agentArray[$expArray[0]]["sumMoney"] += (int)$value['sumMoney'];
+                    $agentArray[$expArray[0]]["sumNumber"] += (int)$value['sumNumber'];
+                } else {
+                    if(count($expArray) > 1){
+                        $data = array(
+                            'agent_id' =>$expArray[0],
+                        );
+                        $return = $CommonAgent->getAgentDataById($data);
+                        if($return === false){
+                            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                        }
+                        $agentAccount = $return['agent_account'];
+                        $agentTree = $return['agent_tree'];
+                        $ratioTree = $return['ratio_tree'];
+                        $agentRatioRemark = $return['agent_ratioRemark'];
+                    } else {
+                        $agentAccount = $value['agent_account'];
+                        $agentTree = $comeAgentTree.$newAgnetTree;
+                        $ratioTree = $value['ratio_tree'];
+                    }
+                    $data = array(
+                        "agentAccount"=>$agentAccount,
+                        "agentTree" => $agentTree,
+                        "sumMoney" => (int)$value['sumMoney'],
+                        "sumNumber" => (int)$value['sumNumber']
+                    );
+                    
+                    $agentArray[$expArray[0]] = $data;
+                }
+            }
+        }
+        
+        $CashflowWithdraw = D("CashflowWithdraw");
+        $data = array(
+            "agent_tree"=>$comeAgentTree,
+            "withdraw_createTime" => array(
+                "startTime" => strtotime($this->startTime),
+                "endTime" => strtotime($this->endTime)
+            ),
+        );
+        $return = $CashflowWithdraw->getMemberWithdrawDataByAgentTree($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        //var_dump($return);
+        foreach($return as $key => $value){
+            if($value['agent_tree'] === $comeAgentTree){
+                $data = array(
+                    "sumMoney" => -(int)$value['sumMoney'],
+                    "sumNumber" => (int)$value['sumNumber']
+                );
+                $memberTotalMoney -= (int)$value['sumMoney'];
+                $memberTotalWithdrawMoney -= (int)$value['sumMoney'];
+                $memberTotalNumber += (int)$value['sumNumber'];
+                
+                if(isset($memberArray[$value['member_account']])){
+                    $memberArray[$value['member_account']]["sumMoney"] -= (int)$value['sumMoney'];
+                    $memberArray[$value['member_account']]["sumNumber"] += (int)$value['sumNumber'];
+                } else {
+                    $memberArray[$value['member_account']] = $data;
+                }
+            } else {
+                $comeTreeExpArray = explode(",",$comeAgentTree);
+                $agentTreeExpArray = explode(",",$value['agent_tree']);
+                $getTreeNumber = count($agentTreeExpArray) - count($comeTreeExpArray);//要取代理樹的數量
+                $startNumber = count($comeTreeExpArray) - 1;
+                $endNumber = $startNumber + $getTreeNumber;
+                $newAgnetTree = "";
+                for($i=$startNumber;$i<=$endNumber;$i++){
+                    $newAgnetTree .= $agentTreeExpArray[$i].",";
+                }
+                $expArray = explode(",",$newAgnetTree);
+                
+                $agentTotalMoney -= (int)$value['sumMoney'];
+                $agentTotalWithdrawMoney -= (int)$value['sumMoney'];
+                $agentTotalNumber += (int)$value['sumNumber'];
+                
+                if(isset($agentArray[$expArray[0]])){
+                    $agentArray[$expArray[0]]["sumMoney"] -= (int)$value['sumMoney'];
+                    $agentArray[$expArray[0]]["sumNumber"] += (int)$value['sumNumber'];
+                } else {
+                    if(count($expArray) > 1){
+                        $data = array(
+                            'agent_id' =>$expArray[0],
+                        );
+                        $return = $CommonAgent->getAgentDataById($data);
+                        if($return === false){
+                            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                        }
+                        $agentAccount = $return['agent_account'];
+                        $agentTree = $return['agent_tree'];
+                        $ratioTree = $return['ratio_tree'];
+                        $agentRatioRemark = $return['agent_ratioRemark'];
+                    } else {
+                        $agentAccount = $value['agent_account'];
+                        $agentTree = $comeAgentTree.$newAgnetTree;
+                        $ratioTree = $value['ratio_tree'];
+                    }
+                    
+                    $data = array(
+                        "agentAccount"=>$agentAccount,
+                        "agentTree" => $agentTree,
+                        "sumMoney" => -(int)$value['sumMoney'],
+                        "sumNumber" => (int)$value['sumNumber']
+                    );
+                    
+                    $agentArray[$expArray[0]] = $data;
+                }
+            }
+        }
+        
+        //var_dump($loginArray);
+        //var_dump($agentArray);
+        //var_dump($memberArray);
+        
+        $this->assign("agentTotalMoney",$agentTotalMoney);
+        $this->assign("agentTotalNumber",$agentTotalNumber);
+        $this->assign("agentTotalWithdrawMoney",$agentTotalWithdrawMoney);
+        $this->assign("agentTotalRechargeMoney",$agentTotalRechargeMoney);
+        $this->assign("memberTotalMoney",$memberTotalMoney);
+        $this->assign("memberTotalNumber",$memberTotalNumber);
+        $this->assign("memberTotalWithdrawMoney",$memberTotalWithdrawMoney);
+        $this->assign("memberTotalRechargeMoney",$memberTotalRechargeMoney);
+        
+        $this->assign("agentEmpty","<tr><td colspan='4'>無代理報表</td></tr>");
+        $this->assign("memberEmpty","<tr><td colspan='5'>無會員報表</td></tr>");
+        
+        $this->assign("loginArray",$loginArray);
+        $this->assign("comeAgentAccount",$comeAgentAccount);
+        $this->assign("comeAgentTree",$comeAgentTree);
+        $this->assign("agentArray",$agentArray);
+        $this->assign("memberArray",$memberArray);
+        $this->display();
+    }
+}

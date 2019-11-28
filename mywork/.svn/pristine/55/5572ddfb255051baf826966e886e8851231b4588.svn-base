@@ -1,0 +1,12 @@
+<div class="row d-sm-none">
+	<div class="col-12 d-flex" style="background-color: #9F2125;">
+		<i class="fa fa-bullhorn marquee-icon ml-8"></i>
+		<div class="mq-height">
+			<ul id="marquee2" class="marquee">
+			   <VOLIST name="marqueeArray" id="marquee">
+				   <li><a data-toggle="modal" class="txt-white" onclick="openmodal('marqueeModal')" href="#">{$marquee.marquee_text}</a></li>
+			   </VOLIST>
+			</ul>
+		</div>
+	</div>
+</div>

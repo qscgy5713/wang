@@ -1,0 +1,87 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">百家樂連贏加送點數</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>	
+				</header>
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30"><!-- DEFAULT -->
+							<strong>活動規則：</strong><BR>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">過關注單的時間，間隔超過1個小時，過關重新累計。</li>
+		                        <li style="list-style:decimal;" >連贏10局，無論其總押分量是否達到中獎條件，過關數都重新累積。</li>
+		                        <li style="list-style:decimal;">單局押分量小於500，過關重新累積。</li>
+		                        <li style="list-style:decimal;">連贏10局時且10局總押分達25000分以上，可獲得5000點。</li>
+		                        <li style="list-style:decimal;">連贏10局時且10局總押分達50000分以上，可獲得10000點。</li>
+		                   		<li style="list-style:decimal;">連贏10局時且10局總押分達100000分以上，可獲得30000點。</li>
+		                   		<li style="list-style:decimal;">總押分僅限投注〈莊〉或〈閒〉之投注量。</li>
+		                   		<li style="list-style:decimal;">如遇雙邊投注時，該局以兩邊相減後的值計算押分量並依據押分較多的一邊判斷是否連贏。</li>
+		                   		<li style="list-style:decimal;" class="text-warning">百家樂連贏加送點數需當天提出申請，有效時間為當天中午12:00分至隔日上午11:59 分，逾期視為無效。</li>
+		                   		<li style="list-style:decimal;">連贏局數不用連續的牌局號碼，但必須是會員第一次投注起24小時內的連贏投注，若參加活動有任何退回點數或者登出情況，則連贏局數將重新計算。</li>
+   	 							<li style="list-style:decimal;">活動僅限於真人娛樂百家廳。每位會員每天僅限申請一次，計算週期為當日中午12:00至隔日上午11:59。</li>
+		                    </ul>
+							<BR>
+							<strong>注意事項：</strong>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">本活動僅計算有效押碼，無風險投注不算入有效押碼。</li>
+		                        <li style="list-style:decimal;" >無風險押碼包括（於百家樂同時押莊家及閒家，或輪盤、骰寶、運動競猜及其他等各式遊戲，同時押碼黑、紅，單、雙，大、小，比賽隊伍A、比賽隊伍B等）。</li>
+		                        <li style="list-style:decimal;">同一帳戶/家庭/電話號碼/儲值地點/銀行帳戶/相似或同一IP位置/共享電腦/網路環境，僅限申請一次。</li>
+		                        <li style="list-style:decimal;">為秉持會員公平公正之原則本娛樂平台有權對會員行為進行嚴格監控，若發生任何違背、欺騙或利用規則與條款進行非法獲利者，我們將保留無限期審核扣回點數及所產生優惠之權利。</li>
+		                        <li style="list-style:decimal;">本娛樂平台對本活動保有最終解釋權，有權在任何時間修改、暫停或取消優惠活動。</li>
+		                   		
+		                    </ul>
+		                    <if condition='$isLogin eq "true"'>
+		                    	<form method="post" action='__APP__/RebateEvent/formBaccaratWinning'>
+				                     <if condition='$eventEnabled eq "true"'>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center">
+					                    	<button type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">立即申請</button>
+					                    </div>
+				                     <else/>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center">
+					                    	<button disabled type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">立即申請</button>
+					                    	<p>{$eventErrMessage}</p>
+					                    </div>
+				                     </if>
+			                    </form>
+		                    </if>
+		                    
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	if("{$isMobile}" == "1"){
+		if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		}else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		}
+		
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

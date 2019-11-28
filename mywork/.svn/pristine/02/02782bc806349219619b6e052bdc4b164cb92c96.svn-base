@@ -1,0 +1,170 @@
+<?php
+class LoginRecordAction extends AgentAction {
+    protected $loginRecord = 10; //分頁筆數
+    //TODO: 登入紀錄 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+
+
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+
+        $CommonAgentLoginLog = D("CommonAgentLoginLog");
+
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        $data = array(
+            "startTime"=> strtotime($startTime),
+            "endTime"=> strtotime($endTime),
+            "agent_tree"=> $_SESSION["Agent"]["tree"],
+            "agent_account" => $memberAccount,
+
+        );
+
+        $return = $CommonAgentLoginLog->getTotalAgentLoginLogNumber($data, $err);
+
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_'. __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        $totalNumber = $return[0]['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->loginRecord); //總頁數
+
+        $data = array(
+            "startTime"=> strtotime($startTime),
+            "endTime"=> strtotime($endTime),
+            "agent_tree"=> $_SESSION["Agent"]["tree"],
+            "agent_account" => $memberAccount,
+            "page" => array(
+                "number" => $this->loginRecord,
+                "pageNumber" => $pageNumber,
+            ),
+        );
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS_ . '_' . __FUNCTION__ . '_02')));
+        }
+
+        $return = $CommonAgentLoginLog->getAgentLoginLogNumberData($data, $err);
+
+        //var_dump($return);exit();
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "agent_account"=>"agentAccount",
+            "sub_account"=>"subAccount",
+            "loginLog_status"=>"status",
+            "loginLog_errMessage"=>"errMessage",
+            "loginLog_createTime"=>"createTime",
+            "loginLog_ip"=>"ip",
+            "loginLog_os"=>"os",
+            "loginLog_url"=>"url"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'sub_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["agentAccount"] .= "->".$value[$key1];
+                        }
+                    case 'loginLog_status':
+                        $showStr = $CommonAgentLoginLog->getAgentLoginLogStatusStr($value[$key1]);
+                        break;
+                    case 'loginLog_errMessage':
+                        $exArray = explode(";",$value[$key1]);
+                        $showStr = $exArray[0];
+                        break;
+                    case 'loginLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'loginLog_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("showArray", $showArray);
+        $this->assign("memberAccount", $memberAccount);
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->display();
+    }
+    /*
+     * 搜索 會員帳號
+     */
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        $CommonAgent = D("CommonAgent");
+        $limit = 7;
+        $data = array(
+            "agent_account" => $request["query"],
+            "agent_tree" => $_SESSION["Agent"]["tree"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonAgent->searchAgentByAgentAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["agent_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

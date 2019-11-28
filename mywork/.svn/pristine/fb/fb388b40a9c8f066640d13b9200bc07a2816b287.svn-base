@@ -1,0 +1,823 @@
+<?php
+
+class GamePaModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  //protected $cfg_api_url = 'http://162.bb4444.net/gi/pa-iface';  //proxy
+  protected $cfg_base_url = 'https://api.ps3838.com/b2b';  //non-proxy
+  //protected $cfg_base_url = 'http://test.bb4444.net/gi/pa-iface';  //proxy
+  protected $cfg_agent_code = '2320101';
+  protected $cfg_agent_key = '8fcf6562-77b0-4354-8fd5-224f215925a4';
+  protected $cfg_secret_key = 'dw4XyxlC0e3jckTP';
+
+  const PA_DEFAULT_REQUEST_METHOD = 'POST';
+  const PA_CURL_CONNECTTIMEOUT_MS = 5000;
+  const PA_CURL_TIMEOUT_MS = 15000;
+  const PA_UTC_OFFSET = 8.0;
+  const PA_DATETIME_OFFSET = -4.0;
+  const PA_DEFAULT_LANG_ID = 'zh-tw';
+  const PA_MEMBER_STATUS_INACTIVE = 'INACTIVE';  //會員狀態:停用
+  const PA_MEMBER_STATUS_ACTIVE = 'ACTIVE';  //會員狀態:正常
+  const PA_MEMBER_STATUS_SUSPENDED = 'SUSPENDED';  //會員狀態:鎖定(不能下注)
+	const PA_REPORT_DATE_FORMAT = 'Y-m-d';  //日期格式
+	const PA_REPORT_DATETIME_FORMAT = 'Y-m-d H:i:s';  //日期時間格式
+
+  const PA_RESPONSE_SUCCESS_CODE = 0;
+  const PA_TRANS_SUCCESS_CODE = 0;
+  const PA_TRANS_FAILED_CODE = 324;
+  const PA_DEFAULT_CURRENCY_ID = 'TWD';
+  const PA_APP_ACCOUNT_PREFIX = 'CSY';
+  const PA_HASH_METHOD = 'md5';
+
+  //5.1 ERRORS TABLE 错误表
+  const PA_API_ERRORS = array(
+    103 => '您用戶的賬號已經被 <狀態>',
+    104 => '系統沒有這個用戶',
+    105 => '創建用戶失敗',
+    106 => '登錄失敗多次賬號被鎖',
+    107 => '代理系統裡沒有儲存key',
+    108 => '代理碼無效。請聯繫合作夥伴獲取代理碼',
+    109 => '會員無法創建在非直屬下級代理之下',
+    110 => '系統沒有這個代理',
+    111 => '登錄名在系統裡已存在',
+    112 => '登錄名無效',
+    113 => '客戶品牌不支持登陸',
+    114 => '如果用戶的賬號被公司關閉或暫停，不可以更改狀態',
+    115 => '用戶賬號在系統裡不存在',
+    305 => '用戶沒有權限創建key store',
+    306 => '無效的參數。你將有錯誤信息的消息。 ',
+    307 => '帳戶餘額在系統不存在。 ',
+    308 => '你的金額應該是一個正數',
+    309 => '你的餘額不足。 ',
+    310 => '你的餘額超過了信用額度',
+    311 => '金額值應該是小數點後兩位。 ',
+    403 => '這個品牌的代碼還沒有產生。 ',
+    405 => '你的錢包在系統不存在。 ',
+    406 => '你的錢包是不活躍',
+    407 => '產品無效。 ',
+    423 => '您的帳戶是<狀態>。請聯繫您的上線尋求幫助。 ',
+  );
+
+//5.3 BET TYPE 投注类型
+const ARR_PA_BET_TYPES = array(
+   1 => 'ML_1X2 1x2 標準盤',
+   2 => 'HDP Handicap 讓球盤',
+   3 => 'OU Over Under 總進球',
+   4 => 'HOME_TOTALS 主隊總得分',
+   5 => 'AWAY_TOTALS 客隊總得分',
+   6 => 'MIX_PARLAY 混合過關',
+   8 => 'MANUAL_PLAY',
+  97 => 'OE Odd Even 單雙',
+  99 => 'OUTRIGHT 優生冠軍',
+);
+
+  //5.4 ODDS FORMAT 赔率格式
+  const ARR_PA_OOD_FORMATS = array(
+    0 => 'AM 美式盤',
+    1 => 'EU 歐洲盤',
+    2 => 'HK 香港盤',
+    3 => 'ID 印尼盤',
+    4 => 'MY 馬來盤',
+  );
+
+  //5.6 PERIOD STATUS 期间状态
+  const ARR_PA_PERIOD_STATUSES = array(
+    0 => '全場',
+    1 => '上半場',
+  );
+
+  //5.7 SPORT 体育
+  const ARR_PA_SPORTS = array(
+    'soccer' => '足球',
+    'tennis' => '網球',
+    'basketball' => '籃球',
+    'football' => '橄欖球',
+    'baseball' => '棒球',
+    'golf' => '高爾夫球',
+    'hockey' => '冰球',
+    'volleyball' => '排球',
+    'rugby-league' => '橄欖球聯賽',
+    'mixed-martial-arts' => '混合武術',
+    'handball' => '手球',
+    'e-sports' => '電子競技',
+    'aussie-rules' => '澳洲規則',
+    'boxing' => '拳擊',
+    'rugby-union' => '橄欖球聯盟',
+    'snooker' => '斯諾克',
+    'cycling' => '自行車賽',
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 平博創出的會員ID (string)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'userCode' => $_user_name,
+    );
+
+    $url = $this->cfg_base_url . "/player/create/";
+    $result = $this->_sendRequest($url, $arrData);
+    if ($result!==false) {
+      if (isset($result['loginId'])) {
+        $argErr = null;
+        return $result['loginId'];
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code']);  //回應中必要的KEY不存在
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'loginId' => $_user_name,
+      //'userCode' => $argUserName,
+      'locale' => self::PA_DEFAULT_LANG_ID,  //zh-tw
+    );
+
+    $url = $this->cfg_base_url."/player/loginV2/";
+    $result = $this->_sendRequest($url, $arrData, 'GET');
+    if ($result!==false) {
+      if ( isset($result['loginUrl']) && isset($result['token']) ) {
+        $argErr = null;
+        return $result['loginUrl'];
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code']);  //鍵 loginUrl, token 未定義
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'userCode' => $_user_name,
+    );
+
+    $url = $this->cfg_base_url."/player/info/";
+    $result = $this->_sendRequest($url, $arrData, 'GET');
+
+    if ($result!==false) {
+      if ( isset($result['userCode']) && isset($result['availableBalance']) ) {
+        $argErr = null;
+        return $result['availableBalance'];
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code']);  //鍵userCode, availableBalance 未定義
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'userCode' => $_user_name,
+      'amount' => $_amount,
+    );
+
+    $url = $this->cfg_base_url."/player/withdraw/";
+    $result = $this->_sendRequest($url, $arrData, 'GET');
+    if ($result!==false) {
+      if ( isset($result['availableBalance']) && isset($result['amount']) ) {
+        $argErr = null;
+        return array(
+          'amount' => $result['amount'],
+          'balance' => $result['availableBalance'],
+        );
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code']);  //必需的KEY不存在: availableBalance, amount
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'userCode' => $_user_name,
+      'amount' => $_amount,
+    );
+
+    $url = $this->cfg_base_url."/player/deposit/";
+    $result = $this->_sendRequest($url, $arrData, 'GET');
+    if ($result!==false) {
+      if ( isset($result['availableBalance']) && isset($result['amount']) ) {
+        $argErr = null;
+        return array(
+          'amount' => $result['amount'],
+          'balance' => $result['availableBalance'],
+        );
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code']);  //必需的KEY不存在: availableBalance, amount
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['user_name'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['user_name'] 查詢的用戶名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'user_name' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+		//$beginDatetime = date(PAREPORT_DATETIME_FORMAT, strtotime($argBeginDatetime)-(60*60*PA_UTC_OFFSET)+(60*60*PA_DATETIME_OFFSET));  //轉為-4時區
+		//$endDatetime = date(PAREPORT_DATETIME_FORMAT, strtotime($argEndDatetime)-(60*60*PA_UTC_OFFSET)+(60*60*PA_DATETIME_OFFSET));  //轉為-4時區
+		$beginDatetime = date(self::PA_REPORT_DATETIME_FORMAT, strtotime($_begin_datetime));
+		$endDatetime = date(self::PA_REPORT_DATETIME_FORMAT, strtotime($_end_datetime));
+		$arrData = array(
+/*date
+1. WITHOUT date range:
+	a. System shall response all wagers from last 24 hours.
+	2. Specific date range:
+	a. If userCode1 = null, valid date range will be up to 24 hours.
+	b. If userCode1 != null, valid date range will be up to 168 hours (7 days).
+*/
+			'dateFrom' => $beginDatetime,  //optional.
+			'dateTo' => $endDatetime,  //optional. Rule: (dateTo - dateFrom) <= 24 hours
+			'settle' => -1, //optional. 1: settle; 0: unsettle; -1: all (both settle and unsettle) (Default: -1)
+			//'filterBy' => 'wager_date',  //optional. event_date, wager_date, settle_date (Default: wager_date)
+			'locale' => self::PA_DEFAULT_LANG_ID,  //optional.
+		);
+		if (isset($_user_name)&&strlen($_user_name)) {
+			$arrData['userCode'] = $_user_name;  //optional
+		}
+
+		$url = $this->cfg_base_url."/report/all-wagers";
+		$result = $this->_sendRequest($url, $arrData, 'GET');
+		if ($result !== false) {
+			return $result;  //see 注單明細 below for column definition
+		}
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+		return false;
+	}
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar)
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下2個key
+   * + bet_datetime      投注時間(GMT+8)
+   * + sb_html           有格式的子注單
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrPABetStatusesStr = array(
+      //'ACCEPTED' => '<span style="cxolor:#0B0;margin:1px;font-weight:bold;">接受</span>',
+      'PENDING' => '<span style="cxolor:#0B0;margin:1px;font-weight:bold;">未結算</span>',
+      'OPEN' => '<span style="xcolor:#0B0;margin:1px;font-weight:bold;">開始</span>',
+      'SETTLED' => '<span style="xcolor:#0B0;margin:1px;font-weight:bold;">已結算</span>',
+      'CANCELLED' => '<span style="xcolor:#0B0;margin:1px;font-weight:bold;">取消</span>',
+      'DELETED' => '<span style="xcolor:#0B0;margin:1px;font-weight:bold;">刪除</span>',
+    );
+
+    $arrBetResultStr = array(  //bet['status_note']: 注單狀態
+      'WON' => '<span style="color:#0a0;margin:1px;font-weight:bold;">贏</span>',
+      'WIN' => '<span style="color:#0a0;margin:1px;font-weight:bold;">贏</span>',
+      'LOSE' => '<span style="color:#c00;margin:1px;font-weight:bold;">輸</span>',
+      'PUSH' => '<span style="color:#333;text-shadow:0px 0px 2px gold;margin:1px;font-weight:bold;">PUSH</span>',
+      'DRAW' => '<span style="color:#00C;margin:1px;font-weight:bold;">平手</span>',
+      'ACCEPTED' => '<span style="color:#00C;margin:1px;font-weight:bold;">接受</span>',
+    );
+
+    $arrLegStatusStr = array(  //bet['status_note']: 注單狀態
+      'WON' => '<span style="background-color:#0a0;color:#fff;margin:1px;padding:3px;font-weight:bold;">贏</span>',
+      'WIN' => '<span style="background-color:#0a0;color:#fff;margin:1px;padding:3px;font-weight:bold;">贏</span>',
+      'LOSE' => '<span style="background-color:#c00;color:#fff;margin:1px;padding:3px;font-weight:bold;">輸</span>',
+      'PUSH' => '<span style="background-color:gold;color:#000;margin:1px;padding:3px;text-shadow:0px 0px 2px gold;margin:1px;font-weight:bold;">PUSH</span>',
+      'DRAW' => '<span style="background-color:#00C;color:#fff;margin:1px;padding:3px;font-weight:bold;">平手</span>',
+      'ACCEPTED' => '<span style="background-color:#00C;color:#fff;margin:1px;padding:3px;font-weight:bold;">接受</span>',
+    );
+
+    $arrBets = array();
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $bet['detail_bettingMoney'] = round(floatVal($bet['detail_bettingMoney']),3)+0;  //stake
+        $bet['detail_effective'] = round(floatVal($bet['detail_effective']),3)+0;  //turnover
+        $bet['detail_surplus'] = round(floatVal($bet['detail_surplus']),3)+0;  //winLoss
+        $wagerId = $bet['detail_id'];
+        $bet['sb_html'] = '';
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        $tempDt = explode(' ',$arrBetContents['wagerDateFm']);
+        $mbOdds = number_format($arrBetContents['odds'],3,'.',',');
+        //$bet['wagerDateFm'] = "{$tempDt[0]}<br/>{$tempDt[1]}";
+        $bet['bet_datetime'] = $arrBetContents['wagerDateFm'];
+        $oddFormatStr = self::ARR_PA_OOD_FORMATS[ $arrBetContents['oddsFormat'] ];
+        $betStatusStr = $arrPABetStatusesStr[ $arrBetContents['status'] ];
+        $resultStr = 'xxx';
+        if (strlen($resultStr)) {
+          $resultStr = $arrBetResultStr[ $arrBetContents['result'] ];  //win
+        }
+        //$bet['end'] = $arrEndStr[$bet['end']];
+        //Dbgr::preout($subbetHtml);
+        $arrBets[$wagerId]['odds'] = <<<END
+        {$mbOdds}<br/>
+        <span style="color:#BE4016;font-weight:bold;font-size:12px;">{$oddFormatStr}</span>
+END;
+        $arrBets[$wagerId]['status'] = <<<END
+        <div style="font-size:12px;">
+          <span style="color:#010383;">{$betStatusStr}</span><br/>
+          {$resultStr}
+        </div>
+END;
+
+        $arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+        $subbetIdx = 1;
+        foreach ($arrSubbets as $sbi=>$sb) {
+          //bgr::preout($sb);
+          //$mbWagerId     = $sb['wagerId'];
+          $sport         = $sb['sport'];
+          $betType       = $sb['betType'];
+          $betTypeStr    = self::ARR_PA_BET_TYPES[$betType];
+          $league        = $sb['league'];
+          $eventDateFm   = $sb['eventDateFm'];
+          $homeTeam      = $sb['homeTeam'];
+          $awayTeam      = $sb['awayTeam'];
+          $handicap      = $sb['handicap']+0;
+          $selection     = $sb['selection'];
+          $legStatus     = $sb['legStatus'];
+          $legStatusStr = '';
+          if (strlen($legStatus)) {
+            $legStatusStr  = $arrLegStatusStr[ $legStatus ];
+            $legStatusStr  = $legStatusStr;
+          }
+          $sbOdds        = number_format($sb['odds'],3,'.',',')+0;
+          $homePitcherName = $sb['homePitcherName'];
+          $homePitcherNameStr = '';
+          if (strlen($homePitcherName)) {
+            $homePitcherNameStr = "<div>[{$homePitcherName} 必須開始。]</div>";
+            $homePitcherNameStr  = '<div style="color:#00d;display:inline-block;">'.$homePitcherNameStr.'</div>';
+          }
+          $selectionStr  = $selection . ' <span style="color:#a00;">'.$handicap.'</span>';;
+          $selectionUpper = strtoupper(trim($selection));
+          if ($selectionUpper=='UNDER') {
+            $selectionStr = '小 <span style="color:#a00;">'.$handicap.'</span>';
+          } elseif ($selectionUpper=='OVER') {
+            $selectionStr = '大 <span style="color:#a00;">'.$handicap.'</span>';
+          }
+
+          //$mbTeamNo = $mb['team_no'];  //球種(籃球足球)編號
+          //$mbBallName = $mb['ball_name'];  //球種名稱(籃球足球)
+
+          $divBgColor = '#FDFDFD';
+
+          //押注對象
+
+          //賠率字串
+          /*
+          $arrMatter = explode(' ',$matter);
+          $maybeCompStr = $arrMatter[sizeof($arrMatter)-1];  //疑似為賠率的字串
+          echo "\$maybeCompStr={$maybeCompStr},\$compensate={$compensate}. ";
+          if (((float)$maybeCompStr)==((float)$compensate)) {  //最後一個字串是否跟賠率相同
+            $matter = str_replace($maybeCompStr,'',$matter);  //去除賠率字樣
+          } else {
+            echo "\$maybeCompStr={$maybeCompStr} <> \$compensate={$compensate} <br/>";
+          }
+          $compensate    = (float)round(floatVal($compensate),3);  //賠率變更樣式至小數下3位
+          */
+
+          $homeScoreStr = '';
+          $awayScoreStr = '';
+          //$winStr = '<span style="color:#A00;font-italic:italic;font-weight:bold;font-size:150%;">O</span>';
+          //$loseStr = '<span style="color:#0A0;font-italic:italic;font-weight:bold;font-size:150%;">X</span>';
+          $homeWinStr = '';
+          $awayWinStr = '';
+          $singleScoreStr = '';
+
+          //組合: 比賽隊伍名稱,比分,讓分
+          $teamsStr = '';
+          if (strlen($homeTeam)) {
+            if ($sport=='soccer') {  //足球的主隊在前
+              $teamsStr = "<div>{$homeScoreStr} <span style=\"color:#000;\">{$homeTeam} [主]</span> <span style=\"color:#888;\"><b>VS.</b></span> <span style=\"color:#000;\">{$awayTeam}</span> {$awayScoreStr} {$singleScoreStr}</div>";
+            } else {
+              $teamsStr = "<div>{$awayScoreStr} <span style=\"color:#000;\">{$awayTeam}</span> <span style=\"color:#888;\"><b>VS.</b></span> <span style=\"color:#000;\">{$homeTeam} [主]</span> {$homeScoreStr} {$singleScoreStr}</div>";
+            }
+          } else {
+            $teamsStr = "<div><span style=\"color:#000;\">{$awayTeam}</span> {$singleScoreStr}</div>";
+          }
+          //if ($home_score > $away_score) {$homeWinStr = $winStr;$awayWinStr = $loseStr;}
+          //elseif ($home_score < $away_score) {$awayWinStr = $winStr;$homeWinStr = $loseStr;}
+          $subbetIdxStr = "";
+          if ($subbetIdx >= 2) {
+            $subbetIdxStr = "({$subbetIdx})";
+          }
+
+          //子注單
+          $subbetHtml = <<<END
+            <div class="subbet_subdiv" style="background-color:{$divBgColor};border:1px solid #00A0FF;text-align:right;">
+              <span style="float:left;color:#00f;">{$sport}</span>
+              <div style="font-weight:bold;"> {$selectionStr} @ {$sbOdds} <span style="float:right;padding:2px;">{$legStatusStr}</span></div>
+              <div style="color:#0097A7;"><span style="float:left;">{$subbetIdxStr}</span></div>
+              {$teamsStr}{$homePitcherNameStr}
+              <div TITLE="betType = {$betType}">{$betTypeStr}</div>
+              <div style="border:#777;padding:2px;">{$league} @ {$eventDateFm}</div>
+            </div>
+END;
+          $bet['sb_html'] .= $subbetHtml;
+          ++$subbetIdx;
+        }  //for-each sbi
+        $arrBets[$wagerId] = $bet;
+      }  //for-each bi
+      return $arrBets;
+    } else {
+      return false;
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  /* send request */
+  protected function _sendRequest($argUrl,$argArrData,$argMethod=self::PA_DEFAULT_REQUEST_METHOD) {
+    $arrData = $argArrData;
+    $method = strtoupper($argMethod);
+    $userCode = $this->cfg_agent_code;
+    $apiToken = $this->_getApiToken();
+
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::PA_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::PA_CURL_TIMEOUT_MS,
+      //CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+      //CURLOPT_COOKIE => 'visid_incap_917491=b8eRtofERH+mR66qfrFkB/RhPFwAAAAAQUIPAAAAAAB5COIk98/pUueU5Y3uYQXt',
+      CURLOPT_HTTPHEADER => array(
+        //'Content-Type: application/json',
+        "userCode: {$userCode}",
+        "token: {$apiToken}",
+        "method: {$method}",
+      )
+    );
+    if ( $method == 'GET') {  //GET
+      $queryStr = http_build_query($arrData);
+      $url = "{$argUrl}?{$queryStr}";
+    } else {  //POST
+      $url = $argUrl;
+      if ($arrData !== null) {
+        $dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+        //var_dump($dataStrInJson);
+        $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStrInJson;
+      }
+    }
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+    
+    $arrCurlInfos = curl_getinfo($ch);
+    //$httpCode = $arrCurlInfos[];
+    //echo "curl_errno() = ", curl_errno($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+
+    $r= htmlspecialchars($result);
+
+    //echo "<hr/>arrCurlDatas = ";
+    //var_dump($arrCurlDatas);
+
+    //echo "<hr/>result = ";
+    //var_dump($r);
+
+    //echo "<hr/>arrCurlInfos = ";
+    //var_dump($arrCurlInfos);
+
+    //echo "<hr/>curlError = ";
+    //var_dump($this->curlError);
+
+    curl_close($ch);
+
+    //var_dump($url);
+    //var_dump($arrCurlDatas);
+    //var_dump($result);
+    //var_dump($arrCurlInfos);
+    //var_dump($this->curlError);
+
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+      //var_dump($resultInAssoc);
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //echo "sendRequest::curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+  //AES 解密
+  protected function _decryptAES($encryptedData, $key) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    //$iv = SP_ENCRYPTION_IV;
+    $iv = 'RandomInitVector';
+    $initializationVectorSize = mcrypt_get_iv_size($cipher, $mode);
+
+    $data =  mcrypt_decrypt(
+      $cipher,
+      $key,
+      base64_decode($encryptedData),
+      $mode,
+      $iv
+    );
+    $pad = ord($data[strlen($data) - 1]);
+    return substr($data, 0, -$pad);
+  }
+
+  //AES 加密
+  protected function _encryptAES($data, $key) {
+/*
+  //PA api example of AES enc
+
+  $size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+  $td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
+  $iv = "RandomInitVector";
+  mcrypt_generic_init($td, $this->key, $iv);
+  $result = mcrypt_generic($td, $this->padding($data, $size));
+  mcrypt_generic_deinit($td);
+  mcrypt_module_close($td);
+  return base64_encode($result);
+ */
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    //$iv = SP_ENCRYPTION_IV;
+    $iv = 'RandomInitVector';
+    $blockSize = mcrypt_get_block_size($cipher, $mode);
+    $pad = $blockSize - (strlen($data) % $blockSize);
+
+    return base64_encode(mcrypt_encrypt(
+      $cipher,
+      $key,
+      $data . str_repeat(chr($pad), $pad),
+      $mode,
+      $iv
+    ));
+  }
+
+  /* produce error */
+  protected function _produceError($argErrCode,$argErrMsg=null) {
+    if ($argErrMsg) {
+      return array(
+        'errorCode' => $argErrCode,
+        'errorMsg' => $argErrMsg,
+      );
+    } else {
+      if (array_key_exists($argErrCode, self::PA_API_ERRORS)) {
+        return self::PA_API_ERRORS[$argErrCode] . ' (code '.$argErrCode.')';
+      } else {
+        return '錯誤說明未定義 (code '.$argErrCode.')';
+      }
+    }
+  }
+
+  /* get token for making api requests */
+  protected function _getApiToken() {
+    $microtime = microtime();  //ex. 0.24930700 1533209404
+    //var_dump($microtime);
+    list($usec, $sec) = explode(" ", $microtime);
+    $usec = substr($usec, 2, 3);
+
+    $unixTimestampWithMs = "{$sec}{$usec}";
+    $agentCode = $this->cfg_agent_code;
+    $agentKey = $this->cfg_agent_key;
+    $secretKey = $this->cfg_secret_key;
+
+    $hashToken = md5( "{$agentCode}{$unixTimestampWithMs}{$agentKey}" );
+    $tokenPayLoad = "{$agentCode}|{$unixTimestampWithMs}|{$hashToken}";
+    $tokenForApi = $this->_encryptAES($tokenPayLoad, $secretKey);
+    return $tokenForApi;
+  }
+
+  //加密用
+  /*protected function _padding($text, $blocksize) {
+    $pad = $blocksize - (strlen($text) % $blocksize);
+    return $text . str_repeat(chr($pad), $pad);
+  }*/
+
+}

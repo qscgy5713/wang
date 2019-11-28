@@ -1,0 +1,188 @@
+<?php
+class MemberPointAction extends AdminAction {
+    //TODO:9 會員點數
+    public function index(){
+        $request = $this->getRequest();
+        if(!isset($request['memberAccount']) || empty($request['memberAccount'])){
+            $searchArray = array();
+            $searchJson = json_encode($searchArray);
+            $this->assign("searchJson",$searchJson);
+            $this->display();
+            exit();
+        }
+        $this->assign("MemberPointBool",true);
+        $this->assign("memberAccount",$request['memberAccount']);
+        
+        //讀取電子錢包金額 開始
+        $CommonMember = D("CommonMember");
+        $data = array(
+            "member_account" => $request['memberAccount']
+        );
+        $return = $CommonMember->getMemberWalletByAccount($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        if(empty($return)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $memberId = $return['member_id'];//會員ID
+        $walletMoney = $return['wallet_money'];//電子錢包
+        //讀取電子錢包金額 結束
+        
+        $searchArray = array();//使用js 讀取會員點數的陣列
+        $gameArray = $this->getMemberInfo($searchArray);//讀取 會員各館 資料
+        var_dump($gameArray);
+        
+        $searchJson = json_encode($searchArray);
+        //var_dump($searchJson);
+        $_SESSION["MemberPoint"]["memberId"] = $memberId;
+        
+        $this->assign("walletMoney",$walletMoney);
+        $this->assign("memberAccount",$request['memberAccount']);
+        $this->assign("searchJson",$searchJson);
+        $this->assign("gameArray",$gameArray);
+        
+        $this->display();
+    }
+    //讀取 會員各館 資料
+    protected function getMemberInfo(&$searchArray){
+        
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameNameData();
+        //var_dump($return);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取菜單失敗，請重新登入
+        }
+        $gameArray = array();
+        $i = 0;
+        foreach ($return as $key => $value){
+            if(count($gameArray[$value['gameClass_showName']]) == 0){
+                $i = 0;
+            }
+            $data = array(
+                "gameCode"=>$value['game_code'],
+                "gameName"=>$value['game_name'],
+                "gameEnabled"=>$value['game_enabled'],
+                "accountBool" => false,
+                "gameAccount"=>""
+            );
+            $gameArray[$value['gameClass_showName']][ucfirst($value['game_code'])] = $data;
+        }
+        //var_dump($gameArray);//exit();
+        
+        foreach ($gameArray as $gameClass => $classArray){
+            foreach ($classArray as $gameCode => $gameBool){
+                if($gameBool['gameEnabled'] == 0){
+                    continue;
+                }
+                if($gameClass == "電子遊戲"){
+                    continue;
+                }
+                var_dump($gameCode);
+                array_push($searchArray,$gameCode);
+                /*
+                //讀取 會員資料
+                $MemberInfo = D("Game".$gameCode."MemberInfo");
+                $data = array(
+                    "member_id" => $_SESSION["MemberPoint"]["memberId"]
+                );
+                $return = $MemberInfo->getMemberInfoDataByMemberId($data,$err);
+                //var_dump($return);
+                if($return === false){
+                    //資料庫錯誤
+                    return false;
+                }
+                if(!empty($return["info_id"])){
+                    array_push($searchArray,$gameCode);
+                    $gameArray[$gameClass][$gameCode]["accountBool"] = true;
+                    $gameArray[$gameClass][$gameCode]["gameAccount"] = $return["game_account"];
+                }*/
+            }
+        }
+        var_dump($searchArray);
+        var_dump($_SESSION["MemberPoint"]["memberId"]);exit();
+        $CommonMember = D("CommonMember");
+        $data = array(
+            'member_id' => $_SESSION["MemberPoint"]["memberId"],
+            'searchArray' => $searchArray
+        );
+        $return = $CommonMember->getMemberAllGameAccount($data,$err);
+        
+        exit();
+        var_dump($gameArray);//exit();
+        return $gameArray;
+    }
+    
+    /*
+     * 取得會員點數
+     */
+    public function ajaxGetMemberPoint(){
+        $request = $this->getRequest();
+        $data = array(
+            "member_id" => $_SESSION["MemberPoint"]["memberId"],
+            "game_name" => $request['gameCode']
+        );
+        $return = $this->getMemberBalance($data,$err);
+        if($return === false){
+            echo 'false;'.$request['gameCode']."->".$err;
+            return;
+        }
+        echo intval($return);
+    }
+    /*
+     * 重製 遊戲帳號
+     */
+    public function ajaxRemakeMemberGameAccount(){
+        $request = $this->getRequest();
+        $data = array(
+            "member_id" => $_SESSION["MemberPoint"]["memberId"],
+            "game_name" => $request['gameCode']
+        );
+        $return = $this->remakeMemberGameAccount($data,$err);
+        if($return === false){
+            echo 'false;'.$request['gameCode']."->".$err;
+            return;
+        }
+        echo '遊戲帳號 重製 完成，請會員重新進入遊戲。';
+    }
+    
+    /*
+     * 開通 遊戲帳號
+     */
+    public function ajaxOpenMemberGameAccount(){
+        $request = $this->getRequest();
+        $data = array(
+            "member_id" => $_SESSION["MemberPoint"]["memberId"],
+            "game_name" => $request['gameCode']
+        );
+        $return = $this->createMember($data,$err);
+        if($return === false){
+            echo 'false;'.$request['gameCode']."->".$err;
+            return;
+        }
+        echo '遊戲帳號 開通 完成，請會員重新進入遊戲。;'.$return['game_account'];
+    }
+    
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        
+        $CommonMember = D("CommonMember");
+        $limit = 7;
+        $data = array(
+            "member_acount" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

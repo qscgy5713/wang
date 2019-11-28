@@ -1,0 +1,315 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+		<button id="add_btn" class="btn btn-info m-r-5 m-b-10" type="button">新增跑馬燈內容</button>
+
+        <div class="modal fade" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 新增跑馬燈內容</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/MarqueeManage/formAddMarquee'>
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">隸屬 :</label>
+								<div class="col-md-8 col-sm-8">
+									<select class="form-control" name="addBelong">
+										<option value="1">前台</option>
+									　       <option value="2">代理</option>
+									　       <option value="3">後台</option>
+									</select>
+								</div>
+							 </div>
+
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">跑馬燈內容 :</label>
+								<div class="col-md-8 col-sm-8">
+									<textarea class="form-control" type="text" name="addText"></textarea>
+								</div>
+							 </div>
+
+						</div>
+						<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+        <div class="row">
+	        	<div class="col-lg-12 ui-sortable">
+					<ul class="nav nav-tabs nav-tabs-inverse">
+						<VOLIST name="showArray" id="vo">
+							<li class="nav-item"><a id="{$key}" href="#default-tab-{$key}" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">{$key}</span></a></li>
+						</VOLIST>
+					</ul>
+					<div class="tab-content">
+					  <VOLIST name="showArray" id="vo">
+						<div class="tab-pane fade" id="default-tab-{$key}">
+							<div class="table-responsive">
+								<table id="table1" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+											<th>隸屬</th>
+											<th>排序</th>
+											<th>開關</th>
+											<th>內文</th>
+											<th>建立時間</th>
+											<th>修改時間</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="vo" id="vo1">
+				                        	<tr>
+					                        	<td>{$key+1}</td>
+												<td>{$vo1.belong}</td>
+												<td>
+													<if condition="$vo1.belong eq '前台'">
+														<if condition="$vo1.order gt 1">
+															<form class="div-style" id="sortup{$vo1.id}" method="post" action="__APP__/MarqueeManage/formSortAgentPageClass">
+																<input type="hidden" value="upSort" name="className">
+																<input type="hidden" value="{$vo1.id}" name="sortId">
+																<input type="hidden" value="{$vo1.belong}" name="marqueeBelong">
+																<input type="hidden" value="{$vo1.order}" name="orderSort">
+																<a onclick="submit('sortup{$vo1.id}')" href="#">
+																<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon"></i></a>
+															</form>
+														<else/>
+															<form class="div-style">
+																<a href="#">
+																	<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon sort-icon-hide"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.belong eq '代理'">
+														<if condition="$vo1.order gt 1">
+															<form class="div-style" id="sortupagent{$vo1.id}" method="post" action="__APP__/MarqueeManage/formSortAgentPageClass">
+																<input type="hidden" value="upSort" name="className">
+																<input type="hidden" value="{$vo1.id}" name="sortId">
+																<input type="hidden" value="{$vo1.belong}" name="marqueeBelong">
+																<input type="hidden" value="{$vo1.order}" name="orderSort">
+																<a onclick="submit('sortupagent{$vo1.id}')" href="#">
+																<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon"></i></a>
+															</form>
+														<else/>
+															<form class="div-style">
+																<a href="#">
+																	<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon sort-icon-hide"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.belong eq '後台'">
+														<if condition="$vo1.order gt 1">
+															<form class="div-style" id="sortupback{$vo1.id}" method="post" action="__APP__/MarqueeManage/formSortAgentPageClass">
+																<input type="hidden" value="upSort" name="className">
+																<input type="hidden" value="{$vo1.id}" name="sortId">
+																<input type="hidden" value="{$vo1.belong}" name="marqueeBelong">
+																<input type="hidden" value="{$vo1.order}" name="orderSort">
+																<a onclick="submit('sortupback{$vo1.id}')" href="#">
+																<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon"></i></a>
+															</form>
+														<else/>
+															<form class="div-style">
+																<a href="#">
+																	<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon sort-icon-hide"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+							                        <span class="f-s-17">{$vo1.order}</span>
+													<if condition="$vo1.belong eq '前台'">
+														<if condition="$vo1.order lt $showCount['前台']">
+							                                <form class="div-style" id="sortdownfront{$vo1.id}" method="post" action="__APP__/MarqueeManage/formSortAgentPageClass">
+							                                	<input type="hidden" value="downSort" name="className">
+							                                	<input type="hidden" value="{$vo1.id}" name="sortId">
+																<input type="hidden" value="{$vo1.belong}" name="marqueeBelong">
+							                                	<input type="hidden" value="{$vo1.order}" name="orderSort">
+							                                	<a onclick="submit('sortdownfront{$vo1.id}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i></a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.belong eq '代理'">
+														<if condition="$vo1.order lt $showCount['代理']">
+							                                <form class="div-style" id="sortdownagent{$vo1.id}" method="post" action="__APP__/MarqueeManage/formSortAgentPageClass">
+							                                	<input type="hidden" value="downSort" name="className">
+							                                	<input type="hidden" value="{$vo1.id}" name="sortId">
+																<input type="hidden" value="{$vo1.belong}" name="marqueeBelong">
+							                                	<input type="hidden" value="{$vo1.order}" name="orderSort">
+							                                	<a onclick="submit('sortdownagent{$vo1.id}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i></a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.belong eq '後台'">
+														<if condition="$vo1.order lt $showCount['後台']">
+							                                <form class="div-style" id="sortdownback{$vo1.id}" method="post" action="__APP__/MarqueeManage/formSortAgentPageClass">
+							                                	<input type="hidden" value="downSort" name="className">
+							                                	<input type="hidden" value="{$vo1.id}" name="sortId">
+																<input type="hidden" value="{$vo1.belong}" name="marqueeBelong">
+							                                	<input type="hidden" value="{$vo1.order}" name="orderSort">
+							                                	<a onclick="submit('sortdownback{$vo1.id}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i></a>
+															</form>
+														</if>
+													</if>
+												</td>
+												<td id='{$vo1.id}enabled'>{$vo1.enabled}</td>
+												<td style="width: 38%;">{$vo1.text}</td>
+												<td>{$vo1.createTime}</td>
+												<td>{$vo1.modifyTime}</td>
+												<td>
+													<a onclick="openmodal('{$key+1}')"><i class="fas fa-wrench fa-fw icon-size"></i></a>
+													<if condition='$vo1.enabled eq "啟用中"'>
+														<form id="formInquireTostop{$vo1.id}" class="div-style form-vertical-align" method="post" action='__APP__/MarqueeManage/formStopMarquee'>
+															<input type="hidden" value="{$vo1.id}" name="stopId" >
+															<div class="switcher">
+															  <input type="checkbox" name="switcher_checkbox_{$vo1.id}" id="switcher_checkbox_{$vo1.id}" checked>
+															  <label for="switcher_checkbox_{$vo1.id}" id="{$vo1.id}_checkbox" onclick="submitAjax('formInquireTostop','{$vo1.id}','stopId')" class="switchbtn"></label>
+															</div>
+						                                </form>
+													<else/>
+														<form id="formInquireTostart{$vo1.id}" class="div-style form-vertical-align" method="post" action='__APP__/MarqueeManage/formStartMarquee'>
+						                                	<input type="hidden" value="{$vo1.id}" name="startId">
+						                                	<div class="switcher">
+															  <input type="checkbox" name="switcher_checkbox_{$vo1.id}" id="switcher_checkbox_{$vo1.id}">
+															  <label for="switcher_checkbox_{$vo1.id}" id="{$vo1.id}_checkbox" onclick="submitAjax('formInquireTostart','{$vo1.id}','startId')" class="switchbtn"></label>
+															</div>
+						                                </form>
+													</if>
+					                               <form id="delform{$vo1.id}" class="div-style" method="post" action='__APP__/MarqueeManage/formDelMarquee'>
+					                                	<input type="hidden" value="{$vo1.id}" name="delId">
+					                                	<a onclick="submit('delform{$vo1.id}')"><i class="fas fa-trash fa-fw icon-size"></i></a>
+					                               </form>
+					                                <div class="modal fade" id="{$key+1}" style="display: none;">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<h4 class="modal-title">修改跑馬燈資料</h4>
+																	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+																</div>
+
+																<form method="post" action='__APP__/MarqueeManage/formSetMarquee'>
+																	<input type="hidden" value="{$vo1.id}" name="setId">
+																	<div class="modal-body">
+																		<div class="form-group row m-b-15">
+																			<label class="col-md-4 col-sm-4 col-form-label">隸屬 :</label>
+																			<div class="col-md-8 col-sm-8">
+																				<select class="form-control" name="setBelong">
+																					<if condition="$vo1.belong eq 前台">
+																						<option value="1" selected>前台</option>
+																					<else />
+																						<option value="1">前台</option>
+																					</if>
+																					<if condition="$vo1.belong eq 代理">
+																						<option value="2" selected>代理</option>
+																					<else />
+																						<option value="2">代理</option>
+																					</if>
+																					<if condition="$vo1.belong eq 後台">
+																						<option value="3" selected>後台</option>
+																					<else />
+																						<option value="3">後台</option>
+																					</if>
+																				</select>
+																			</div>
+																		 </div>
+
+																		 <div class="form-group row m-b-15">
+																			<label class="col-md-4 col-sm-4 col-form-label">內文 :</label>
+																			<div class="col-md-8 col-sm-8">
+																				<textarea class="form-control" name="setText" rows="3">{$vo1.text}</textarea>
+																			</div>
+																		 </div>
+																	</div>
+																	<div class="modal-footer">
+																		<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+																		<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認修改</button>
+																	</div>
+																</form>
+															</div>
+														</div>
+													</div>
+				                                </td>
+											</tr>
+				                        </VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</VOLIST>
+				</div>
+			</div>
+        </div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+function openmodal(modal_id){
+	//alert(id);
+	$('#'+modal_id).modal('show');
+}
+
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+
+	$("#前台").addClass( "active show" );
+	$("#default-tab-前台").addClass( "active show" );
+
+});
+function submit(formId){
+	 $("#"+formId).submit();
+}
+function submitAjax(mod_id,vo_id,mode_id){
+	if(mod_id == 'formInquireTostop'){
+		$("#switcher_checkbox_"+vo_id).attr("disabled",true);
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{stopId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+     			$("#"+vo_id+"enabled").html('停用中');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+     	$("#"+vo_id+"_checkbox").attr('onclick','submitAjax("formInquireTostart","'+vo_id+'","startId")');
+		$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+	} else if(mod_id == 'formInquireTostart'){
+ 		$("#switcher_checkbox_"+vo_id).attr("disabled",true);
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{startId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+				$("#"+vo_id+"enabled").html('啟用中');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+     	$("#"+vo_id+"_checkbox").attr('onclick','submitAjax("formInquireTostop","'+vo_id+'","stopId")');
+		$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+	}
+}
+</script>

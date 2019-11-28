@@ -1,0 +1,175 @@
+<?php
+class LoginRecordAction extends AdminAction {
+    //TODO: 登入紀錄 首頁
+    public function index(){
+        $request = $this->getRequest();
+        
+        $selectClass = 'Admin';
+        if(isset($request['selectClass'])){
+            $selectClass = $request['selectClass'];
+        }
+        $this->assign("selectClass",$selectClass);//單狀態
+        
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+        
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        
+        
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        
+        switch ($selectClass){
+            case 'Member':
+                $CommonMemberLoginLog = D("CommonMemberLoginLog");
+                $data = array(
+                    "startTime"=>strtotime($startTime),
+                    "endTime"=>strtotime($endTime)
+                );
+                $return = $CommonMemberLoginLog->getMemberLoginLogData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'Agent':
+                $CommonAgentLoginLog = D("CommonAgentLoginLog");
+                $data = array(
+                    "startTime"=>strtotime($startTime),
+                    "endTime"=>strtotime($endTime),
+                    "agent_tree"=>'1,'
+                );
+                $return = $CommonAgentLoginLog->getAgentLoginLogData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'Admin':
+                $InternalAdminLoginLog = D("InternalAdminLoginLog");
+                $data = array(
+                    "startTime"=>strtotime($startTime),
+                    "endTime"=>strtotime($endTime)
+                );
+                $return = $InternalAdminLoginLog->getAdminLoginLogData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'all':
+                $return = array();
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                break;
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "member_account"=>"memberAccount",
+            "admin_account"=>"adminAccount",
+            "agent_account"=>"agentAccount",
+            "sub_account"=>"subAccount",
+            "loginLog_status"=>"status",
+            "loginLog_errMessage"=>"errMessage",
+            "loginLog_createTime"=>"createTime",
+            "loginLog_ip"=>"ip",
+            "loginLog_os"=>"os",
+            "loginLog_url"=>"url"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] = $value[$key1];
+                        }
+                        break;
+                    case 'admin_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] = $value[$key1];
+                        }
+                        break;
+                    case 'agent_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] = $value[$key1];
+                        }
+                        break;
+                    case 'sub_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] .= "->".$value[$key1];
+                        }
+                        break;
+                    case 'loginLog_status':
+                        switch ($selectClass){
+                            case 'Member':
+                                break;
+                            case 'Agent':
+                                $showStr = $CommonAgentLoginLog->getAgentLoginLogStatusStr($value[$key1]);
+                                break;
+                            case 'Admin':
+                                $showStr = $InternalAdminLoginLog->getAdminLoginLogStatusStr($value[$key1]);
+                                break;
+                            case 'all':
+                                $return = array();
+                                break;
+                            default:
+                                $showStr = $value[$key1];
+                                break;
+                        }
+                        break;
+                    case 'loginLog_errMessage':
+                        $exArray = explode(";",$value[$key1]);
+                        $showStr = $exArray[0];
+                        break;
+                    case 'loginLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'loginLog_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);exit();
+        $this->assign("showArray",$showArray);
+        $this->display();
+    }
+}

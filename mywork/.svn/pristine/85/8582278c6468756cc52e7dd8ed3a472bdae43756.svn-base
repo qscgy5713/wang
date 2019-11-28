@@ -1,0 +1,46 @@
+<?php
+class KotsmsLogModel extends AdminModel {
+    protected $tableName = "kotsms_log";
+    protected $tableId = "log_id";
+    
+    
+    /*
+     * 取得 註冊驗證碼 資料
+     */
+    public function getRegisteredVerificationCodeData($data,&$err = ""){
+        if(empty($data['registPhone']) && $data['registPhone'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無輸入電話
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `log_phone` = '{$data['registPhone']}'
+                AND `main_code` = 'registered'
+                ORDER BY `log_createTime` DESC
+                LIMIT 1";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//資料庫錯誤
+            return false;
+        }
+        return $return;
+    }
+    
+    /*
+     * 刪除 資料
+     */
+    public function delAgentOnlineDataById($data,&$err=""){
+        if(empty($data["agent_id"]) && $data["agent_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["agent_identity"]) && $data["agent_identity"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `agent_id` = '{$data['agent_id']}'
+                    AND `agent_identity` = '{$data['agent_identity']}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+}

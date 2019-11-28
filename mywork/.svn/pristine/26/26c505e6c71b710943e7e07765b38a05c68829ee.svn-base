@@ -1,0 +1,104 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">{$Think.lang.DragonDragonStorePlusPage1}</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>
+				</header>
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30"><!-- DEFAULT -->
+							<if condition='$isLogin eq "true"'>
+		                    	<form method="post" action='__APP__/RebateEvent/formDragonStorePlus'>
+				                     <if condition='$eventEnabled eq "true"'>
+				                     	<div class="col-lg-2 col-md-2 col-sm-2 m-auto text-center">
+					                    	<button type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">{$Think.lang.DragonDragonStorePlusPage2}</button>
+					                    </div>
+				                     <else/>
+				                     	<div class="col-lg-3 col-md-3 col-sm-3 m-auto text-center">
+					                    	<button disabled type="submit" style="height: 61px;" class="btn btn-secondary btn-shadow-1 RebateEvent-btn">{$Think.lang.DragonStorePlusPage2}</button>
+					                    	<p>{$eventErrMessage}</p>
+					                    </div>
+				                     </if>
+			                    </form>
+		                    </if>
+							<strong><span  class="text-warning">{$Think.lang.DragonStorePlusPage3}</span>{$Think.lang.DragonStorePlusPage4}</strong>
+							<BR><BR>
+							<strong><span  class="text-warning">{$Think.lang.DragonStorePlusPage5}</span>
+							{$Think.lang.DragonStorePlusPage6}</strong>
+							<BR><BR>							
+							<strong><span  class="text-warning">{$Think.lang.DragonStorePlusPage7}</span>
+							{$Think.lang.DragonStorePlusPage8}<span  class="text-red">{$Think.lang.DragonStorePlusPage9}</span><span>{$Think.lang.DragonStorePlusPage10}</span>
+							<span  class="text-red">{$Think.lang.DragonStorePlusPage11}</span></strong>
+							<strong>{$Think.lang.DragonStorePlusPage12}</strong><BR>
+							<strong class="text-red">{$Think.lang.DragonStorePlusPage13}</strong><BR><BR>
+							<strong>{$Think.lang.DragonStorePlusPage14}</strong><BR>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">{$Think.lang.DragonStorePlusPage15}
+		                        	<BR>{$Think.lang.DragonStorePlusPage16}
+		                        </li>
+		                        <BR>
+		                        <li style="list-style:decimal;" >{$Think.lang.DragonStorePlusPage17}
+		                        	<BR>{$Think.lang.DragonStorePlusPage18}
+		                        	<BR><BR>
+		                        <li style="list-style:decimal;" >{$Think.lang.DragonStorePlusPage19}
+		                        	<BR>{$Think.lang.DragonStorePlusPage20}
+		                        	<BR>
+		                        	{$Think.lang.DragonStorePlusPage21}
+		                        	<BR>
+		                        	{$Think.lang.DragonStorePlusPage22}
+		                        	<BR><BR>{$Think.lang.DragonStorePlusPage23}
+		                        	<BR>{$Think.lang.DragonStorePlusPage24}<BR>
+		                        	{$Think.lang.DragonStorePlusPage25}<BR><BR>
+		                        	{$Think.lang.DragonStorePlusPage26}
+		                        	<BR>
+		                        </li>
+		                        <BR>
+		                        <span class="text-warning">{$Think.lang.DragonStorePlusPage27}</span>
+		                    </ul>
+							<strong class="text-red">{$Think.lang.DragonStorePlusPage28}</strong>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">{$Think.lang.DragonStorePlusPage29}</li><BR>
+		                        <li style="list-style:decimal;" >{$Think.lang.DragonStorePlusPage30}</li><BR>
+		                        <li style="list-style:decimal;">{$Think.lang.DragonStorePlusPage31}</li><BR>
+		                        <li style="list-style:decimal;">{$Think.lang.DragonStorePlusPage32}</li>
+		                    </ul>
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		}else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		}
+
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

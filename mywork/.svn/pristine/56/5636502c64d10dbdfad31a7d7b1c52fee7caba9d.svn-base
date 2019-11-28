@@ -1,0 +1,203 @@
+<include file="Common:header" />
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+    <include file="Common:menu" />
+    <include file="Common:menu2" />
+    <div id="content" class="content">
+        <div class="row">
+            <div class="col-lg-12 ui-sortable">
+                <!-- begin panel -->
+                <div class="panel panel-inverse">
+                    <div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+                        <div class="panel-heading-btn">
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+                        </div>
+                        <h4 class="panel-title">活動管理</h4>
+                    </div>
+                    <div class="panel-body">
+                        <!-- begin table-responsive -->
+                        <div class="table-responsive">
+                            <table class="table table-striped m-b-0">
+                                <thead>
+                                    <tr>
+                                        <th>序號</th>
+                                        <th>活動名稱</th>
+                                        <th>開關</th>
+                                        <th>活動開始時間</th>
+                                        <th>活動結束時間</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <VOLIST name="showArray" id="vo">
+                                        <tr>
+                                            <td>{$i}</td>
+                                            <td>{$vo.eventName}</td>
+                                            <td id="{$vo.eventId}eventEnable">{$vo['enabled']? '啟用中':'停用中' }</td>
+                                            <td>{$vo.eventStartTime}</td>
+                                            <td>{$vo.eventEndTime}</td>
+                                            <td>
+                                                <a onclick="openmodal('setModal','{$vo.eventId}','{$vo.eventName}','{$vo.eventStartTime}','{$vo.eventEndTime}')"><i class="fas fa-wrench fa-fw icon-size"></i>
+                                                </a>
+                                                <if condition="$vo.enabled eq '1'">
+                                                    <form id="Tostop{$vo.eventId}" method="post" action="" class="div-style form-vertical-align">
+                                                        <input type="hidden" value="{$vo.eventId}" name="setEventId">
+                                                        <input type="hidden" value="{$vo.enabled}" name="setEnabled">
+                                                        <div class="switcher">
+                                                            <input type="checkbox" id="switcher_checkbox_{$vo.eventId}" checked onclick="submitAjax('formInquireTostop','{$vo.eventId}','stopId')">
+                                                            <label for="switcher_checkbox_{$vo.eventId}" class="switchbtn"></label>
+                                                        </div>
+                                                    </form>
+                                                    <else />
+                                                    <form id="Tostart{$vo.eventId}" method="post" action="" class="div-style form-vertical-align">
+                                                        <input type="hidden" value="{$vo.eventId}" name="setEventId">
+                                                        <input type="hidden" value="{$vo.enabled}" name="setEnabled">
+                                                        <div class="switcher">
+                                                            <input type="checkbox" id="switcher_checkbox_{$vo.eventId}" onclick="submitAjax('formInquireTostart','{$vo.eventId}','startId')">
+                                                            <label for="switcher_checkbox_{$vo.eventId}" class="switchbtn"></label>
+                                                        </div>
+                                                    </form>
+                                                </if>
+                                            </td>
+                                        </tr>
+                                    </VOLIST>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- end panel -->
+            </div>
+        </div>
+        <div class="modal fade" id="setModal" style="display: none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="setModalTitle"></h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    </div>
+                    <form method="post" action='__APP__/ActivityManagement/formSetStarToEnd'>
+                        <div class="modal-body">
+                            <input type="hidden" value="" name="setEventId" id="setEventId">
+                            <div class="form-group row m-b-15" id="titleDiv">
+                                <label class="col-md-4 col-sm-4 col-form-label">修改活動名稱</label>
+                                <div class="col-md-8 col-sm-8">
+                                    <input class="form-control" type="text" value="" name="setEventName" id="setEventName">
+                                </div>
+                            </div>
+                            <div class="form-group row m-b-15" id="titleDiv">
+                                <label class="col-md-4 col-sm-4 col-form-label">修改活動開始時間</label>
+                                <div class="col-md-8 col-sm-8">
+                                    <input class="form-control" type="text" value="" name="setStartTime" id="setStartTime">
+                                    <div class="modal-footer">
+                                        <span class="btn btn-info f-s-15" name="cleanStart" id="cleanStart">清空</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row m-b-15" id="titleDiv">
+                                <label class="col-md-4 col-sm-4 col-form-label">修改活動結束時間</label>
+                                <div class="col-md-8 col-sm-8">
+                                    <input class="form-control" type="text" value="" name="setEndTime" id="setEndTime">
+                                    <div class="modal-footer">
+                                        <span class="btn btn-info f-s-15" name="cleanEnd" id="cleanEnd">清空</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" id="okbtn" name="okbtn" class="btn btn-info f-s-15">確認修改</button>
+                            <button type="button" id="closebtn" class="btn btn-info f-s-15" data-dismiss="modal" style="display:none;">關閉</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<include file="Common:footer" />
+<script>
+$(document).ready(function() {
+    $("#add_btn").click(function() {
+        $('#modal-dialog').modal('show');
+    });
+    $("#setStartTime").datetimepicker({
+        dateFormat: "yy-mm-dd",
+        timeFormat: "HH:mm:ss",
+        maxDate: "+1y",
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function(selectedDate) {
+            $("#setEndTime").datepicker("option", "minDate", selectedDate);
+        }
+    });
+
+    $("#setEndTime").datetimepicker({
+        dateFormat: "yy-mm-dd",
+        timeFormat: "HH:mm:ss",
+        maxDate: "+1y",
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function(selectedDate) {
+            $("#setEndTime").datepicker("option", "minDate", selectedDate);
+        }
+    });
+    $("#cleanEnd").click(function(){
+        $("#setEndTime").val("");
+    });
+    $("#cleanStart").click(function(){
+        $("#setStartTime").val("");
+    });
+
+});
+
+function openmodal(modal_id,vo_id,vo_name,vo_start,vo_end) {
+    $('#' + modal_id).modal('show');
+    $("#setEventId").val(vo_id);
+    $("#setEventName").val(vo_name);
+    $("#setStartTime").val(vo_start);
+    $("#setEndTime").val(vo_end);
+}
+
+function submit1(formId){
+    $("#"+formId).submit();
+}
+
+function submitAjax(mod_id, vo_id, mode_id) {
+    $("#switcher_checkbox_" + vo_id).attr("disabled", true);
+    if (mod_id == 'formInquireTostop') {
+        $.ajax({
+            type: "POST",
+            url: "__URL__/ajaxSwitch",
+            data: { stopId: vo_id, mode_id: mode_id },
+            dataType: "text",
+            success: function(data) {
+                $("#switcher_checkbox_" + vo_id).attr("disabled", false);
+                $("#" + vo_id + "eventEnable").html('停用中');
+                $("#switcher_checkbox_" + vo_id).attr('onclick', 'submitAjax("formInquireTostart","' + vo_id + '","startId")');
+            },
+            error: function() {
+                alert("網路連線錯誤，請檢查您的網路狀況。");
+            }
+        });
+    } else if (mod_id == 'formInquireTostart') {
+        $.ajax({
+            type: "POST",
+            url: "__URL__/ajaxSwitch",
+            data: { startId: vo_id, mode_id: mode_id },
+            dataType: "text",
+            success: function(data) {
+                $("#switcher_checkbox_" + vo_id).attr("disabled", false);
+                $("#" + vo_id + "eventEnable").html('啟用中');
+                $("#switcher_checkbox_" + vo_id).attr('onclick', 'submitAjax("formInquireTostop","' + vo_id + '","stopId")');
+            },
+            error: function() {
+                alert("網路連線錯誤，請檢查您的網路狀況。");
+            }
+        });
+    }
+}
+</script>

@@ -1,0 +1,133 @@
+<?php
+/**
+ * 簡訊通知
+ */
+class NewsletterNotificationAction extends AdminAction{
+	protected $newsletterNotification = 10; // 分頁筆數
+	protected $pageMormNumber = 5; // 一頁最多幾筆
+	//TODO: 簡訊通知首頁
+	public function index(){
+		$request = $this->getRequest();
+		//分頁製作
+		if(empty($request['pageNumber'])){
+			$pageNumber = 1;
+		} else {
+			$pageNumber = $request['pageNumber'];
+		}
+		// var_dump(expression)
+		$CommonMobliemessage = D('CommonMobliemessage');
+		$return = $CommonMobliemessage->getCommonMobliemessagePageNumberData(); //取得總筆數
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		$totalNumber = $return['totalNumber']; //取得總筆數
+		$totalPage = ceil($totalNumber / $this->newsletterNotification); //取得分頁筆數
+		$pageArray = getPageArray($pageNumber, $totalPage, $this->pageMormNumber); //分頁陣列
+		$data = array(
+			'page' => array(
+				'pageNumber' => $pageNumber,
+				'number' => $this->newsletterNotification,
+			),
+		);
+		$CommonMobliemessage = D('CommonMobliemessage');
+		$return = $CommonMobliemessage->getCommonMobliemessagePageData($data); //取得分頁資料
+		// var_dump($return);die;
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$showStr = "";
+		$showArray = array();
+		$FieldChange = array(
+			'mobilemessage_code' => 'messageCode',
+			'mobilemessage_main' => 'messageMain',
+			'mobilemessage_createTime' => 'createTime',
+			'mobilemessage_modifyTime' => 'modifyTime',
+		);
+		foreach ($return as $key => $value) {
+			foreach ($FieldChange as $key1 => $value1) {
+				//欄位特別處理
+				switch($key1){
+					case 'mobilemessage_createTime':
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						break;
+					case 'mobilemessage_modifyTime':
+						if(empty($value[$key1])){
+							$showStr = "無修改時間";
+							break;
+						}
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						break;
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		// var_dump($showArray);die;
+		$this->assign('showArray', $showArray);
+		$this->assign('pageArray', $pageArray); //分頁陣列
+		$this->assign('pageNumber', $pageNumber); //目前筆數
+		$this->assign('totalPage', $totalPage); //總分頁
+        $this->assign("showEmpty","<tr><td colspan='5' align='center'>無資料</td></tr>");
+		$this->display();
+	}
+	//TODO: 新增簡訊
+	public function addFormNewsletterData(){
+		$request = $this->getRequest();
+		if(empty($request['addMessageCode']) && $request['addMessageCode'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		if(empty($request['addMessageMain']) && $request['addMessageMain'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$nowTime = time();
+		$data = array(
+			'mobilemessage_code' => $request['addMessageCode'],
+			'mobilemessage_main' => $request['addMessageMain'],
+			'mobilemessage_createTime' => $nowTime,
+		);
+		$CommonMobliemessage = D('CommonMobliemessage');
+		$return = $CommonMobliemessage->addCommonMobliemessageData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+		}
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+	//TODO: 修改簡訊
+	public function setFormNewsletterData(){
+		$request = $this->getRequest();
+		if(empty($request['setmessageCode']) && $request['setmessageCode'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		$nowTime = time();
+		$data = array(
+			'mobilemessage_code' => $request['setmessageCode'],
+			'mobilemessage_code1' => $request['setmessageCode1'],
+			'mobilemessage_main' => $request['setmessageMain'],
+			'mobilemessage_modifyTime' => $nowTime,
+		);
+		$CommonMobliemessage = D('CommonMobliemessage');
+		$return = $CommonMobliemessage->setCommonMobliemessageData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+	//TODO: 刪除簡訊
+	public function delFormNewsletterData(){
+		$request = $this->getRequest();
+		if(empty($request['delMessageCode']) && $request['delMessageCode'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		$data = array(
+			'mobilemessage_code' => $request['delMessageCode'],
+		);
+		$CommonMobliemessage = D('CommonMobliemessage');
+		$return = $CommonMobliemessage->delCommonMobliemessageData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+}

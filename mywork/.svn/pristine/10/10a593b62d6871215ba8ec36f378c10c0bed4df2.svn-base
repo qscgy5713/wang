@@ -1,0 +1,157 @@
+<?php
+class AdminIndexAction extends AdminAction {
+    //TODO: 管理者首頁
+    public function index(){
+        $this->getAdminMarquee();//跑馬燈
+        $this->getAdminAnnouncement();//全版公告
+        $this->display();
+    }
+    //TODO: 管理者登入功能
+    public function formLogin(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+        //var_dump($request);exit();
+        $InternalAdmin = D("InternalAdmin");
+        
+        $data = array(
+            "admin_account" => $request['account'] //傳入的帳號
+        );
+        //從 InternalAdminModel getAdminDataByAccount 取得管理者資訊
+        $return = $InternalAdmin->getAdminDataByAccount($data);
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //檢查 是否 有此帳號
+        if(!isset($return['admin_id'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //從 InternalAdminModel getMd5Password($password) 傳入密碼 取得加密後的密碼 做比對
+        $password = $InternalAdmin->getMd5Password($request['password']);
+        //檢查 密碼 是否正確 。
+        if(!($return['admin_password'] === $password)){
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $nowTime = time();//取得現在時間戳
+            $InternalAdminLoginLog = D("InternalAdminLoginLog");
+            $data = array(
+                "admin_id" => $return['admin_id'],
+                "admin_account" => $return['admin_account'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"密碼錯誤;輸入密碼;".$request['password'],
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $InternalAdminLoginLog->addAdminLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            //否，回傳顯示 帳號、密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        //將管理者資料 存入SESSION。
+        $_SESSION['Admin']['id'] = $return['admin_id'];
+        $_SESSION['Admin']['account'] = $return['admin_account'];
+        $_SESSION['Admin']['status'] = $return['admin_status'];
+        $_SESSION['Admin']['agentId'] = 1;//公司帳號所屬代理ID 為1
+        $_SESSION['Admin']['agentAccount'] = 'game';
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $nowTime = time();//取得現在時間戳
+        $InternalAdminLoginLog = D("InternalAdminLoginLog");
+        if($this->isAdminLosePower()){
+            $data = array(
+                "admin_id" => $return['admin_id'],
+                "admin_account" => $return['admin_account'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"帳號停權;無法登入",
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $InternalAdminLoginLog->addAdminLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            //否，回傳顯示 帳號、密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        
+        $CommonAgentTree = D("CommonAgentTree");
+        $data = array(
+            "agent_id" => $_SESSION['Admin']['agentId']
+        );
+        $return = $CommonAgentTree->getAgentTreeDataByAgentId($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        $_SESSION['Admin']['agentTree'] = $return["agent_tree"];
+        
+        
+        //是
+        $data = array(
+            "admin_id" => $_SESSION['Admin']['id'],
+            "admin_account" => $_SESSION['Admin']['account'],
+            "loginLog_status"=>1,
+            "loginLog_createTime" => time(),
+            "loginLog_ip" => $ip,
+            "loginLog_os" => get_os(),
+            "loginLog_url" => get_url()
+        );
+        $return = $InternalAdminLoginLog->addAdminLoginLogData($data,$err);
+        if ($return === false) {
+            $this->error($err);
+        }
+        
+        $uid = $InternalAdmin->getMd5Password($nowTime); //把時間戳 變成 Token
+        $_SESSION['Admin']['login_uid'] = $uid;
+        $data = array(
+            "admin_id" => $_SESSION['Admin']['id'],
+            "admin_uid" => $_SESSION['Admin']['login_uid'],
+            "admin_lastLoginTime" => $nowTime,
+            "admin_lastLoginIp" => $ip
+        );
+        $return = $InternalAdmin->setAdminDataById($data);
+        if ($return === false) {
+            unset($_SESSION['Admin']);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        //轉跳頁面，登入後首頁。
+        redirect(__APP__.'/AdminIndex/index');
+    }
+   
+    //TODO:跑馬燈
+    protected function getAdminMarquee(){
+        //從 CommonMarqueeModel getAdminMarqueeData() 取得前台跑馬燈資料
+        $CommonMarquee = D("CommonMarquee");
+        $return = $CommonMarquee->getAdminMarqueeData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->assign("marqueeArray",$return);
+    }
+    //TODO:全版公告
+    protected function getAdminAnnouncement(){
+        //從 CommonAnnouncementModel getAdminAnnouncementData() 取得前台跑馬燈資料
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $return = $CommonAnnouncement->getAdminAnnouncementData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        if(count($return) == 0){
+            $this->assign("announcementBool",false);
+        } else {
+            $this->assign("announcementBool",true);
+        }
+        $this->assign("announcementArray",$return);
+    }
+    //TODO: 管理者登出功能
+    public function logout(){
+        //清除管理者資料 SESSION
+        unset($_SESSION['Admin']);
+        //顯示你已登出，重新導回首頁
+        redirect(__APP__.'/AdminIndex/index');
+    }
+}

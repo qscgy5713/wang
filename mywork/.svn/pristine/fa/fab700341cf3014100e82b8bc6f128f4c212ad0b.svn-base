@@ -1,0 +1,138 @@
+ <include file="Common:header"/> 
+ <include file="Common:menu"/> 
+<div class="container pb50 bg-min-height height-size-667 height-size-731 height-size-812 height-size-823" style='background-image:'>
+    	<div class="row">
+                <div class="col-md-12 mb40">
+                
+	                    <h2 class="text-center">忘記帳號/密碼</h2> 
+	                   
+	                    <hr>
+	                 <ul class="nav  tabs-circle-icon justify-content-center" role="tablist">
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t7" id="am-s1-link" aria-controls="home" role="tab" data-toggle="tab" aria-selected="true"> 
+				         		<i class="ti-money"></i>
+				         		<h4 class="mt5 font15">發送驗證碼</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t8" id="am-s2-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-lock"></i>
+				         		<h4 class="mt5 font15">確認驗證碼</h4>
+				         </a>
+				        </li>
+				        
+				         <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link active show" href="#t9" id="am-s3-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-check"></i>
+				         		<h4 class="mt5 font15">確認帳號密碼</h4>
+				         </a>
+				        </li> 
+				        
+				         <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t10" id="am-s4-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-check"></i>
+				         		<h4 class="mt5 font15">完成</h4>
+				         </a>
+				        </li>
+				    </ul> 
+			        <div class="tab-content">
+			        <!-- 發送驗證碼 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t7">
+                        	<div class="col-md-6 mr-auto ml-auto">
+                        	
+                        		<div class="col-md-6 mr-auto ml-auto">
+	                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp  text-center RegistPage_border animated" data-wow-duration="1.5s" data-wow-delay=".2s" style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+			                            <p class="mb0 mt10">
+			                               	    已確認驗證碼，<br>請至步驟3確認帳號密碼
+			                            </p>
+			                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s3-link').click();">繼續</button>
+			                        </div>
+	                        	</div>
+                        		
+			        		</div>
+                        </div>
+                        <!-- /發送驗證碼 -->
+                        
+                        <!-- 確認驗證碼 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t8">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            
+                            	<div class="col-md-6 mr-auto ml-auto">
+	                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp  text-center RegistPage_border animated" data-wow-duration="1.5s" data-wow-delay=".2s" style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+			                            <p class="mb0 mt10">
+			                               	   已確認驗證碼，<br>請至步驟3確認帳號密碼
+			                            </p>
+			                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s3-link').click();">繼續</button>
+			                        </div>
+	                        	</div>
+                        	</div>
+                        </div>
+                        <!-- /確認驗證碼 -->
+                        
+                         <!-- 確認帳號密碼 -->
+                        <div role="tabpanel" class="tab-pane fade active show" id="t9">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            	<div class=" smart-wrap">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action="__APP__/ForgetPage/setRemeberMemberData" novalidate="novalidate">
+						                    <div class="form-body">
+						                    
+							                       <div class="section ">
+							                       		<h6>帳號</h6>
+							                            <label class="field prepend-icon">
+							                                <input type="text" class="gui-input" 
+							                                       data-minlength="4" maxlength="12" readonly value="{$memberAccount}">
+							                                 <span class="field-icon"><i class="ti-money"></i></span>
+							                            </label>
+							                        </div>
+							                        <div class="section ">
+							                        	<h6>新密碼</h6>
+							                            <label class="field prepend-icon">
+							                                <input type="password" name="newPassword" id="newPassword" class="gui-input" 
+							                                       data-minlength="4" maxlength="12">
+							                                 <span class="field-icon"><i class="ti-money"></i></span>
+							                            </label>
+							                        </div>
+							                        
+							                        <div class="section ">
+							                        	<h6>確認密碼</h6>
+							                            <label class="field prepend-icon">
+							                                <input type="password" name="new2Password" id="new2Password" class="gui-input" 
+							                                       data-minlength="4" maxlength="12">
+							                                 <span class="field-icon"><i class="ti-money"></i></span>
+							                            </label>
+							                        </div>
+							                       <div class="result"></div><!-- end .result  section --> 
+						                                                                                                                    
+						                    </div><!-- end .form-body section -->
+						                    <div class="form-footer text-center">
+						                    	<button type="button" onclick="self.location.href='__APP__/MemberIndex/index'" class="btn btn-outline-primary loading">取消</button>
+						                        <button type="submit" class="btn btn-outline-primary loading">確認</button>
+						                    </div><!-- end .form-footer section -->
+
+						                    
+						                </form>
+						            </div><!-- end .smart-forms section -->
+			        			</div><!-- end .smart-wrap section -->
+                        	</div>
+                        </div>
+                        <!-- /確認帳號密碼 -->
+                        
+                        <!-- 完成 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t10">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp  text-center RegistPage_border animated" data-wow-duration="1.5s" data-wow-delay=".2s" style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	    尚未確認帳號密碼，<br>請至步驟3選擇後按下『確認』
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s3-link').click();">返回</button>
+		                        </div>
+                        	</div>
+                        </div>
+                        <!-- /完成 -->   
+                    </div>
+                </div>
+            </div>
+</div>
+<include file="Common:footer"/> 

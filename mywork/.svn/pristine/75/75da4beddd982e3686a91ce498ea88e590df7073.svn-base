@@ -1,0 +1,366 @@
+<include file="Common:header" />
+<style>
+</style>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+    <include file="Common:menu" />
+    <include file="Common:menu2" />
+    <div id="content" class="content">
+        <div class="row">
+            <form action="__APP__/MemberChart/index" method="post" id="formSub">
+                <div class="row form-inline p-l-7" style="width:100%;">
+                    <div class="form-group row m-b-15">
+                        <label class="col-md-4 col-sm-4 col-form-label">日期 :</label>
+                        <div class="col-md-8 col-sm-8">
+                            <input type="text" class="form-control text-center" value="{$today}" name="today" id="today" autocomplete="off">
+                            <input class="btn btn-info p-r-0 p-l-0 m-r-5 m-l-5" style="width:100%;" type='submit' value='搜尋'>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="col-lg-12 ui-sortable">
+                <div class="panel panel-inverse" data-sortable-id="flot-chart-1">
+                    <div class="panel-heading ui-sortable-handle">
+                        <div class="panel-heading-btn">
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+                        </div>
+                        <h4 class="panel-title">上線人數</h4>
+                    </div>
+                    <div class="panel-body">
+                        <div id="placeholder" class="height-sm" style="padding: 0px; position: relative;"></div>
+                        <p id="choices" style="float:right; width:135px;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12 ui-sortable">
+                <div class="panel panel-inverse" data-sortable-id="flot-chart-1">
+                    <div class="panel-heading ui-sortable-handle">
+                        <div class="panel-heading-btn">
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+                        </div>
+                        <h4 class="panel-title">托售/儲值人數</h4>
+                    </div>
+                    <div class="panel-body">
+                        <div id="money_placeholder" class="height-sm" style="padding: 0px; position: relative;"></div>
+                        <p id="money_choices" style="float:right; width:135px;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12 ui-sortable">
+                <div class="panel panel-inverse" data-sortable-id="flot-chart-1">
+                    <div class="panel-heading ui-sortable-handle">
+                        <div class="panel-heading-btn">
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+                        </div>
+                        <h4 class="panel-title">總金額</h4>
+                    </div>
+                    <p>當日資料</p>
+                    <div class="panel-body">
+                        <div id="pie-placeholder" class="height-sm" style="padding: 0px; position: relative;"></div>
+                        <div id="hover"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<include file="Common:footer" />
+<script>
+var totalData = JSON.parse('{$totalData}');
+var timeData = JSON.parse('{$timeData}');
+var timeNameData = JSON.parse('{$timeNameData}');
+
+$(function() {
+	//折線圖
+    /**
+     * 折線圖數據修改
+     * label => 標題
+     * data => 數據
+     * color => 線顏色
+     */
+
+    var datasetTotal = {
+        'totalMem':{
+            label: timeNameData['totalMem'],
+            data: []
+        },
+        'registeredName':{
+            label: timeNameData['registeredName'],
+            data: []
+        }
+    }
+    var datasetMoney = {
+        'withdrawName':{
+            label: timeNameData['withdrawName'],
+            data: [],
+            yaxis: 1,
+        },
+        'rechargeName':{
+            label: timeNameData['rechargeName'],
+            data: [],
+            yaxis: 1,
+        },
+        'withdrawMoney':{
+            label: timeNameData['withdrawMoney'],
+            data: [],
+            yaxis: 2,
+        },
+        'rechargeMoney':{
+            label: timeNameData['rechargeMoney'],
+            data: [],
+            yaxis: 2,
+        }
+
+    }
+
+    for (var i = 0; i < timeData.hour.length; i++) {
+        datasetTotal.totalMem.data.push([timeData['hour'][i], timeData['peopleTotal'][i]]); //總人數
+        datasetTotal.registeredName.data.push([timeData['hour'][i], timeData['registeredPer'][i]]); //註冊人數
+        datasetMoney.withdrawName.data.push([timeData['hour'][i], timeData['withdrawPer'][i]]); //脫售人數
+        datasetMoney.rechargeName.data.push([timeData['hour'][i], timeData['rechargePer'][i]]); //儲值人數
+        datasetMoney.withdrawMoney.data.push([timeData['hour'][i], timeData['withdrawTotal'][i]]); //脫售金額
+        datasetMoney.rechargeMoney.data.push([timeData['hour'][i], timeData['rechargeTotal'][i]]); //儲值金額
+    }
+
+    var options = {
+        lines: {
+            show: true,
+        },
+        series: {
+            lines: {lineWidth: 2}
+        },
+        points: {
+            show: true
+        },
+        xaxis: {
+            tickDecimals: 0,
+            tickSize: 1
+        },
+        legend: {
+            show: true, //不顯示例圖
+        },
+        grid: {
+            hoverable: true,// 開啟 hoverable 事件
+        }
+    };
+    var options1 = {
+        lines: {
+            show: true,
+        },
+        series: {
+            lines: {lineWidth: 2}
+        },
+        points: {
+            show: true
+        },
+        xaxis: {
+            tickDecimals: 0,
+            tickSize: 1
+        },
+        yaxes: [
+            {
+                position: "left",
+                color: "black",
+                axisLabel: "Sin(x)",
+                axisLabelUseCanvas: true,
+                axisLabelFontSizePixels: 12,
+                axisLabelFontFamily: 'Verdana, Arial',
+                axisLabelPadding: 3
+            },
+            {
+                position: "right",
+                color: "black",
+                axisLabel: "Cos(x)",
+                axisLabelUseCanvas: true,
+                axisLabelFontSizePixels: 12,
+                axisLabelFontFamily: 'Verdana, Arial',
+                axisLabelPadding: 3
+            },
+        ],
+        legend: {
+            show: true, //不顯示例圖
+        },
+        grid: {
+            hoverable: true,// 開啟 hoverable 事件
+        }
+    };
+
+    //上線人數
+    var i = 0;
+    $.each(datasetTotal, function(key, val) {
+        val.color = i;
+        ++i;
+    });
+
+    var choiceContainer = $("#choices");
+    $.each(datasetTotal, function(key, val) {
+        choiceContainer.append("<br/><input type='checkbox' name='" + key +
+            "' checked='checked' id='id" + key + "'></input>" +
+            "<label for='id" + key + "'>"
+            + val.label + "</label>");
+    });
+
+    choiceContainer.find("input").click(plotAccordingToChoices);
+
+    function plotAccordingToChoices() {
+        var data = [];
+        choiceContainer.find("input:checked").each(function () {
+            var key = $(this).attr("name");
+            if (key && datasetTotal[key]) {
+                data.push(datasetTotal[key]);
+            }
+        });
+        if (data.length > 0) {
+            $.plot("#placeholder", data, options);
+        }
+    }
+    plotAccordingToChoices();
+    //結束
+
+    //託售/儲值折線圖
+    var j = 0;
+    $.each(datasetMoney, function(key, val) {
+        val.color = j;
+        ++j;
+    });
+
+    var money_choiceContainer = $("#money_choices");
+    $.each(datasetMoney, function(key, val) {
+        money_choiceContainer.append("<br/><input type='checkbox' name='" + key +
+            "' checked='checked' id='id" + key + "'></input>" +
+            "<label for='id" + key + "'>"
+            + val.label + "</label>");
+    });
+
+    money_choiceContainer.find("input").click(plotAccordingToChoicesMoney);
+
+    function plotAccordingToChoicesMoney() {
+        var data = [];
+        money_choiceContainer.find("input:checked").each(function () {
+            var key = $(this).attr("name");
+            if (key && datasetMoney[key]) {
+                data.push(datasetMoney[key]);
+            }
+        });
+        if (data.length > 0) {
+            $.plot("#money_placeholder", data, options1);
+        }
+    }
+    plotAccordingToChoicesMoney();
+    //結束
+
+
+
+    var previousPoint = null;
+
+    // 绑定提示事件
+    $("#placeholder").bind("plothover", function(event, pos, item) {
+        if (item) {
+            if (previousPoint != item.dataIndex) {
+                previousPoint = item.dataIndex;
+                $("#tooltip").remove();
+                var y = item.datapoint[1].toFixed(0);
+                var tip = "人數：";
+                showTooltip(item.pageX, item.pageY, tip + y + " 人");
+            }
+        } else {
+            $("#tooltip").remove();
+            previousPoint = null;
+        }
+    });
+
+    // 绑定提示事件
+    $("#money_placeholder").bind("plothover", function(event, pos, item) {
+        if (item) {
+            console.log(item.series.label);
+            if (previousPoint != item.dataIndex) {
+                previousPoint = item.dataIndex;
+                $("#tooltip").remove();
+                var y = item.datapoint[1].toFixed(0);
+                var tip = "人數：";
+                if(item.series.label == "出售人數" || item.series.label == "儲值人數"){
+                    showTooltip(item.pageX, item.pageY, tip + y + " 人");
+                } else if(item.series.label == "出售金額" || item.series.label == "儲值金額"){
+                    showTooltip(item.pageX, item.pageY,  y + " 元");
+                }
+            }
+        } else {
+            $("#tooltip").remove();
+            previousPoint = null;
+        }
+    });
+    //折線圖結束
+
+    //圓餅圖
+    var options1 = {
+	    series: {
+	        pie: {
+	            show: true,
+	        },
+	    },
+	    legend: {
+	        show: true, //不顯示利圖
+	    },
+	    grid: {
+	    	hoverable: true,
+	    	clickable: true,
+	     } // 開啟 hoverable clickable事件
+	};
+
+	/**
+	 * 更改圓餅圖數據
+	 * label => 標題
+	 * data => 數據
+	 * colot => 顏色
+	 */
+    var dataset1 = [
+	    { label: totalData['rechargeName'], data: totalData['rechargeTotal'], color: "#005CDE" },
+	    { label: totalData['withdrawName'], data: totalData['withdrawTotal'], color: "#00A36A" },
+	];
+
+    $.plot("#pie-placeholder", dataset1, options1);
+    $("#pie-placeholder").bind("plothover", function(event, pos, item){
+    	if(item) {
+			var data = item.datapoint[1][0][1];
+            var y = data.toFixed(0);
+            percent = parseFloat(item.series.percent).toFixed(2);
+       		$("#hover").html('<span style="font-weight: bold; color: '+item.series.color+'">'+item.series.label+' : '+y+' ('+percent+'%)</span>');
+        }
+    });
+    //圓餅圖結束
+
+    $("#today").datetimepicker({
+        dateFormat: "yy-mm-dd",
+        changeMonth: true,
+        numberOfMonths: 1,
+        onClose: function(selectedDate) {
+            $("#today").datepicker("option", "minDate", selectedDate);
+        }
+    });
+});
+
+// 節點提示
+function showTooltip(x, y, contents) {
+    $('<div id="tooltip">' + contents + '</div>').css({
+        position: 'absolute',
+        display: 'none',
+        top: y + 10,
+        left: x + 10,
+        border: '1px solid #fdd',
+        padding: '2px',
+        'background-color': '#ffffff',
+        opacity: 0.80
+    }).appendTo("body").fadeIn(200);
+}
+</script>

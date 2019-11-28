@@ -1,0 +1,103 @@
+<include file="Common:header"/>
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div class="row">
+			<div class="col-lg-4 ui-sortable m-auto">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">變更密碼</h4>
+					</div>
+					
+					<div class="panel-body">
+						<div class="table-responsive">
+							<table id="agentTable" class="table table-striped m-b-0">
+							   <thead>
+			                      <tr class="text-center">
+				                      <th>會員帳號</th>
+				                      <th>{$agentAccount}</th>
+			                      </tr>
+				                </thead>
+							</table>
+						</div>
+					</div>
+					
+					<div class="panel-body">
+						
+						<form id="setPasswordForm" method="post" action='__APP__/AgentIndex/setAgentPassword'>
+							<div class="form-group row m-b-15">
+								<label class="col-form-label col-md-3">原始密碼</label>
+								<div class="col-md-9">
+									<input type="password" class="form-control m-b-5" id="oldPassword" name="oldPassword" placeholder="請輸入舊密碼">
+									
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-form-label col-md-3">新密碼</label>
+								<div class="col-md-9">
+									<input type="password" class="form-control m-b-5" id="newPassword" name="newPassword" placeholder="請輸入新密碼">
+									
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-form-label col-md-3">確認密碼</label>
+								<div class="col-md-9">
+									<input type="password" class="form-control m-b-5" id="new2Password" name="new2Password" placeholder="請再次輸入新密碼">
+									
+								</div>
+							</div>
+							
+							<div class="form-group row m-b-15">
+								<div class="col-md-3 m-auto">
+									<button type="button" onclick="submitForm()" class="btn btn-pink">確認變更</button>
+								</div>
+							</div>
+							
+							
+						</form>
+					</div>
+				</div>
+				
+				
+			</div>
+		</div>
+	</div>
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+
+</div>
+<include file="Common:footer"/> 
+<script>
+function submitForm(){
+	var oldPassword = $.trim($("#oldPassword").val());
+	var newPassword = $.trim($("#newPassword").val());
+	var new2Password = $.trim($("#new2Password").val());
+	
+	if(oldPassword == "" ){
+		alert("請輸入舊密碼");
+		return;
+	}
+	if(newPassword == "" ){
+		alert("請輸入新密碼");
+		return;
+	}
+	if(new2Password == "" ){
+		alert("請輸入確認密碼");
+		return;
+	}
+	if(new2Password != newPassword){
+		alert("請再次確認新密碼");
+		return;
+	}
+	$("#setPasswordForm").submit();
+}
+</script>

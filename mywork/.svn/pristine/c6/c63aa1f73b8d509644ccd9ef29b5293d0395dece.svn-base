@@ -1,0 +1,313 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		
+		<div class="row">
+			<div class="col-lg-3 col-sm-3">
+				 <button class="btn btn-pink m-r-5 m-b-5" type="button" id="add_btn">
+	                                              新增代理
+	       		</button>
+	       		<button class="btn btn-pink m-r-5 m-b-5" type="button" onclick="self.location.href='__APP__/AgentManage/iframeIndex'">
+	                  iframe語法範例
+	       		</button>
+			</div>
+			
+			
+			<div class="modal fade" id="modal-dialog" style="display: none; padding-right: 16px;">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title"> 新增代理</h4>
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						</div>
+						
+						<form method="post" action='__APP__/AgentManage/formAddAgent'>
+							<div class="modal-body">
+								<div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">帳號 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" readonly="readonly" type="text" value="{$newAgentAccount}">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">密碼 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="password" name="addPassword">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">確認密碼 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="password" name="addCheckPassword">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">最高佔成 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" readonly="readonly" name=highestRatio value="{$highestRatio}">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">佔成 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addRatio">
+									</div>
+							     </div>
+							     
+							     <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">聯絡人 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addContact">
+									</div>
+							     </div>
+							     
+							     <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">聯絡方式 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addContactWay">
+									</div>
+							     </div>
+							     
+							     <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">電話 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addPhone">
+									</div>
+							     </div>
+							     
+							     <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text" name="addRemark">
+									</div>
+							     </div>
+							</div>
+							<div class="modal-footer">
+								<a href="javascript:;" class="btn btn-danger f-s-15" data-dismiss="modal">取消</a>
+								<button type="submit" name="addbtn" class="btn btn-danger f-s-15">確認新增</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">代理管理</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+			                          <th>帳號</th>
+			                          <th>佔成</th>
+			                          <th>狀態</th>
+			                          <th>建立時間</th>
+			                          <th>聯絡人</th>
+			                          <th>聯絡方式</th>
+			                          <th>電話</th>
+			                          <th>備註</th>
+			                          <th>操作</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+										<tr>
+											<td>{$key+1}</td>
+											<td>{$vo.account}</td>
+											<td>{$vo.superiorGiving}</td>
+											<td>{$vo.status}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.contact}</td>
+											<td>{$vo.contactWay}</td>
+											<td>{$vo.phone}</td>
+											<td>{$vo.remark}</td>
+											<td>
+												<form class="div-style" method="post" action='__APP__/AgentManage/formStopAgent'>
+							                    	<input type="hidden" value="{$vo.id}" name="stopId">
+							                    	<button type="submit" class="btn btn-danger f-s-13 p-5">停權</button>
+							                    </form>
+							                    <form class="div-style" method="post" action='__APP__/AgentManage/formStartAgent'>
+							                    	<input type="hidden" value="{$vo.id}" name="stopId">
+							                    	<button type="submit" class="btn btn-danger f-s-13 p-5">啟用</button>
+							                    </form>
+												<button onclick="openmodal({$key+1})" type="button" class="btn btn-danger f-s-13 p-5">修改</button>
+												<form class="div-style" method="post" action='__APP__/AgentManage/formClearAgent'>
+							                    	<input type="hidden" value="{$vo.id}" name="clearId">
+							                    	<button type="submit" class="btn btn-danger f-s-13 p-5">清除</button>
+							                    </form>
+												
+												<div class="modal fade" id="{$key+1}" style="display: none; padding-right: 16px;">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="modal-title">修改代理資料</h4>
+																<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+															</div>
+															
+															<form method="post"  action='__APP__/AgentManage/formSetAgent'>
+																<div class="modal-body">
+																
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">帳號 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input type="hidden" value="{$vo.id}" name="setId">
+                             												<input type="hidden" value="{$vo.account}" name="setAccount">
+																			<input class="form-control" type="text" readonly="readonly" value="{$vo.account}">
+																		</div>
+																	 </div>
+																		
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">佔成 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="text" name="setRatio" value="{$vo.superiorGiving}">
+																		</div>
+																	 </div>
+																		
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">密碼 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="password" name="setPassword">
+																		</div>
+																	 </div>
+																		
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">確認密碼 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="password" name="setCheckpassword">
+																		</div>
+																     </div>
+																     
+																     <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">聯絡人 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="text" name="setContact" value="{$vo.contact}">
+																		</div>
+																     </div>
+																     
+																     <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">聯絡方式 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="text" name="setContactWay" value="{$vo.contactWay}">
+																		</div>
+																     </div>
+																     
+																     <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">電話 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="text" name="setPhone" value="{$vo.phone}">
+																		</div>
+																     </div>
+																     
+																     <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="text" name="setRemark" value="{$vo.remark}">
+																		</div>
+																     </div>
+																</div>
+																<div class="modal-footer">
+																	<a href="javascript:;" class="btn btn-danger f-s-15" data-dismiss="modal">取消</a>
+																	<button type="submit" name ="okbtn" class="btn btn-danger f-s-15">確認修改</button>
+																</div>
+															</form>
+														</div>
+													</div>
+												</div>
+												
+											</td>
+										</tr>
+									</VOLIST>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+});
+function openmodal(id){
+	
+	//alert(id);
+	$('#'+id).modal('show');
+}
+$(document).ready(function(){
+	$("#"+"人事部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	
+});
+ $(document).ready(function(){
+	//修改
+	$("button[name='okbtn']").click(function(){
+		var password = $("input[name='setPassword']").val();
+		var checkPassword = $("input[name='setCheckpassword']").val();
+		
+		password = $.trim(password);
+		checkPassword = $.trim(checkPassword);
+		
+		 if (password == 0 && checkPassword == 0){
+			 //alert("1");
+		 }
+		 else if(password == checkPassword){
+			 //alert("2");
+			
+		 }else{
+			 alert("請確認 密碼 與 確認密碼 資料是否一致");
+			 return false;
+		 }
+	 })
+	 //新增
+	 $("button[name='addbtn']").click(function(){
+		 var addPassword = $("input[name='addPassword']").val();
+		 var addCheckPassword = $("input[name='addCheckPassword']").val();
+		 
+		 addPassword = $.trim(addPassword);
+		 addCheckPassword = $.trim(addCheckPassword);
+		 
+		 if (addPassword == 0 || addCheckPassword == 0){
+			 alert("請輸入密碼");
+			 return false;
+		 }else if(addPassword != addCheckPassword){
+			 alert("請確認 密碼 與 確認密碼 資料是否一致");
+			 return false;
+		 }
+	 })
+	 
+});
+ </script>

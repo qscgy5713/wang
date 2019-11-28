@@ -1,0 +1,693 @@
+<?php
+class MemberNoteAction extends AdminAction{
+	protected $memberNote = 10; //分頁筆數
+	protected $pageMoreNumber = 5;//一頁最多幾頁
+	//TODO: 主要頁面 noteRecharge 儲值頁面
+
+	protected function _initialize() {
+		// 執行父類初始化
+        parent::_initialize();
+
+        $classArray = array(
+        	"儲值記事"=>"index",
+        	"處理記事"=>"noteProcess",
+        	"問題記事"=>"noteProblem",
+        	"停權記事"=>"noteStop",
+        );
+        $this->assign("classArray", $classArray);//類別陣列
+	}
+	public function index(){
+		$request = $this->getRequest();
+
+		//製作分頁
+		if(empty($request['pageNumber'])){
+			$pageNumber = 1;
+		} else {
+			$pageNumber = $request['pageNumber'];
+		}
+
+		$CommonMemberNote = D("CommonMemberNote");
+		$memberAccount = "";
+		if(isset($request['memberAccount']) && !empty($request['memberAccount']) ){
+			$memberAccount = $request['memberAccount'];
+		}
+
+		$addMemberAccount = "";
+		if(isset($request['addMemberAccount']) && !empty($request['addMemberAccount']) ){
+			$addMemberAccount = $request['addMemberAccount'];
+		}
+
+		$data = array(
+			'member_account' => $memberAccount,
+			'className' => 'note_recharge',
+		);
+		$return = $CommonMemberNote->getTotalNumberCommonMemberNoteData($data);
+		if($return === false){
+			//取得總筆數，失敗
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		$totalNumber = $return[0]['totalNumber']; //總筆數
+		$totalPage = ceil($totalNumber / $this->memberNote); //總頁數
+		$pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得頁數陣列
+
+		$data = array(
+			'member_account' => $memberAccount,
+			'className' => 'note_recharge',
+			'page' => array(
+				'number' => $this->memberNote,
+				'pageNumber' => $pageNumber,
+			),
+		);
+
+		$return = $CommonMemberNote->getCommonMemberNoteNumberData($data);
+
+		if($return === false){
+			//搜索分頁，失敗
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$showArray = array();
+
+		//使用欄位轉換 資料庫欄位
+		$FiedlChange = array(
+			'member_account' => 'memberAccount',
+			'note_recharge' => 'recharge',
+			'note_rechargeLastCode' => 'rechargeLastCode',
+			'note_rechargeArea' => 'rechargeArea',
+			'note_rechargeRemark' => 'rechargeRemark',
+			'note_rechargeModifyTime' => 'rechargeModifyTime',
+		);
+
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FiedlChange as $key1 => $value1) {
+				switch ($key1){
+					case 'note_rechargeModifyTime': //時戳 轉換 日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						break;
+					default: //未做設定，正常顯示
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+
+
+
+		//var_dump($showArray);
+		$this->assign("showArray", $showArray);
+		$this->assign("addMemberAccount",$addMemberAccount);
+		$this->assign("memberAccount",$memberAccount);
+		$this->assign("totalPage", $totalPage); //總筆數
+		$this->assign("pageNumber", $pageNumber); //目前頁數
+		$this->assign("pageArray", $pageArray); //頁數陣列
+    $this->assign("rechargeEmpty","<tr><td colspan='6' align='center'>無儲值資料</td></tr>");
+		$this->display();
+	}
+
+	//TODO: 問題頁面
+	public function noteProblem(){
+		$request = $this->getRequest();
+
+		$CommonMemberNote = D("CommonMemberNote");
+		//製作分頁
+		if(empty($request['pageNumber'])){
+			$pageNumber = 1;
+		} else {
+			$pageNumber = $request['pageNumber'];
+		}
+
+		$memberAccount = "";
+		if(isset($request['memberAccount']) && !empty($request['memberAccount']) ){
+			$memberAccount = $request['memberAccount'];
+		}
+
+		$addMemberAccount = "";
+		if(isset($request['addMemberAccount']) && !empty($request['addMemberAccount']) ){
+			$addMemberAccount = $request['addMemberAccount'];
+		}
+
+		$data = array(
+			'className' => 'note_problem',
+			'member_account' => $memberAccount,
+		);
+
+		$return = $CommonMemberNote->getTotalNumberCommonMemberNoteData($data);
+
+		if($return === false){
+			//取得總筆數，失敗
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		$totalNumber = $return[0]['totalNumber']; //總筆數
+		$totalPage = ceil($totalNumber / $this->memberNote); //總頁數
+		$pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得頁數陣列
+
+		$data = array(
+			'className' => 'note_problem',
+			'note_problem' => 1,
+			'member_account' => $memberAccount,
+			'page' => array(
+				'number' => $this->memberNote,
+				'pageNumber' => $pageNumber,
+			),
+		);
+
+		$return = $CommonMemberNote->getCommonMemberNoteNumberData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')), "__APP__/MemberNote/index");
+		}
+		$showArray = array();
+
+		//使用欄位轉換 資料庫欄位
+		$FiedlChange = array(
+			'member_account' => 'memberAccount',
+			'note_problem' => 'problem',
+			'note_problemAccount' => 'problemAccount',
+			'note_problemProcess' => 'problemProcess',
+			'note_problemRemark' => 'problemRemark',
+			'note_problemModifyTime' => 'problemModifyTime',
+		);
+
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FiedlChange as $key1 => $value1) {
+				switch ($key1){
+					case 'note_problemModifyTime': //時戳 轉換 日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						break;
+					default: //未做設定，正常顯示
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		// var_dump($showArray);
+		$this->assign("showArray", $showArray);
+		$this->assign("addMemberAccount",$addMemberAccount);
+		$this->assign("memberAccount",$memberAccount);
+		$this->assign("totalPage", $totalPage); //總筆數
+		$this->assign("pageNumber", $pageNumber); //目前頁數
+		$this->assign("pageArray", $pageArray); //頁數陣列
+        $this->assign("problemEmpty","<tr><td colspan='6' align='center'>無問題資料</td></tr>");
+		$this->display();
+	}
+
+	//TODO: 停權頁面
+	public function noteStop(){
+		$request = $this->getRequest();
+
+		$CommonMemberNote = D("CommonMemberNote");
+		//製作分頁
+		if(empty($request['pageNumber'])){
+			$pageNumber = 1;
+		} else {
+			$pageNumber = $request['pageNumber'];
+		}
+
+		$memberAccount = "";
+		if(isset($request['memberAccount']) && !empty($request['memberAccount']) ){
+			$memberAccount = $request['memberAccount'];
+		}
+
+		$addMemberAccount = "";
+		if(isset($request['addMemberAccount']) && !empty($request['addMemberAccount']) ){
+			$addMemberAccount = $request['addMemberAccount'];
+		}
+		$data = array(
+
+			'className' => 'note_stop',
+			'note_stop' => 1,
+			'member_account' => $memberAccount,
+		);
+
+		$return = $CommonMemberNote->getTotalNumberCommonMemberNoteData($data);
+
+		if($return === false){
+			//取得總筆數，失敗
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		$totalNumber = $return[0]['totalNumber']; //總筆數
+		$totalPage = ceil($totalNumber / $this->memberNote); //總頁數
+		$pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得頁數陣列
+
+		$data = array(
+			'className' => 'note_stop',
+			'member_account' => $memberAccount,
+			'note_stop' => 1,
+			'page' => array(
+				'number' => $this->memberNote,
+				'pageNumber' => $pageNumber,
+			),
+		);
+
+		$return = $CommonMemberNote->getCommonMemberNoteNumberData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')), "__APP__/MemberNote/index");
+		}
+		$showArray = array();
+
+		//使用欄位轉換 資料庫欄位
+		$FiedlChange = array(
+			'className' => 'note_stop',
+			'member_account' => 'memberAccount',
+			'note_stop' => 'stop',
+			'note_stopStatus' => 'stopStatus',
+			'note_stopRemark' => 'stopRemark',
+			'note_stopModifyTime' => 'stopModifyTime',
+		);
+
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FiedlChange as $key1 => $value1) {
+				switch ($key1){
+					case 'note_stopModifyTime': //時戳 轉換 日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						break;
+					default: //未做設定，正常顯示
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+
+		$this->assign("showArray", $showArray);
+		$this->assign("addMemberAccount",$addMemberAccount);
+		$this->assign("memberAccount",$memberAccount);
+		$this->assign("totalPage", $totalPage); //總筆數
+		$this->assign("pageNumber", $pageNumber); //目前頁數
+		$this->assign("pageArray", $pageArray); //頁數陣列
+		$this->assign("stopEmpty","<tr><td colspan='5' align='center'>無停權資料</td></tr>");
+		$this->display();
+	}
+
+	//TODO: 處裡頁面
+	public function noteProcess(){
+		$request = $this->getRequest();
+
+		$CommonMemberNote = D("CommonMemberNote");
+		//製作分頁
+		if(empty($request['pageNumber'])){
+			$pageNumber = 1;
+		} else {
+			$pageNumber = $request['pageNumber'];
+		}
+
+		$memberAccount = "";
+		if(isset($request['memberAccount']) && !empty($request['memberAccount']) ){
+			$memberAccount = $request['memberAccount'];
+		}
+		$addMemberAccount = "";
+		if(isset($request['addMemberAccount']) && !empty($request['addMemberAccount']) ){
+			$addMemberAccount = $request['addMemberAccount'];
+		}
+		$data = array(
+			'className' => 'note_process',
+			'note_process' => 1,
+			'member_account' => $memberAccount,
+		);
+
+		$return = $CommonMemberNote->getTotalNumberCommonMemberNoteData($data);
+
+		if($return === false){
+			//取得總筆數，失敗
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		$totalNumber = $return[0]['totalNumber']; //總筆數
+		$totalPage = ceil($totalNumber / $this->memberNote); //總頁數
+		$pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得頁數陣列
+
+		$data = array(
+			'className' => 'note_process',
+			'member_account' => $memberAccount,
+			'note_process' => 1,
+			'page' => array(
+				'number' => $this->memberNote,
+				'pageNumber' => $pageNumber,
+			),
+		);
+
+		$return = $CommonMemberNote->getCommonMemberNoteNumberData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')), "__APP__/MemberNote/index");
+		}
+		$showArray = array();
+
+		//使用欄位轉換 資料庫欄位
+		$FiedlChange = array(
+			'member_account' => 'memberAccount',
+			'note_process' => 'process',
+			'note_processAccount' => 'processAccount',
+			'note_processMain' => 'processMain',
+			'note_processRemark1' => 'processRemark1',
+			'note_processRemark2' => 'processRemark2',
+			'note_processModifyTime' => 'processModifyTime',
+		);
+
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FiedlChange as $key1 => $value1) {
+				switch ($key1){
+					case 'note_processModifyTime': //時戳 轉換 日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						break;
+					default: //未做設定，正常顯示
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		//var_dump($showArray);
+		$this->assign("showArray", $showArray);
+		$this->assign("addMemberAccount",$addMemberAccount);
+		$this->assign("memberAccount",$memberAccount);
+		$this->assign("totalPage", $totalPage); //總筆數
+		$this->assign("pageNumber", $pageNumber); //目前頁數
+		$this->assign("pageArray", $pageArray); //頁數陣列
+        $this->assign("processmEmpty","<tr><td colspan='7' align='center'>無處理資料</td></tr>");
+		$this->display();
+	}
+
+	//TODO:
+	public function formAddMemberNote(){
+		//使用common.php filterStr($data) 公用函數 過濾取得輸入的資料
+		$request = $this->getRequest();
+
+		if(!isset($request['className']) || empty($request['className'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		//檢查 addMemberAccount 傳入並且不為空
+		if(!isset($request['addMemberAccount']) || empty($request['addMemberAccount'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$CommonMemberNote = D('CommonMemberNote');
+
+		$data = array(
+			'member_account' => $request['addMemberAccount'],
+		);
+
+		//確認是否有此帳號
+		$return = $CommonMemberNote->searchMemberByMemberAccount($data);
+		if(empty($return)){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+		}
+
+		//分辨新增帳號是否有重複
+		$return = $CommonMemberNote->checkCommonMemberNoteId($data);
+
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//資料庫錯誤
+		}
+		$addBool = false;
+		if(count($return) == 0){
+			$addBool = true;
+		}
+		//取得 會員 ID
+		$memberId = $CommonMemberNote->searchMemberByMemberId($data);
+		switch ($request['className']) {
+			case 'recharge':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_recharge"=> 1,
+					"note_rechargeLastCode"=> $request['addRechargeLastCode'],
+					"note_rechargeArea"=> $request['addRechargeArea'],
+					"note_rechargeRemark"=> $request['addRechargeRemark'],
+					"note_rechargeModifyTime" => time(),
+				);
+				if($addBool){
+					$return = $CommonMemberNote->addCommonMemberNoteData($data);
+				} else {
+					$return = $CommonMemberNote->setCommonMemberNoteData($data);
+				}
+				break;
+			case 'problem':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_problem"=> 1,
+					"note_problemAccount" => $request['addProblemAccount'],
+					"note_problemProcess" => $request['addProblemProcess'],
+					"note_problemRemark" => $request['addProblemRemark'],
+					"note_problemModifyTime" => time(),
+				);
+				if($addBool){
+					$return = $CommonMemberNote->addCommonMemberNoteData($data);
+				} else {
+					$return = $CommonMemberNote->setCommonMemberNoteData($data);
+				}
+				break;
+			case 'stop':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_stop"=> 1,
+					"note_stopStatus" => $request['addStopStatus'],
+					"note_stopRemark" => $request['addStopRemark'],
+					"note_stopModifyTime" => time(),
+				);
+				if($addBool){
+					$return = $CommonMemberNote->addCommonMemberNoteData($data);
+				} else {
+					$return = $CommonMemberNote->setCommonMemberNoteData($data);
+				}
+				break;
+			case 'process':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_process"=> 1,
+					"note_processAccount" => $request['addProcessAccount'],
+					"note_processMain" => $request['addProcessMain'],
+					"note_processRemark1" => $request['addProcessRemark1'],
+					"note_processRemark2" => $request['addProcessRemark2'],
+					"note_processModifyTime" => time(),
+				);
+
+				if($addBool){
+					$return = $CommonMemberNote->addCommonMemberNoteData($data);
+				} else {
+					$return = $CommonMemberNote->setCommonMemberNoteData($data);
+				}
+				break;
+			default:
+				$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+				break;
+		}
+		//否,顯示錯誤
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+		}
+
+		//是，顯示成功訊息
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+
+	//TODO: 修改後台頁面
+	public function formSetMemberNote(){
+		//使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+		$request = $this->getRequest();
+		$CommonMemberNote = D('CommonMemberNote');
+		$nowTime = time();
+
+		if(!isset($request['className']) || empty($request['className'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		if(!isset($request['setMemberAccount']) || empty($request['setMemberAccount'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+
+		$data = array(
+			'member_account' => $request['setMemberAccount'],
+		);
+		//取得 會員 ID
+		$memberId = $CommonMemberNote->searchMemberByMemberId($data);
+
+		if(!isset($request['setNote'])){
+			$setNote = 1;
+			$nowTime = time();
+		} else {
+			$setNote = $request['setNote'];
+			$nowTime = null;
+		}
+		switch ($request['className']){
+			case 'recharge':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_recharge"=> $setNote,
+					"note_rechargeLastCode"=> $request['setRechargeLastCode'],
+					"note_rechargeArea"=> $request['setRechargeArea'],
+					"note_rechargeRemark"=> $request['setRechargeRemark'],
+					"note_rechargeModifyTime" => $nowTime,
+				);
+				break;
+			case 'problem':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_problem"=> $setNote,
+					"note_problemAccount" => $request['setProblemAccount'],
+					"note_problemProcess" => $request['setProblemProcess'],
+					"note_problemRemark" => $request['setProblemRemark'],
+					"note_problemModifyTime" => $nowTime,
+				);
+				break;
+			case 'stop':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_stop"=> $setNote,
+					"note_stopStatus" => $request['stopStatus'],
+					"note_stopRemark" => $request['setStopRemark'],
+					"note_stopModifyTime" => $nowTime,
+				);
+				break;
+			case 'process':
+				$data = array(
+					"member_id"=> $memberId,
+					"note_process"=> $setNote,
+					"note_processAccount" => $request['setProcessAccount'],
+					"note_processMain" => $request['setProcessMain'],
+					"note_processRemark1" => $request['setProcessRemark1'],
+					"note_processRemark2" => $request['setProcessRemark2'],
+					"note_processModifyTime" => $nowTime,
+				);
+				break;
+			default:
+				$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+				break;
+		}
+		$return = $CommonMemberNote->setCommonMemberNoteData($data);
+
+		//否,顯示錯誤
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+		}
+		//是，顯示成功訊息
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+	/*
+     * 搜索 Index會員帳號
+     */
+    public function searchIndexMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMemberNote = D("CommonMemberNote");
+        $data = array(
+        	"className" => 'note_recharge',
+            "member_account" => $request["query"],
+        );
+
+        $member_child_arr = $CommonMemberNote->searchNoteMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    /*
+     * 搜索 Problem會員帳號
+     */
+    public function searchProblemMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMemberNote = D("CommonMemberNote");
+        $data = array(
+        	"className" => "note_problem",
+            "member_account" => $request["query"],
+        );
+
+        $member_child_arr = $CommonMemberNote->searchNoteMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    /*
+     * 搜索 Stop會員帳號
+     */
+    public function searchStopMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMemberNote = D("CommonMemberNote");
+        $data = array(
+        	"className" => "note_stop",
+            "member_account" => $request["query"],
+        );
+        $member_child_arr = $CommonMemberNote->searchNoteMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    /*
+     * 搜索 Process會員帳號
+     */
+    public function searchProcessMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        $CommonMemberNote = D("CommonMemberNote");
+        $limit = 7;
+        $data = array(
+        	"className" => "note_process",
+            "member_account" => $request["query"],
+        );
+
+        $member_child_arr = $CommonMemberNote->searchNoteMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    /*
+     * 搜索 新增會員帳號
+     */
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMemberNote = D('CommonMemberNote');
+        $limit = 7;
+        $data = array(
+        	"limit" => $limit,
+            "member_account" => $request["query"],
+        );
+
+        $member_child_arr = $CommonMemberNote->searchAddMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

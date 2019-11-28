@@ -1,0 +1,967 @@
+<?php
+
+class GameAsgModel extends ApiModel{
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  //protected $cfg_base_url = 'https://middleware.oriental-game.com';
+  //protected $cfg_report_base_url = 'http://ares.oriental-game.com';
+  const AS_RSA_PUBLIC_KEY_PATH = 'XiaoniuGaming.pub';
+  const AS_RSA_PRIVATE_KEY_PATH = 'XiaoniuGaming.key';
+  const AS_RSA_PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAw9AqlhSt0IBWvEG8sziI
+2Cjdr5r94UMkH/W3p4lJ6zzVuc4awNx/d4dUY7b9xDPI4YADKZqxZrqed4EayRCz
+YDk0IARKaB5KyPWiNwGDKQJUMxoIRTpErzLsfuQDKp5rr07betTI1Hlitl1AtNPJ
+vuJ0E7h4Ppb2zCDt8E48biMgMT2PcblcFqQd1211wybYfVwF/+5rH4hssOqkdpqH
+OZGQI87mmfkIPCMXxbfYNYHbSf0Rng2vlWpPt79wMEsrf9MSXW3/xhmfKLUEkV0k
+44ezrtm7aaiPDTKZRUSS6Ji/lzPBMG5yEiwNXSIl+ebLlA+hsEsVSOvTqIdIyakb
+/l2BI384ta3MYaLkfzwRD0pr/4AAQXZA6qrXKh01Gf9+jXxXM9Ls0xuw7iwMeDJj
+Valg0BabmsCvNv9oMmpKt9UigBrJy5RAIdNLt1Iti9bt2SbOYxmrcl8TQv/QpSW5
+UzIt1nTWn/mISgK/Scdsh7JUuuJlGN0MQbA+qJHURET/SXePJuVnlYzzB6nchww4
+YMAijAQoPyIjlH8Au4iagASxL8YOEDWCS0iDREiCklBLTA1yeZ3swpIX/wUUKI9J
+gnavN6YJYKe3528khc10+KwM17brEuVr4IBZFYC97q/CYPDM1rmrdU+Q3H08tLR/
+YQZ4+yY1EUzt4ve82k68fjMCAwEAAQ==
+-----END PUBLIC KEY-----
+';
+  CONST AS_RSA_PRIVATE_KEY = '-----BEGIN PRIVATE KEY-----
+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
+x6Iw7foWrkpr1eCBgUipdVl7ytsD
+-----END PRIVATE KEY-----
+';
+
+  const AS_AGENT = 'XiaoniuGaming';
+  const AS_BACKSTAGE_URL = 'http://demo-operation.asdasd55.com:8080';
+  const AS_GET_API_URL = 'http://demo-select.asdasd44.com';  //getApiUrl
+
+  const AS_API_HTTP_PROTOCOL = 'http';
+
+  const AS_RESPONSE_SUCCESS_CODE = 0;
+  const AS_AES_CIPHER_MODE = 'AES-256-CBC';
+  const AS_DEFAULT_REQUEST_METHOD = 'POST';
+  const AS_CURL_CONNECTTIMEOUT_MS = 8000;
+  const AS_CURL_TIMEOUT_MS = 28000;
+  const AS_REPORT_DATETIME_FORMAT = 'Y-m-d H:i:s';
+  //const AS_REPORT_DATE_FORMAT = 'Y-m-d';
+  const AS_REPORT_TIMEZONE_OFFSET = 8;
+
+  const AS_TRANSFER_DEPOSIT_TYPE_CODE = 0;
+  const AS_TRANSFER_WITHDRAW_TYPE_CODE = 1;
+
+  const AS_USER_TYPE_CODE_FORMAL = 1;
+  const AS_USER_TYPE_CODE_TEST = 2;
+
+  const AS_REPORT_GAME_TYPE_CODE_ALL = -1;
+  const AS_REPORT_MAX_QUERY_LENGTH_HOURS = 6;
+
+  protected $AS_CURL_DATA = array(
+    CURLOPT_CUSTOMREQUEST => self::AS_DEFAULT_REQUEST_METHOD,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_SSL_VERIFYHOST => false,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_CONNECTTIMEOUT_MS => self::AS_CURL_CONNECTTIMEOUT_MS,
+    CURLOPT_TIMEOUT_MS => self::AS_CURL_TIMEOUT_MS,
+    CURLOPT_POST => true,
+  );
+
+  protected $game_url = null;
+  protected $game_url_get_datetime = null;
+
+  protected $current_api_url = null;
+  protected $current_api_get_datetime = null;
+
+  /* AES参数 */
+    private $key = false;
+    private $cipher_mode = false;
+    private $iv = false;
+
+    /* RSA公钥参数 */
+    private $public_key = false;
+    private $private_key = false;
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+  //--------------------通用函數--------------------
+	/**
+	 * 註冊新會員
+	 * @param $data['account'] 會員帳號
+   * @param $data['hall_name'] 旗下廠商代號
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01 必需的KEY不存在'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if (!($apiUrl = $this->getApiUrl($err))) {
+      return false;
+    }
+    $apiUrl = self::AS_API_HTTP_PROTOCOL . "://{$apiUrl}/AsiaStarApi/CreateUser";
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+    // 传输加密资料内容
+    $data = array(
+      'userAccount' => $account,
+      'timestamp' => time(),
+    );
+    $plainText = json_encode($data);
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+
+    if($result === false){
+      return $result;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === 'Success.'){
+        return true;
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+	}
+	/**
+	 * 會員登入
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($data, &$err = null) {
+
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if (!($apiUrl = $this->getApiUrl($err))) {
+      return false;
+    }
+
+    if ($this->isGameUrlAvailable()) {
+      $err = null;
+      return $this->game_url;
+    }
+
+    $data = array(
+      'userAccount' => $account,
+      'timestamp' => time(),
+    );
+    $plainText = json_encode($data);
+
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+
+    $apiUrl = self::AS_API_HTTP_PROTOCOL . "://{$apiUrl}/AsiaStarApi/UserLoginUrl";
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+
+    if($result === false){
+      return $result;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === 'Success.'){
+        $plainText = $this->decipherAsRes($result['data'], $result['authorization']); //解密
+        $resInJson = json_decode($plainText, true); //轉
+        $this->setGameUrl($resInJson['userLoginUrl'], date('Y-m-d H:i:s'));
+        return self::AS_API_HTTP_PROTOCOL . "://{$resInJson['userLoginUrl']}";
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+  }
+
+	/**
+	 * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($data, &$err = null) {
+
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    if (!($apiUrl = $this->getApiUrl($err))) {
+      return false;
+    }
+    // 传输加密资料内容
+    $data = array(
+      'userAccount' => $account,
+      'timestamp' => time(),
+    );
+    $plainText = json_encode($data);
+
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+    $apiUrl = self::AS_API_HTTP_PROTOCOL . "://{$apiUrl}/AsiaStarApi/UserBalance";
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+    if($result === false){
+      return $result;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === 'Success.'){
+        $plainText = $this->decipherAsRes($result['data'], $result['authorization']);  
+        $resInJson = json_decode($plainText, true);
+        return $resInJson['mainBalance'];
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+  }
+	/**
+	 * 下點(提款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(bool)
+	 */
+	public function withdrawMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    if (!($apiUrl = $this->getApiUrl($err))) {
+      return false;
+    }
+    $apiUrl = self::AS_API_HTTP_PROTOCOL . "://{$apiUrl}/AsiaStarApi/UserWalletTransaction";
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+
+    $transType = self::AS_TRANSFER_WITHDRAW_TYPE_CODE;
+    // 传输加密资料内容
+    $data = array(
+      'amount' => floatval($amount),
+      'hall_name' => "",
+      'timestamp' => time(),
+      'type' => $transType,
+      'userAccount' => $account,
+    );
+    $plainText = json_encode($data);
+
+    $checksum = hash('crc32', $plainText);
+
+    $data['checksum'] = $checksum;
+    $plainText = json_encode($data);
+
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === "Success."){
+        $plainText = $this->decipherAsRes($result['data'], $result['authorization']);
+        $resInJson = json_decode($plainText, true);
+        return $resInJson['mainBalance'];
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+	}
+	/**
+	 * 上點(加款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(bool)
+   */
+	public function rechargeMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    if (!($apiUrl = $this->getApiUrl($err))) {
+      return false;
+    }
+    $apiUrl = self::AS_API_HTTP_PROTOCOL . "://{$apiUrl}/AsiaStarApi/UserWalletTransaction";
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+
+    $transType = self::AS_TRANSFER_DEPOSIT_TYPE_CODE;
+    // 传输加密资料内容
+    $data = array(
+      'amount' => floatval($amount),
+      'hall_name' => "",
+      'timestamp' => time(),
+      'type' => $transType,
+      'userAccount' => $account,
+    );
+    $plainText = json_encode($data);
+
+    $checksum = hash('crc32', $plainText);
+
+    $data['checksum'] = $checksum;
+    $plainText = json_encode($data);
+
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === "Success."){
+        $plainText = $this->decipherAsRes($result['data'], $result['authorization']);
+        $resInJson = json_decode($plainText, true);
+        return $resInJson['mainBalance'];
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+	 */
+	public function getGameRecord($data, &$err = null) {
+    $arrKeys = array(
+      'startTime' => array('required'=>1,),
+      'endTime' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    if (!($apiUrl = $this->getApiUrl($err))) {
+      return false;
+    }
+
+    $beginTs =strtotime($startTime);
+    $endTs =strtotime($endTime);
+
+    $apiUrl = self::AS_API_HTTP_PROTOCOL . "://{$apiUrl}/AsiaStarApi/UserBetRecord";
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+
+    // 传输加密资料内容
+    $data = array(
+      'userAccount' => "",
+        'startTime' => $startTime,
+        'endTime' => $endTime,
+      'hall_name' => "",
+      'gameType' => self::AS_REPORT_GAME_TYPE_CODE_ALL,
+      'timestamp' => time(),
+    );
+    $plainText = json_encode($data);
+
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === "Success."){
+        $plainText = $this->decipherAsRes($result['data'], $result['authorization']);
+        $resInJson = json_decode($plainText, true);
+        return $resInJson['betRecords'];
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+
+  }
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + game_name     遊戲名稱
+   * + prize         中獎金額
+   * + period        期號
+   * + sb_html       有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $arrBet) {
+        $detail_id = $arrBet['detail_id'];
+
+        $arrBetContents = json_decode($arrBet['detail_dataInJson'], true);
+        /*
+      'gameName' => $gameName,
+      'gameType' => $gameType,
+      'hallName' => $hallName,
+      'prizeTotal' => $prizeTotal,
+      'userType' => $userType,
+      'state' => $state,
+      'tax' => $tax,
+      'period' => $period,
+        */
+        $gameName = $arrBetContents['gameName'];
+        $gameType = $arrBetContents['gameType'];
+        $hallName = $arrBetContents['hallName'];
+        $prizeTotal = $arrBetContents['prizeTotal'];
+        $userType = $arrBetContents['userType'];
+        $state = $arrBetContents['state'];
+        $tax = $arrBetContents['tax'];
+        $period = $arrBetContents['period'];
+
+        $arrBet['game_name'] = $gameName;
+        $arrBet['prize'] = $prizeTotal;
+        $arrBet['period'] = $period;
+
+        $arrBet['sb_html'] = null;
+        $arrBets[] = $arrBet;
+      }
+      return $arrBets;
+    } else {
+      return false;
+    }
+  }
+
+
+  //--------------------PUBLIC 非通用函數--------------------
+
+  /**
+   * get api url.
+   * @param none
+   * @param &$err 盛裝錯誤(非必須)
+   * @return api url(String)
+   */
+  public function getApiUrl(&$err = null) {
+    if ($this->current_api_url) {
+      return $this->current_api_url;
+    }
+
+    $apiUrl = self::AS_GET_API_URL;
+    $apiMethod = self::AS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->AS_CURL_DATA;
+
+    // 传输加密资料内容
+    $data = array(
+        "timestamp" => time(),
+    );
+    $plainText = json_encode($data);
+
+    $encipheredReqStr = $this->encipherForAsResquest($plainText, $encAuthorization);
+    $apiArrData = array(
+      'company' => self::AS_AGENT,
+      'authorization' => $encAuthorization,
+      'data' => $encipheredReqStr,
+    );
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+    if($result === fasle){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['state'] === 0 && $result['msg'] === 'Success.'){
+        $plainText = $this->decipherAsRes($result['data'], $result['authorization']);
+        $resInJson = json_decode($plainText, true);
+        $this->current_api_url = $resInJson['domain'];
+        return $this->current_api_url;
+      } else {
+        $err = $result['msg'];
+        return false;
+      }
+    }
+  }
+
+  protected function encipherForAsResquest($argPlainStr, &$argAuthorization) {
+
+    $aesKey = $this->setAesParam(self::AS_AES_CIPHER_MODE);
+    $this->setRsaPublicKey(self::AS_RSA_PUBLIC_KEY);
+    $argAuthorization = $this->rsaPublicEncrypt($aesKey); // 取得授权密文
+    $encipheredStr = $this->aesEncrypt($argPlainStr); // 取得加密密文
+    return $encipheredStr;
+
+  }
+
+  protected function decipherAsRes($argStr, $argAuthorization) {
+
+    // 设定私钥档案位置
+    $RSA_PRIVATE_KEY = self::AS_RSA_PRIVATE_KEY;
+
+    // 设定接收密文资料
+    //$Data = '密文资料';
+
+    // 设定授权密文
+    //$Authorization = '授权密文';
+
+    $this->setRsaPrivateKey($RSA_PRIVATE_KEY);
+    $AES_KEY = $this->rsaPrivateDecrypt($argAuthorization);
+    $this->setAesParam(self::AS_AES_CIPHER_MODE, $AES_KEY);
+    $plainText = $this->aesDecrypt($argStr); // 取得解密文本讯息
+    return $plainText;
+  }
+
+  public static function getBetDate($argBetDate, &$argSplitTimestamp=null) {
+    $betTime = strtotime($argBetDate);
+    $splitTime = strtotime(date('Y-m-d',$betTime).' 00:00:00');  //下注當日的12:00:00
+    $argSplitTimestamp = $splitTime;
+    if ($betTime >= $splitTime) {  //算到隔天的1200
+      $targetDate = date('Y-m-d',$betTime);
+    } else {  //算成前日
+      $targetDate = date('Y-m-d',$betTime-60*60*24);
+    }
+    return $targetDate;
+  }
+
+  public static function getArrayValueByKey($arrArray, $arrKey) {
+    if (array_key_exists($arrKey, $arrArray)) {
+      return $arrArray[$arrKey];
+    } else {
+      if (array_key_exists('unknown', $arrArray)) {
+        return "{$arrArray['unknown']}({$arrKey})";
+      } else {
+        'Unknown key';
+      }
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  //取得投注項目的文字
+  protected function _getBetStr($argGameId, $argBettingContent) {
+    $ret = '';
+    $gameId = trim($argGameId);
+    $arr = explode(',', $argBettingContent);
+    if (sizeof($arr)) {
+      foreach ($arr as $ak => $arrBetItems) {
+        if (strlen(trim($arrBetItems))) {
+          $arr2 = explode('^', $arrBetItems);
+          if (sizeof($arr2)) {
+            $betItemCode = trim($arr2[0]);
+            $betAmount = floatVal($arr2[1])+0;
+            $winLoss = $arr2[2];
+            if (strlen($betItemCode)) {
+              if (strlen($ret)) {$ret .= ',';}
+              if (array_key_exists($gameId, self::ARR_AS_BET_CODE)) {
+                if (array_key_exists($betItemCode, self::ARR_AS_BET_CODE[$gameId])) {
+                  $betItem = self::ARR_AS_BET_CODE[$gameId][$betItemCode];
+                  if (sizeof($arr)===2) {
+                    $ret .= "【{$betItem}】";
+                  } else {
+                    $ret .= "【{$betItem}】x{$betAmount}";
+                  }
+                } else {
+                  $ret .= "不存在的投注代碼({$betItemCode})";
+                }
+              } else {
+                $ret .= "不存在的遊戲({$gameId})";
+              }
+            }
+          }
+        }
+      }
+      return $ret;
+    }
+    return false;
+  }
+
+  /*
+  //遊戲結果尚不可用
+  protected function _getGameResultStr($argGameId, $argResult) {
+    if (($argGameId==11)||($argGameId==12)) {  //11=百家樂,12=龍虎
+      return self::getArrayValueByKey(self::ARR_AS_BACCARAT_RESULT_ID, $argResult);
+    } elseif ($argGameId==13) {  //輪盤
+      return "【{$argResult}】";
+    } elseif ($argGameId==14) {  //骰寶
+      $ret = '';
+      $len = strlen($argResult);
+      for ($i=0; $i<$len; ++$i) {
+        if (strlen($ret)) {$ret .= ',';}
+        $num = substr($argResult, $i, 1);
+        $ret .= "【{$num}】";
+      }
+      return $ret;
+    } elseif ($argGameId==15) {  //德州撲克
+      return '德州撲克結果...';
+    } elseif ($argGameId==16) {  //翻攤
+      return "【{$argResult}】";
+    } elseif ($argGameId==17) {  //AG電子
+      return 'AG電子結果...';
+    }
+    return "無法解析結果({$argGameId},{$argResult})";
+  }
+  */
+
+  /**
+   * 檢驗CLASS內的 gameUrl 是否可用
+   * @param 不需要
+   * @return 結果(bool)
+   */
+  protected function isGameUrlAvailable() {
+    if (
+      ($this->game_url === null)
+      || ($this->game_url_get_datetime === null)
+      || ( (strtotime($this->game_url_get_datetime)+self::AS_GAME_URL_ALIVE_TIME_SEC) >= time() )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * 重設CLASS內的 gameUrl 為初始狀態
+   * @param 不需要
+   * @return 結果(bool)
+   */
+  protected function _resetGameUrl() {
+    if (($this->game_url = null) && ($this->game_url_get_datetime = null)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 設定CLASS內的 gameUrl
+   * @param argGameUrl gameUrl本身
+   * @param argDatetime 取得gameUrl的時間
+   * @return 結果(bool)
+   */
+  protected function setGameUrl($argGameUrl, $argDatetime) {
+    if (($this->game_url = $argGameUrl) && ($this->game_url_get_datetime = $argDatetime)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+     * 设置 AES 加解密的参数
+     * @param   string   $cipher_mode   加解密的模式
+     * @param   string   $key           加解密的金钥
+     * @return  string   回传加解密的钥匙
+     */
+    public function setAesParam($cipher_mode, $key = null)
+    {
+        if (!in_array($cipher_mode, openssl_get_cipher_methods())) {
+            throw new Exception('AES Param is err!!');
+        } else {
+            $this->cipher_mode = $cipher_mode;
+            $aesKey = $key == null ? $this->randAesKey() : $key;
+            $this->key = hash("sha256", $aesKey, true);
+            $this->iv = md5($aesKey, true);
+        }
+        return $aesKey;
+    }
+
+    /**
+     * 随机从 (a~z A~Z 0~9) 产生32字的字串作为AES的加密金钥
+     * @return  string  AES的加密金钥
+     */
+    public function randAesKey()
+    {
+        $key_len = 32; // 字串长度
+        $key = '';
+        $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // 乱数内容
+        $len = strlen($word);
+        for ($i = 0; $i < $key_len; $i++) {
+            $key .= $word[rand() % $len];
+        }
+        return $key;
+    }
+
+     /**
+     * AES 字串加密
+     * @param   string   $plain_text   要加密的字串
+     * @return  string   AES加密后的内容
+     */
+    public function aesEncrypt($plain_text)
+    {
+        if (empty($plain_text)) {
+            throw new Exception('plain text is empty');
+        } else {
+            $cipher_text = openssl_encrypt($plain_text, $this->cipher_mode, $this->key, 0, $this->iv);
+        }
+        return $cipher_text;
+    }
+
+    /**
+     * AES 字串解密
+     * @param   string   $cipher_text   要解密的字串
+     * @return  string   AES解密后的内容
+     */
+    public function aesDecrypt($cipher_text)
+    {
+        if (empty($cipher_text)) {
+            throw new Exception('cipher text is empty');
+        } else {
+            $plain_text = openssl_decrypt($cipher_text, $this->cipher_mode, $this->key, 0, $this->iv);
+        }
+        return $plain_text;
+    }
+
+    /**
+     * 设定RSA公钥
+     * @param    string   $public_key   公钥文件内容
+     * @return   bool     是否成功
+     */
+    public function setRsaPublicKey($public_key)
+    {
+        $this->public_key = openssl_get_publickey($public_key);
+        if (!$this->public_key) {
+            throw new Exception('public key Invalid!!');
+        }
+        return true;
+    }
+
+    /**
+     * 设定RSA私钥
+     * @param    string   $private_key   私钥文件内容
+     * @return   bool     是否成功
+     */
+    public function setRsaPrivateKey($private_key)
+    {
+        $this->private_key = openssl_get_privatekey($private_key);
+        if (!$this->private_key) {
+            throw new Exception('private key Invalid!!');
+        }
+        return true;
+    }
+
+    /**
+     * RSA公钥加密函数(需定义公钥)
+     * @param    string   $plain_text   要加密的内容
+     * @return   string   加密后的字串
+     */
+    public function rsaPublicEncrypt($plain_text)
+    {
+        if (!$this->public_key || $plain_text === '') {
+            throw new Exception('public Key or plain text invalid');
+        }
+        openssl_public_encrypt($plain_text, $crypt_text, $this->public_key);
+        openssl_free_key($this->public_key);
+        return base64_encode($crypt_text); // 加密后的内容为 binary 透过 base64_encode() 转换为 string 方便传输
+    }
+
+
+    /**
+     * RSA私钥解密函数(需定义私钥)
+     * @param    string   $cipher_text   要解密的字串
+     * @return   string   解密后的内容
+     */
+    public function rsaPrivateDecrypt($cipher_text)
+    {
+        if (!$this->private_key || $cipher_text === '') {
+            throw new Exception('private Key or encrypted text invalid');
+        }
+        // 先将密文用 base64_decode() 解译
+        openssl_private_decrypt(base64_decode($cipher_text), $decrypted, $this->private_key);
+        openssl_free_key($this->private_key);
+        return $decrypted;
+    }
+
+}

@@ -1,0 +1,49 @@
+<?php
+
+class CommonAction extends Action {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        //宣告台灣時區
+        date_default_timezone_set('Asia/Taipei');
+        
+        // 跳過過濾字串參數
+        $ignore = array();
+        
+        // $_REQUEST過濾
+        foreach ($_REQUEST as $key => $val) {
+            if (!in_array($key, $ignore)) {
+                $_REQUEST[$key] = filterStr($val);
+            }
+        }
+    }
+    /**
+     * 取得Request資料
+     *
+     * @return array
+     */
+    protected function getRequest() {
+        
+        foreach ($_REQUEST as $key => $val) {
+            if (is_array($val)) {
+                $data[$key] = ($val);
+            } else {
+                $data[$key] = trim($val);
+            }
+        }
+        
+        return $data;
+    }
+    /*
+     * 易沛資訊
+     */
+    protected function getYiPayData(){
+        $data = array(
+            "hashKey"=>"PPUXXF7G4HHQEY9HYJX9B9YMCM",
+            "hashIv"=>"Y7HT8LSGABNLJ75UNFKAU33HTA",
+            "ValidateKey"=>"XLTYB7KKLB",
+        );
+        return $data;
+    }
+}

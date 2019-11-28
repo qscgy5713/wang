@@ -1,0 +1,83 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+		<div class="row">
+			<span>總投注:{$sumBettimgMoney}</span>
+			<span>總輸贏:{$sumSurplus}</span>
+			<span>總洗碼:{$sumEffective}</span>
+			<table class="table table-striped m-b-0">
+			   <thead>
+                     <tr>
+                     	  <th>序</th>
+                      <VOLIST name="FieldChange" id="field">
+                      	<th>{$field.cnName}</th>
+                      </VOLIST>
+                     </tr>
+                </thead>
+				<tbody>
+					<VOLIST name="showArray" id="vo" empty="$showEmpty">
+						<tr>
+							<td>{$key+1}</td>
+							<VOLIST name="FieldChange" id="field">
+								<td>{$vo[$field['newField']]}</td>
+							</VOLIST>
+						</tr>
+					</VOLIST>
+				</tbody>
+			</table>
+			
+			</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/>
+
+<script>
+$(function(){
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+    $("#"+"系統部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	
+	if($("#table1 tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#showMessage").show()
+	}
+   
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+
+$(document).ready(function(){
+  $('#member_account').typeahead({
+    ajax: {
+      url: '__URL__/searchMemberName',
+      timeout: 200
+    }
+  });
+});
+</script>

@@ -1,0 +1,107 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menu"/>
+		<include file="Common:menuRwd"/>
+		
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners">
+			<!--
+				Navigation Styles:
+				
+					data-navigationStyle="" theme default navigation
+					
+					data-navigationStyle="preview1"
+					data-navigationStyle="preview2"
+					data-navigationStyle="preview3"
+					data-navigationStyle="preview4"
+					
+				Bottom Shadows
+					data-shadow="1"
+					data-shadow="2"
+					data-shadow="3"
+					
+				Slider Height (do not use on fullscreen mode)
+					data-height="300"
+					data-height="350"
+					data-height="400"
+					data-height="450"
+					data-height="500"
+					data-height="550"
+					data-height="600"
+					data-height="650"
+					data-height="700"
+					data-height="750"
+					data-height="800"
+			-->
+			<div class="fullwidthbanner" data-height="500" data-navigationStyle="">
+				<ul class="hide">
+					<!-- SLIDE  -->
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off"  data-title="Slide">
+						<img src="" data-lazyload="__CSS__/images/about_banner.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+					</li>
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>
+	<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+		<div class="container mt-10">
+		
+			<header class="text-center mb-30">
+				<h2 class="mb-20 mt-20">關於我們</h2>
+				
+				<div class="responsibility_title"><i class="icomoon icon-smallcow responsibility-icon-style fs-40"></i></div>	
+			</header>
+
+			<div class="row">
+				<div class="col-md-12 col-sm-12 pl-35">
+					<p class="mb-45 fw-700">小牛遊戲擁有菲律賓政府PAGCOR（菲律賓娛樂和遊戲公司）頒發的博彩牌照並經第三方遊戲平台GLI（Gaming Laboratories International）權威認證，
+					是一家合法，安全，專業的購彩平台，小牛遊戲的團隊已有12年的行業經驗，是值得您信任並放心遊戲的娛樂平台。</p>
+					<p class="mb-45 fw-700">小牛遊戲致力於提供最先進的創新技術，小牛遊戲擁有最友善的操作介面，最創新的遊戲產品，以及最安全的遊戲環境，
+					不必擔心個資遭盜用外流，我們恪守「客戶至上」的宗旨，聘用專業並且熱忱的服務團隊，力求創新，不斷進步的精神，為客戶呈現最貼心的娛樂服務。</p>
+					<h3 class="text-center">小牛遊戲五大保障</h3>
+					<div class="divider divider-left"><!-- divider -->
+						<i class="fa fa-star-o"></i>
+					</div>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="col-md-12 col-sm-12 pl-35">
+					<ul class="responsibility_list text-danger">
+                        <li>
+                        	<p class="mb-10">強大的資金實力100％兌現賠付，保你暢玩無壓力</p>
+                        	<p style="color: #666;">您可以選擇超高獎金組，小牛遊戲始終承諾給您最優的獎金組和最強資金兌現力的雙重保障！只要您獲獎，無論多少，都100％即刻兌現，確保您的經濟利益。</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">可靠的運營團隊，提供您最即時的協助以及最高質量的遊戲體驗</p>
+                        	<p style="color: #666;">小牛遊戲提供優秀的服務團隊7×24小時全天候為您協助您所遇到的問題，給您專業的答复及高處理效率。</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">極高效率的存取款機制</p>
+                        	<p style="color: #666;">小牛遊戲注重每位用戶的遊戲體驗，高效率的存取款作業採用國際標準256位加密技術的支付系統保障您的支付存提萬無一失。</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">個資安全絕不外流</p>
+                        	<p style="color: #666;">小牛遊戲已通過國際知名互聯網安全檢測機構嚴格檢測，安全無毒無漏洞，最周到的安全機制為每位用戶的資料安全保駕護航。</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">合法注册的网上博彩执照</p>
+                        	<p style="color: #666;">擁有菲律賓政府PAGCOR（Philippine Amusement and Gaming Corporation）頒發的合法網上博彩執照。</p>
+                        </li>
+                    </ul>
+                    
+				</div>	
+				<div class="col-md-6 col-sm-6 m-auto">
+					<img style="width: 100%;" src="__CSS__/images/license.jpg">
+				</div>
+				
+			</div>
+			
+		</div>
+	</section>
+			
+	    
+<include file="Common:footer"/>
+<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/js/jquery.themepunch.revolution.js"></script>

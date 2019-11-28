@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{$Think.MODULE_NAME}首頁</title>
+</head>
+
+<body>
+<div id="ind" ></div>
+<span> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME}  </span>
+<BR>
+<input type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<input id="startTime" name="startTime" type="text" value="{$startTime}"/> 至
+		<input id="endTime"   name="endTime"   type="text" value="{$endTime}"/>
+		<select name="selectClass">
+			<if condition="$selectClass eq 'Member'">
+				<option selected value="Member">會員</option>
+			<else />
+				<option value="Member">會員</option>
+			</if>
+			<if condition="$selectClass eq 'Agent'">
+				<option selected value="Agent">代理</option>
+			<else />
+				<option value="Agent">代理</option>
+			</if>
+			<if condition="$selectClass eq 'Admin'">
+				<option selected value="Admin">公司</option>
+			<else />
+				<option value="Admin">公司</option>
+			</if>
+			<if condition="$selectClass eq 'all'">
+				<option selected value="all">全顯示</option>
+			<else />
+				<option value="all">全顯示</option>
+			</if>
+		</select>
+		<input type='submit' value='查詢'>
+	</form>
+	<div>
+		<form method="post" action="__APP__/LoginRecord/index">
+			搜索帳號 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+			<input type="submit" value="查詢">
+		</form>
+	</div>
+	<table>
+		<tr>
+			<th>序</th><th>時間</th><th>登入帳號</th><th>IP</th><th>瀏覽器/版本/裝置</th>
+			<th>登入網址</th><th>狀態</th><th>訊息</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.Account}</td>
+				<td>{$vo.ip}</td>
+				<td>{$vo.os}</td>
+				<td>{$vo.url}</td>
+				<td>{$vo.status}</td>
+				<td>{$vo.errMessage}</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>
+<include file="Common:footer"/> 
+<script type="text/javascript">
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+
+$(document).ready(function(){
+  $('#member_account').typeahead({
+    ajax: {
+      url: '__URL__/searchMemberName',
+      timeout: 200
+    }
+  });
+});
+</script>

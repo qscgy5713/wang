@@ -1,0 +1,1205 @@
+<?php
+class GameReportAction extends AdminAction {
+    protected $effectiveMemberLimit = 10000;//有效會員 的 有效投注
+    protected $memberDetailNumber = 10;
+    protected $pageMoreNumber = 5;
+    protected $gameDataArray = array(
+        0 =>array(
+            "gameCode" => "Sb",
+            "gameName" => "鑫寶體育",
+            "gameEnable" => 1
+        ),
+        1 =>array(
+            "gameCode" => "Pa",
+            "gameName" => "平博體育",
+            "gameEnable" => 1
+        ),
+        2 =>array(
+            "gameCode" => "Sp",
+            "gameName" => "SP體育",
+            "gameEnable" => 1
+        ),
+        3 =>array(
+            "gameCode" => "Dg",
+            "gameName" => "夢幻真人",
+            "gameEnable" => 1
+        ),
+        4 =>array(
+            "gameCode" => "Sa",
+            "gameName" => "沙龍真人",
+            "gameEnable" => 1
+        ),
+        5 =>array(
+            "gameCode" => "Ab",
+            "gameName" => "歐博真人",
+            "gameEnable" => 1
+        ),
+        6 =>array(
+            "gameCode" => "Bj",
+            "gameName" => "北京賽車",
+            "gameEnable" => 1
+        ),
+        7 =>array(
+            "gameCode" => "Xbs",
+            "gameName" => "六合",
+            "gameEnable" => 1
+        ),
+        8 =>array(
+            "gameCode" => "Bg",
+            "gameName" => "小牛賓果",
+            "gameEnable" => 1
+        ),
+        9 =>array(
+            "gameCode" => "Bng",
+            "gameName" => "博狗電子",
+            "gameEnable" => 1
+        ),
+        10 =>array(
+            "gameCode" => "Qt",
+            "gameName" => "QT電子",
+            "gameEnable" => 1
+        ),
+        11 =>array(
+            "gameCode" => "Uc8",
+            "gameName" => "手機電子",
+            "gameEnable" => 1
+        ),
+    );
+    
+    protected $decimal = 0;//計算到小數點兩位
+    //TODO:7 遊戲報表
+    public function index(){
+        
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+        
+        
+        $searchMemberAccount = "";
+        $searchMemberId = "";
+        if(isset($request['searchMemberAccount']) && !empty($request['searchMemberAccount'])){
+            $searchMemberAccount = $request['searchMemberAccount'];
+            $CommonMember = D("CommonMember");
+            $data = array(
+                "member_account" => $searchMemberAccount,
+                "agent_tree" => $_SESSION['Admin']['agentTree'],
+            );
+            $return = $CommonMember->searchMemberByMemberAccountUseGiven($data);
+            if($return === false || empty($return)){
+                $this->assign("searchMemberErr","true");
+                $this->assign("searchMemberErrMessage","無此 ".$searchMemberAccount." 會員帳號");
+                $searchMemberAccount = "";
+            }
+            $searchMemberId = $return["member_id"];
+            $request["agentTree"] = $return["agent_tree"];
+            
+            $this->assign("searchMemberAccount",$searchMemberAccount);
+        }
+        
+        //代理線開始
+        $CommonAgentTree = D("CommonAgentTree");
+        $loginArray = array(
+            0 => array(
+                "agentTree"=>$_SESSION['Admin']['agentTree'],
+                "agentId"=>$_SESSION['Admin']['agentId'],
+                "agentAccount"=>$_SESSION['Admin']['agentAccount']
+            )
+        );
+        
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Admin']['agentTree']."/i", $request["agentTree"])
+            || $request["agentTree"] == $_SESSION['Admin']['agentTree']
+            ){
+                $comeAgentTree = $_SESSION['Admin']['agentTree'];
+                $comeAgentId = $_SESSION['Admin']['id'];
+                $comeAgentAccount = $_SESSION['Admin']['agentAccount'];
+                $comeAgentmode = $_SESSION['Admin']['agentMode'];
+                $comeAgentHead = $_SESSION['Admin']['agentHead'];
+        } else {
+            $comeAgentTree = $request["agentTree"];
+            
+            $comeTreeExpArray = explode(",",$_SESSION['Admin']['agentTree']);
+            $agentTreeExpArray = explode(",",$comeAgentTree);
+            $getTreeNumber = count($agentTreeExpArray) - count($comeTreeExpArray);//要取代理樹的數量
+            $startNumber = count($comeTreeExpArray) - 1;
+            $endNumber = $startNumber + $getTreeNumber;
+            $comeReplace = "";
+            for($i=$startNumber;$i<$endNumber;$i++){
+                $comeReplace .= $agentTreeExpArray[$i].",";
+            }
+            $exArray = explode(",",$comeReplace);
+            $return = $CommonAgentTree->getAgentTreeDataByManyAgentId($exArray);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            $agentAccount = "";
+            $agentmode = "";
+            $agentHead = "";
+            foreach ($return as $value){
+                array_push($loginArray,$value);
+                $agentAccount = $value['agentAccount'];
+                $agentmode = $value['agentMode'];
+                $agentHead = $value['agentHead'];
+            }
+            //var_dump($loginArray);
+            $comeAgentAccount = $agentAccount;
+            $comeAgentmode = $agentmode;
+            $comeAgentHead = $agentHead;
+        }
+        
+        //判定是否是 制度代理
+        //0自訂佔成 1制度佔成
+        $isSystemMode = false;
+        if($comeAgentmode == 1){
+            $isSystemMode = true;
+        }
+        
+        $exArray = explode(",",$comeAgentTree);
+        $comeAgentId = $exArray[count($exArray)-2];
+        //代理線結束
+        
+        //日期選單 開始
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+        
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tomorrow = date('Y-m-d',strtotime('tomorrow'));
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        
+        $this->assign("today",$today);//今日
+        $this->assign("tomorrow",$tomorrow);//明日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        //日期選單 結束
+        
+        
+        $gameShowArray = array();
+        $gameTotalBettingMoney = 0;//遊戲投注金額
+        $gameTotalSurplus = 0;//遊戲輸贏金額
+        $gameTotalEffective = 0;//遊戲有效投注
+        $gameTotalBetNumber = 0;//遊戲注單數量
+        
+        $allEffectiveMemberNumber = 0;//總有效會員
+        $allBettingMoney = 0;//總投注額
+        $allSurplus = 0;//總輸贏
+        $allEffective = 0;//總洗碼
+        $allBetNumber = 0;//總住單數量
+        $allGivenMoney = 0;//總贈點
+        
+        $agentArray = array();
+        $agentGivenArray = array();
+        $memberArray = array();
+        $memberGivenArray = array();
+        
+        $agentTotalBettingMoney = 0;//代理總投注額
+        $agentTotalSurplus = 0;//代理總輸贏
+        $agentTotalEffective = 0;//代理總洗碼
+        $agentTotalBetNumber = 0;//代理總住單
+        $agentTotalGiven = 0;//代理總贈點
+        $agentTotalTopMoney = 0;//代理總上級金額
+        $agentTotalRatioMoney = 0;//代理總佔成金額
+        $agentTotalUnderMoney = 0;//代理總下級金額
+        
+        
+        $memberTotalBettingMoney = 0;//會員總投注額
+        $memberTotalSurplus = 0;//會員總輸贏
+        $memberTotalEffective = 0;//會員總洗碼
+        $memberTotalBetNumber = 0;//會員總住單
+        $memberTotalGiven = 0;//會員總贈點
+        $memberTotalTopMoney = 0;//會員總上級金額
+        $memberTotalRatioMoney = 0;//會員總佔成金額
+        
+        $GameInfo = D("GameInfo");
+        $CommonAgent = D("CommonAgent");
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        
+        $gameDataArray = $this->gameDataArray;
+        
+        foreach($gameDataArray as $key => $value){
+            $gameCode = ucfirst($value['gameCode']);
+            $data = array(
+                "game_code"=>$gameCode
+            );
+            $return = $GameInfo->getGameIdDataByGameCode($data,$err);
+            if($return === false){
+                $this->error($err);
+            }
+            if(empty($return)){
+                continue;
+            }
+            
+            $gameName = $return['game_name'];
+            
+            $data = array(
+                "agent_tree" => $comeAgentTree,
+                "game_code" => $gameCode,
+                "report_orderDate"=> array(
+                    'startTime'=>strtotime($startTime),
+                    'endTime'=>strtotime($endTime)
+                ),
+                "searchMemberId" => $searchMemberId
+            );
+            
+            $return = $GameInfo->getOneGameReportData($data,$err);
+            if($return === false){
+                $this->error($err);
+            }
+            foreach ($return as $key => $value){
+                if(empty($value)){
+                    $return[$key] = 0;
+                } else {
+                    switch ($key){
+                        case 'allBettingMoney':
+                            $gameTotalBettingMoney = bcadd($gameTotalBettingMoney,$value,$this->decimal);
+                            $return[$key] = number_format($value,$this->decimal,".","");
+                            break;
+                        case 'allSurplus':
+                            $gameTotalSurplus = bcadd($gameTotalSurplus,$value,$this->decimal);
+                            $return[$key] = number_format($value,$this->decimal,".","");
+                            break;
+                        case 'allEffective':
+                            $gameTotalEffective = bcadd($gameTotalEffective,$value,$this->decimal);
+                            $return[$key] = number_format($value,$this->decimal,".","");
+                            break;
+                        case 'allBetNumber':
+                            $gameTotalBetNumber += (int)$value;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                }
+            }
+            $return['game_code'] = $gameCode;
+            $gameShowArray[$gameName] = $return;
+        }
+        //var_dump($gameShowArray);exit();
+        
+        $this->assign("gameTotalBettingMoney",$gameTotalBettingMoney);
+        $this->assign("gameTotalSurplus",(($gameTotalSurplus > 0) ? "<span style='color:green;'>".$gameTotalSurplus."</span>" : "<span style='color:red;'>".$gameTotalSurplus."</span>"));
+        $this->assign("gameTotalEffective",$gameTotalEffective);
+        $this->assign("gameTotalBetNumber",$gameTotalBetNumber);
+        
+        
+        if(empty($searchMemberId)){
+            //搜尋代理 開始
+            $data = array(
+                "agent_id" => $comeAgentId,
+                "agent_tree" => $comeAgentTree,
+                "report_orderDate"=> array(
+                    'startTime'=>strtotime($startTime),
+                    'endTime'=>strtotime($endTime)
+                ),
+                "gameDataArray" => $gameDataArray
+            );
+            $reportReturn = $GameInfo->getAllGameReportData($data,$err);
+            if($reportReturn === false){
+                $this->error($err);
+            }
+            $data = array(
+                "agent_id"=>$comeAgentId,
+                "agent_tree"=>$comeAgentTree,
+                "startTime"=>strtotime($startTime),
+                "endTime"=>strtotime($endTime),
+                "groupBy"=>"agent_id",
+                "walletLog_type"=>'all' //搜尋返水
+            );
+            $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+            }
+            $givenArray = $return;
+            foreach($givenArray as $key => $value){
+                $agentGivenArray[$value['agent_account']] = $value;
+            }
+            //var_dump($agentGivenArray);exit();
+            
+            $comeTreeExpArray = explode(",",$comeAgentTree);
+            foreach($reportReturn as $key => $value){
+                //代理
+                $agentTreeExpArray = explode(",",$value['agent_tree']);
+                $getTreeNumber = count($agentTreeExpArray) - count($comeTreeExpArray);//要取代理樹的數量
+                $startNumber = count($comeTreeExpArray) - 1;
+                $endNumber = $startNumber + $getTreeNumber;
+                $newAgnetTree = "";
+                for($i=$startNumber;$i<$endNumber;$i++){
+                    $newAgnetTree .= $agentTreeExpArray[$i].",";
+                }
+                $agnetTreeArray = explode(",",$newAgnetTree);
+                
+                $ratioArray = explode(',',$value['ratioTree']);//佔成樹
+                $agnetTreeNumber = explode(",",$comeAgentTree);
+                $agnetTreeNumber = count($agnetTreeNumber)-1;
+                
+                
+                //贈點
+                $agentGivenValue = 0;
+                if(!empty($agentGivenArray[$value['agent_account']])){
+                    $agentGivenValue = $agentGivenArray[$value['agent_account']]['allMoney'];
+                    //$agentTotalGiven += (int)$agentGivenValue;
+                    $agentTotalGiven = bcadd($agentTotalGiven, $agentGivenValue, $this->decimal);
+                }
+                
+                $agentTotalBettingMoney = bcadd($agentTotalBettingMoney, $value['allBettingMoney'], $this->decimal);
+                $agentTotalSurplus = bcadd($agentTotalSurplus, $value['allSurplus'], $this->decimal);
+                $agentTotalEffective = bcadd($agentTotalEffective, $value['allEffective'], $this->decimal);
+                $agentTotalBetNumber += (int)$value['allBetNumber'];
+                
+                if(isset($agentArray[$agnetTreeArray[0]])){
+                    $agentArray[$agnetTreeArray[0]]["sumBettingMoney"] = bcadd($agentArray[$agnetTreeArray[0]]["sumBettingMoney"], $value['allBettingMoney'], $this->decimal);
+                    $agentArray[$agnetTreeArray[0]]["sumSurplus"] = bcadd($agentArray[$agnetTreeArray[0]]["sumSurplus"], $value['allSurplus'], $this->decimal);
+                    $agentArray[$agnetTreeArray[0]]["sumEffective"] = bcadd($agentArray[$agnetTreeArray[0]]["sumEffective"], $value['allEffective'], $this->decimal);
+                    $agentArray[$agnetTreeArray[0]]["sumGivenMoney"] = bcadd($agentArray[$agnetTreeArray[0]]["sumGivenMoney"], $agentGivenValue, $this->decimal);
+                    $agentArray[$agnetTreeArray[0]]["sumBetNumber"] += (int)$value['allBetNumber'];
+                    
+                    
+                    if($isSystemMode || $comeAgentAccount == 'game'){
+                        if((int)$value['allEffective'] > $this->effectiveMemberLimit){
+                            $agentArray[$agnetTreeArray[0]]["sumEffectiveMeberNumber"]++;
+                            $allEffectiveMemberNumber++;
+                        }
+                    }
+                } else {
+                    if(count($agnetTreeArray) > 1){
+                        $data = array(
+                            'agent_id' =>$agnetTreeArray[0],
+                        );
+                        $return = $CommonAgent->getAgentDataById($data);
+                        if($return === false){
+                            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                        }
+                        $agentAccount = $return['agent_account'];
+                        $agentTree = $return['agent_tree'];
+                        $ratioTree = $return['ratio_tree'];
+                        $agentRatioRemark = $return['agent_ratioRemark'];
+                    } else {
+                        $agentAccount = $value['agent_account'];
+                        $agentTree = $comeAgentTree.$newAgnetTree;
+                        $ratioTree = $value['ratio_tree'];
+                    }
+                    
+                    $data = array(
+                        "agentAccount"=>$agentAccount,
+                        "agentTree" => $agentTree,
+                        "ratioTree" => $ratioTree,
+                        "sumBettingMoney" => number_format($value['allBettingMoney'],$this->decimal,".",""),
+                        "sumSurplus" => number_format($value['allSurplus'],$this->decimal,".",""),
+                        "sumEffective" => number_format($value['allEffective'],$this->decimal,".",""),
+                        "sumBetNumber" => $value['allBetNumber'],
+                        "sumGivenMoney" => $agentGivenValue,
+                        "ratioRemark"=>$agentRatioRemark,
+                        "agentMode"=>$value['agent_mode'],
+                    );
+                    if($isSystemMode || $comeAgentAccount == 'game'){
+                        if((int)$value['allEffective'] > $this->effectiveMemberLimit){
+                            $data["sumEffectiveMeberNumber"] = 1;
+                            $allEffectiveMemberNumber = 1;
+                        } else {
+                            $data["sumEffectiveMeberNumber"] = 0;
+                        }
+                    }
+                    $agentArray[$agnetTreeArray[0]] = $data;
+                }
+            }
+            //搜尋代理 結束
+        }
+        
+        
+        //var_dump($agentArray);exit();
+        
+        //搜尋會員 開始
+        $data = array(
+            "agent_id" => $comeAgentId,
+            "report_orderDate"=> array(
+                'startTime'=>strtotime($startTime),
+                'endTime'=>strtotime($endTime)
+            ),
+            "gameDataArray" => $gameDataArray,
+            "searchMemberId"=>$searchMemberId,//搜尋會員ID
+        );
+        $reportReturn = $GameInfo->getAllGameReportData($data,$err);
+        //var_dump($reportReturn);exit();
+        if($reportReturn === false){
+            $this->error($err);
+        }
+        //var_dump($reportReturn);exit();
+        
+        $data = array(
+            "agent_id"=>$comeAgentId,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"member_id",
+            "walletLog_type"=>'all'
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        $givenArray = $return;
+        //var_dump($givenArray);exit();
+        foreach($givenArray as $key => $value){
+            $memberGivenArray[$value['member_account']] = $value;
+        }
+        foreach($reportReturn as $key => $value){
+            //會員
+            $memberTotalBettingMoney = bcadd($memberTotalBettingMoney, $value['allBettingMoney'], $this->decimal);
+            $memberTotalSurplus = bcadd($memberTotalSurplus, $value['allSurplus'], $this->decimal);
+            $memberTotalEffective = bcadd($memberTotalEffective, $value['allEffective'], $this->decimal);
+            $memberTotalBetNumber += (int)$value['allBetNumber'];
+            
+            if((int)$value['allBettingMoney'] > $this->effectiveMemberLimit){
+                $allEffectiveMemberNumber++;
+            }
+            
+            //贈點
+            $memberGivenValue = 0;
+            if(!empty($memberGivenArray[$value['member_account']])){
+                $memberGivenValue = $memberGivenArray[$value['member_account']]['allMoney'];
+                $memberTotalGiven = bcadd($memberTotalGiven, $memberGivenValue, $this->decimal);
+                //$memberTotalGiven += (int)$memberGivenValue;
+                unset($memberGivenArray[$value['member_account']]);
+            }
+            
+            if(isset($memberArray[$value['member_id']])){
+                $memberArray[$value['member_id']]["sumBettingMoney"] = bcadd($memberArray[$value['member_id']]["sumBettingMoney"], $value['allBettingMoney'], $this->decimal);
+                $memberArray[$value['member_id']]["sumSurplus"] = bcadd($memberArray[$value['member_id']]["sumSurplus"], $value['allSurplus'], $this->decimal);
+                $memberArray[$value['member_id']]["sumEffective"] = bcadd($memberArray[$value['member_id']]["sumEffective"], $value['allEffective'], $this->decimal);
+                $memberArray[$value['member_id']]["sumGivenMoney"] = bcadd($memberArray[$value['member_id']]["sumGivenMoney"], $memberGivenValue, $this->decimal);
+                $memberArray[$value['member_id']]["sumBetNumber"] += (int)$value['allBetNumber'];
+                
+            } else {
+                $data = array(
+                    "memberId" => $value['member_id'],
+                    "memberAccount" => $value['member_account'],
+                    "sumBettingMoney" => (int)$value['allBettingMoney'],
+                    "sumSurplus" => (int)$value['allSurplus'],
+                    "sumEffective" => (int)$value['allEffective'],
+                    "sumBetNumber" => (int)$value['allBetNumber'],
+                    "sumGivenMoney" => (int)$memberGivenValue,
+                    "ratioTree" => $value['ratio_tree']
+                );
+                $memberArray[$value['member_id']] = $data;
+            }
+        }
+        //var_dump($memberGivenArray);exit();
+        if(count($memberGivenArray) != 0){
+            foreach($memberGivenArray as $key => $value){
+                $data = array(
+                    "memberId" => $value['member_id'],
+                    "memberAccount" => $value['member_account'],
+                    "sumBettingMoney" => 0,
+                    "sumSurplus" => 0,
+                    "sumEffective" => 0,
+                    "sumBetNumber" => 0,
+                    "sumGivenMoney" => $value['allMoney'],
+                    "ratioTree" => $value['ratio_tree']
+                );
+                $memberArray[$value['member_id']] = $data;
+            }
+        }
+        
+        //搜尋會員 結束
+        
+        
+        if($isSystemMode){//計算制度佔成金額
+            if($comeAgentHead == 'game'){//第一代代理
+                
+                $allBettingMoney = $agentTotalBettingMoney + $memberTotalBettingMoney;
+                $allSurplus = $agentTotalSurplus + $memberTotalSurplus;
+                $allEffective = $agentTotalEffective + $memberTotalEffective;
+                $allBetNumber = $agentTotalBetNumber + $memberTotalBetNumber;
+                $allGivenMoney = $agentTotalGiven + $memberTotalGiven;
+                
+                //$allEffectiveMemberNumber;//總有效會員
+                //$allSurplus;//總輸贏
+                //$allGivenMoney;//總贈點
+                if($allSurplus >= 310000 && $allEffectiveMemberNumber >= 25){
+                    $ratioTree = "60,40";
+                } else if($allSurplus >= 210000 && $allEffectiveMemberNumber >= 15){
+                    $ratioTree = "60,40";
+                } else if($allSurplus >= 110000 && $allEffectiveMemberNumber >= 10){
+                    $ratioTree = "60,40";
+                } else if($allSurplus >= 10000 && $allEffectiveMemberNumber >= 3){
+                    $ratioTree = "60,40";
+                } else {
+                    $ratioTree = "100,0";
+                }
+                $ratioArray = explode(',',$ratioTree);//佔成樹
+                
+                $topRatio = $ratioArray[0];
+                $agentRatio = $ratioArray[1];
+                
+                $cypherMoneyA = bcadd($allSurplus, $allGivenMoney, $this->decimal);
+                $cypherMoneyB = bcdiv($cypherMoneyA, 100, 4);
+                
+                $agentTopMoney = bcmul($cypherMoneyB, 100-$topRatio, $this->decimal);//上級佔成金額
+                $ratioMoney = bcmul($cypherMoneyB, $agentRatio, $this->decimal);//佔成金額
+                
+                $this->assign("firstAgentBettingMoney",$allBettingMoney);//代理總投注
+                $this->assign("firstAgentSurplus",$allSurplus);//代理總輸贏
+                $this->assign("firstAgentEffective",$allEffective);//代理總有效
+                $this->assign("firstAgentBetNumber",$allBetNumber);//代理總注單數
+                $this->assign("firstAgentGivenMoney",$allGivenMoney);//代理總贈點
+                $this->assign("firstAgentTopRatio",$topRatio);//上級佔成
+                $this->assign("firstAgentRatio",$agentRatio);//代理佔成
+                $this->assign("firstAgentTopMoney",$agentTopMoney);//上級佔成金額
+                $this->assign("firstAgentRatioMoney",$ratioMoney);//代理佔成金額
+                $this->assign("firstAgentEffectiveMemberNumber",$allEffectiveMemberNumber);//代理有效會員
+                $firstAgent = 'true';
+                $this->assign("firstAgent",$firstAgent);
+            }
+            $agentNotCompute = 'true';
+            $this->assign("agentNotCompute",$agentNotCompute);
+        } else {
+            if($comeAgentAccount == 'game'){
+                //計算game 佔成金額 開始 (有制度 有自訂) 開始
+                $agnetTreeNumber = explode(",",$comeAgentTree);
+                $agnetTreeNumber = count($agnetTreeNumber)-1;
+                foreach($agentArray as $key => $value){
+                    //$value['agentAccount'];//代理帳號
+                    //$value['agentTree'];//代理樹
+                    //$value['agentMode'];//代理模式
+                    switch ($value['agentMode']){
+                        case '0'://自訂佔成
+                            $ratioArray = explode(',',$value['ratioTree']);//佔成樹
+                            
+                            $topRatio = 0;
+                            for($i=0;$i<$agnetTreeNumber-1;$i++){
+                                $topRatio += $ratioArray[$i];
+                            }
+                            $underRatio = 0;
+                            for($i=$agnetTreeNumber;$i<count($ratioArray);$i++){
+                                $underRatio += $ratioArray[$i];
+                            }
+                            $agentRatio = $ratioArray[$agnetTreeNumber-1];
+                            
+                            $cypherMoneyA = bcadd($value['sumSurplus'], $agentArray[$key]['sumGivenMoney'], $this->decimal);
+                            $cypherMoneyB = bcdiv($cypherMoneyA, 100, 4);
+                            $agentTopMoney = bcmul($cypherMoneyB, 100-$topRatio, $this->decimal);//上級金額
+                            
+                            
+                            $agentTotalTopMoney = bcadd($agentTotalTopMoney, $agentTopMoney, $this->decimal);
+                            
+                            $agentArray[$key]['topMoney'] = $agentTopMoney;
+                            $agentArray[$key]['agentRatio'] = $agentRatio.'%';//佔成
+                            
+                            $ratioMoney = bcmul($cypherMoneyB, $agentRatio, $this->decimal);//佔成金額
+                            $agentTotalRatioMoney = bcadd($agentTotalRatioMoney, $ratioMoney, $this->decimal);//總佔成金額
+                            
+                            $agentArray[$key]['ratioMoney'] = $ratioMoney;
+                            $agentArray[$key]['underRatio'] = $underRatio.'%';//下級佔成
+                            $agentUnderMoney = bcmul($cypherMoneyB, 100-$topRatio-$agentRatio, $this->decimal);//下級金額
+                            
+                            $agentTotalUnderMoney = bcadd($agentTotalUnderMoney, $agentUnderMoney, $this->decimal);//總下級金額
+                            $agentArray[$key]['underMoney'] = $agentUnderMoney;
+                            //$agentArray[$key]['underMoney'] = ($value['sumSurplus']-$agentArray[$key]['sumGivenMoney'])/100*(100-$agentRatio);//下級金額
+                            break;
+                        case '1'://制度佔成
+                            if($allSurplus >= 310000 && $allEffectiveMemberNumber >= 25){
+                                $ratioTree = "60,40";
+                            } else if($allSurplus >= 210000 && $allEffectiveMemberNumber >= 15){
+                                $ratioTree = "60,40";
+                            } else if($allSurplus >= 110000 && $allEffectiveMemberNumber >= 10){
+                                $ratioTree = "60,40";
+                            } else if($allSurplus >= 10000 && $allEffectiveMemberNumber >= 3){
+                                $ratioTree = "60,40";
+                            } else {
+                                $ratioTree = "100,0";
+                            }
+                            $ratioArray = explode(',',$ratioTree);//佔成樹
+                            $topRatio = 0;
+                            $agentRatio = $ratioArray[0];
+                            $underRatio = $ratioArray[1];
+                            
+                            $cypherMoneyA = bcadd($value['sumSurplus'], $agentArray[$key]['sumGivenMoney'], $this->decimal);
+                            $cypherMoneyB = bcdiv($cypherMoneyA, 100, 4);
+                            $agentTopMoney = bcmul($cypherMoneyB, 100-$topRatio, $this->decimal);//上級金額
+                            
+                            $agentTotalTopMoney = bcadd($agentTotalTopMoney, $agentTopMoney, $this->decimal);
+                            $agentArray[$key]['topMoney'] = $agentTopMoney;
+                            $agentArray[$key]['agentRatio'] = $agentRatio.'%';//佔成
+                            
+                            $ratioMoney = bcmul($cypherMoneyB, $agentRatio, $this->decimal);//佔成金額
+                            
+                            $agentTotalRatioMoney = bcadd($agentTotalRatioMoney, $ratioMoney, $this->decimal);//總佔成金額
+                            $agentArray[$key]['ratioMoney'] = $ratioMoney;
+                            $agentArray[$key]['underRatio'] = $underRatio.'%';//下級佔成
+                            $agentUnderMoney = bcmul($cypherMoneyB, 100-$topRatio-$agentRatio, $this->decimal);//下級金額
+                            $agentTotalUnderMoney = bcadd($agentTotalUnderMoney, $agentUnderMoney, $this->decimal);//總下級金額
+                            $agentArray[$key]['underMoney'] = $agentUnderMoney;
+                            
+                            break;
+                    }
+                    
+                }
+                //計算game 佔成金額 開始 (有制度 有自訂) 結束
+            } else {
+                //計算自訂佔成金額 開始
+                $agnetTreeNumber = explode(",",$comeAgentTree);
+                $agnetTreeNumber = count($agnetTreeNumber)-1;
+                foreach($agentArray as $key => $value){
+                    $value['agentAccount'];//代理帳號
+                    $value['agentTree'];//代理樹
+                    $ratioArray = explode(',',$value['ratioTree']);//佔成樹
+                    
+                    $topRatio = 0;
+                    for($i=0;$i<$agnetTreeNumber-1;$i++){
+                        $topRatio += $ratioArray[$i];
+                    }
+                    $underRatio = 0;
+                    for($i=$agnetTreeNumber;$i<count($ratioArray);$i++){
+                        $underRatio += $ratioArray[$i];
+                    }
+                    $agentRatio = $ratioArray[$agnetTreeNumber-1];
+                    
+                    
+                    $cypherMoneyA = bcadd($value['sumSurplus'], $agentArray[$key]['sumGivenMoney'], $this->decimal);
+                    $cypherMoneyB = bcdiv($cypherMoneyA, 100, 4);
+                    $agentTopMoney = bcmul($cypherMoneyB, 100-$topRatio, $this->decimal);//上級金額
+                    
+                    
+                    $agentTotalTopMoney = bcadd($agentTotalTopMoney, $agentTopMoney, $this->decimal);
+                    $agentArray[$key]['topMoney'] = $agentTopMoney;
+                    $agentArray[$key]['agentRatio'] = $agentRatio.'%';//佔成
+                    
+                    $ratioMoney = bcmul($cypherMoneyB, $agentRatio, $this->decimal);//佔成金額
+                    
+                    $agentTotalRatioMoney = bcadd($agentTotalRatioMoney, $ratioMoney, $this->decimal);//總佔成金額
+                    $agentArray[$key]['ratioMoney'] = $ratioMoney;
+                    
+                    $agentArray[$key]['underRatio'] = $underRatio.'%';//下級佔成
+                    $underMoney = bcmul($cypherMoneyB, 100-$topRatio-$agentRatio, $this->decimal);//下級金額
+                    
+                    $agentTotalUnderMoney = bcadd($agentTotalUnderMoney, $underMoney, $this->decimal);//總下級佔成金額
+                    $agentArray[$key]['underMoney'] = $underMoney;
+                }
+                
+                foreach($memberArray as $key => $value){
+                    
+                    $ratioArray = explode(',',$value['ratioTree']);//佔成樹
+                    $topRatio = 0;
+                    for($i=0;$i<$agnetTreeNumber-1;$i++){
+                        $topRatio += $ratioArray[$i];
+                    }
+                    $underRatio = 0;
+                    for($i=$agnetTreeNumber;$i<count($ratioArray);$i++){
+                        $underRatio += $ratioArray[$i];
+                    }
+                    $agentRatio = $ratioArray[$agnetTreeNumber-1];
+                    
+                    $cypherMoneyA = bcadd($value['sumSurplus'], $memberArray[$key]['sumGivenMoney'], $this->decimal);
+                    $cypherMoneyB = bcdiv($cypherMoneyA, 100, 4);
+                    $memberTopMoney = bcmul($cypherMoneyB, 100-$topRatio, $this->decimal);
+                    
+                    $memberTotalTopMoney = bcadd($memberTotalTopMoney, $memberTopMoney, $this->decimal);//總上級金額
+                    $memberArray[$key]['topMoney'] = $memberTopMoney;//上級金額
+                    
+                    $memberArray[$key]['agentRatio'] = $agentRatio.'%';//佔成
+                    $ratioMoney = bcmul($cypherMoneyB, $agentRatio, $this->decimal);//佔成金額
+                    $memberTotalRatioMoney = bcadd($memberTotalRatioMoney, $ratioMoney, $this->decimal);//總佔成金額
+                    $memberArray[$key]['ratioMoney'] = $ratioMoney;
+                }
+                //計算佔成金額 結束
+            }
+        }
+        
+        
+        
+        
+        
+        $this->assign("effectiveMemberNumber",$effectiveMemberNumber);//有效會員數量
+        
+        $this->assign("agentTotalBettingMoney",(($agentTotalBettingMoney > 0) ? "<span style='color:green;'>".$agentTotalBettingMoney."</span>" : "<span style='color:red;'>".$agentTotalBettingMoney."</span>"));
+        $this->assign("agentTotalSurplus",(($agentTotalSurplus > 0) ? "<span style='color:green;'>".$agentTotalSurplus."</span>" : "<span style='color:red;'>".$agentTotalSurplus."</span>"));
+        $this->assign("agentTotalEffective",$agentTotalEffective);
+        $this->assign("agentTotalBetNumber",$agentTotalBetNumber);
+        $this->assign("agentTotalGiven",$agentTotalGiven);
+        $this->assign("agentTotalRatioMoney",(($agentTotalRatioMoney > 0) ? "<span style='color:green;'>".$agentTotalRatioMoney."</span>" : "<span style='color:red;'>".$agentTotalRatioMoney."</span>"));
+        $this->assign("agentTotalTopMoney",(($agentTotalTopMoney > 0) ? "<span style='color:green;'>".$agentTotalTopMoney."</span>" : "<span style='color:red;'>".$agentTotalTopMoney."</span>"));//總代理上級金額
+        $this->assign("agentTotalUnderMoney",(($agentTotalUnderMoney > 0) ? "<span style='color:green;'>".$agentTotalUnderMoney."</span>" : "<span style='color:red;'>".$agentTotalUnderMoney."</span>"));//總代理下級金額
+        
+        
+        
+        $this->assign("memberTotalBettingMoney",$memberTotalBettingMoney);
+        $this->assign("memberTotalSurplus",(($memberTotalSurplus > 0) ? "<span style='color:green;'>".$memberTotalSurplus."</span>" : "<span style='color:red;'>".$memberTotalSurplus."</span>"));
+        $this->assign("memberTotalEffective",$memberTotalEffective);
+        $this->assign("memberTotalBetNumber",$memberTotalBetNumber);
+        $this->assign("memberTotalGiven",$memberTotalGiven);
+        $this->assign("memberTotalTopMoney",(($memberTotalTopMoney > 0) ? "<span style='color:green;'>".$memberTotalTopMoney."</span>" : "<span style='color:red;'>".$memberTotalTopMoney."</span>"));//會員上級金額
+        $this->assign("memberTotalRatioMoney",(($memberTotalRatioMoney > 0) ? "<span style='color:green;'>".$memberTotalRatioMoney."</span>" : "<span style='color:red;'>".$memberTotalRatioMoney."</span>"));
+        
+        if($agentNotCompute == 'true'){
+            $this->assign("agentEmpty","<tr><td colspan='8' style='text-align:center;'>無代理報表</td></tr>");
+        } else {
+            $this->assign("agentEmpty","<tr><td colspan='13' style='text-align:center;'>無代理報表</td></tr>");
+        }
+        
+        
+        if($firstAgent == 'true'){
+            $this->assign("memberEmpty","<tr><td colspan='7' style='text-align:center;'>無會員報表</td></tr>");
+        } else {
+            $this->assign("memberEmpty","<tr><td colspan='10' style='text-align:center;'>無會員報表</td></tr>");
+        }
+        
+        $this->assign("loginArray",$loginArray);
+        $this->assign("comeAgentAccount",$comeAgentAccount);
+        $this->assign("comeAgentTree",$comeAgentTree);
+        
+        $this->assign("gameShowArray",$gameShowArray);
+        $this->assign("gameShowEmpty","<tr><td colspan='6' style='text-align:center;'>無遊戲報表</td></tr>");
+        $this->assign("agentArray",$agentArray);
+        $this->assign("memberArray",$memberArray);
+        $this->display();
+    }
+    
+    //TODO: 遊戲明細
+    public function gameDetail(){
+        
+        $request = $this->getRequest();
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Agent']['tree']."/i", $request["agentTree"])
+            || empty($request["gameCode"])
+            ){
+                echo "<div style='text-align:center;'>權限不足或無此會員!</div>";
+                exit();
+        }
+        
+        if(!isset($request['startTime']) || !isset($request['endTime'])){
+            echo "<div style='text-align:center;'>無選擇時間!</div>";
+            exit();
+        }
+        $agentTree = $request["agentTree"];
+        $gameCode = $request["gameCode"];
+        $startTime = $request['startTime'];
+        $endTime = $request['endTime'];
+        
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        
+        $GameInfo = D("GameInfo");
+        $data = array(
+            "startTime" =>strtotime($startTime),
+            "endTime" =>strtotime($endTime),
+            "game_code" =>$gameCode,
+            "agent_tree" =>$agentTree,
+        );
+        $return = $GameInfo->getOneGameAllMemberDetailDataCount($data,$err);//取得明細總數
+        if($return === false){
+            echo "<div style='text-align:center;'>{$err}</div>";
+            exit();
+        }
+        $totalNumber = $return; //總筆數
+        $totalPage  =ceil($totalNumber / $this->memberDetailNumber); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumberDetail); //分頁陣列
+        
+        $data = array(
+            "game_code" =>$gameCode,
+            "agent_tree" =>$agentTree,
+            "startTime"=>strtotime($request['startTime']),
+            "endTime"=>strtotime($request['endTime']),
+            'page' => array(
+                'number' => $this->memberDetail,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $GameInfo->getOneGameAllMemberDetailData($data,$err);//取得明細資料
+        if($return === false){
+            echo "<div style='text-align:center;'>{$err}</div>";
+            exit();
+        }
+        $sumBettimgMoney = 0;
+        $sumSurplus = 0;
+        $sumEffective = 0;
+        $showArray = array();
+        $FieldChange = array(
+            'member_id' => array('newField'=>'memberId','cnName'=>'會員ID'),
+            'member_account' => array('newField'=>'memberAccount','cnName'=>'會員帳號'),
+            'sumBettimgMoney' =>  array('newField'=>'sumBettimgMoney','cnName'=>'總投注'),
+            'sumSurplus' => array('newField'=>'sumSurplus','cnName'=>'總輸贏'),
+            'sumEffective' => array('newField'=>'sumEffective','cnName'=>'總有效'),
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'sumBettimgMoney':
+                        $showStr = number_format($value[$key1]);
+                        $sumBettimgMoney += $value[$key1];
+                        break;
+                    case 'sumSurplus':
+                        $showStr = number_format($value[$key1]);
+                        if($showStr < 0){
+                            $showStr = "<span style='color:red;'>".$showStr."</span>";
+                        } else {
+                            $showStr = "<span style='color:green;'>".$showStr."</span>";
+                        }
+                        $sumSurplus += $value[$key1];
+                        break;
+                    case 'sumEffective':
+                        $showStr = number_format($value[$key1]);
+                        $sumEffective += $value[$key1];
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1['newField']] = $showStr;
+            }
+        }
+        $sumBettimgMoney = number_format($sumBettimgMoney);
+        $sumSurplus = number_format($sumSurplus);
+        $sumEffective = number_format($sumEffective);
+        if($sumSurplus < 0){
+            $sumSurplus = "<span style='color:red;'>".$sumSurplus."</span>";
+        } else {
+            $sumSurplus = "<span style='color:green;'>".$sumSurplus."</span>";
+        }
+        
+        
+        $this->assign("sumBettimgMoney",$sumBettimgMoney);//總投注
+        $this->assign("sumSurplus",$sumSurplus);//總輸贏
+        $this->assign("sumEffective",$sumEffective); //總洗碼
+        
+        $this->assign("FieldChange",$FieldChange);
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='".(count($FieldChange)+1)."' style='text-align:center;'>無報表資料</td></tr>");//無資料時輸出
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //分頁陣列
+        $this->assign("gameCode", $gameCode); //館別
+        $this->assign("agentTree", $agentTree); //代理樹
+        $this->assign("startTime",$request['startTime']);//查詢開始時間
+        $this->assign("endTime",$request['endTime']);//查詢最後時間
+        $this->display();
+        
+    }
+    
+    //TODO: 會員明細
+    public function memberDetail(){
+        $request = $this->getRequest();
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Admin']['agentTree']."/i", $request["agentTree"])
+            || empty($request["memberId"])
+            ){
+                echo "<div style='text-align:center;'>權限不足或無此會員!</div>";
+                exit();
+        }
+        
+        if(!isset($request['startTime']) || !isset($request['endTime'])){
+            echo "<div style='text-align:center;'>無選擇時間!</div>";
+            exit();
+        }
+        
+        $this->assign("agentTree",$request["agentTree"]);//代理樹
+        $this->assign("memberId",$request["memberId"]);//會員ID
+        $this->assign("startTime",$request['startTime']);//查詢開始時間
+        $this->assign("endTime",$request['endTime']);//查詢最後時間
+        $this->assign('gameDataArray',$this->gameDataArray);
+        $this->display();
+        exit();
+        
+        $gameArray = array(
+            "ab"=>1,
+        );
+        $gameNameArray = array(
+            "ab"=>"歐博真人",
+        );
+        foreach($gameArray as $key => $value){
+            $gameCode = ucfirst($key);
+            $GameDetail = D("Game{$gameCode}Detail");
+            $data = array(
+                "agent_tree" => $request['comeAgentTree'],
+                "member_id" => $request['memberId'],
+                "startTime"=> strtotime($request['startTime']),
+                "endTime"=> strtotime($request['endTime']),
+            );
+            $return = $GameDetail->getGameDetailData($data);
+            $showArray[$gameNameArray[$key]] = array();
+            $totalMoney = 0;
+            //使用欄位轉換  資料庫欄位 => 輸出名稱
+            $FieldChange = array(
+                'member_id' => 'memberId',
+                'member_account' => 'mamberAccount',
+                'agent_account' => 'agentAccount',
+                'detail_createTime' => 'createTime',
+                'detail_bettingMoney' => 'bettingMoney',
+                'detail_surplus' => 'surplus',
+                'detail_effective' => 'effective',
+            );
+            $showStr = "";
+            foreach ($return as $showKey => $showvalue){
+                foreach ($FieldChange as $key1 => $value1){
+                    //欄位特別處理
+                    switch ($key1){
+                        case 'detail_createTime':
+                            $showStr = date('Y-m-d H:i:s',$showvalue[$key1]);
+                            break;
+                        default://未做設定 正常顯示
+                            $showStr = $showvalue[$key1];
+                            break;
+                    }
+                    $showArray[$gameNameArray[$key]][$showKey][$value1] = $showStr;
+                }
+            }
+        }
+        // var_dump($showArray);die;
+        $this->assign("memberId",$request['memberId']);
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='8' style='text-align:center;'>無會員資料</td></tr>");//無資料時輸出
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //分頁陣列
+        $this->display();
+    }
+    public function eachGameDetail(){
+        $request = $this->getRequest();
+        
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Admin']['agentTree']."/i", $request["agentTree"])
+            || empty($request["memberId"])
+            ){
+                echo "<div style='text-align:center;'>權限不足或無此會員!</div>";
+                exit();
+        }
+        
+        if(!isset($request['startTime']) || !isset($request['endTime'])){
+            echo "<div style='text-align:center;'>無選擇時間!</div>";
+            exit();
+        }
+        
+        if(!isset($request['gameCode'])){
+            echo "<div style='text-align:center;'>無選擇館別!</div>";
+            exit();
+        }
+        
+        $memberId = $request['memberId'];
+        $agentTree = $request["agentTree"];
+        $gameCode = $request["gameCode"];
+        $startTime = $request['startTime'];
+        $endTime = $request['endTime'];
+        
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        
+        $GameInfo = D("GameInfo");
+        $data = array(
+            "startTime" =>strtotime($startTime),
+            "endTime" =>strtotime($endTime),
+            "member_id" =>$memberId,
+            "game_code" =>$gameCode,
+            "agent_tree" =>$agentTree,
+        );
+        $return = $GameInfo->getOneGameDetailDataCount($data,$err);//取得明細總數
+        if($return === false){
+            echo "<div style='text-align:center;'>{$err}</div>";
+            exit();
+        }
+        $totalNumber = $return['totalNumber']; //總筆數
+        $sumBettimgMoney = $return['sumBettimgMoney']; //總投注
+        $sumSurplus = $return['sumSurplus']; //總輸贏
+        $sumEffective = $return['sumEffective']; //總洗碼
+        $totalPage  =ceil($totalNumber / $this->memberDetailNumber); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumberDetail); //分頁陣列
+        
+        $data = array(
+            "game_code" =>$gameCode,
+            "agent_tree" =>$agentTree,
+            "member_id"=>$request['memberId'],
+            "startTime"=>strtotime($request['startTime']),
+            "endTime"=>strtotime($request['endTime']),
+            'page' => array(
+                'number' => $this->memberDetail,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $GameInfo->getOneGameDetailData($data,$err);//取得明細資料
+        if($return === false){
+            echo "<div style='text-align:center;'>{$err}</div>";
+            exit();
+        }
+        //var_dump($return);
+        $showArray = array();
+        $FieldChange = array(
+            'detail_id' => array('newField'=>'id','cnName'=>'單號'),
+            'member_account' => array('newField'=>'mamberAccount','cnName'=>'會員'),
+            'agent_account' => array('newField'=>'agentAccount','cnName'=>'代理'),
+            'detail_gameAccount' => array('newField'=>'gameAccount','cnName'=>'遊戲帳號'),
+            'detail_createTime' => array('newField'=>'createTime','cnName'=>'投注時間'),
+            'detail_bettingMoney' =>  array('newField'=>'bettingMoney','cnName'=>'投注金額'),
+            'detail_surplus' => array('newField'=>'surplus','cnName'=>'輸贏'),
+            'detail_effective' => array('newField'=>'effective','cnName'=>'有效押注'),
+            //'detail_isBackWater' => array('newField'=>'isBackWater','cnName'=>'返水'),
+        );
+        //var_dump($return);exit();
+        switch($gameCode){
+            case 'Sb':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['sb_html'] = array('newField'=>'bet_result','cnName'=>'注單明細');
+                break;
+            case 'Sp':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['sb_html'] = array('newField'=>'bet_result','cnName'=>'注單明細');
+                break;
+            case 'Dg':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['betDetailStr'] = array('newField'=>'betDetailStr','cnName'=>'投注');
+                $FieldChange['resultStr'] = array('newField'=>'resultStr','cnName'=>'遊戲結果');
+                $FieldChange['isRevocation'] = array('newField'=>'isRevocation','cnName'=>'狀態');
+                break;
+            case 'Ab':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['gameTypeStr'] = array('newField'=>'gameTypeStr','cnName'=>'遊戲單號');
+                $FieldChange['bet_result'] = array('newField'=>'bet_result','cnName'=>'注單明細');
+                $FieldChange['bet_numbers'] = array('newField'=>'bet_numbers','cnName'=>'投注號碼');
+                break;
+            case 'Sa':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['gameTypeStr'] = array('newField'=>'gameTypeStr','cnName'=>'遊戲');
+                $FieldChange['gameId'] = array('newField'=>'gameId','cnName'=>'桌號');
+                $FieldChange['round'] = array('newField'=>'round','cnName'=>'局號');
+                $FieldChange['betTypeStr'] = array('newField'=>'betTypeStr','cnName'=>'投注');
+                $FieldChange['detail_gameResult'] = array('newField'=>'detail_gameResult','cnName'=>'遊戲結果');
+                $FieldChange['payoutTime'] = array('newField'=>'payoutTime','cnName'=>'派彩時間');
+                $FieldChange['stateStr'] = array('newField'=>'stateStr','cnName'=>'派彩結果');
+                break;
+            case 'Bj':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['game_name'] = array('newField'=>'game_name','cnName'=>'遊戲');
+                $FieldChange['no'] = array('newField'=>'no','cnName'=>'期數');
+                $FieldChange['mode'] = array('newField'=>'mode','cnName'=>'玩法');
+                $FieldChange['bet_numbers'] = array('newField'=>'bet_numbers','cnName'=>'投注');
+                $FieldChange['odds'] = array('newField'=>'odds','cnName'=>'賠率');
+                $FieldChange['is_checkout'] = array('newField'=>'is_checkout','cnName'=>'狀態');
+                break;
+            case 'Pa':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['sb_html'] = array('newField'=>'bet_result','cnName'=>'注單明細');
+                break;
+            case 'Qt':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['game_name_ch'] = array('newField'=>'game_name_ch','cnName'=>'遊戲');
+                $FieldChange['game_type_name_ch'] = array('newField'=>'game_type_name_ch','cnName'=>'類型');
+                break;
+            case 'Bng':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['game_name_zhtw'] = array('newField'=>'game_name_zhtw','cnName'=>'遊戲');
+                $FieldChange['status_str'] = array('newField'=>'status_str','cnName'=>'狀態');
+                break;
+            case 'Uc8':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['gameId'] = array('newField'=>'gameId','cnName'=>'遊戲');
+                $FieldChange['roundId'] = array('newField'=>'roundId','cnName'=>'局號');
+                $FieldChange['multiplier'] = array('newField'=>'multiplier','cnName'=>'倍率');
+                break;
+            default:
+                break;
+        }
+        
+        
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'detail_createTime':
+                        $showStr = date('Y-m-d H:i:s',$value[$key1]);
+                        break;
+                    case 'detail_bettingMoney':
+                        $showStr = number_format($value[$key1]);
+                        break;
+                    case 'detail_surplus':
+                        $showStr = number_format($value[$key1]);
+                        if($showStr < 0){
+                            $showStr = "<span style='color:red;'>".$showStr."</span>";
+                        } else {
+                            $showStr = "<span style='color:green;'>".$showStr."</span>";
+                        }
+                        break;
+                    case 'detail_effective':
+                        $showStr = number_format($value[$key1]);
+                        break;
+                        /*case 'detail_isBackWater':
+                         $showStr = "未返水";
+                         if($value[$key1] == '1'){
+                         $showStr = "已返水";
+                         }
+                         break;*/
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1['newField']] = $showStr;
+            }
+        }
+        $sumBettimgMoney = number_format($sumBettimgMoney);
+        $sumSurplus = number_format($sumSurplus);
+        $sumEffective = number_format($sumEffective);
+        if($sumSurplus < 0){
+            $sumSurplus = "<span style='color:red;'>".$sumSurplus."</span>";
+        } else {
+            $sumSurplus = "<span style='color:green;'>".$sumSurplus."</span>";
+        }
+        $this->assign("sumBettimgMoney",$sumBettimgMoney);//總投注
+        $this->assign("sumSurplus",$sumSurplus);//總輸贏
+        $this->assign("sumEffective",$sumEffective); //總洗碼
+        
+        $this->assign("FieldChange",$FieldChange);
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='".(count($FieldChange)+1)."' style='text-align:center;'>無報表資料</td></tr>");//無資料時輸出
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //分頁陣列
+        $this->display();
+    }
+}

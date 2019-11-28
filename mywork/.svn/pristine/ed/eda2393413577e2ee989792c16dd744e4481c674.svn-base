@@ -1,0 +1,864 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menu"/>
+		<include file="Common:menuRwd"/>
+
+
+<if condition='$isMobile eq "true"'>
+	<!-- 手機板輪播 -->
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners">
+			<div class="fullscreenbanner" data-navigationStyle="preview1">
+				<ul class="hide ">
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+					   <a href="#"><img src="" data-lazyload="__CSS__/images/promotions/cowRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+						
+					</li>
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+					   <a href="__APP__/RebateEvent/baccaratWinningPage"><img src="" data-lazyload="__CSS__/images/promotions/baccaratWinningPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+						
+					</li>
+					
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+						<a href="__APP__/RebateEvent/backWaterElectronicPage"><img src="" data-lazyload="__CSS__/images/promotions/backWaterElectronicPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+					</li>
+					
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+						<a href="__APP__/RebateEvent/backWaterRealityPage"><img src="" data-lazyload="__CSS__/images/promotions/backWaterRealityPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+					</li>
+					
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+						<a href="__APP__/RebateEvent/backWaterSportsPage"><img src="" data-lazyload="__CSS__/images/promotions/backWaterSportsPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+					</li>
+					
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+						<a href="__APP__/RebateEvent/lottoFourPage"><img src="" data-lazyload="__CSS__/images/promotions/lottoFourPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+					</li>
+					
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+						<a href="__APP__/RebateEvent/reversalPage"><img src="" data-lazyload="__CSS__/images/promotions/reversalPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+					</li>
+					
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+						<a href="__APP__/RebateEvent/storeGiftPage"><img src="" data-lazyload="__CSS__/images/promotions/storeGiftPageRWD.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat"></a>
+					</li>
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>
+<else/>
+	<!-- 電腦版輪播 -->
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners">
+			<div class="fullscreenbanner" data-navigationStyle="preview1">
+				<ul class="hide ">
+					<!-- SLIDE  -->
+					<li class=""data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 1" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/index_banner02-bg.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+
+						<div class="tp-caption customin ltl tp-resizeme small_light_white font-lato fs-20" data-x="700" data-y="160"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800" data-start="1400" data-easing="easeOutQuad" data-splitin="none" data-splitout="none"
+							data-elementdelay="0.01" data-endelementdelay="0.1" data-endspeed="1000" data-endeasing="Power4.easeIn"
+							style="z-index: 10; width: 100%; max-width: 50px; white-space: normal; text-align:center;">
+							<img class="" style="width:1100%;" src="__CSS__/images/bg-img/bg-text/index_banner02_logo.png">
+						</div>
+
+					</li>
+					<!-- SLIDE -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg1.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+						
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							data-x="center"
+							data-y="150"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1200"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<img class="" style="width: 1500px; height: 234.375px;" src="__CSS__/images/bg-img/bg-text/offer_title1.png">
+						</div>
+
+						<div class="tp-caption customin ltl tp-resizeme"
+							data-x="center"
+							data-y="413"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1550"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/baccaratWinningPage">
+								<img class="" style="width: 225px; height: 64.275px;" src="__CSS__/images/bg-img/bg-text/offer_btn1.png">
+							</a>
+						</div>
+					</li>
+					
+					<!-- SLIDE -->
+					<!-- SLIDE -->
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg2.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							data-x="250"
+							data-y="250"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1200"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<img  style="width: 450px; height: 254.375px;" src="__CSS__/images/bg-img/bg-text/offer_title2.png">
+						</div>
+						<div class="tp-caption customin ltl tp-resizeme"
+							data-x="300"
+							data-y="500"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1550"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/lottoFourPage">
+								<img class="" style="width: 225px; height: 64.275px;" src="__CSS__/images/bg-img/bg-text/offer_btn2.png">
+							</a>
+						</div>
+					</li>
+					
+					<!-- SLIDE -->
+					
+					
+					<!-- SLIDE  -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 2" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg3.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+
+						<div class="tp-caption very_large_text lfb ltt tp-resizeme"
+							data-x="100" data-hoffset="-100"
+							data-y="50" data-voffset="-100"
+							data-speed="800"
+							data-start="1400"
+							data-easing="Power4.easeOut"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="500"
+							data-endeasing="Power4.easeIn">
+							<img class="" style="width: 600px; height: 488.325px;" src="__CSS__/images/bg-img/bg-text/offer_title3.png">
+						</div>
+						
+						<div class="tp-caption customin ltl tp-resizeme"
+							data-x="250"
+							data-y="530"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1550"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/storeGiftPage">
+								<img class="" style="width: 225px; height: 94.35px;" src="__CSS__/images/bg-img/bg-text/offer_btn3.png">
+							</a>
+						</div>
+						
+					</li>
+					
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg4.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							data-x="400"
+							data-y="160"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1200"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/backWaterElectronicPage">
+								<img class="" style="width: 800px;height: 466.775px;" src="__CSS__/images/bg-img/bg-text/offer_title4.png">
+							</a>
+						</div>
+					</li>
+					
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg5.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							data-x="300"
+							data-y="160"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1200"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/backWaterSportsPage">
+								<img class="" style="width: 817px; height: 405.775px;" src="__CSS__/images/bg-img/bg-text/offer_title5.png">
+							</a>
+						</div>
+					</li>
+					
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg6.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							data-x="150"
+							data-y="160"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1200"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/backWaterRealityPage">
+								<img style="width: 600px; height: 405.775px;" src="__CSS__/images/bg-img/bg-text/offer_title6.png">
+							</a>
+						</div>
+					</li>
+					
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg7.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							data-x="250"
+							data-y="200"
+							data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							data-speed="800"
+							data-start="1200"
+							data-easing="easeOutQuad"
+							data-splitin="none"
+							data-splitout="none"
+							data-elementdelay="0.01"
+							data-endelementdelay="0.1"
+							data-endspeed="1000"
+							data-endeasing="Power4.easeIn" style="z-index: 3;">
+							<a href="__APP__/RebateEvent/reversalPage">
+								<img class="" style="width: 800px;height: 357.775px;" src="__CSS__/images/bg-img/bg-text/offer_title7.png">
+							</a>
+						</div>
+					</li>
+					
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>
+</if>
+		
+		
+		<!-- rwd跑馬燈 -->
+		<include file="Common:marquee"/>
+		<!-- rwd跑馬燈 -->
+		
+			<div class=" m-0 p-0 hidden-sm-down">
+				
+				<div class="row">
+				
+					<div class="col-md-6 col-sm-6 pr-0 Login-movie" style="background-image: url(__CSS__/images/movies.png);background-size: cover;"><!-- left text -->
+						<div class="move-div text-center">
+							<div class="row" >
+								<div class="col-md-3 m-auto"><p class="fs-30 mb-0 txt-white">小牛影城</p></div>
+								<div class="col-md-1 m-auto"><div class="separateline"></div></div>
+								<div class="col-md-7 m-auto text-left"><p class="fs-20 mb-0 txt-white">
+									你的觀劇模式，你自己選擇！！<br>
+									免费觀劇，或者是你可以付费去廣告！
+								</p></div>
+							</div>
+						</div>
+					</div>
+				
+					
+					
+					<div class="col-md-6 col-sm-6 text-right pl-0" style="background-image: url(__CSS__/images/app_download.png);background-size: cover;"><!-- right btn -->
+						<div class="move-div text-center">
+							<div class="row">
+								<div class="col-md-2 m-auto"><i class="icomoon icon-app-phone-2 movie_app_icon_size"></i></div>
+								<div class="col-md-3 m-auto"><p class="fs-30 mb-0 txt-white">APP下載</p></div>
+								<div class="col-md-1 m-auto"><div class="separateline"></div></div>
+								<div class="col-md-5 m-auto text-left"><p class="fs-20 mb-0 txt-white">
+									即时語音，高手竞技<br>
+									手機、PC、Web三端同步<br>
+									走到哪玩到哪！
+								</p></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<section class="pt-30 pb-30 hidden-sm-down" style="background-color:#fff ;">
+				<div class="container">
+					<div class="row">
+						<div style="margin:0 auto;" class="mb-20 fs-20 fw-500">合作伙伴</div>
+						<div>
+							<img style="max-width:100%;" class="lazyload" data-original="__CSS__/images/partner.jpg" >
+						</div>
+					</div>
+				</div>
+			</section>
+			<section class="aboutMe-bg hidden-sm-down">
+				<div class="container">
+
+					<div class="row">
+						<div class="col-md-3">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large">
+								<a class="box-icon-title">
+									<img class="lazyload" data-original="__CSS__/images/index_logo_w.png">
+									<h2 class="txt-white mt-5">聯絡我們</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-center">
+									<li> LINE ID: wkg66com</li>
+									<li><a class="txt-white" href="__APP__/AgentJoin/index">代理加盟</a></li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="col-md-3">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large">
+								<a class="box-icon-title">
+									<h2 class="txt-white">服務訊息</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-center">
+									<li><a class="txt-white" href="#">域名測速</a></li>
+									<li><a class="txt-white" href="#">充值/提現</a></li>
+									<li><a class="txt-white" href="#">常見問題</a></li>
+									<li><a class="txt-white" href="#">技術支援</a></li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="col-md-3">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large">
+								<a class="box-icon-title">
+									<h2 class="txt-white">投注訊息</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-center">
+									<li><a class="txt-white" href="#">關於我們</a></li>
+									<li><a class="txt-white" href="#">博彩規則</a></li>
+									<li><a class="txt-white" href="#">責任博彩</a></li>
+									<li><a class="txt-white" href="#">隱私政策</a></li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="col-md-3">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large text-center">
+								<a class="box-icon-title">
+									<h2 class="txt-white">@我們</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-center">
+									<li><a class="txt-white" href="#">LINE</a></li>
+								</ul>
+								<img style="width: 34%;" class="lazyload" data-original="__CSS__/images/file-read-38.jpg">
+							</div>
+
+						</div>
+
+					</div>
+
+				</div>
+			</section>
+			<!-- rwd首頁 -->
+			<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up">
+				<if condition='$isLogin eq "false"'>
+					<!-- 登入 -->
+					<div id="login-container" class="container">
+						<div class="row">
+							<!-- LOGIN -->
+							<div class="col-md-4">
+								<ul class="nav nav-tabs nav-justified">
+									<li class="nav-item"><a class="nav-link bookmark_type active" href="#loginRwd" data-toggle="tab">遊戲登入</a></li>
+									<li class="nav-item"><a class="nav-link bookmark_type" href="#profileRwd" data-toggle="tab">APP下載</a></li>
+									
+								</ul>
+								
+								<div class="tab-content pt-20 pb-0">
+									<div class="tab-pane active" id="loginRwd">
+										<div class="row">
+											<div class="col-11 m-auto">
+												<!-- login form -->
+												<form class="mb-0" id="loginFormRwd" method="post" action='__APP__/MemberIndex/formLogin'>
+													<div class="clearfix">
+														<!-- Email -->
+														<div class="form-group">
+															<div class="fancy-form">
+																<i class="fa fa-user txt-white"></i>
+																<input type="text" name='account' id="loginFormAccountRwd" class="form-control login-input" placeholder="請輸入帳號">
+															</div>
+														</div>
+														
+														<!-- Password -->
+														<div class="form-group">
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="password" name='password' id="loginFormPasswordRwd" class="form-control login-input" placeholder="請輸入密碼">
+															</div>
+														</div>
+															
+													</div>
+													
+													<div class="row">
+														<div class="col-12 d-flex mb-20">
+															<button type="button" onclick="registBtn()" class="btn btn-danger btn-shadow-1 btn-login-md btn-left">立即註冊</button>
+															<button id="loginBtnRwd" type="button" class="btn btn-danger btn-shadow-1 btn-login-md btn-right">登入</button>
+														</div>
+													</div>
+													
+												</form>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-11 m-auto modal-footer-m mb-15">
+												<label class="checkbox ">
+													<input type="checkbox" value="1" checked="checked" onclick="openmodal('MemberConditionModal')">
+													<i></i> <span onclick="openmodal('MemberConditionModal')">我同意</span>
+												</label>
+												<span>|</span>
+												<a class="txt-white" href="__APP__/OnlineService/index">聯繫客服</a>
+												<span>|</span>
+												<a class="txt-white" href="__APP__/ForgetPage/index.html">忘記帳密</a>
+											</div>
+										</div>
+									</div>
+									<div class="tab-pane fade" id="profileRwd">
+										<p class="text-center txt-white">敬請期待</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- 註冊 -->
+					<div id="regist-container" class="container" style="display:none;">
+						<div class="row">
+							<!-- LOGIN -->
+							<div class="col-md-4">
+								<ul class="nav nav-tabs nav-justified">
+									<li class="nav-item"><a class="nav-link bookmark_type active" href="#registRwd" data-toggle="tab">遊戲註冊</a></li>
+								</ul>
+								
+								<div class="tab-content pt-10 pb-0">
+									<div class="tab-pane active" id="registRwd">
+										<div class="row">
+											<div class="col-11 m-auto">
+												<!-- login form -->
+												<form class="mb-0">
+													<div class="clearfix">
+														<!-- Phone -->
+														<div class="form-group">
+															<label class="txt-white" id="addPhoneLabelRwd" style="display:none;">手機</label>
+															<div class="fancy-form">
+																<i id="phoneIconRwd" class="fa fa-mobile txt-white regist-icon"></i>
+																<input type="text" id="addPhoneRwd" class="form-control login-input" placeholder="請輸入手機號碼">
+																<span id="checkPhoneRwd" class="invalid-feedback">電話長度不為10碼!</span>
+																<span class="valid-feedback">電話號碼可以使用!</span>
+															</div>
+														</div>
+														
+														
+														<!-- 帳號 -->
+														<div id="addAccountDivRwd" class="form-group" style="display:none;">
+															<label class="txt-white" id="addAccountLabelRwd">帳號</label>
+															<div class="fancy-form">
+																<i class="fa fa-mobile txt-white regist-icon"></i>
+																<input type="text" id="addAccountRwd" name="account" class="form-control login-input" >
+															</div>
+														</div>
+														
+														
+														<!-- Password -->
+														<div id="addPasswordDivRwd" class="form-group">
+															<label class="txt-white" id="addPasswordLabelRwd"></label>
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="password" id="addPasswordRwd" name="password" class="form-control login-input" placeholder="請輸入密碼">
+															</div>
+														</div>
+														
+														<!-- Password -->
+														<div id="addCheckPasswordDivRwd" class="form-group">
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="password" id="addCheckPasswordRwd" class="form-control login-input" placeholder="請再次確認密碼">
+															</div>
+														</div>
+														
+														<!-- 驗證碼 -->
+														<div id="addVerificationCodeDivRwd" class="form-group" style="display:none;">
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="text" id="addVerificationCodeRwd" class="form-control login-input" placeholder="請輸入驗證碼">
+															</div>
+														</div>
+													</div>
+												</form>
+											</div>
+										</div>
+										<div class="col-md-12 mb-10">
+											<button id="registBtnRwd" type="button" onclick="registRwd();"class="btn btn-primary login-btn">立即註冊</button>
+											<button id="sendOutBtnRwd" type="button" onclick="sendOutRwd();"class="btn btn-primary login-btn" style="display:none;">立即送出</button>
+											<button id="finishBtnRwd" type="button" onclick="self.location.href='__APP__/MemberIndex/index'" class="btn btn-primary login-btn" style="display:none;">完成</button>
+										</div>
+										<div class="row">
+											<div class="col-11 m-auto modal-footer-m mb-15">
+												<label class="checkbox ">
+													<input type="checkbox" value="1" checked="checked" >
+													<i></i> <span onclick="openmodal('MemberConditionModal')">我同意</span>
+												</label>
+												<span>|</span>
+												<a class="txt-white" href="__APP__/OnlineService/index">聯繫客服</a>
+												<span>|</span>
+												<a class="txt-white" href="__APP__/ForgetPage/index.html">忘記帳密</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				<else/>
+					<!-- <div class="row game-row"><h5 class="txt-white mb-5">最近遊戲</h5></div> -->
+					
+					 <if condition='$showGameArrayCount neq "0"'>
+						<div class="row game-row mb-2">
+							<VOLIST name="showGameArray" id="vo">
+								<if condition='$vo.href neq "0"'>
+									<div class="col-3 col-sm-3 game-div mb-0 rwd-icon-hover">
+										<if condition='$vo.popUp eq "yes"'>
+											<a href="__APP__/{$vo.href}" class="gameNewHtml">
+										<else/>
+											<a href="__APP__/{$vo.href}" class="">
+										</if>
+											<i class="icomoon icon-{$vo.gameCode} txt-feda29cf"></i>
+										</a>
+										<p class="txt-feda29cf">{$vo.cnName}</p>
+									</div>
+								<else/>
+									<div style='visibility: hidden;' class="col-3 col-sm-3 game-div mb-0 rwd-icon-hover">
+										<i class="fa fa-smile-o text-white"></i>
+									</div>
+								</if>
+							</Volist>
+						</div>
+					</if> 
+				
+					
+					<div class="row game-row">
+						<div class="col-6 col-sm-6 game-div game-div-big mb-0 rwd-icon-hover">
+							<div class="icon-bg-style">
+								<a class="Login-movie" href="#">
+									<i class="icomoon icon-smallcow icon-app-phone-2-style"></i>
+									<label class="icon_label">小牛影城</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-6 col-sm-6 game-div game-div-big mb-0 rwd-icon-hover">
+							<div class="icon-bg-style">
+								<a href="#">
+									<i class="icomoon icon-app-phone-2 icon-app-phone-2-style"></i>
+									<label class="icon_label">APP下載</label>
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="row game-row mt-5">
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/realityHall">
+									<i class="icomoon icon-clive game-div-small-icon"></i>
+									<label class="icon_label">真人娛樂</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/lotteryHall">
+									<i class="icomoon icon-clottery game-div-small-icon"></i>
+									<label class="icon_label">彩票賓果</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/electronicHall">
+									<i class="icomoon icon-celectronic-games game-div-small-icon"></i>
+									<label class="icon_label">電子遊戲</label>
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="row game-row mt-5">
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/sportsHall">
+									<i class="icomoon icon-cphysical-education game-div-small-icon"></i>
+									<label class="icon_label">體育競技</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberCenter/lottoRecords">
+									<i class="fa fa-bar-chart game-div-small-icon game-div-small-fa"></i>
+									<label class="icon_label">點數紀錄</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/AgentJoin/index">
+									<i class="fa fa-handshake-o game-div-small-icon game-div-small-fa"></i>
+									<label class="icon_label">代理加盟</label>
+								</a>
+							</div>
+						</div>
+					</div>
+					
+				</if>
+			</section>
+	    <!-- 系統公告 -->
+		<a id="systemMsgBtn" href="#" onclick="openmodal('systemMsgModal')" class="btn btn-3d btn-aqua show_msg-left hidden-sm-down"><i class="et-key"></i>系統公告</a>
+		<div id="systemMsgModal" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="systemMsgModal" style="display: none; padding-right: 17px;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+
+					<!-- Modal Header -->
+					<div class="modal-header modal-bg pr-30">
+						<button type="button" class="close-style" data-dismiss="modal" ><span aria-hidden="true">×</span></button>
+						
+						<h4 class="modal-title tex-black" id="">系統公告</h4>
+					</div>
+
+					<!-- Modal Body -->
+					<div class="modal-body modal-body-bg">
+						<VOLIST name="announcementArray" id="announcement">
+				            <h4 class="">
+				                {$announcement.announcement_title}
+				            </h4>
+				            <p>
+				                {$announcement.announcement_text}
+				            </p>
+			            </VOLIST>
+					</div>
+					<!-- Modal Footer -->
+					<div class="modal-footer modal-bg">
+						<!-- <div class="form-check">
+			                 <input type="checkbox" name="noshow" id="noshow" class="form-check-input">
+			                 <label class="form-check-label text-white">不再顯示</label>
+			             </div> -->
+						<button type="button" class="btn btn-warning btn-warning-style" onclick="noshowagain()">確定</button>
+		             	<button id="closeBtn" type="button" style="display:none;" class="btn btn-sm btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+<include file="Common:footer"/>
+<script src="__CSS__/js/lazyload.js"></script>
+<script>
+$(".gameNewHtml").click(function(){
+	var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+});
+//RWD調整畫面高度
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var home_page_rwd_h = jQuery('.home_page_rwd').height();
+	//var md_footer_h = jQuery('#md-footer').height();
+	//alert(h);
+	//alert(banner_h);
+	if(isLogin == "true"){
+		jQuery("#md-login-bg").css("min-height",h-home_page_rwd_h+"px").addClass("footer-rwd");
+	}else{
+		jQuery("#md-login-bg").css("min-height",h-home_page_rwd_h+"px").addClass("footer-rwd");
+	}	   
+}
+//立即註冊btn
+function registBtn(){
+	jQuery("#login-container").hide(500);
+	jQuery("#regist-container").show(500);
+}
+//註冊
+function registRwd(){
+	var addPassword = jQuery('#addPasswordRwd').val();
+	var addCheckPassword = jQuery('#addCheckPasswordRwd').val();
+	var addPhone = jQuery('#addPhoneRwd').val();
+	if(addPhone.length != 10){
+		alert("電話長度不為10碼!");
+		return;
+	}
+	if(addPassword != addCheckPassword){
+		alert("請重新輸入確認密碼!");
+		return;
+	}
+	if(addPassword.length <= 5){
+		alert("密碼長度應界於6~20位之間");
+		return;
+	}
+	jQuery.ajax({
+        type:"post",
+        url:"__APP__/RegistPage/formRegist",
+        data:{addPassword:addPassword,addCheckPassword:addCheckPassword,addPhone:addPhone},
+        dataType: "json",
+        success:function(data){
+          var dataObject = JSON.parse(data);
+          if(dataObject.return == 1){
+            jQuery('#sendOutBtnRwd').show(500);//立即送出btn
+            jQuery('#addVerificationCodeDivRwd').show(500);
+            jQuery('#addPhoneRwd').removeClass("phone-ok").attr("readonly","readonly");
+            jQuery("#phoneIconRwd").removeClass(" phone-error-i");
+            jQuery('#registBtnRwd').hide(500);//立即註冊btn
+            jQuery('#addPasswordDivRwd').hide(500);
+            jQuery('#addCheckPasswordDivRwd').hide(500);
+          } else {
+            alert(dataObject.errMessage);
+          }
+        },
+        error:function(){
+          alert("error");
+        }
+    });
+}
+//送出
+function sendOutRwd(){
+	var addVerificationCode = jQuery('#addVerificationCodeRwd').val();
+	if(addVerificationCode.length == 0){
+		alert("請輸入驗證碼!");
+		return;
+	}
+	jQuery.ajax({
+        type:"POST",
+        url:"__APP__/RegistPage/formRegistCheck",
+        data:{addVerificationCode:addVerificationCode},
+        dataType: "json",
+        success:function(data){
+          var dataObject = JSON.parse(data);
+          if(dataObject.return == 1){
+            jQuery('#addPhoneRwd').attr("readonly","readonly");
+            jQuery('#addPhoneLabelRwd').show(500);
+            jQuery('#addAccountDivRwd').show(500);
+            jQuery('#addAccountLabelRwd').html('帳號');
+            jQuery('#addAccountRwd').val(dataObject.addAccount).attr("readonly","readonly");
+            jQuery('#addPasswordDivRwd').show(500);
+            jQuery('#addPasswordRwd').attr("type","text").val(dataObject.addPassword).attr("readonly","readonly");
+            jQuery('#addPasswordLabelRwd').html('密碼');
+            jQuery('#addCheckPasswordDivRwd').hide(500);
+            jQuery('#addVerificationCodeDivRwd').hide(500);
+            jQuery('#finishBtnRwd').show(500);
+            jQuery('#sendOutBtnRwd').hide(500);
+            jQuery('#registBtnRwd').hide(500);
+            
+          } else {
+            alert(dataObject.errMessage);
+          }
+        },
+        error:function(){
+          alert("error");
+        }
+    });
+}
+//檢查電話幾碼
+jQuery( "#addPhoneRwd" ).change(function() {
+	var addPhone = jQuery("#addPhoneRwd").val();
+	jQuery("#phoneIconRwd").addClass(" phone-error-i");
+	if(addPhone == '0900000000'){
+		jQuery("#addPhoneRwd").removeClass().addClass("form-control login-input phone-ok");
+		return;
+	}
+	//alert(addPhone.length);return;
+	if(addPhone.length == 10){
+		jQuery.ajax({
+			 type:"POST",
+			 url:"__APP__/RegistPage/ajaxCheckMemberPhone",
+			 data:{addPhone:addPhone},
+		     dataType: "text",
+		     success:function(data){
+		    	 //alert(data);
+		        if(data == true){
+		        	jQuery("#addPhoneRwd").removeClass().addClass("form-control login-input phone-ok");
+		        	
+		        } else {
+		        	jQuery("#addPhoneRwd").removeClass().addClass("form-control login-input phone-error");
+		        	jQuery("#checkPhoneRwd").html(data);
+		        }
+		     },
+			 error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	} else {
+		jQuery("#addPhoneRwd").removeClass().addClass("form-control login-input phone-error");
+		
+	}
+});
+//登入判斷
+jQuery(document).ready(function(){
+	jQuery("img.lazyload").lazyload();
+	//RWD判斷登入帳號密碼
+	  jQuery("#loginBtnRwd").click(function() {
+			var loginFormAccount = jQuery("#loginFormAccountRwd").val();
+			var loginFormPassword = jQuery("#loginFormPasswordRwd").val();
+			loginFormAccount = jQuery.trim(loginFormAccount);
+			loginFormPassword = jQuery.trim(loginFormPassword);
+			//alert(account_phone);
+			//alert(password_phone);
+			if(loginFormAccount == "" || loginFormPassword == ""){
+				alert("請輸入帳號或密碼!");
+				return;
+			}
+			jQuery("#loader-bg").show();
+			jQuery("#loginFormRwd").submit();
+			
+	   });
+});
+
+</script>
+
+
+			

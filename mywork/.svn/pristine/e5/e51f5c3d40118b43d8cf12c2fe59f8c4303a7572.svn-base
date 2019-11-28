@@ -1,0 +1,707 @@
+<?php
+//UC8 手機電子
+class GameUc8Model extends ApiModel{
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  const UC8_PARTNER_ID = 'f-wukong';
+  const UC8_PRIVATE_KEY = "M8SvxnZ3nr";
+  const UC8_HOME_URL = "https://x591.net/";
+  const UC8_CASHIER_URL = "放儲值頁面的網址";
+ 
+  const UC8_URL_ARRAY = array(  //API URLs
+    'get_wallet_url' => 'https://api-funds1.spinomenal.com/GameLauncher/GetWalletUrl',  //Launch Game (POST)
+    'get_balance' => 'https://api-funds1.spinomenal.com/Funds/GetBalance',  //Get Balance (POST)
+    'transfer' => 'https://api-funds1.spinomenal.com/Funds/Transfer',  //Funds Transfer (POST)
+    'create_player' => 'https://api-funds1.spinomenal.com/Funds/CreatePlayer',  //Create Player (POST)
+    'login_player' => 'https://api-funds1.spinomenal.com/Funds/LoginPlayer',  //Login Player [Post]
+    'login_out' => 'https://api-funds1.spinomenal.com/Funds/LoginOut',  //Logout player [Post]
+    'get_token_redirect' => 'https://api-funds1.spinomenal.com/GameLauncher/GetTokenRedirect',  //for launching game after you have token  [Get]
+    'visualizer' => 'https://visualizer.funds.uc8slots.com',  //Visualizer:
+    //report
+    'get_tickets' => 'https://api-funds1.spinomenal.com/Reporting/GetTickets',  //Reporting-Tickets
+    'get_transfers' => 'https://api-funds1.spinomenal.com/Reporting/GetTransfers',  //Reporting-Transactions
+  );
+  
+  const UC8_RESPONSE_SUCCESS_CODE = 0;
+  const UC8_PLATFORM_ID_DESKTOP = 1;
+  const UC8_PLATFORM_ID_MOBILE = 2;
+  const UC8_DEFAULT_CURRENCY_CODE = 'TWD';
+  const UC8_DEFAULT_LANGUAGE_CODE = 'zh_CN';
+  const UC8_GAME_CODE_LOBBY = 'SLOT_LOBBY';
+  const UC8_GET_TICKETS_NUM_PER_PAGE = 500;
+  const UC8_BALANCE_RATIO = 100;  //遊戲點數對實際金額的比值
+  const UC8_TIMEZONE_OFFSET = 8;
+  const UC8_TRANSACATION_ID_LENGTH_MAX = 16;
+  const UC8_TRANSACATION_ID_DEPOSIT_PREFIX = '1';
+  const UC8_TRANSACATION_ID_WITHDRAW_PREFIX = '2';
+  const UC8_TRANSACATION_ID_BONUS_PREFIX = '3';
+  const UC8_CURL_CONNECTTIMEOUT_MS = '15000';
+  const UC8_CURL_CURLOPT_TIMEOUT_MS = '30000';
+  const UC8_DEFAULT_REQUEST_METHOD = 'POST';
+
+  protected $UC8_CURL_DATAS = array(
+      CURLOPT_CUSTOMREQUEST => self::UC8_DEFAULT_REQUEST_METHOD,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_SSL_VERIFYHOST => false,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_TIMEOUT_MS => self::UC8_CURL_CURLOPT_TIMEOUT_MS,
+      CURLOPT_CONNECTTIMEOUT_MS => self::UC8_CURL_CONNECTTIMEOUT_MS,
+  );
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 平博創出的會員ID (string)
+	 */
+	public function createMember($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $urlIndex = 'create_player';
+    $apiUrl = self::UC8_URL_ARRAY[$urlIndex];
+
+    $apiMethod = self::UC8_DEFAULT_REQUEST_METHOD;
+
+    $apiCurlDatas = $this->UC8_CURL_DATAS;
+
+    $apiArrData = array(
+      "ExternalId" => $account,
+      "CurrencyCode" => self::UC8_DEFAULT_CURRENCY_CODE,
+      "Name" => '111',
+      "TimeStamp" => $utcDatetime,
+      "Sig" => $signature,
+      "PartnerId" => self::UC8_PARTNER_ID,
+    );
+    $apiArrJson = json_encode($apiArrData);
+
+    $apiCurlDatas[CURLOPT_HTTPHEADER] = array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($apiArrJson)
+    );
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrJson,$err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['ErrorCode'] === self::UC8_RESPONSE_SUCCESS_CODE){
+        return true;
+      } else {
+        $errCode = $result['ErrorCode'];
+        $errMsg = $result['ErrorMessage'];
+        $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).": ".$this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 會員登入
+   * @param $data['account'] 會員帳號
+   * @param $data['language'] (非必須) 語言
+   * @param $data['currency'] (非必須) 貨幣
+   * @param $data['game_code'] (非必須) 遊戲代碼。預設=大廳LOBBY
+   * @param $data['is_mobile'] (非必須) 手機版?
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'is_mobile' => array('required'=>0,'default'=>false),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $urlIndex = 'get_wallet_url';
+    $apiUrl = self::UC8_URL_ARRAY[$urlIndex];
+
+    $apiMethod = self::UC8_DEFAULT_REQUEST_METHOD;
+
+    $apiCurlDatas = $this->UC8_CURL_DATAS;
+
+    $platformId = self::UC8_PLATFORM_ID_DESKTOP;
+    if ($is_mobile) {
+      $platformId = self::UC8_PLATFORM_ID_MOBILE;
+    }
+    $utcDatetime = $this->_getUTCTime();
+    $signature = $this->_getSignature($account,$utcDatetime);
+    $funMode = false;
+
+    $apiArrData = array(
+      "ExternalId" => $account,
+      "CurrencyCode" => self::UC8_DEFAULT_CURRENCY_CODE,
+      "Name" => $this->_createNickname($account),
+      "TimeStamp" => $utcDatetime,
+      "Sig" =>  $signature,
+      "GameCode" => self::UC8_GAME_CODE_LOBBY,  //以大廳方式進入而非個別遊戲
+      "LangCode" => self::UC8_DEFAULT_LANGUAGE_CODE,
+      "PartnerId" => self::UC8_PARTNER_ID,
+      "FunMode" => $funMode,
+      "PlatformId" => $platformId,
+    );
+    $apiArrJson = json_encode($apiArrData);
+
+    $apiCurlDatas[CURLOPT_HTTPHEADER] = array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($apiArrJson)
+    );
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrJson,$err);
+    
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['ErrorCode'] === self::UC8_RESPONSE_SUCCESS_CODE && isset($result['Url'])){
+        return $result['Url'];
+      } else {
+        $errCode = $result['ErrorCode'];
+        $errMsg = $result['ErrorMessage'];
+        $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01')).": ".$this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+	 */
+	public function getMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $urlIndex = 'get_balance';
+    $apiUrl = self::UC8_URL_ARRAY[$urlIndex];
+
+    $apiMethod = self::UC8_DEFAULT_REQUEST_METHOD;
+
+    $apiCurlDatas = $this->UC8_CURL_DATAS;
+
+    $utcDatetime = $this->_getUTCTime();
+    $signature = $this->_getSignature($account,$utcDatetime);
+    $apiArrData = array(
+      "ExternalId" => $account,
+      "PartnerId" => self::UC8_PARTNER_ID,
+      "TimeStamp" => $utcDatetime,
+      "Sig" =>  $signature,
+    );
+    $apiArrJson = json_encode($apiArrData);
+
+    $apiCurlDatas[CURLOPT_HTTPHEADER] = array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($apiArrJson)
+    );
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrJson,$err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['ErrorCode'] === self::UC8_RESPONSE_SUCCESS_CODE && isset($result['Balance'])){
+          return bcdiv($result['Balance'], self::UC8_BALANCE_RATIO);
+      } else {
+        $errCode = $result['ErrorCode'];
+        $errMsg = $result['ErrorMessage'];
+        $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01')).": ".$this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 下點(提款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號。16為長度內純數字。
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'TransactionId' => 交易號 (number),
+                'Balance' => 交易後餘額 (number),
+              );
+	 */
+	public function withdrawMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $transType = 'WITHDRAW';
+
+    $trans_id = time() . '' . str_pad(rand(0,999), 3, '0', STR_PAD_LEFT);
+
+    $checkTranIdxRes = $this->_checkTransId($trans_id);  //檢查TransId
+    if ( $checkTranIdxRes !== true) {
+      $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //transId 格式不合規定
+      return false;
+    }
+
+    $urlIndex = 'transfer';
+    $apiUrl = self::UC8_URL_ARRAY[$urlIndex];
+
+    $apiMethod = self::UC8_DEFAULT_REQUEST_METHOD;
+
+    $apiCurlDatas = $this->UC8_CURL_DATAS;
+
+    $utcDatetime = $this->_getUTCTime();
+    $signature = $this->_getSignature($account,$utcDatetime);
+    $apiArrData = array(
+      "Name" => $this->_createNickname($account),
+      "PartnerId" => self::UC8_PARTNER_ID,
+      "ExternalId" => $account,
+      "TimeStamp" => $utcDatetime,
+      "Sig" => $signature,
+      "CurrencyCode" =>  self::UC8_DEFAULT_CURRENCY_CODE,
+      "ExtTransactionId" => $trans_id,
+      "Amount" => abs(bcmul($amount, self::UC8_BALANCE_RATIO)),
+      "TransactionType" => $transType,
+      "TransactionDescription" => null,
+    );
+
+    $apiArrJson = json_encode($apiArrData);
+
+    $apiCurlDatas[CURLOPT_HTTPHEADER] = array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($apiArrJson)
+    );
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrJson,$err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['ErrorCode'] === self::UC8_RESPONSE_SUCCESS_CODE){
+          return bcdiv($result['Balance'], self::UC8_BALANCE_RATIO);
+      } else {
+        $errCode = $result['ErrorCode'];
+        $errMsg = $result['ErrorMessage'];
+        $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).": ".$this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 上點(加款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號。16為長度內純數字。
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'TransactionId' => 交易號 (number),
+                'Balance' => 交易後餘額 (number),
+              );
+   */
+	public function rechargeMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $transType = 'DEPOSIT';
+
+    $trans_id = time() . '' . str_pad(rand(0,999), 3, '0', STR_PAD_LEFT);
+
+    $checkTranIdxRes = $this->_checkTransId($trans_id);  //檢查TransId
+    if ( $checkTranIdxRes !== true) {
+      $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //transId 格式不合規定
+      return false;
+    }
+
+    $urlIndex = 'transfer';
+    $apiUrl = self::UC8_URL_ARRAY[$urlIndex];
+
+    $apiMethod = self::UC8_DEFAULT_REQUEST_METHOD;
+
+    $apiCurlDatas = $this->UC8_CURL_DATAS;
+
+    $utcDatetime = $this->_getUTCTime();
+    $signature = $this->_getSignature($account,$utcDatetime);
+    $apiArrData = array(
+      "Name" => $this->_createNickname($account),
+      "PartnerId" => self::UC8_PARTNER_ID,
+      "ExternalId" => $account,
+      "TimeStamp" => $utcDatetime,
+      "Sig" => $signature,
+      "CurrencyCode" =>  self::UC8_DEFAULT_CURRENCY_CODE,
+      "ExtTransactionId" => $trans_id,
+      "Amount" => abs(bcmul($amount, self::UC8_BALANCE_RATIO)),
+      "TransactionType" => $transType,
+      "TransactionDescription" => null,
+    );
+
+    $apiArrJson = json_encode($apiArrData);
+
+    $apiCurlDatas[CURLOPT_HTTPHEADER] = array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($apiArrJson)
+    );
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrJson,$err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['ErrorCode'] === self::UC8_RESPONSE_SUCCESS_CODE){
+          return bcdiv($result['Balance'], self::UC8_BALANCE_RATIO);
+      } else {
+        $errCode = $result['ErrorCode'];
+        $errMsg = $result['ErrorMessage'];
+        $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).": ".$this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+	}
+	/**
+	 * 抓取注單報表
+   * @param $data['account'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['account'] 查詢的用戶名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($data, &$err = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1),
+      'end_datetime' => array('required'=>1),
+      'num_to_skip' => array('required'=>1),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $urlIndex = 'get_tickets';
+
+    $apiUrl = self::UC8_URL_ARRAY[$urlIndex];
+    $apiMethod = self::UC8_DEFAULT_REQUEST_METHOD;
+
+    $apiCurlDatas = $this->UC8_CURL_DATAS;
+
+    $utcDatetime = $this->_getUTCTime();
+    $signature = $this->_getReportSignature($utcDatetime);
+    $beginDatetime = $this->_getUTCTimeFromStr($begin_datetime);
+    $endDatetime = $this->_getUTCTimeFromStr($end_datetime);
+
+    $apiArrData = array(
+      //必須
+      "TimeStamp" => $utcDatetime,
+      "Sig" => $signature,
+      "LangCode" => self::UC8_DEFAULT_LANGUAGE_CODE,
+      "PartnerId" => self::UC8_PARTNER_ID,
+      "StartDate" => $beginDatetime,
+      "EndDate" => $endDatetime,
+      "CurrencyCode" => self::UC8_DEFAULT_CURRENCY_CODE,
+      "SortBy" => "TimeStamp",
+      "SortDesc" => false,
+      "Take" => self::UC8_GET_TICKETS_NUM_PER_PAGE,
+      "Skip" => $num_to_skip,
+    );
+
+    $apiArrJson = json_encode($apiArrData);
+
+    $apiCurlDatas[CURLOPT_HTTPHEADER] = array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($apiArrJson)
+    );
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrJson,$err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['ErrorCode'] === self::UC8_RESPONSE_SUCCESS_CODE){
+        return $result['Data'];
+      } else {
+        $errCode = $result['ErrorCode'];
+        $errMsg = $result['ErrorMessage'];
+        $err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01')).": ".$this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+	}
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + gameId        遊戲名稱
+   * + roundId       局號
+   * + multiplier    倍率
+   * + sb_html       格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+    $arrBets = array();
+    
+    $GameUc8Menu = D("GameUc8Menu");
+    if ($argArrRowBetDetails) {
+        
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $bet['detail_bettingMoney'] = round(floatVal($bet['detail_bettingMoney']),3);
+        $bet['detail_effective'] = round(floatVal($bet['detail_effective']),3);
+        $bet['detail_surplus'] = round(floatVal($bet['detail_surplus']),3);
+
+        $bet['sb_html'] = '';
+        $bet_id = $bet['detail_id'];
+
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        //$arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+
+        $GameCode = $arrBetContents['GameCode'];
+        $RoundId = $arrBetContents['RoundId'];
+        $Multiplier = $arrBetContents['Multiplier'];
+        
+        //$nameZhtw = $UC8Menu->getGameChNameById($GameCode);
+        $nameZhtw = $GameUc8Menu->getGameChNameById($GameCode);
+        
+        $bet['gameId'] = $nameZhtw;
+        $bet['roundId'] = $RoundId;
+        $bet['multiplier'] = $Multiplier;
+
+        
+        $arrBets[$bet_id] = $bet;
+      }  //rowBetDetails foreach
+      return $arrBets;
+    } else {  //if ($argArrRowBetDetails)
+      return false;
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  /* check transaction id */
+  protected function _checkTransId($argTransId) {
+    if (strlen($argTransId) <= self::UC8_TRANSACATION_ID_LENGTH_MAX) {  //長度 <= 16
+      if (is_numeric($argTransId)) {  //必須為數字
+        return true;
+      }
+    }
+    return false;
+  }
+  /* get sig */
+  protected function _getSignature($argMemberId,$argUTCDatetime) {
+    $externalId = $argMemberId;
+    $privateKey = self::UC8_PRIVATE_KEY;
+    $strForHash = "{$argUTCDatetime}{$externalId}{$privateKey}";
+    $signature = hash('md5',$strForHash);
+    //echo "strForHash={$strForHash}, signature={$signature}";
+    return $signature;
+  }
+
+  /* get sig for report */
+  protected function _getReportSignature($argUTCDatetime,$argDummy='') {
+    $partnerId = self::UC8_PARTNER_ID;
+    $privateKey = self::UC8_PRIVATE_KEY;
+    $strForHash = "{$argUTCDatetime}{$partnerId}{$privateKey}";
+    $signature = hash('md5',$strForHash);
+    return $signature;
+  }
+
+  /* get UTC time */
+  protected function _getUTCTime() {
+    $orgTimezone = date_default_timezone_get();
+    date_default_timezone_set("UTC");
+    $datetime = date("YmdHis",time());
+    date_default_timezone_set($orgTimezone);
+    return $datetime;
+  }
+
+  /* get UTC time */
+  protected function _getUTCTimeFromStr($argDatetimeStr) {
+    $orgTimezone = date_default_timezone_get();
+    $time = new \DateTime('now', new DateTimeZone($orgTimezone));
+    $timezoneOffset = $time->format('P');
+    $datetime = date(
+      "YmdHis",
+      strtotime($argDatetimeStr)-(60*60*$timezoneOffset)
+    );
+    date_default_timezone_set($orgTimezone);
+    return $datetime;
+  }
+
+  /* get name */
+  protected function _createNickname($_account) {
+    return "fortune-{$_account}";
+  }
+
+  /* produce error */
+  protected function _produceError($argAct, $errCode) {
+    $arrErrorMsgs = array(
+      'createMem' => array(
+        '002' => '帳號重複',
+      ),
+      'memLogin' => array(
+      ),
+      'memEdit' => array(
+        '002' => '無此帳號',
+        '003' => '未傳入修改資料',
+      ),
+      'memGetMoney' => array(
+        '002' => '無此帳號',
+      ),
+      'memTransfer' => array(
+        '002' => '無此帳號',
+        '003' => '額度不足',
+      ),
+      'getTix' => array(
+        '002' => '沒有紀錄',
+      ),
+    );
+    $errMsg = '';
+    if (isset($arrErrorMsgs[$argAct])) {
+      if (isset($arrErrorMsgs[$argAct][$errCode])) {
+        $errMsg = $arrErrorMsgs[$argAct][$errCode];
+      } else {
+        $errMsg = '其他錯誤 (代碼不明)';
+      }
+    } else {
+      $errMsg = '其他錯誤 (動作不明)';
+    }
+
+    return "{$errMsg} (code {$errCode})";
+  }
+}

@@ -1,0 +1,243 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+
+		<div class="row">
+			<div class="col-md-2">
+				<div><h6>重整倒數 &nbsp;<span id="min"></span>:<span id="sec"></span></h6></div>
+			</div>
+			<div class="col-md-2">
+				<div class="form-check p-t-0">
+					<input class="form-check-input is-valid" type="checkbox" id="noRenew" name="noRenew">
+					<label class="form-check-label" for="validCheckbox">不重整</label>
+				</div>
+			</div>
+			<div>
+				<div id="newMessageDIV" style="display:none"></div>
+			</div>
+		</div>
+
+		<a href="__APP__/{$Think.MODULE_NAME}/withdrawDetail">託售歷史紀錄</a>
+
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+
+				<div class="panel panel-inverse">
+
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">未處理託售訂單</h4>
+					</div>
+
+						<div class="panel-body">
+								<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table id="table1" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>單號</th>
+											<th>帳號</th>
+											<th>狀態</th>
+											<th>託售金額</th>
+											<th>建立時間</th>
+											<th>託售IP</th>
+											<th>修改時間</th>
+											<th>操作者</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="showArray" id="vo" empty="$showEmpty">
+				                        	<tr id='{$vo.id}trid'>
+												<td>
+													{$vo.id}
+												</td>
+												<td>{$vo.memberAccount}</td>
+												<td>{$vo.status}</td>
+												<td>{$vo.money}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.ip}</td>
+												<td>{$vo.modifyTime}</td>
+												<td id="adminAccount{$vo.id}">{$vo.adminAccount}</td>
+												<td>
+													<if condition="$vo.processingOrder eq 'true'">
+														<input type="hidden" id="{$vo.id}processing" value="true">
+														<form method="post" action='__APP__/{$Think.MODULE_NAME}/withdrawCheck'>
+															<input type="hidden" name="setId" value="{$vo.id}">
+															<button type="submit" class="btn btn-info" >處理訂單</button>
+														</form>
+													<else/>
+														<input type="hidden" id="{$vo.id}processing" value="false">
+													</if>
+												</td>
+											</tr>
+				                        </VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+	</div>
+	<!-- end #content -->
+<include file="Common:footer"/>
+<script type="text/javascript">
+var t,count = 5;
+var allDataId = "{$allDataId}";
+var dataIdArray = allDataId.split(",");
+$(document).ready(function(){
+	
+	t = setInterval(showAuto, 1000);
+	
+	$("#noRenew").change(function() { 
+		var noRenew=$('#noRenew:checked').val();
+		if(noRenew == "on"){
+			clearInterval(t);
+		} else {
+			t = setInterval(showAuto, 1000);
+		}
+	});
+	
+	function play(){
+		$('#newMessageDIV').html('<audio autoplay="autoplay"><source src="__CSS__/mp3/DoorBell.mp3"'
+		+ 'type="audio/wav"/><source src="__CSS__/mp3/DoorBell.mp3" type="audio/mpeg"/></audio>');
+	}
+	
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+});
+function showAuto(){
+	var min = Math.floor(count/60);
+	var sec = count%60;
+	if(sec<10){
+		sec = '0' + sec;
+	}
+	$('#min').html(min);
+    $('#sec').html(sec);
+    if(count == 0){
+    	clearInterval(t);
+    	count = 10;
+    	var noRenew=$('#noRenew:checked').val();
+    	if(noRenew != "on"){
+    		getajaxNewData();
+    	}
+    }
+    --count;
+}
+function getajaxNewData(){
+	$.ajax({
+		type: "POST",
+		dataType: "text",
+		url: "__URL__/getAjaxUnprocessedForm",
+		success:function(data){
+			//alert(1);
+			splitArray = data.split(";;");
+			if(splitArray[0] == 'err'){
+				errorMsgShow(splitArray[1]);
+				t = setInterval(showAuto, 1000);
+				return;
+			}
+			ajaxDataId = splitArray[0];//資料id
+			ajaxDataStr = splitArray[1];//資料明細
+			ajaxDataIdArray = ajaxDataId.split(",");
+			ajaxDataStrArray = ajaxDataStr.split(",");
+			
+			for(var i=0;i<dataIdArray.length;i++){
+				var instr = $.inArray(dataIdArray[i], ajaxDataIdArray);
+				if(instr == -1){
+					$('#'+dataIdArray[i]+'trid').remove();
+				} else {
+					var processing = $("#"+dataIdArray[i]+"processing").val();
+					fieldDatastrArray = ajaxDataStrArray[i].split(";");
+					var newProcessing = fieldDatastrArray[fieldDatastrArray.length-1];
+					if(processing != newProcessing){
+						var trData = "";
+						for(var j=0;j<fieldDatastrArray.length;j++){
+							if(j == (fieldDatastrArray.length-1)){
+								trData = trData + "<td></td>";
+							} else {
+								trData = trData + "<td>"+fieldDatastrArray[j]+"</td>";	
+							}
+						}
+						$('#'+dataIdArray[i]+'trid').html(trData);
+					}
+				}
+			}
+			for(var i=0;i<ajaxDataIdArray.length;i++){
+				var instr = $.inArray(ajaxDataIdArray[i], dataIdArray);
+				if(instr == -1){
+					fieldDatastrArray = ajaxDataStrArray[i].split(";");
+					withdrawId = ajaxDataIdArray[i];
+					var trData = "<tr id="+withdrawId+"trid>";
+					for(var j=0;j<fieldDatastrArray.length;j++){
+						if(j == (fieldDatastrArray.length-1)){
+							if(fieldDatastrArray[j] == "true"){
+								trData = trData + "<td><input type='hidden' id='"+withdrawId+"processing' value='true'>";
+								trData = trData + "<form method='POST' action='__APP__/"+"{$Think.MODULE_NAME}"+"/withdrawCheck'>";
+								trData = trData + "<input type='hidden' name='setId' value='"+withdrawId+"'>";
+								trData = trData + "<button type='submit' class='btn btn-info' >處理訂單</button></form></td>";
+							} else  {
+								trData = trData + "<td><input type='hidden' id='"+withdrawId+"processing' value='false'></td>";
+							}
+						} else {
+							trData = trData + "<td>"+fieldDatastrArray[j]+"</td>";
+						}
+					}
+					trData = trData + '</tr>';
+					$($('table > tbody > tr')[0]).before(trData);
+				}
+			}
+			dataIdArray = ajaxDataIdArray;
+			
+			t = setInterval(showAuto, 1000);
+		},
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況");
+		}
+	});
+}
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>
+
+
+
+
+
+
+

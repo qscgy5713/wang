@@ -1,0 +1,72 @@
+<?php
+/*
+ * 會員專屬帳戶
+ */
+class CommonMemberPrivateatmModel extends CommonModel {
+    public function getMemberPrivateatmData(){
+        $sql = "SELECT p.`privateATM_id`,m.`member_id`,m.`member_account`,p.`privateATM_bankcode`,p.`privateATM_bankaccount`,p.`privateATM_bankname`,p.`privateATM_enabled`
+                FROM `common_member_privateatm` p,`common_member` m
+                WHERE p.`member_id` = m.`member_id`";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 新增 會員帳戶 資料
+     */
+    public function addPrivateatmData($data){
+        if(isset($data['member_id'])){
+            return false;
+        }
+        $sql = "INSERT INTO `common_member_privateatm` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改  會員帳戶 資料
+     * 使用帳戶ID
+     */
+    public function setPrivateatmDataByPrivateatmId($data){
+        if(empty($data['privateATM_id']) && $data['privateATM_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'privateATM_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_member_privateatm` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `privateATM_id` = '{$data['privateATM_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 刪除 會員帳戶 資料
+     * 使用帳戶ID
+     */
+    public function delPrivateatmDataByPrivateatmId($data){
+        if(empty($data['privateATM_id']) && $data['privateATM_id'] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `common_member_privateatm` WHERE `privateATM_id` = '".$data['privateATM_id']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

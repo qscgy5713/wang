@@ -1,0 +1,297 @@
+<?php
+/*
+ * 代理子帳號
+ */
+class CommonAgentSubModel extends AgentModel {
+    protected $tableName = "common_agent_sub";
+    protected $tableId = "sub_id";
+    /*
+     * 取得 代理子帳號 資料
+     * 登入使用
+     */
+    public function getAgentSubDataPageDataByAccount($data){
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                JOIN `common_agent` b ON(a.`agent_id`=b.`agent_id`)
+                JOIN `common_agent_sub_pagepower` c ON(a.`sub_id`=c.`sub_id`)
+                JOIN `common_agent_tree` d ON(a.`agent_id`=d.`agent_id`)
+                WHERE a.`sub_account` = '".$data['sub_account']."'
+                LIMIT 1;";
+        $return = $this->cacheQuery($sql,2);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 代理子帳號 資料
+     * 新增子帳號使用
+     */
+    public function getAgentSubDataByAccount($data){
+        $sql = "SELECT *
+                FROM `{$this->tableName}`
+                WHERE `sub_account` = '".$data['sub_account']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 代理子帳號 規則 新子帳號
+     */
+    public function getAgentSubNewAccountDataByAgentId($data){
+        if(empty($data["agent_id"]) && $data["agent_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT MAX(`sub_bodys`) as MaxBodys FROM `{$this->tableName}`
+                WHERE `agent_id` = '".$data['agent_id']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 密碼MD5
+     */
+    public function getMd5Password($password){
+        return md5($password . C("HASH_KEY"));
+    }
+    /*
+     * 取得 代理子帳號 資料
+     * 代理子帳號管理使用
+     * 使用代理ID
+     */
+    public function getAgentSubDataByAgentId($data){
+        if(empty($data["agent_id"]) && $data["agent_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_agent_sub_pagepower` b ON(a.`sub_id` = b.`sub_id`)
+                WHERE a.`agent_id` = '{$data["agent_id"]}';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 新增 子帳號 資料
+     */
+    public function addAgentSubData($data,&$err){
+        if(empty($data["sub_account"]) && $data["sub_account"] !== '0'){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        if(empty($data["agent_id"]) && $data["agent_id"] !== '0'){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        if(empty($data["sub_password"]) && $data["sub_password"] !== '0'){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        if(empty($data["sub_bodys"]) && $data["sub_bodys"] !== '0'){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return false;
+        }
+        if(empty($data["power_main"]) && $data["power_main"] !== '0'){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_05"));
+            return false;
+        }
+
+        $newAccount = $data['sub_account'];
+        $power_main = $data['power_main'];
+        //開始事務處理
+        $this->startTrans();
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if($key == "power_main"){ continue;}
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+            return $return;
+        }
+
+        //把頁面權限 加入 common_agent_sub_pagepower
+        $insertId = $this->getLastInsertId();
+        if(empty($insertId)){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_07"));
+            return false;
+        }
+        $CommonAgentSubPagepower = D("CommonAgentSubPagepower");
+        $data = array(
+            "sub_id" => $insertId,
+            "power_main" => $power_main
+        );
+        $return = $CommonAgentSubPagepower->addAgentSubPagepowerData($data);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_08"));
+            return false;
+        }
+        $this->commit();//事務處理成功
+        return true;
+    }
+    /*
+     * 修改 子帳號 資料
+     * 使用ID
+     * 停權 啟用 使用
+     */
+    public function setAgentSubDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 修改 子帳號 資料
+     * 使用ID
+     */
+    public function setAgentSubDataPageDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $power_main = $data['power_main'];
+        //開始事務處理
+        $this->startTrans();
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if($key == "power_main"){ continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return $return;
+        }
+
+        $CommonAgentSubPagepower = D("CommonAgentSubPagepower");
+        $data = array(
+            "{$this->tableId}" => $data["{$this->tableId}"],
+            "power_main" => $power_main
+        );
+        $return = $CommonAgentSubPagepower->setAgentSubPagepowerDataBySubId($data);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $this->commit();//事務處理成功
+        return true;
+    }
+    /*
+     * 刪除 帳號
+     * 使用ID
+     */
+    public function delAgentSubDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        $CommonAgentSubPagepower = D("CommonAgentSubPagepower");
+        $data = array(
+            "{$this->tableId}" => $data["{$this->tableId}"]
+        );
+        $CommonAgentSubPagepower->delAgentSubPagepowerDataBySubId($data);
+
+        return $return;
+    }
+    /*
+     * 取得總筆數
+     */
+    public function getTotalNumberAgentSubData($data){
+       if(empty($data["agent_id"]) && $data["agent_id"] !== '0'){
+            return false;
+        }
+
+        $whereSql = "";
+        if(!empty($data['sub_account'])){
+            $whereSql = " AND `sub_account` LIKE '%{$data['sub_account']}%'";
+        }
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}` a
+                JOIN `common_agent_sub_pagepower` b ON(a.`sub_id` = b.`sub_id`)
+                WHERE a.`agent_id` = '{$data["agent_id"]}'{$whereSql};";
+
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 搜索分頁資料
+     */
+    public function getAgentSubDataNumber($data){
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+
+        $whereSql = "";
+        if(!empty($data['sub_account'])){
+            $whereSql = " AND `sub_account` LIKE '%{$data['sub_account']}%'";
+        }
+
+        if(empty($data["agent_id"]) && $data["agent_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_agent_sub_pagepower` b ON(a.`sub_id` = b.`sub_id`)
+                WHERE a.`agent_id` = '{$data["agent_id"]}'{$whereSql}{$pageSql};";
+        $return = $this->query($sql);
+
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+        }
+
+        return $return;
+    }
+    /*
+     * 搜尋 會員 帳號
+     */
+    public function searchMemberByMemberAccount($data){
+
+        $sql = "SELECT `sub_account`
+                FROM `{$this->tableName}`
+                WHERE `sub_account` LIKE '" . $data['sub_account'] . "%'
+                AND `agent_id` = {$data['agent_id']}
+                LIMIT " . $data['limit'];
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+
+}

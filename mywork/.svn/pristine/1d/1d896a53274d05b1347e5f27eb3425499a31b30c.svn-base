@@ -1,0 +1,10 @@
+<?php
+/**
+ * 手機業面
+ */
+class EventPhoneIndexAction extends EventAction{
+  //TODO:優惠活動 手機板
+  public function index(){
+      $this->display();
+  }
+}

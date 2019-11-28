@@ -1,0 +1,92 @@
+<?php
+/*
+ * AB會員資料
+ * //建立info資料表
+    CREATE TABLE `game_ab_member_info` (
+      `ab_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ABID',
+      `member_id` int(11) NOT NULL COMMENT '會員ID',
+      `ab_account` varchar(15) NOT NULL COMMENT '遊戲帳號 abA+member_id',
+      `ab_password` varchar(15) NOT NULL COMMENT '遊戲密碼 abP+member_id',
+      PRIMARY KEY (`ab_id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='AB遊戲會員資訊';
+ */
+class GameAbMemberInfoModel extends AdminModel {
+    protected $tableName = "game_ab_member_info";
+    protected $tableId = "info_id";
+    /*
+     * 刪除 會員遊戲帳號
+     */
+    public function delMemberInfoData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得會員資料失敗，缺少參數。
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /**
+     *
+     * @param $data
+     * @param string $err
+     */
+    public function getMemberInfoDataByMemberId($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得會員資料失敗，缺少參數。
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 新增 會員遊戲 資料
+     * @param $data //$data['member_id']
+     * @param $err //錯誤訊息
+     * @return boolean
+     */
+    public function addMemberInfoData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//註冊失敗
+            return false;
+        }
+        if(empty($data['game_account']) && $data['game_account'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//註冊失敗
+            return false;
+        }
+        if(empty($data['game_password']) && $data['game_password'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//註冊失敗
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return $return;
+        }
+        return true;
+    }
+    
+}

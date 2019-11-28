@@ -1,0 +1,164 @@
+<?php
+class OnlineRecordAction extends AdminAction {
+    protected $limitTime = 30;
+    //TODO: 線上紀錄 首頁
+    public function index(){
+        $request = $this->getRequest();
+        $selectClass = 'Agent';
+        if(isset($request['selectClass'])){
+            $selectClass = $request['selectClass'];
+        }
+        $this->assign("selectClass",$selectClass);//單狀態
+
+        switch ($selectClass){
+            case 'Member':
+                $CommonMemberOnline = D("CommonMemberOnline");
+                $startTime = time() - (60 * 60);
+                $data = array(
+                    "startTime" => $startTime,
+                );
+                $return = $CommonMemberOnline->getMemberOnlineData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'Agent':
+                $CommonAgentOnline = D("CommonAgentOnline");
+                $data = array(
+                    "upOnlineTime"=>(time()-($this->limitTime*60))
+                );
+                $return = $CommonAgentOnline->getAgentOnlineData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'Admin':
+                $InternalAdminOnline = D("InternalAdminOnline");
+                $data = array(
+                    "upOnlineTime"=>(time()-($this->limitTime*60))
+                );
+                $return = $InternalAdminOnline->getAdminOnlineData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'all':
+                $return = array();
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                break;
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "agent_account"=>"agentAccount",
+            "member_account"=>"memberAccount",
+            "admin_account"=>"adminAccount",
+            "sub_account"=>"subAccount",
+            "online_errMessage"=>"errMessage",
+            "online_createTime"=>"createTime",
+            "online_ip"=>"ip",
+            "online_os"=>"os",
+            "online_url"=>"url",
+            "online_id"=>"id",
+            "member_id"=>"memberId",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] .= "->".$value[$key1];
+                        }
+                        break;
+                    case 'admin_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] = $value[$key1];
+                        }
+                        break;
+                    case 'agent_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] = $value[$key1];
+                        }
+                        break;
+                    case 'sub_account':
+                        if(!empty($value[$key1])){
+                            $showArray[$key]["Account"] .= "->".$value[$key1];
+                        }
+                        break;
+                    case 'online_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        $onlineTime = time()-$value[$key1];
+                        $showArray[$key]['onlineTime'] = getSecondsChange($onlineTime);
+                        break;
+                    case 'online_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='8' align='center'>無資料</td></tr>");
+        $this->display();
+    }
+    //TODO: 踢除會員功能
+    public function formGetOutId(){
+        $request = $this->getRequest();
+        switch ($request['selectClass']){
+            case 'Member':
+                $CommonMember = D("CommonMember");
+                $CommonMemberOnline = D("CommonMemberOnline");
+                $data = array(
+                    "member_id" => $request['memberId'],
+                );
+                $return = $CommonMember->getOutMemberLogin($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                break;
+            case 'Agent':
+                $CommonAgentOnline = D("CommonAgentOnline");
+                $data = array(
+                    "online_id" => $request['id'],
+                );
+                //取得sub_id 與 agent_id
+                $return = $CommonAgentOnline->getAgentAndSubId($data);
+                $data = array(
+                    "agent_id" => $return['agent_id'],
+                    "sub_id" => $return['sub_id'],
+                    "online_id" => $request['id'],
+                );
+                if(empty($data['sub_id'])){
+                    $CommonAgent = D("CommonAgent");
+                    $return = $CommonAgent->getOutAgentLogin($data,$err);
+                    if($return === false){
+                    $this->error($err);
+                    }
+                } else {
+                    $CommonAgentSub = D("CommonAgentSub");
+                    $return = $CommonAgentSub->getOutAgentSubLogin($data,$err);
+                    if($return === false){
+                    $this->error($err);
+                    }
+                }
+                $return = $CommonAgentOnline->delAgentOnlineDataById($data);
+                if($return === false){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                }
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+                break;
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+
+    }
+}

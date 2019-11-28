@@ -1,0 +1,21 @@
+.m-l-auto{
+	margin-left: auto !important;
+}
+.card-shadow{
+	box-shadow: 2px 2px 7px #11111154;
+}
+.div-style{
+   display: initial !important;
+}
+.div-style-contents{
+	display: contents !important;
+}
+.div-style-inline-flex{
+	/*display: -webkit-inline-box !important;*/
+	display: inline-flex;
+}
+.div-s{}
+
+@media (max-width: 575px) {
+	
+}

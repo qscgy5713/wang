@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>iframeIndex首頁</title>
+</head>
+<body>
+
+<a href="iframeExplanation.txt" download="iframeExplanation範例">
+	點此下載文字檔範例
+</a>
+<BR>
+範例
+<BR>
+<img src="" >
+</body>
+</html>

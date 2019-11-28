@@ -1,0 +1,3 @@
+<sapn>測試</sapn>
+<BR>開始時間：<sapn>{$startTime}</sapn>
+結束時間<sapn>{$endTime}</sapn>

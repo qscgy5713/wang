@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		遊戲帳號: <input type="text" name="user_name" value="{$user_name}" /><br/>
+		貨幣: <input type="text" name="currency_type" value="{$currency_type}" /><br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="isset($op_result['Token']) and isset($op_result['DisplayName'])">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			<PHP>var_dump($op_result);</PHP>
+			<IF condition="strlen($op_result2)"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+		<strong>登入成功，送出下列表單即可進入遊戲:</strong>
+		<form id="sa_game_form" method="post" action="{$sa_form_action}" enctype="application/x-www-form-urlencoded" target="_self">
+			username: <input type="text" id="sa_username" name="username" value="{$op_result['DisplayName']}" /> 來自 login 回傳結果的 DisplayName<br/>
+			token: <input type="text" id="sa_token" name="token" value="{$op_result['Token']}" /> 來自 login 回傳結果的 Token<br/>
+			lang: <input type="text" id="sa_lang" name="lang" value="{$sa_form_language}" /> 預設 zh_TW<br/>
+			lobby: <input type="text" id="sa_lobby" name="lobby" value="{$sa_form_lobby}" /> 依遊戲商約定<br/>
+			mobile: <input type="text" id="sa_is_mobile" name="mobile" value="false" /> 手機板時為 'true' 字串，否則為 'false' 字串<br/>
+			noselectui: <input type="text" id="" name="noselectui" value="true" /> 建議勿改 <br/>
+			<hr/>
+			<button type="submit">進入SA</button>
+		</form>
+	<ELSE/>
+		<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+	</IF>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+<if condition='$gameLink eq "false"'>
+	<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+		<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+		<div class="display-table">
+			<div class="display-table-cell vertical-align-middle">
+				<div class="container text-center">
+					<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+					<div class="row mt-30">
+						<div class="col-md-3 col-sm-3 m-auto">
+							<label class="txt-white mb-10">電子錢包</label>
+							<input type="text" value="{$memberWallet}" readonly class="form-control required">
+						</div>
+					</div>
+					<div class="row mt-10">
+						<div class="col-md-3 col-sm-3 m-auto">
+							<label class="txt-white mb-10">錯誤訊息</label>
+							<input type="text" id="errMessage" value="{$errMessage}" readonly class="form-control required">
+							<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+<else/>
+	<div style='display:none;'>
+		<form id='gameForm' method="$gameLink['form_method']" action="{$gameLink['form_action']}" target="gameIframe">
+			<input type="hidden" name="partner_id" value="{$gameLink['bng_partner_id']}" />
+			<input type="hidden" name="token" value="{$gameLink['bng_token']}" />
+			<input type="hidden" name="lang" value="{$gameLink['bng_lang']}" />
+			<input type="hidden" name="fun" value="{$gameLink['bng_fun']}" />
+			<button type="submit">進入BNG</button>
+		</form>
+	</div>
+	<iframe id="game_iframe" class="md-gameEnter la-gameEnter" src="" name="gameIframe" width="100%" height="100%" frameborder="0" scrolling="auto"></iframe>
+</if>
+
+<include file="Common:game_footer"/>
+<script type="text/javascript">
+
+jQuery(document).ready(function(){
+	if("{$gameLink}" == "false"){
+		jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+	    alert("{$errMessage}");
+	} else {
+		jQuery("#gameForm").submit();
+		mobileChange();
+	}
+});
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#game_iframe").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 jQuery("#mobile").val("true");
+		 
+	}else{
+		 jQuery("#game_iframe").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+		 jQuery("#mobile").val("false");
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+function reloadPage(){
+	location.reload();
+}
+</script>
+
+
+

@@ -1,0 +1,142 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+
+				<div class="row">
+						
+					<div class="col-md-7 m-auto">
+						<div class="card card-default mt-15">
+							<div class="card-block">
+
+								<form  id="applyForm" name="applyForm" method="post" action='__APP__/BankcodeBinding/formBankcodeBinding' onclick="return false">
+									
+									<div class="row">
+										<div class="col-md-7 col-sm-7 m-auto">
+											<label>銀行代號</label>
+											<select id="addCode" name="addCode" class="form-control form-control-select2 mb-5 pointer">
+						                    	<option >請選擇銀行</option>
+						                    	<VOLIST name="bankCodeArray" id="bank">
+						                    		<option value="{$bank.bankcode_code}">{$bank.bankcode_code} - {$bank.bankcode_name}</option>
+						                    	</VOLIST>	                    
+						                    </select>
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-md-7 col-sm-7 m-auto">
+											<label>銀行帳號</label>
+											<input type="text" id="" name="addAccount" placeholder="請輸入銀行帳號" autocomplete="off" class="form-control">
+											<span id="checkPhone" class="invalid-feedback">帳號長度應介於6~14位之間!</span>
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-md-7 col-sm-7 m-auto">
+											<label>銀行戶名</label>
+											<input type="text" id="addAccountName" name="addName" placeholder="請輸入銀行戶名" class="form-control">
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-7 col-sm-7 m-auto">
+											<label>銀行分行</label>
+											<input type="text" id="addBranch" name="addBranch" placeholder="請輸入銀行分行" class="form-control">
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-7 col-sm-7 m-auto">
+											<button type="submit" name="btnok" id="btnok" class="btn btn-secondary btn-shadow-1">送出</button>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	
+	//算畫面高度
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+jQuery( "input[name='addAccount']" ).change(function() {
+	var addAccount = jQuery("input[name='addAccount']").val();
+	addAccount = jQuery.trim(addAccount);
+	if(addAccount.length < 6 || addAccount.length > 14){
+		jQuery("input[name='addAccount']").removeClass().addClass("form-control phone-error");
+	}else{
+		jQuery("input[name='addAccount']").removeClass().addClass("form-control phone-ok");
+	}
+});
+
+
+jQuery(document).ready(function(){
+	//送出
+	jQuery("button[name='btnok']").click(function(){
+		var addAccount = jQuery("input[name='addAccount']").val();//銀行帳號
+		var addName = jQuery("input[name='addName']").val();//銀行戶名
+		var addBranch = jQuery("input[name='addBranch']").val();//銀行分行
+		
+		addAccount = jQuery.trim(addAccount);
+		addName = jQuery.trim(addName);
+		addBranch = jQuery.trim(addBranch);
+		
+	     if(addAccount.length < 6 || addAccount.length > 14){
+	    	 alert("帳號長度應介於6~14位之間!");
+			 return false;
+		 }
+		
+		 if (addAccount.length == 0){
+			 alert("銀行帳號不可為空");
+			 return false;
+		 }
+		 if (addName.length == 0){
+			 alert("銀行戶名不可為空");
+			 return false;
+		 }
+		 if (addBranch.length == 0){
+			 alert("銀行分行不可為空");
+			 return false;
+		 }
+		 jQuery("#loader-bg").show();
+			jQuery("#loader-text").show();
+		 document.applyForm.submit();
+	 })
+	
+	//有搜尋功能的select
+	jQuery("#addCode").select2();
+})
+
+</script>
+
+
+			

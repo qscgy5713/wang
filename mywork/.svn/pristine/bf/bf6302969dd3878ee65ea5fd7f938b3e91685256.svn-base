@@ -1,0 +1,74 @@
+<?php
+class billManageAction extends AdminAction {
+    
+    //修改明細佔成
+    public function setDetailRatio(){
+        
+        $detailCreateTime = strtotime("2019-04-01 00:00:00");
+        
+        $GameInfo = D("GameInfo");
+        $data = array(
+            'gameCode' => 'pa',
+            'detailCreateTime' => $detailCreateTime
+        );
+        $return = $GameInfo->getDetailDataByCreateTime($data);
+        if($return === false){
+            echo '資料庫錯誤<BR>';exit();
+        }
+        echo count($return);exit();
+        foreach($return as $key => $value){
+            //var_dump($value);exit();
+            if($value['ratio_tree'] != $value['newRatio']){
+                //var_dump($value);exit();
+                $data = array(
+                    'gameCode' => 'pa',
+                    'detail_id' => $value['detail_id'],
+                    'member_id' => $value['member_id'],
+                    'agent_id' => $value['agent_id'],
+                    'ratio_tree' => $value['newRatio'],
+                );
+                $setReturn = $GameInfo->setDetailDataById($data);
+                if($setReturn === false){
+                    echo "修改 訂單編號 = {$value['detail_id']} 錯誤<BR>";exit();
+                }
+                echo "訂單編號:{$value['detail_id']} 修改成功<BR>";
+            }
+        }
+        exit();
+    }
+    //修改報表佔成
+    public function setReportRatio(){
+        
+        $reportOrderDate = strtotime("2019-04-01 00:00:00");
+        
+        $GameInfo = D("GameInfo");
+        $data = array(
+            'gameCode' => 'xbs',
+            'report_orderDate' => $reportOrderDate
+        );
+        $return = $GameInfo->getReportDataByOrderDate($data);
+        if($return === false){
+            echo '資料庫錯誤<BR>';exit();
+        }
+        //echo count($return);exit();
+        foreach($return as $key => $value){
+            //var_dump($value);exit();
+            if($value['ratio_tree'] != $value['newRatio']){
+                //var_dump($value);exit();
+                $data = array(
+                    'gameCode' => 'xbs',
+                    'report_orderDate' => $value['report_orderDate'],
+                    'member_id' => $value['member_id'],
+                    'agent_id' => $value['agent_id'],
+                    'ratio_tree' => $value['newRatio'],
+                );
+                $setReturn = $GameInfo->setReportDataById($data);
+                if($setReturn === false){
+                    echo "修改 會員ID= {$value['member_id']} 代理ID = {$value['agent_id']} 規帳日 = {$value['report_orderDate']} 錯誤<BR>";exit();
+                }
+                echo "會員ID= {$value['member_id']} 代理ID = {$value['agent_id']} 規帳日 = {$value['report_orderDate']} 修改成功<BR>";
+            }
+        }
+        exit();
+    }
+}

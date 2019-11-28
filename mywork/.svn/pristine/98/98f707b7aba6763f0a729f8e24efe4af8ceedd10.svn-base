@@ -1,0 +1,471 @@
+<?php
+//XBS 六合彩
+class GameXbsModel extends ApiModel{
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  const XBS_BASE_URL = 'http://apilt.king588.net';
+  const XBS_ROUTE = 'api_101';
+  const XBS_AG_URL = 'http://ag.king588.net';
+  const XBS_ENC_KEY = 'WGI@X9ENgpo138jL';  //同SP體育
+  const XBS_BASE_AG_NAME = 'G53999';  //彩球代理
+  const XBS_BASE_AG_PASS = 'bbqq1234';  //彩球代理密碼
+  const XBS_BASE_SUPER_AG_NAME = 'G';//總代理
+  const XBS_BASE_SUPER_AG_PASS = 'asdf15668';//總代理密碼
+
+  const XBS_ENCRYPTION_IV = 'm%2qQ7L&wfafUj&b';
+  const XBS_ACCOUNT_LEVEL_MEMBER = 1;
+  const XBS_ACCOUNT_LEVEL_AGENT = 2;
+  const XBS_ACCOUNT_LEVEL_DIRECTOR = 3;  //總代理
+  const XBS_RESPONSE_SUCCESS_CODE = 999;
+  const XBS_DEFAULT_REQUEST_METHOD = 'POST';
+  const XBS_DEFAULT_BET_ROW_PAGE_SIZE = 100;
+  const XBS_BET_TYPE_ALL = 0;  //玩法-所有
+  const XBS_CURL_CONNECTTIMEOUT_MS = 8000;
+  const XBS_CURL_TIMEOUT_MS = 18000;
+
+  protected $XBS_CURL_DATAS = array(
+    CURLOPT_CUSTOMREQUEST => self::XBS_DEFAULT_REQUEST_METHOD ,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CONNECTTIMEOUT_MS => self::XBS_CURL_CONNECTTIMEOUT_MS ,
+    CURLOPT_TIMEOUT_MS => self::XBS_CURL_TIMEOUT_MS,
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['account'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['account'] 會員暱稱
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果 (bool)
+	 */
+	public function createMember($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01 必需的KEY不存在'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'create';
+    $func = 'account';
+    $apiUrl = self::XBS_BASE_URL;
+    $route = self::XBS_ROUTE;
+    $apiUrl = "{$apiUrl}/{$route}/{$func}";
+
+    $apiMethod = self::XBS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->XBS_CURL_DATAS;
+
+    $apiData = array(
+      "act" => $act,
+      "account" => $account,
+      "nickname" => $account,
+      "passwd" => $password,
+      "up_acc" => self::XBS_BASE_AG_NAME,
+      "up_pwd" => self::XBS_BASE_AG_PASS,
+    );
+
+    $arrColsNeedEnc = array(
+      'account', 'passwd','up_acc','up_pwd'
+    );
+    foreach ($arrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$apiData)) {
+        $apiData[$cVal] = $this->encrypt($apiData[$cVal]);
+      }
+    }
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiData, $err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['code'] === self::XBS_RESPONSE_SUCCESS_CODE){
+        return true;
+      } else {
+        $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['account'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01 必需的KEY不存在'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $func = 'login';
+    $apiUrl = self::XBS_BASE_URL;
+    $route = self::XBS_ROUTE;
+    $apiUrl = "{$apiUrl}/{$route}/{$func}";
+
+    $apiMethod = self::XBS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->XBS_CURL_DATAS;
+
+    $apiData = array(
+      "account" => $account,
+      "passwd" => $password,
+    );
+    $arrColsNeedEnc = array(
+      'account', 'passwd'
+    );
+    foreach ($arrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$apiData)) {
+        $apiData[$cVal] = $this->encrypt($apiData[$cVal]);
+      }
+    }
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiData, $err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['code'] === self::XBS_RESPONSE_SUCCESS_CODE){
+        return $result['data'];
+      } else {
+        $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+	 */
+	public function getMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'read';
+    $func = 'points';
+    $err = null;
+    $apiUrl = self::XBS_BASE_URL;
+    $route = self::XBS_ROUTE;
+    $apiUrl = "{$apiUrl}/{$route}/{$func}";
+
+    $apiMethod = self::XBS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->XBS_CURL_DATAS;
+
+    $apiData = array(
+      "act" => $act,
+      "account" => $account,
+      "up_acc" => self::XBS_BASE_AG_NAME,
+      "up_pwd" => self::XBS_BASE_AG_PASS,
+    );
+
+    $arrColsNeedEnc = array(
+      'account','up_acc','up_pwd'
+    );
+
+    foreach ($arrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$apiData)) {
+        $apiData[$cVal] = $this->encrypt($apiData[$cVal]);
+      }
+    }
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiData, $err);
+
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['code'] === self::XBS_RESPONSE_SUCCESS_CODE){
+        return $result['data']['point'];
+      } else {
+        $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+	 */
+	public function withdrawMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'sub';
+    $func = 'points';
+    $apiUrl = self::XBS_BASE_URL;
+    $route = self::XBS_ROUTE;
+    $apiUrl = "{$apiUrl}/{$route}/{$func}";
+
+    $apiMethod = self::XBS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->XBS_CURL_DATAS;
+
+    $apiData = array(
+      "act" => $act,
+      "account" => $account,
+      "Point" => $amount,
+      "up_acc" => self::XBS_BASE_AG_NAME,
+      "up_pwd" => self::XBS_BASE_AG_PASS
+    );
+
+    $arrColsNeedEnc = array(
+      'account','up_acc','up_pwd'
+    );
+
+    foreach ($arrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$apiData)) {
+        $apiData[$cVal] = $this->encrypt($apiData[$cVal]);
+      }
+    }
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiData, $err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['code'] === self::XBS_RESPONSE_SUCCESS_CODE){
+        return $result['data']['point'];
+      } else {
+        $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+   */
+	public function rechargeMemberBalance($data, &$err = null){
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'add';
+    $func = 'points';
+    $apiUrl = self::XBS_BASE_URL;
+    $route = self::XBS_ROUTE;
+    $apiUrl = "{$apiUrl}/{$route}/{$func}";
+
+    $apiMethod = self::XBS_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->XBS_CURL_DATAS;
+
+    $apiData = array(
+      "act" => $act,
+      "account" => $account,
+      "Point" => $amount,
+      "up_acc" => self::XBS_BASE_AG_NAME,
+      "up_pwd" => self::XBS_BASE_AG_PASS
+    );
+
+    $arrColsNeedEnc = array(
+      'account','up_acc','up_pwd'
+    );
+
+    foreach ($arrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$apiData)) {
+        $apiData[$cVal] = $this->encrypt($apiData[$cVal]);
+      }
+    }
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiData, $err);
+    if($result === false){
+      return false;
+    } else {
+      $result = json_decode($result, true);
+      if($result['code'] === self::XBS_RESPONSE_SUCCESS_CODE){
+        return $result['data']['point'];
+      } else {
+        $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 抓取注單報表
+   * XBS不提供明細抓取功能
+	 */
+	public function getGameRecord($data, &$err = null){
+    //...
+	}
+
+	//--------------------非通用函數--------------------
+
+  /* get aes key */
+  protected function _getEncKey() {
+    return self::XBS_ENC_KEY;
+  }
+
+  protected function _decrypt($encryptedData) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    $key = $this->_getEncKey();
+    $iv = self::XBS_ENCRYPTION_IV;
+    $initializationVectorSize = mcrypt_get_iv_size($cipher, $mode);
+
+    $data =  mcrypt__decrypt(
+        $cipher,
+        $key,
+        base64_decode($encryptedData),
+        $mode,
+        $iv
+    );
+    $pad = ord($data[strlen($data) - 1]);
+    return substr($data, 0, -$pad);
+  }
+
+  // 加密
+  protected function encrypt($xml_data) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    $key = $this->_getEncKey();
+    $iv = self::XBS_ENCRYPTION_IV;
+    $blockSize = mcrypt_get_block_size($cipher, $mode);
+    $pad = $blockSize - (strlen($xml_data) % $blockSize);
+
+    return base64_encode(mcrypt_encrypt(
+        $cipher,
+        $key,
+        $xml_data . str_repeat(chr($pad), $pad),
+        $mode,
+        $iv
+    ));
+  }
+
+  /* produce error */
+  protected function produceError($errorMsg, $errCode) {
+    return "{$errorMsg} (code {$errCode})";
+  }
+
+}

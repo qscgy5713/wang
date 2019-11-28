@@ -1,0 +1,224 @@
+<include file="Common:header"/>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+<include file="Common:menu"/>
+<include file="Common:menu2"/>
+	<div id="content" class="content">
+	  	 <p>
+            <button id="add_btn" class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                   新增後台頁面
+            </button>
+         </p>
+					
+		<div class="modal fade add-page" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+			<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 新增後台頁面</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+					
+					<form method="post" action='__APP__/AdminPageManage/formAddAdminPage'>
+							<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">分類名稱</label>
+								<div class="col-md-8 col-sm-8">
+		                            <select class="form-control" name="addClassId">
+		                                <VOLIST name="classArray" id="vo">
+											<option value="{$vo.classId}">{$vo.showName}</option>
+										</VOLIST>
+		                            </select>
+	                            </div>
+	                         </div>
+	                        
+	                        <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">Action名稱</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control form-control-AgentPageClassManage" type="text" name="addActionName">
+								</div>
+							 </div>
+	                       <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">顯示名稱</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control form-control-AgentPageClassManage" type="text" name="addShowName">
+								</div>
+							</div>
+	                       <div class="modal-footer">
+							<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+						</div>
+                  	 </div>
+					</form>
+				</div>
+			</div>
+		</div>
+	
+	<div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">後台頁面</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+		                            	<th>分類名稱</th>
+		                            	<th>Action名稱</th>
+		                            	<th>顯示名稱</th>
+		                            	<th>排序</th>
+		                            	<th>開關</th>
+		                            	<th>建立時間</th>
+		                            	<th>修改時間</th>
+		                            	<th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+				                        	<td>{$key+1}</td>
+											<td>{$vo.classShowName}</td>
+											<td>{$vo.actionName}</td>
+											<td>{$vo.showName}</td>
+											<td>{$vo.order}</td>
+											<td>{$vo.enabled}</td>
+											<td>{$vo.createtime}</td>
+											<td>{$vo.modifyTime}</td>
+											<td>
+											<button onclick="openmodal('{$key+1}')" type="button" name="addbtn" class="btn btn-info f-s-13 p-5 m-r-5 m-b-5">修改</button>
+											
+											<div id="{$key+1}" class="modal fade" style="display:none;">
+									            <div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="modal-title"> 修改後台頁面資料</h4>
+																<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+															</div>
+															
+															<form method="post" action='__APP__/AdminPageManage/formSetAdminPage'>
+															
+															    <div class="form-group mb5">
+					                                                 <input type="hidden" value="{$vo.id}" name="setId">
+					                                            </div>
+																<div class="modal-body">
+																	<div class="form-group row m-b-15">
+																	<label class="col-md-4 col-sm-4 col-form-label m-t-10">分類名稱</label>
+																		<div class="col-md-8 col-sm-8 m-t-10">
+																		    <select class="form-control" name="setClassId">
+							                                                      <VOLIST name="classArray" id="vi">
+																                     <eq name="vo.classId" value="$vi.classId">
+																	                     <option selected="selected" value="{$vi.classId}">{$vi.showName}</option>
+																                     <else />
+																	                     <option value="{$vi.classId}">{$vi.showName}</option>
+																                     </eq>
+															                      </VOLIST>
+							                                                </select>
+							                                             </div>
+																	 </div>
+																	 
+																	 <div class="form-group row m-b-15">
+																	 	<label class="col-md-4 col-sm-4 col-form-label m-t-10">Action名稱</label>
+																		<div class="col-md-8 col-sm-8 m-t-10">
+																			<input class="form-control" type="text" readonly style="display:none;">
+																			<input class="form-control" type="text" value="{$vo.actionName}" name="setActionName">
+																		</div>
+																	 </div>
+																	 
+																	 <div class="form-group row m-b-15">
+																	 	<label class="col-md-4 col-sm-4 col-form-label m-t-10">顯示名稱</label>
+																		<div class="col-md-8 col-sm-8 m-t-10">
+																			<input class="form-control" type="text" readonly style="display:none;">
+																			<input class="form-control" type="text" value="{$vo.showName}" name="setShowName">
+																		</div>
+																	 </div>
+																</div>
+																<div class="modal-footer">
+																	<button type="submit" name="okbtn" class="btn btn-info f-s-15">確認修改</button>
+																</div>
+															</form>
+														</div>
+													</div>
+												</div>
+											
+											<if condition="$vo.enabled eq '啟用中'">
+												<form class="div-style" method="post" action='__APP__/AdminPageManage/formStopAdminPage'>
+													<input type="hidden" value="{$vo.id}" name="stopId">
+				                                	<button type="submit" class="btn btn-warning f-s-13 p-5 m-r-5 m-b-5">停用</button>
+				                                </form>
+											<else/>
+												<form class="div-style" method="post" action='__APP__/AdminPageManage/formStartAdminPage'>
+				                                	<input type="hidden" value="{$vo.id}" name="startId">	
+				                                	<button type="submit" class="btn btn-green f-s-13 p-5 m-r-5 m-b-5">啟用</button>
+				                                </form>
+											</if>
+											
+			                                <form class="div-style" method="post" action='__APP__/AdminPageManage/formDelAdminPage'>
+			                                	<input type="hidden" value="{$vo.id}" name="delId">	
+			                                	<button type="submit" class="btn btn-info f-s-13 p-5 m-r-5 m-b-5">刪除</button>
+			                                </form>
+                                      </td>
+										</tr>
+			                        </VOLIST>
+								</tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+					</div>
+					<!-- end panel-body -->
+										
+					<div class="col-md-12 panel-body text-center">
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">1</button>
+							<button type="button" class="btn btn-white">2</button>
+							<button type="button" class="btn btn-white">3</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">4</button>
+							<button type="button" class="btn btn-white">5</button>
+							<button type="button" class="btn btn-white">6</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">7</button>
+						</div>
+					</div>
+				</div>
+				<!-- end panel -->
+			</div>
+        </div>
+	</div>
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+		
+<include file="Common:footer"/> 
+<script>
+function openmodal(modal_id){
+	//alert(id);
+	$('#'+modal_id).modal('show');
+}
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	
+	$("#"+"網管工具").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+function openmodal(modalId){
+	//alert(id);
+	$('#'+modalId).modal('show');
+}
+</script>

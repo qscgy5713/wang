@@ -1,0 +1,323 @@
+<?php
+class GivenRecordAction extends AdminAction {
+    protected $memberDetail = 10; //分頁筆數
+    protected $pageMoreNumberDetail = 5; //一頁幾筆
+    //TODO:8 贈點記錄
+    public function index(){
+        $request = $this->getRequest();
+
+        //代理線開始
+        $CommonAgentTree = D("CommonAgentTree");
+        $loginArray = array(
+            0 => array(
+                "agentTree"=>$_SESSION['Admin']['agentTree'],
+                "agentId"=>$_SESSION['Admin']['agentId'],
+                "agentAccount"=>$_SESSION['Admin']['agentAccount']
+            )
+        );
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Admin']['agentTree']."/i", $request["agentTree"])
+            || $request["agentTree"] == $_SESSION['Admin']['agentTree']
+            ){
+                $comeAgentTree = $_SESSION['Admin']['agentTree'];
+                $comeAgentId = $_SESSION['Admin']['agentId'];
+                $comeAgentAccount = $_SESSION['Admin']['agentAccount'];
+        } else {
+            $comeAgentTree = $request["agentTree"];
+            $comeReplace = str_replace ($_SESSION['Admin']['agentTree'],"",$comeAgentTree);
+            $exArray = explode(",",$comeReplace);
+            $return = $CommonAgentTree->getAgentTreeDataByManyAgentId($exArray);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            //var_dump($return);
+            foreach ($return as $value){
+                array_push($loginArray,$value);
+            }
+            //var_dump($loginArray);
+            $comeAgentAccount = $request["agentAccount"];
+        }
+        $exArray = explode(",",$comeAgentTree);
+        $comeAgentId = $exArray[count($exArray)-2];
+        //代理線結束
+
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+
+
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+
+        $typesArray = array();
+        $typesTotalMoney = 0;
+        $typesTotalNumber = 0;
+
+        $agentArray = array();
+        $agentTotalMoney = 0;
+        $agentTotalNumber = 0;
+
+        $memberArray = array();
+        $memberTotalMoney = 0;
+        $memberTotalNumber = 0;
+
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+
+        $data = array(
+            "agent_tree"=>$comeAgentTree.$newAgnetTree,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"walletLog_type_class",
+            "walletLog_type"=>4 //搜尋活動
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $typesArray = $return;
+        foreach($typesArray as $key => $value){
+            $typesTotalMoney += $value['allMoney'];
+            $typesTotalNumber += $value['allNumber'];
+        }
+
+        $data = array(
+            "agent_tree"=>$comeAgentTree.$newAgnetTree,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"walletLog_item_id",
+            "walletLog_type"=>5 //搜尋返水
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $waterArray = $return;
+        foreach($waterArray as $key => $value){
+            $typesTotalMoney += $value['allMoney'];
+            $typesTotalNumber += $value['allNumber'];
+            array_push($typesArray, $value);
+        }
+        //var_dump($typesArray);
+
+        $data = array(
+            "agent_id"=>$comeAgentId,
+            "agent_tree"=>$comeAgentTree.$newAgnetTree,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"agent_id",
+            "walletLog_type"=>'all' //搜尋返水
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        $agentArray = $return;
+        foreach($agentArray as $key => $value){
+            $agentTotalMoney += $value['allMoney'];
+            $agentTotalNumber += $value['allNumber'];
+        }
+        //var_dump($agentArray);
+
+        $data = array(
+            "agent_id"=>$comeAgentId,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"member_id",
+            "walletLog_type"=>'all' //搜尋返水
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        $memberArray = $return;
+        foreach($memberArray as $key => $value){
+            $memberTotalMoney += $value['allMoney'];
+            $memberTotalNumber += $value['allNumber'];
+        }
+        //var_dump($memberArray);exit();
+
+        $this->assign("loginArray",$loginArray);
+        $this->assign("comeAgentAccount",$comeAgentAccount);
+        $this->assign("comeAgentId",$comeAgentId);
+        $this->assign("comeAgentTree",$comeAgentTree);
+
+        $this->assign("typesArray",$typesArray);//依類型
+        $this->assign("typesTotalMoney",$typesTotalMoney);//依贈點總和
+        $this->assign("typesTotalNumber",$typesTotalNumber);//依贈點數量
+        $this->assign("typesEmpty","<tr><td colspan='4' style='text-align:center;'>無類型資料</td></tr>");//無資料時輸出
+
+        $this->assign("agentArray",$agentArray);//依代理
+        //var_dump($agentArray);exit();
+        $this->assign("agentTotalMoney",$agentTotalMoney);//依贈點總和
+        $this->assign("agentTotalNumber",$agentTotalNumber);//依贈點數量
+        $this->assign("agentEmpty","<tr><td colspan='4' style='text-align:center;'>無代理資料</td></tr>");//無資料時輸出
+
+
+        $this->assign("memberArray",$memberArray);//依會員
+        $this->assign("memberTotalMoney",$memberTotalMoney);//依贈點總和
+        $this->assign("memberTotalNumber",$memberTotalNumber);//依贈點數量
+        $this->assign("memberEmpty","<tr><td colspan='4' style='text-align:center;'>無會員資料</td></tr>");//無資料時輸出
+        $this->display();
+    }
+    public function memberDetail(){
+        $request = $this->getRequest();
+
+        if(!isset($request['memberId'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        //時間列表開始
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+
+
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        //時間列表結束
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        //搜尋會員活動 開始
+        $data = array(
+            "member_id"=>$request['memberId'],
+            "startTime"=>strtotime($request['startTime']),
+            "endTime"=>strtotime($request['endTime']),
+            //"walletLog_type"=>4
+        );
+        //取得總筆數
+        $return = $CommonMemberWalletLog->getMemberGiveDetailTotalNumber($data, $err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $totalNumber = $return['totalNumber']; //總筆數
+        $totalPage  =ceil($totalNumber / $this->memberDetail); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumberDetail); //分頁陣列
+        $data = array(
+            "member_id"=>$request['memberId'],
+            "startTime"=>strtotime($request['startTime']),
+            "endTime"=>strtotime($request['endTime']),
+            'page' => array(
+                'number' => $this->memberDetail,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $CommonMemberWalletLog->getMemberGiveDetailPage($data, $err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $showArray = array();
+        $totalMoney = 0;
+        $totalNumber = 0;
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "walletLog_id"=>"id",
+            "member_account"=>"memberAccount",
+            "agent_account"=>"agentAccount",
+            "walletLog_main"=>"main",
+            "walletLog_createTime"=>"createTime",
+            "walletLog_money"=>"money",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            $totalNumber++;
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'walletLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'walletLog_money'://建立時間 時間戳 轉換 日期
+                        $showStr = $value[$key1];
+                        $totalMoney += (int)$value[$key1];
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        $this->assign("memberId",$request['memberId']);
+        $this->assign("totalMoney",$totalMoney);//總贈點
+        $this->assign("totalNumber",$totalNumber);//總筆數
+        $this->assign("showArray",$showArray);//會員陣列
+        $this->assign("showEmpty","<tr><td colspan='4' style='text-align:center;'>無代理資料</td></tr>");//無資料時輸出
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //分頁陣列
+        $this->display();
+    }
+}

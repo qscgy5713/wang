@@ -1,0 +1,56 @@
+<?php
+/*
+ * 會員洗碼
+ */
+class CommonMemberWaterrankEffectiveModel extends MemberModel {
+    protected $tableName = "common_member_waterrank_effective";
+    protected $tableId = "member_id";
+    /*
+     * 取得 會員洗碼 資料
+     */
+    public function getMemberEffectiveData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無會員ID
+            return false;
+        }
+        if(empty($data['gameClass_id']) && $data['gameClass_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//無遊戲類別ID
+            return false;
+        }
+        if(empty($data['level_year']) && $data['level_year'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//無年份
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//無月份
+            return false;
+        }
+        if(empty($data['last_year']) && $data['last_year'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));//無上次年份
+            return false;
+        }
+        if(empty($data['last_month']) && $data['last_month'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));//無上次月份
+            return false;
+        }
+        
+        
+        $sql = "SELECT a.`level_year`,a.`level_month`,sum(a.`effective_effective`) as allEffective,b.`waterRank_serial`,c.`waterRank_serialShowName` 
+                FROM `{$this->tableName}` a
+                JOIN `common_member_waterrank_level` b 
+                	ON (a.`member_id` = b.`member_id` AND a.`gameClass_id` = b.`gameClass_id` 
+                        AND a.`level_year` = b.`level_year` AND a.`level_month` = b.`level_month`)
+                JOIN `common_game_waterrank` c 
+                    ON (b.`waterRank_serial` = c.`waterRank_serial` AND a.`gameClass_id` = c.`gameClass_id`)
+                WHERE a.`member_id` = '{$data['member_id']}' AND a.`gameClass_id` = '{$data['gameClass_id']}'
+                 AND ((a.`level_year` = '{$data['level_year']}' AND a.`level_month` = '{$data['level_month']}') OR 
+                      (a.`level_year` = '{$data['last_year']}' AND a.`level_month` = '{$data['last_month']}'))
+                GROUP BY a.`level_month`";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));//資料庫錯誤
+            return false;
+        }
+        return $return;
+    }
+}

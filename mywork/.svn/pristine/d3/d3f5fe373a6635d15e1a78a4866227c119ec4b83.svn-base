@@ -1,0 +1,503 @@
+<?php
+
+class GameRTG2Action extends CommonAction {
+  const API_NAME = 'RTG2電子';
+  protected $power = false;
+  protected $gameName = "Rtg2";
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+    $request = $this->getRequest();
+    //測試API
+    if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+        cookie('MIS','@@aaa123','expire=3600');
+    }
+    $MIS = cookie('MIS');
+    if($MIS === "@@aaa123"){
+        $this->power = true;
+        $function_links = '';
+        $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+        $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+        $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+        $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+        $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+        $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a> | ";
+        $function_links .= "<a href=\"__URL__/get_token\" target=\"_self\">getToken</a> | ";
+        $function_links .= "<a href=\"__URL__/api_start\" target=\"_self\">apiStart</a> | ";
+        $function_links .= "<a href=\"__URL__/get_game_strings\" target=\"_self\">getGameStrings</a> | ";
+        $this->assign('function_links', $function_links);
+    
+        $this->assign('api_name', self::API_NAME);
+        $this->assign('op_desc', '輸入參數按下送出');
+    }
+  }
+
+  //1. 創新帳號
+  public function index(){
+      if(!$this->power){exit();}
+    $user_name = 'rtg2test001';
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if(!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $arrStartData = $rtg2->apiStart($err);
+
+      if ($arrStartData === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $agentId = $arrStartData['agentId'];
+        $err = null;
+        $res = $rtg2->createMember(array(
+          'agent_id' => $agentId,
+          'user_name' => $user_name,
+        ), $err);
+
+        if ($res === false) {
+          $op_result = $err;
+          $op_result2 = $rtg2->curlError;
+          $this->assign('op_result2', $op_result2);
+        } else {
+          $op_result = $res;
+        }
+      }
+
+    }
+
+    $this->assign('method_name', 'createMember');
+    $this->assign('method_desc', '建立一個新的遊戲帳號。除了user_name及agent_id以外，其他欄位基本都是廢值。API成功執行後回傳的參數有一項playerId，在未提供 playerId給 API各功能參數時，提供 playerLogin及 agentId便成為必須。');
+    $this->assign('user_name', $user_name);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //2. 取得遊戲連結
+  public function game_link(){
+      if(!$this->power){exit();}
+    $user_name = 'rtg2test001';
+    $return_url = 'http://asgametest.bb4444.net/Client/index.php?s=/GameRTG2/';
+
+    $request = $this->getRequest();
+
+    $rtg2 = D('GameRtg2');
+
+    $err = null;
+    $arrGameStrings = $rtg2->getGameStrings($err);
+
+    if($arrGameStrings !== false) {
+      if(isset($request['go']) && (($request['go'])==1)){
+
+        //檢查是否有 user_name 傳入 並且不為空
+        if(!isset($request['user_name']) || empty($request['user_name'])){
+          $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+        }
+        $user_name = $request['user_name'];
+
+        //檢查是否有 game_id 傳入 並且不為空
+        if(!isset($request['game_id']) || empty($request['game_id'])){
+          $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//game_id 為空，請重新輸入
+        }
+        $game_id = $request['game_id'];
+
+        //檢查是否有 return_url 傳入 並且不為空
+        if(!isset($request['return_url']) || empty($request['return_url'])){
+          $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//return_url 為空，請重新輸入
+        }
+        $return_url = $request['return_url'];
+
+        $err = null;
+        $arrStartData = $rtg2->apiStart($err);
+
+        if ($arrStartData === false) {
+          $op_result = $err;
+          $op_result2 = $rtg2->curlError;
+          $this->assign('op_result2', $op_result2);
+        } else {
+          $agentId = $arrStartData['agentId'];
+          $err = null;
+          $res = $rtg2->loginMember(array(
+            'agent_id' => $agentId,
+            'user_name' => $user_name,
+            'game_id' => $game_id,
+            'return_url' => $return_url,
+          ), $err);
+
+          if ($res === false) {
+            $op_result = $err;
+            $op_result2 = $rtg2->curlError;
+            $this->assign('op_result2', $op_result2);
+          } else {
+            $op_result = $res;
+          }
+        }
+      }
+    } else {
+      echo <<<END
+      <h1>$rtg2->getGameStrings() 執行失敗! 無法取得遊戲ID及名稱!</h1>
+END;
+    }
+
+    $this->assign('method_name', 'loginMember');
+    $this->assign('method_desc', '用現存遊戲帳號取得遊戲的連結');
+    $this->assign('arr_game_strings', $arrGameStrings);
+    $this->assign('user_name', $user_name);
+    $this->assign('return_url', $return_url);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //3. 取得會員餘額
+  public function balance(){
+      if(!$this->power){exit();}
+    $user_name = 'rtg2test001';
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if(!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $arrStartData = $rtg2->apiStart($err);
+
+      if ($arrStartData === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $agentId = $arrStartData['agentId'];
+        $err = null;
+        $res = $rtg2->getMemberBalance(array(
+          'agent_id' => $agentId,
+          'user_name' => $user_name,
+        ), $err);
+
+        if ($res === false) {
+          $op_result = $err;
+          $op_result2 = $rtg2->curlError;
+          $this->assign('op_result2', $op_result2);
+        } else {
+          $op_result = $res;
+        }
+      }
+    }
+
+    $this->assign('method_name', 'getMemberBalance');
+    $this->assign('method_desc', '取得會員的當前餘額');
+    $this->assign('user_name', $user_name);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //4. 上點
+  public function deposit(){
+      if(!$this->power){exit();}
+    $user_name = 'rtg2test001';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if(!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if(!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $arrStartData = $rtg2->apiStart($err);
+
+      if ($arrStartData === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $agentId = $arrStartData['agentId'];
+        $err = null;
+        $res = $rtg2->rechargeMemberBalance(array(
+          'agent_id' => $agentId,
+          'user_name' => $user_name,
+          'amount' => $amount,
+        ), $err);
+
+        if ($res === false) {
+          $op_result = $err;
+          $op_result2 = $rtg2->curlError;
+          $this->assign('op_result2', $op_result2);
+        } else {
+          $op_result = $res;
+        }
+      }
+    }
+
+    $this->assign('method_name', 'rechargeMemberBalance');
+    $this->assign('method_desc', '增加會員的點數餘額');
+    $this->assign('user_name', $user_name);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //5. 下點
+  public function withdraw(){
+      if(!$this->power){exit();}
+    $user_name = 'rtg2test001';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 user_name 傳入 並且不為空
+      if(!isset($request['user_name']) || empty($request['user_name'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $user_name = $request['user_name'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if(!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $arrStartData = $rtg2->apiStart($err);
+
+      if ($arrStartData === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $agentId = $arrStartData['agentId'];
+        $err = null;
+        $res = $rtg2->withdrawMemberBalance(array(
+          'agent_id' => $agentId,
+          'user_name' => $user_name,
+          'amount' => $amount,
+        ), $err);
+
+        if ($res === false) {
+          $op_result = $err;
+          $op_result2 = $rtg2->curlError;
+          $this->assign('op_result2', $op_result2);
+        } else {
+          $op_result = $res;
+        }
+      }
+    }
+
+    $this->assign('method_name', 'withdrawMemberBalance');
+    $this->assign('method_desc', '減少會員的點數餘額');
+    $this->assign('user_name', $user_name);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //6. 抓報表明細
+  public function report(){
+      if(!$this->power){exit();}
+    $begin_datetime = date('Y-m-d H:00:00');
+    $end_datetime = date('Y-m-d H:10:00');
+    $page = 1;
+    $page_size = 500;
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      $rtg2 = D('GameRtg2');
+
+      $arrDatas = array();
+
+      //處理 begin_datetime
+      if(isset($request['begin_datetime']) && strlen($request['begin_datetime'])){
+        $begin_datetime = $request['begin_datetime'];
+      } else {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//begin_datetime 為空，請重新輸入
+      }
+
+      //處理 end_datetime
+      if(isset($request['end_datetime']) && strlen($request['end_datetime'])){
+        $end_datetime = $request['end_datetime'];
+      } else {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//end_datetime 為空，請重新輸入
+      }
+
+      //處理 page
+      if(isset($request['page']) && strlen($request['page'])){
+        $page = $request['page'];
+      } else {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//page 為空，請重新輸入
+      }
+
+      //處理 page_size
+      if(isset($request['page_size']) && strlen($request['page_size'])){
+        $page_size = $request['page_size'];
+      } else {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//page_size 為空，請重新輸入
+      }
+
+      $err = null;
+      $arrStartData = $rtg2->apiStart($err);
+
+      if ($arrStartData === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $agentId = $arrStartData['agentId'];
+        $err = null;
+        $res = $rtg2->getGameRecord(array(
+          'agent_id' => $agentId,
+          'begin_datetime' => $begin_datetime,
+          'end_datetime' => $end_datetime,
+          'page' => $page,
+          'page_size' => $page_size,
+        ), $err);
+
+        if ($res === false) {
+          $op_result = $err;
+          $op_result2 = $rtg2->curlError;
+          $this->assign('op_result2', $op_result2);
+        } else {
+          $op_result = $res;
+        }
+      }
+    }
+
+    $this->assign('method_name', 'getGameRecord');
+    $this->assign('method_desc', '抓取注單明細。');
+    $this->assign('begin_datetime', $begin_datetime);
+    $this->assign('end_datetime', $end_datetime);
+    $this->assign('page', $page);
+    $this->assign('page_size', $page_size);
+    $this->assign('end_datetime', $end_datetime);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //7. getToken
+  public function get_token(){
+      if(!$this->power){exit();}
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $res = $rtg2->getToken($err);
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getToken');
+    $this->assign('method_desc', '认证令牌是一组使用账号与密码检索API验证的方法。认证令牌有使用效期。我们建议每个API呼叫时使用更新认证令牌。');
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //8. apiStart
+  public function api_start(){
+      if(!$this->power){exit();}
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $res = $rtg2->apiStart($err);
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'apiStart');
+    $this->assign('method_desc', 'Start (启动) 是提供使用 API时的参数。它将根据“ Token (认证令牌)”使用的用户返回信息。<br/>此功能最重要是可取回 agentId，在未提供 playerId給 API各功能參數時，提供 playerLogin及 agentId便成為必須。');
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //8. getGameStrings
+  public function get_game_strings(){
+      if(!$this->power){exit();}
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      $rtg2 = D('GameRtg2');
+
+      $err = null;
+      $res = $rtg2->getGameStrings($err);
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $rtg2->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getGameStrings');
+    $this->assign('method_desc', 'Game Strings (游戏字串) 根据地区/语言提供与游戏相关信息
+');
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+}

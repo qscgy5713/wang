@@ -1,0 +1,118 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">{$Think.lang.Support1}</h2>
+
+					<div class="responsibility_title"><i class="fa fa-gavel responsibility-icon-style"></i></div>
+				</header>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<p class="mb-5 fw-700">{$Think.lang.Support2}</p>
+						<p class="mb-5 fw-700">{$Think.lang.Support3}</p>
+						<p class="fw-700">{$Think.lang.Support4}</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h3>{$Think.lang.Support5}</h3>
+					</div>
+					<div class="col-md-6 col-sm-6 pl-35">
+						<h4>Google Chrome</h4>
+						<h4>{$Think.lang.Support6}</h4>
+						<p style="line-height: 30px;">{$Think.lang.Support7}</p>
+						<h4>{$Think.lang.Support8}</h4>
+						<ul class="responsibility_list">
+	                        <li>{$Think.lang.Support9}</li>
+	                        <li>{$Think.lang.Support10}</li>
+	                        <li>{$Think.lang.Support11}</li>
+	                        <li>{$Think.lang.Support12}</li>
+	                        <li>{$Think.lang.Support13}</li>
+	                        <li>{$Think.lang.Support14}</li>
+	                    </ul>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+					<div class="col-md-6 col-sm-6">
+						<h4>Microsoft Internet Explorer</h4>
+						<h4>{$Think.lang.Support16}</h4>
+						<p style="line-height: 30px;">{$Think.lang.Support17}</p>
+						<h4>{$Think.lang.Support17}</h4>
+						<h5>Internet Explorer 11.x</h5>
+						<ul class="responsibility_list" style="line-height: 40px;">
+	                        <li>{$Think.lang.Support18}</li>
+	                        <li>{$Think.lang.Support19}</li>
+	                        <li>{$Think.lang.Support20}</li>
+	                        <li>{$Think.lang.Support21}</li>
+	                        <li>{$Think.lang.Support22}</li>
+
+	                    </ul>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>Mozilla Firefox</h4>
+						<h4>{$Think.lang.Support23}</h4>
+						<p class="mb-5">{$Think.lang.Support24}</p>
+						<p class="mb-5">{$Think.lang.Support25}</p>
+						<p class="mb-5">{$Think.lang.Support26}</p>
+						<h4>{$Think.lang.Support27}</h4>
+						<h5>Mozilla Firefox 61.x</h5>
+						<ul class="responsibility_list">
+	                        <li>{$Think.lang.Support28}</li>
+	                        <li>{$Think.lang.Support29}</li>
+	                        <li>{$Think.lang.Support30}</li>
+	                        <li>{$Think.lang.Support31}</li>
+
+	                    </ul>
+					</div>
+				</div>
+			</div>
+
+
+		</section>
+
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 }
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+

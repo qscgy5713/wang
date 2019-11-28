@@ -1,0 +1,13 @@
+<?php
+/**
+ * 體育返水頁面
+ */
+class EventBackWaterSportsPageAction extends EventAction{
+	 //TODO:體育返水頁面
+    public function index(){
+      if($this->formEnabled){
+          $this->getMemberWaterPageData('1');
+      }
+      $this->display();
+  	}
+}

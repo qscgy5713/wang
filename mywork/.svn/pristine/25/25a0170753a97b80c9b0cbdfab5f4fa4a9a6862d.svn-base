@@ -1,0 +1,54 @@
+	<!-- begin #sidebar -->
+		<div id="sidebar" class="sidebar">
+			<!-- begin sidebar scrollbar -->
+			<div data-scrollbar="true" data-height="100%">
+				<!-- begin sidebar user -->
+				<ul class="nav">
+					<li class="nav-profile">
+						<a href="javascript:;" data-toggle="nav-profile">
+							<div class="cover with-shadow"></div>
+							<div class="image">
+								<img src="__CSS__/color-admin-v4.2/admin/assets/img/user/user-13.jpg" alt="" />
+							</div>
+							<div class="info">
+								<b class="caret"></b>
+								{$agentAccount}
+								<small>Hi!</small>
+							</div>
+						</a>
+					</li>
+					<li>
+						<ul class="nav nav-profile">
+							<li><a href="javascript:;"><i class="ion-ios-cog"></i> Settings</a></li>
+							<li><a href="javascript:;"><i class="ion-ios-share-alt"></i> Send Feedback</a></li>
+							<li><a href="javascript:;"><i class="ion-ios-help"></i> Helps</a></li>
+						</ul>
+					</li>
+				</ul>
+				<!-- end sidebar user -->
+				<!-- begin sidebar nav -->
+				<ul class="nav">
+					<li class="nav-header"></li>
+					<foreach name="showPageArray" item="showPageVal">
+						<li id="{$key}" class="has-sub">
+							<a href="javascript:;">
+								<b class="caret"></b>
+								<i class="ion-ios-map bg-pink"></i>
+								<span>{$key}</span>
+							</a>
+							<ul class="sub-menu">
+								<foreach name="showPageVal" item="PageVal">
+									<li id="{$PageVal.actionName}"><a href="__APP__/{$PageVal.actionName}/index">{$PageVal.showName}</a></li>
+								</foreach>
+							</ul>
+						</li>
+					</foreach>
+					
+					<!-- begin sidebar minify button -->
+					<li><a href="javascript:;" class="sidebar-minify-btn" data-click="sidebar-minify"><i class="ion-ios-arrow-back"></i> <span>Collapse</span></a></li>
+					<!-- end sidebar minify button -->
+				</ul>
+				<!-- end sidebar nav -->
+			</div>
+			<!-- end sidebar scrollbar -->
+		</div>

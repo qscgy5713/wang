@@ -1,0 +1,23 @@
+<?php
+/*
+ * 前後台菜單
+ */
+class CommonMenuModel extends CommonModel {
+    
+    public function getMenuList(){
+        $sql = "SELECT
+					*
+				FROM
+					`common_menu`
+				WHERE
+					`is_active` = 1
+				ORDER BY
+					`parent_id` ASC,
+					`menu_order` ASC";
+        $return = $this->cacheQuery($sql, 30);//緩存查詢 30秒內有效
+        if ($return === false) {
+            return false;
+        }
+        
+    }
+}

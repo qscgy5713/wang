@@ -1,0 +1,239 @@
+<?php
+class MemberManageAction extends AdminAction {
+    protected $memberManage = 10; //分頁筆數
+    protected $pageMoreNumber = 5; //一頁最多幾筆
+    protected $memberManageMem = 10; //分頁筆數
+    protected $pageMoreNumberMem = 5; //一頁最多幾筆
+    //TODO: 會員管理 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        //代理線開始
+        $CommonAgentTree = D("CommonAgentTree");
+        $loginArray = array(
+            0 => array(
+                "agentTree"=>$_SESSION['Admin']['agentTree'],
+                "agentAccount"=>$_SESSION['Admin']['agentAccount']
+            )
+        );
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Admin']['agentTree']."/i", $request["agentTree"])
+            || $request["agentTree"] == $_SESSION['Admin']['agentTree']
+           ){
+            $comeAgentTree = $_SESSION['Admin']['agentTree'];
+            $comeAgentAccount = $_SESSION['Admin']['agentAccount'];
+        } else {
+            $comeAgentTree = $request["agentTree"];
+            $comeReplace = str_replace ($_SESSION['Admin']['agentTree'],"",$comeAgentTree);
+            $exArray = explode(",",$comeReplace);
+            $return = $CommonAgentTree->getAgentTreeDataByManyAgentId($exArray);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            //var_dump($return);
+            foreach ($return as $value){
+                array_push($loginArray,$value);
+            }
+            //var_dump($loginArray);
+            $comeAgentAccount = $request["agentAccount"];
+        }
+        $exArray = explode(",",$comeAgentTree);
+        $comeAgentId = $exArray[count($exArray)-2];
+        //代理線結束
+
+        //用於會員帳號搜索
+        $agentTree = $request['agentTree'];
+        $agentAccount = $request['agentAccount'];
+        $data = array(
+            "agent_account" => $memberAccount,
+            "agent_boss" => $comeAgentId,
+        );
+        //取得總頁數
+        $return = $CommonAgentTree->getTotalNumberAgentDataByAgentBoss($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+
+        $totalNumber = $return['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->memberManage);
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //去得頁數陣列
+
+        $data = array(
+            "agent_account" => $memberAccount,
+            "agent_boss" => $comeAgentId,
+            'page' => array(
+                'number' => $this->memberManage,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $CommonAgentTree->getAgentDataByAgentBossNumber($data);
+
+        $agentArray = array();
+        $FieldChange = array(
+            "agent_id"=>"agentId",
+            "agent_tree"=>"agentTree",
+            "agent_account"=>"agentAccount",
+            "agent_status"=>"status",
+            "agent_createTime"=>"createTime"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'agent_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $agentArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($agentArray);
+        //製作分頁
+        if(empty($request['pageNumberMem'])){
+            $pageNumberMem = 1;
+        } else {
+            $pageNumberMem = $request['pageNumberMem'];
+        }
+        $memberAccount1 = "";
+        if(isset($request['memberAccount1']) && !empty($request['memberAccount1'])){
+            $memberAccount1 = $request['memberAccount1'];
+        }
+        $CommonMember = D("CommonMember");
+        //表明 getManageBankData()取得資料
+        $data = array(
+            "member_account" => $memberAccount1,
+            "agent_id" => $comeAgentId,
+        );
+        $return = $CommonMember->getAllTotalMemberData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+
+        $totalNumberMem = $return['totalNumber']; //總筆數
+        $totalPageMem = ceil($totalNumberMem / $this->memberManageMem);
+        $pageArrayMem = getPageArray($pageNumberMem, $totalPageMem, $this->pageMoreNumberMem); //去得頁數陣列
+
+        $data = array(
+            "member_account" => $memberAccount1,
+            "agent_id" => $comeAgentId,
+            'page' => array(
+                'number' => $this->memberManageMem,
+                'pageNumber' => $pageNumberMem,
+            ),
+        );
+        $return = $CommonMember->getAllMemberDataPageNumber($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        //var_dump($return);
+        $memberArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "member_id"=>"id",
+            "agent_id"=>"agentId",
+            "agent_account"=>"agentAccount",
+            "member_account"=>"account",
+            "member_status"=>"status",
+            "member_createTime"=>"createTime",
+            "member_ip"=>"ip"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'member_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $memberArray[$key][$value1] = $showStr;
+            }
+        }
+
+        //var_dump($memberArray);
+        $this->assign("agentAccount",$agentAccount); //紀錄agentAccount
+        $this->assign("agentTree",$agentTree); //紀錄agentTree
+        $this->assign("loginArray",$loginArray);
+        $this->assign("memberAccount",$memberAccount); //代理搜索
+        $this->assign("memberAccount1",$memberAccount1); //會員搜索
+        $this->assign("comeAgentAccount",$comeAgentAccount);
+        $this->assign("agentArray",$agentArray);
+        $this->assign("memberArray",$memberArray);
+        $this->assign("totalPage", $totalPage); //代理總頁數
+        $this->assign("pageNumber", $pageNumber); //代理目前頁數
+        $this->assign("pageArray", $pageArray); //代理頁數陣列
+
+        $this->assign("totalPageMem", $totalPageMem); //會員總頁數
+        $this->assign("pageNumberMem", $pageNumberMem); //會員目前頁數
+        $this->assign("pageArrayMem", $pageArrayMem); //會員頁數陣列
+        $this->assign("agentEmpty", '<tr><td colspan="5" align="center">無代理資料</td></tr>'); //
+        $this->assign("memberEmpty", '<tr><td colspan="7" align="center">無會員資料</td></tr>'); //
+        $this->display();
+    }
+    //TODO: 搜索 代理帳號
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonAgent = D("CommonAgent");
+        $limit = 7;
+        $agentTree = $_SESSION['Agent']['tree'];
+        $data = array(
+            'agent_tree' => $agentTree,
+            "agent_account" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonAgent->searchAgentByAgentAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["agent_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+    //TODO: 搜索 會員帳號
+    public function searchMemberName1() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMember = D("CommonMember");
+        $limit = 7;
+        $data = array(
+            "member_acount" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_acount"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

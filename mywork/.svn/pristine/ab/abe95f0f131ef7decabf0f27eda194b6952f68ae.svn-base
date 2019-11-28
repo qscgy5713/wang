@@ -1,0 +1,86 @@
+<?php
+/**
+ * 百家樂連贏前置
+ */
+class EventBaccaratWinningPageAction extends EventAction{
+	//TODO:百家樂連贏前置
+    protected function _initialize(&$err=""){
+    	parent::_initialize();
+        $CommonEvent = D("CommonEvent");
+        //$eventCode = 'baccaratwinning';
+        $data = array(
+            "event_code" => $this->baccaratWinning_code,
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false || empty($return)){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if($return['event_enabled'] === '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        } else {
+            $this->baccaratWinning_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+
+        $data = array(
+            "event_code" => $this->baccaratWinning_code,
+            "member_id"=>$this->memberId,
+            "startTime"=>strtotime(date('Y-m-d 00:00:00',time())),
+            "endTime"=>strtotime(date('Y-m-d 23:59:59',time()))
+        );
+        $return = $CommonEvent->getMemberEventData($data,$err);
+        if($return === false){
+            return false;
+        }
+        if(!empty($return) || (count($return) != 0)){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')); // 您的申請正在審核中，請稍後。
+            return false;
+        }
+        return true;
+    }
+    //TODO:百家樂連贏頁面
+    public function index(){
+        $err = "";
+        $return = $this->_initialize($err);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",$err);
+        } else {
+            $this->assign("eventEnabled","true");
+        }
+        $this->display();
+    }
+    //TODO:百家樂連贏功能
+    public function formBaccaratWinning(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $err = "";
+        $return = $this->_initialize($err);
+        if($return === false){
+            $this->error($err);
+        } else {
+            $CommonEvent = D("CommonEvent");
+            $data = array(
+                'event_code' => $this->baccaratWinning_code,
+                'event_id' => $this->baccaratWinning_eventId,
+                'member_id' => $this->memberId,
+                'agent_id' =>$_SESSION['Member']['agentId'],
+                'agent_tree' =>$_SESSION['Member']['agentTree'],
+                'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+                'event_status' =>'0',
+                'event_money'=>$this->baccaratWinning_money,
+                'event_createTime' =>time(),
+                'event_ip'=>get_ip_inet_pton(getIp())
+            );
+            $return = $CommonEvent->addMemberEventData($data,$err);
+            if($return === false){
+                $this->error($err);//活動已關閉
+            }
+            $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+        }
+    }
+
+}

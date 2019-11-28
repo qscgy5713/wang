@@ -1,0 +1,341 @@
+<?php
+class MemberDetailAction extends MemberAction {
+    protected $decimal = 0;//計算到小數點
+    protected $memberDetailNumber = 10;
+    protected $pageMoreNumberDetail = 5;
+    
+    protected function _initialize() {
+        parent::_initialize();
+        $this->isMemberLoginShowErr();
+    }
+    
+    protected function getTimeArray(){
+        $request = $this->getRequest();
+        //日期選單 開始
+        $today = date('Y-m-d');
+        $startTime = $today;
+        $endTime = $today;
+        
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tomorrow = date('Y-m-d',strtotime('tomorrow'));
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        
+        $this->assign("today",$today);//今日
+        $this->assign("tomorrow",$tomorrow);//明日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        
+        if(strtotime($startTime) < strtotime($lastWeekA)){
+            //最多讓使用者查詢時間 為上週第一天
+            $startTime = $lastWeekA;
+        }
+        $return = array(
+            'startTime' => $startTime." 00:00:00",
+            'endTime' => $endTime."23:59:59"
+        );
+        return $return;
+    }
+    //TODO: 會員明細
+    public function index(){
+        
+        $return = $this->getTimeArray();
+        
+        $startTime = $return['startTime'];
+        $endTime = $return['endTime'];
+        
+        $gameShowArray = array();
+        $gameTotalBettingMoney = 0;//遊戲投注金額
+        $gameTotalSurplus = 0;//遊戲輸贏金額
+        $gameTotalEffective = 0;//遊戲有效投注
+        $gameTotalBetNumber = 0;//遊戲注單數量
+        
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameCodeData();
+        $gameDataArray = $return;
+        foreach($gameDataArray as $key => $value){
+            if(intval($value['game_showEnabled']) == 0){
+                continue;
+            }
+            $gameCode = $value['game_code'];
+            $gameName = json_decode($value['game_name'], true);
+            $gameName = $gameName[$_COOKIE['think_language']];
+            
+            $data = array(
+                "member_id" => $_SESSION['Member']['id'],
+                "game_code" => $gameCode,
+                "report_orderDate"=> array(
+                    'startTime'=>strtotime($startTime),
+                    'endTime'=>strtotime($endTime)
+                ),
+            );
+            $return = $GameInfo->getOneGameReportData($data,$err);
+            if($return === false){
+                $this->error($err);
+            }
+            foreach ($return as $key => $value){
+                if(empty($value)){
+                    $return[$key] = 0;
+                } else {
+                    switch ($key){
+                        case 'allBettingMoney':
+                            $gameTotalBettingMoney = bcadd($gameTotalBettingMoney,$value,$this->decimal);
+                            $return[$key] = number_format($value,$this->decimal,".","");
+                            break;
+                        case 'allSurplus':
+                            $gameTotalSurplus = bcadd($gameTotalSurplus,$value,$this->decimal);
+                            $return[$key] = number_format($value,$this->decimal,".","");
+                            break;
+                        case 'allEffective':
+                            $gameTotalEffective = bcadd($gameTotalEffective,$value,$this->decimal);
+                            $return[$key] = number_format($value,$this->decimal,".","");
+                            break;
+                        case 'allBetNumber':
+                            $gameTotalBetNumber += (int)$value;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                }
+            }
+            $return['game_code'] = $gameCode;
+            $gameShowArray[$gameName] = $return;
+        }
+        
+        $this->assign("gameTotalBettingMoney",$gameTotalBettingMoney);
+        $this->assign("gameTotalSurplus",(($gameTotalSurplus > 0) ? "<span style='color:green;'>".$gameTotalSurplus."</span>" : "<span style='color:red;'>".$gameTotalSurplus."</span>"));
+        $this->assign("gameTotalEffective",$gameTotalEffective);
+        $this->assign("gameTotalBetNumber",$gameTotalBetNumber);
+        $this->assign("gameShowArray",$gameShowArray);
+        $this->assign("gameShowEmpty","<tr><td colspan='5' style='text-align:center;'>" . L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01')). "</td></tr>");
+        $this->display();
+    }
+    public function oneGameMemberDetail(){
+        $request = $this->getRequest();
+        
+        $return = $this->getTimeArray();
+        
+        $startTime = $return['startTime'];
+        $endTime = $return['endTime'];
+        
+        $gameCode = $request["gameCode"];
+        if(isset($request["gameCode"])){
+            $gameCode = $request["gameCode"];
+            cookie('gameDetailCode',$gameCode);
+        } else {
+            $gameCode = cookie('gameDetailCode');
+        }
+        if(empty($gameCode)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//ERROR_MEMBERDETAILACTION_ONEGAMEMEMBERDETAIL_01 無選擇遊戲館別
+        }
+        
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        
+        $GameInfo = D("GameInfo");
+        $data = array(
+            "startTime" =>strtotime($startTime),
+            "endTime" =>strtotime($endTime),
+            "member_id" =>$_SESSION['Member']['id'],
+            "game_code" =>$gameCode,
+        );
+        $return = $GameInfo->getOneGameDetailDataCount($data,$err);//取得明細總數
+        if($return === false){
+            $this->error($err);
+        }
+        $totalNumber = $return['totalNumber']; //總筆數
+        $sumBettimgMoney = $return['sumBettimgMoney']; //總投注
+        $sumSurplus = $return['sumSurplus']; //總輸贏
+        $sumEffective = $return['sumEffective']; //總洗碼
+        $totalPage  =ceil($totalNumber / $this->memberDetailNumber); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumberDetail); //分頁陣列
+        
+        $data = array(
+            "game_code" =>$gameCode,
+            "member_id"=>$_SESSION['Member']['id'],
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            'page' => array(
+                'number' => $this->memberDetailNumber,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $GameInfo->getOneGameDetailData($data,$err);//取得明細資料
+        if($return === false){
+            $this->error($err);
+        }
+        $showArray = array();
+        $FieldChange = array(
+            'detail_id' => array('newField'=>'id','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))),
+            //'member_account' => array('newField'=>'mamberAccount','cnName'=>'會員'),
+            //'agent_account' => array('newField'=>'agentAccount','cnName'=>'代理'),
+            //'detail_gameAccount' => array('newField'=>'gameAccount','cnName'=>'遊戲帳號'),
+            'detail_createTime' => array('newField'=>'createTime','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'))),
+            'detail_bettingMoney' =>  array('newField'=>'bettingMoney','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04'))),
+            'detail_surplus' => array('newField'=>'surplus','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_05'))),
+            'detail_effective' => array('newField'=>'effective','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_06'))),
+            //'detail_isBackWater' => array('newField'=>'isBackWater','cnName'=>'返水'),
+        );
+        switch($gameCode){
+            case 'Sb':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['sb_html'] = array('newField'=>'bet_result','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));
+                break;
+            case 'Sp':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['sb_html'] = array('newField'=>'bet_result','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));
+                break;
+            case 'Dg':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['betDetailStr'] = array('newField'=>'betDetailStr','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));
+                $FieldChange['resultStr'] = array('newField'=>'resultStr','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_09')));
+                $FieldChange['isRevocation'] = array('newField'=>'isRevocation','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_10')));
+                break;
+            case 'Ab':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['gameTypeStr'] = array('newField'=>'gameTypeStr','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_11')));
+                $FieldChange['bet_result'] = array('newField'=>'bet_result','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));
+                $FieldChange['bet_numbers'] = array('newField'=>'bet_numbers','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_12')));
+                break;
+            case 'Sa':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['gameTypeStr'] = array('newField'=>'gameTypeStr','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_13')));
+                $FieldChange['gameId'] = array('newField'=>'gameId','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_14')));
+                $FieldChange['round'] = array('newField'=>'round','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_15')));
+                $FieldChange['betTypeStr'] = array('newField'=>'betTypeStr','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));
+                $FieldChange['detail_gameResult'] = array('newField'=>'detail_gameResult','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_09')));
+                $FieldChange['payoutTime'] = array('newField'=>'payoutTime','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_16')));
+                $FieldChange['stateStr'] = array('newField'=>'stateStr','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_17')));
+                break;
+            case 'Bj':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['game_name'] = array('newField'=>'game_name','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_13')));
+                $FieldChange['no'] = array('newField'=>'no','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_18')));
+                $FieldChange['mode'] = array('newField'=>'mode','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_19')));
+                $FieldChange['bet_numbers'] = array('newField'=>'bet_numbers','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));
+                $FieldChange['odds'] = array('newField'=>'odds','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_20')));
+                $FieldChange['is_checkout'] = array('newField'=>'is_checkout','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_10')));
+                break;
+            case 'Pa':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['sb_html'] = array('newField'=>'bet_result','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));
+                break;
+            case 'Qt':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['game_name_ch'] = array('newField'=>'game_name_ch','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_13')));
+                $FieldChange['game_type_name_ch'] = array('newField'=>'game_type_name_ch','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_21')));
+                break;
+            case 'Bng':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['game_name_zhtw'] = array('newField'=>'game_name_zhtw','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_13')));
+                $FieldChange['status_str'] = array('newField'=>'status_str','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_10')));
+                break;
+            case 'Uc8':
+                $GameModel = D("Game{$gameCode}");
+                $return = $GameModel->getReportRows($return);
+                $FieldChange['gameId'] = array('newField'=>'gameId','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_13')));
+                $FieldChange['roundId'] = array('newField'=>'roundId','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_15')));
+                $FieldChange['multiplier'] = array('newField'=>'multiplier','cnName'=>L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_22')));
+                break;
+            default:
+                break;
+        }
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'detail_createTime':
+                        $showStr = date('m-d H:i:s',$value[$key1]);
+                        break;
+                    case 'detail_bettingMoney':
+                        $showStr = number_format($value[$key1]);
+                        break;
+                    case 'detail_surplus':
+                        $showStr = number_format($value[$key1]);
+                        if($showStr < 0){
+                            $showStr = "<span style='color:red;'>".$showStr."</span>";
+                        } else {
+                            $showStr = "<span style='color:green;'>".$showStr."</span>";
+                        }
+                        break;
+                    case 'detail_effective':
+                        $showStr = number_format($value[$key1]);
+                        break;
+                        /*case 'detail_isBackWater':
+                         $showStr = "未返水";
+                         if($value[$key1] == '1'){
+                         $showStr = "已返水";
+                         }
+                         break;*/
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1['newField']] = $showStr;
+            }
+        }
+        $sumBettimgMoney = number_format($sumBettimgMoney);
+        $sumSurplus = number_format($sumSurplus);
+        $sumEffective = number_format($sumEffective);
+        if($sumSurplus < 0){
+            $sumSurplus = "<span style='color:red;'>".$sumSurplus."</span>";
+        } else {
+            $sumSurplus = "<span style='color:green;'>".$sumSurplus."</span>";
+        }
+        $this->assign("sumBettimgMoney",$sumBettimgMoney);//總投注
+        $this->assign("sumSurplus",$sumSurplus);//總輸贏
+        $this->assign("sumEffective",$sumEffective); //總洗碼
+        //var_dump($sumBettimgMoney,$sumSurplus,$sumEffective,$showArray);
+        $this->assign("FieldChange",$FieldChange);
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='".(count($FieldChange)+1)."' style='text-align:center;'>" . L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))."</td></tr>");//無資料時輸出
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //分頁陣列
+        $this->assign("gameCode",$gameCode);//遊戲code
+        $this->display();
+        
+    }
+}

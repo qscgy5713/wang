@@ -1,0 +1,72 @@
+<?php
+class GameControlAction extends MemberAction {
+    //取得遊戲連結ajax
+    public function ajaxGetGameLink(){
+        //使用 過濾方法 檢查傳入資料
+        $request = $this->getRequest();
+        
+        if(!isset($request['gameName']) || empty($request['gameName'])){
+            $returnArray = array(
+                "return" => 0,
+                "err" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))
+            );
+            $this->ajaxReturn(array_to_json($returnArray));
+        }
+        
+        $gameName = ucfirst(strtolower($request['gameName']));
+        switch ($gameName){
+            case 'Sb':
+                //取得 遊戲連結 開始
+                $data = array(
+                    "game_name" => $gameName
+                );
+                $return = $this->loginMember($data,$err);
+                if($return === false){
+                    $returnArray = array(
+                        "return" => 0,
+                        "err" => $err
+                    );
+                    $this->ajaxReturn(array_to_json($returnArray));
+                    return false;
+                }
+                $gameLink = $return;
+                //取得 遊戲連結 結束
+                
+                $memberWallet = $_SESSION['Member']['money'];
+                if($memberWallet != 0){
+                    $data = array(
+                        "transferMoney" => $memberWallet,
+                        "gameName" => $gameName
+                    );
+                    $return = $this->walletTransferGameBalance($data,$err);
+                    if($return === false){
+                        $returnArray = array(
+                            "return" => 0,
+                            "err" => $err
+                        );
+                        $this->ajaxReturn(array_to_json($returnArray));
+                        return false;
+                    }
+                    $this->getMemberWalletMoney();//讀取電子錢包
+                } else {
+                    cookie('member_newMember',null);//清除不讀轉移表的cookie
+                }
+                break;
+            default:
+                $returnArray = array(
+                    "return" => 0,
+                    "err" => '無此遊戲'
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+                return false;
+                break;
+        }
+        
+        
+        $returnArray = array(
+            "return" => 1,
+            "success" => $gameLink,//$gameLink
+        );
+        $this->ajaxReturn(array_to_json($returnArray));
+    }
+}

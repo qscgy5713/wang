@@ -1,0 +1,13 @@
+<?php
+/*
+ * 北京 遊戲明細
+ */
+class GameBjDetailModel extends AdminModel {
+    protected $tableName = "game_bj_detail";
+    protected $tableId = "detail_id";
+    protected $gameCode = "Bj";
+    
+    protected $timeName = "detail_createTime";//detail_orderDate
+    
+    
+}

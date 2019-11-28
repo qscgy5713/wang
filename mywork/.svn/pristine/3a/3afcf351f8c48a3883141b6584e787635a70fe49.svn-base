@@ -1,0 +1,139 @@
+<?php
+//會員統計腳本
+class ScriptMemberStatisticsAction extends ScriptAction {
+    /*
+       common_member_statistics 會員統計資料
+    	statistics_year int 4 年
+    	statistics_month int 2 月
+    	statistics_day int 2 日
+    	statistics_hour int 2 時
+
+    	statistics_onlineNumber int 11 總線上人數
+    	statistics_pcUseNumber int 11 電腦使用人數
+    	statistics_phoneUseNumber int 11 手機使用人數
+    	statistics_allUseNumber int 11 電腦手機都使用人數
+    	statistics_appleNumber int 11 蘋果系統人數
+    	statistics_androidNumber int 11 安卓系統人數
+    	statistics_allSystemNumber int 11 手機系統都使用人數
+
+    	statistics_totalRechargeMoney int 11 總儲值金額
+    	statistics_totalRechargeNumber int 11 總儲值數量
+    	statistics_totalWithdrawMoney int 11 總託售金額
+    	statistics_totalWithdrawNumber int 11 總託售數量
+    	statistics_totalRegisteredNumber int 11 總註冊人數
+     */
+    public function index(){
+
+        //總線上人數
+        //抓取  common_member_online    online_modifyTime 在一個小時內的
+        //加上 common_member_login_log  loginLog_createTime 在一個小時內的  loginLog_status 等於 1
+        //同樣的會員   人數算一個   但OS 不同的話 要統計
+
+
+        //statistics_totalRechargeMoney int 11 總儲值金額  statistics_totalRechargeNumber int 11 總儲值數量
+        //讀取 cashflow_recharge    recharge_modifyTime  在一個小時內的  recharge_status 等於  1
+
+        //statistics_totalWithdrawMoney int 11 總託售金額  statistics_totalWithdrawNumber int 11 總託售數量
+        //讀取 cashflow_withdraw   withdraw_modifyTime  在一個小時內的  withdraw_status 等於  1
+
+        //statistics_totalRegisteredNumber int 11 總註冊人數   讀取 common_member   member_createTime  在一個小時內的
+
+
+        //統計好資料  做沒有此資料新增  有此資料 就執行更新
+
+        $CommonMemberOnline = D('CommonMemberOnline');
+        $CashflowRecharge = D('CashflowRecharge');
+        $CashflowWithdraw = D('CashflowWithdraw');
+        $CommonMember = D('CommonMember');
+        $CommonMemberStatistics = D('CommonMemberStatistics');
+        $data = array(
+            'startTime' => strtotime(date('Y-m-d H:00:00', time())),
+            'endTime' => strtotime(date('Y-m-d H:00:00', time() + 3600)),
+        );
+        $useSystem = $CommonMemberOnline->getMemberOnlineDataByHour($data);
+        $totalRecharg = $CashflowRecharge->getHourTotalMoneyMember($data);
+        $totalWithdraw = $CashflowWithdraw->getHourTotalMoneyMember($data);
+        $totalNewMem = $CommonMember->getHourNewMemberData($data);
+
+        $allSystemNumber = 0;
+        $allUseNumber = 0;
+        $onlineNumber = 0;
+        $pcUseNumber = 0;
+        $phoneUseNumber = 0;
+        $appleNumber = 0;
+        $androidNumber = 0;
+        foreach ($useSystem as $key => $value) {
+            $oldData = array(
+                'startTime' => strtotime(date('Y-m-d H:00:00', time() - 3600)),
+                'endTime' => strtotime(date('Y-m-d H:00:00', time())),
+                'member_account' => $value['member_account'],
+            );
+            $oldUseSystem = $CommonMemberOnline->getOldMemberOnlineDataByHour($oldData); //搜索前一筆上線紀錄
+
+            if($value['member_account'] === $oldUseSystem['member_account']){ //與前一次登入紀錄比對
+                $onlineNumber++; //總人數
+                if($value['online_os'] ==! $oldUseSystem['online_os']){ //判斷前一次登入的OS
+                    $allUseNumber++; //手機電腦都使用
+                    if(!preg_match('/Windows/', $value['online_os']) && !preg_match('/Windows/', $oldUseSystem['online_os'])){
+                        $allSystemNumber++; //兩個系統都使用
+                    }
+                } else {
+                    if(preg_match('/Windows/', $value['online_os'])){
+                        $pcUseNumber++; //電腦使用
+                    } else{
+                        $phoneUseNumber++; //手機使用
+                        if(preg_match('/Mac/', $value['online_os'])){
+                            $appleNumber++; //蘋果
+                        } elseif (preg_match('/Android/', $value['online_os'])) {
+                            $androidNumber++; //安卓
+                        }
+                    }
+                }
+            } else { //無登入紀錄
+                $onlineNumber++; //總人數
+                if(preg_match('/Windows/', $value['online_os'])){
+                    $pcUseNumber++; //電腦使用
+                } else{
+                    $phoneUseNumber++; //手機使用
+                    if(preg_match('/Mac/', $value['online_os'])){
+                        $appleNumber++; //蘋果
+                    } elseif (preg_match('/Android/', $value['online_os'])) {
+                        $androidNumber++; //安卓
+                    }
+                }
+            }
+        }
+
+        $data = array(
+            'statistics_year' => date('Y', time()),
+            'statistics_month' => date('m', time()),
+            'statistics_day' => date('d', time()),
+            'statistics_hour' => date('H', time()),
+            'statistics_totalRechargeMoney' => $totalRecharg['totalMoney']? $totalRecharg['totalMoney']:0,
+            'statistics_totalRechargeNumber' => $totalRecharg['totalMember'],
+            'statistics_totalWithdrawMoney' => $totalWithdraw['totalMoney']? $totalWithdraw['totalMoney']:0,
+            'statistics_totalWithdrawNumber' => $totalWithdraw['totalMember'],
+            'statistics_totalRegisteredNumber' => $totalNewMem['totalMember'],
+            'statistics_onlineNumber' => $onlineNumber, //上線總人數
+            'statistics_pcUseNumber' => $pcUseNumber, //電腦使用者
+            'statistics_phoneUseNumber' => $phoneUseNumber, //手機使用者
+            'statistics_allUseNumber' => $allUseNumber, //兩者皆用
+            'statistics_appleNumber' => $appleNumber, //蘋果
+            'statistics_androidNumber' => $androidNumber, //安卓
+            'statistics_allSystemNumber' => $allSystemNumber, //兩種系統
+        );
+        $return = $CommonMemberStatistics->duplicateData($data);
+        if($return === false){
+            $this->error(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+        }
+        var_dump('記錄成功');
+    }
+    public function get_string_between($string, $start, $end){
+        $string = ' ' . $string;
+        $ini = strpos($string, $start);
+        if ($ini == 0) return '';
+        $ini += strlen($start);
+        $len = strpos($string, $end, $ini) - $ini;
+        return substr($string, $ini, $len);
+    }
+}

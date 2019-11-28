@@ -1,0 +1,183 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">{$Think.lang.Betting1}</h2>
+
+					<div class="responsibility_title"><i class="fa fa-street-view responsibility-icon-style"></i></div>
+				</header>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<p class="mb-45 fw-700" style="line-height: 30px;">{$Think.lang.Betting2}</p>
+					</div>
+				</div>
+
+				<div class="row mb-20">
+					<div class="col-md-6 col-sm-6 pl-35">
+						<h4>{$Think.lang.Betting3}</h4>
+
+						<p style="line-height: 30px;">{$Think.lang.Betting4}<a class="text-danger" href="https://gamtest.se/v3/gamcare" target="_blank">{$Think.lang.Betting5}</a></p>
+
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+					<div class="col-md-6 col-sm-6">
+						<h4>{$Think.lang.Betting6}</h4>
+
+						<p style="line-height: 30px;">{$Think.lang.Betting7}</p>
+
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>{$Think.lang.Betting8}</h4>
+						<p class="mb-45">{$Think.lang.Betting9}</p>
+					</div>
+
+					<div class="container">
+						<div class="masonry-gallery columns-5 clearfix row col-12">
+
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://gamtest.se/v3/gamcare" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/gam.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>GamCare</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.gamblingtherapy.org/en?ReferrerID=315" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/Gambling-Therapy.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Gambling Therapy</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.gordonmoody.org.uk/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/gordon-house-association.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Gorden House Association</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="http://www.gamblersanonymous.org.uk/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/Gamblers-Anonymous.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Gamblers Anonymous</h5>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row mb-30">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>{$Think.lang.Betting10}</h4>
+						<p class="mb-15" style="line-height: 30px;">{$Think.lang.Betting11}</p>
+						<p class="mb-45">{$Think.lang.Betting12}</p>
+					</div>
+
+					<div class="container">
+						<div class="masonry-gallery columns-5 clearfix row col-12">
+
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.cyberpatrol.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/cyberpatrol.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Cyberpatrol</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.contentwatch.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/contentwatch.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Contentwatch</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.netnanny.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/netnanny.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Netnanny</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="http://www.netmom.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/netmom.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Netmom</h5>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>{$Think.lang.Betting13}</h4>
+						<p class="mb-15">{$Think.lang.Betting14}</p>
+						<div class="callout alert alert-default b-0 mt-60 mb-60 pt-50 pb-50">
+							<div class="text-center">
+								<h3>{$Think.lang.Betting15}</h3>
+								<p class="font-lato mt-10">
+									{$Think.lang.Betting16}
+								</p>
+							</div>
+						</div>
+						<h4>{$Think.lang.Betting17}</h4>
+						<p class="mb-30">{$Think.lang.Betting18}</p>
+						<h4>{$Think.lang.Betting19}</h4>
+						<p class="mb-30" style="line-height: 30px;">{$Think.lang.Betting20}</p>
+						<h4>{$Think.lang.Betting21}</h4>
+						<p class="mb-30" style="line-height: 30px;">{$Think.lang.Betting22}</p>
+						<h4>{$Think.lang.Betting23}</h4>
+						<p class="mb-30">{$Think.lang.Betting24}</p>
+						<h4>{$Think.lang.Betting25}</h4>
+						<p class="mb-30">{$Think.lang.Betting26}</p>
+						<h4>{$Think.lang.Betting27}</h4>
+						<p class="mb-30">{$Think.lang.Betting28}</p>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+
+
+	</section>
+
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 }
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+

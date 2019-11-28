@@ -1,0 +1,379 @@
+<?php
+/*
+ * 活動表
+ */
+class CommonEventModel extends MemberModel {
+    protected $tableName = "common_Event";
+    protected $tableId = "event_id";
+
+    /**
+     * 取得 會員 活動資料 筆數
+     * 前台會員報表使用
+     */
+    public function getTotalNumberMemberEventData($data,&$err=""){
+        $sql = "SELECT `event_code` FROM `{$this->tableName}`
+                WHERE `event_process` = '1'";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+        }
+
+        $eventTableNameSql = "";
+        foreach ($return AS $value){
+            if(empty($eventTableNameSql)){
+                $eventTableNameSql = "(SELECT * FROM `common_event_{$value['event_code']}` WHERE `member_id` = '{$data['member_id']}' AND `event_createTime` > '{$data['event_createTime']}' )";
+            } else {
+                $eventTableNameSql .= "UNION ALL (SELECT * FROM `common_event_{$value['event_code']}` WHERE `member_id` = '{$data['member_id']}' AND `event_createTime` > '{$data['event_createTime']}' )";
+            }
+        }
+
+        $sql = "SELECT count(*) AS totalNumber FROM ({$eventTableNameSql}) as newEvent
+                JOIN `common_member` b ON (newEvent.member_id = b.member_id)
+                JOIN `common_member_wallet` c ON (newEvent.member_id = c.member_id)
+                JOIN `common_event` d ON (newEvent.`event_id` = d.`event_id`)
+                ORDER BY `event_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 取得 會員 活動資料
+     * 前台會員報表使用
+     */
+    public function getMemberEventAllData($data,&$err = ""){
+
+        $sql = "SELECT `event_code` FROM `{$this->tableName}`
+                WHERE `event_process` = '1'";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+        }
+
+        $eventTableNameSql = "";
+        foreach ($return AS $value){
+            if(empty($eventTableNameSql)){
+                $eventTableNameSql = "(SELECT * FROM `common_event_{$value['event_code']}` WHERE `member_id` = '{$data['member_id']}' AND `event_createTime` > '{$data['event_createTime']}' )";
+            } else {
+                $eventTableNameSql .= "UNION ALL (SELECT * FROM `common_event_{$value['event_code']}` WHERE `member_id` = '{$data['member_id']}' AND `event_createTime` > '{$data['event_createTime']}' )";
+            }
+        }
+
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+
+        $sql = "SELECT * FROM ({$eventTableNameSql}) as newEvent
+                JOIN `common_event` b ON (newEvent.`event_id` = b.`event_id`)
+                ORDER BY `event_createTime` DESC
+                {$pageSql} ;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+
+    /*
+     * 取得 活動 狀態 文字
+     */
+    public function getEventStatusStr($data){
+        $returnStr = "";
+        switch ($data){
+            case "0":
+                $returnStr = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case "1":
+                $returnStr = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                break;
+            case "2":
+                $returnStr = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                break;
+            default:
+                $returnStr = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+                break;
+        }
+        return $returnStr;
+    }
+
+    /*
+     * 取得 活動 資料
+     */
+    public function getEventData(){
+        $sql = "SELECT * FROM `{$this->tableName}`;";
+        $return = $this->cacheQuery($sql,10);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return;
+    }
+
+    /*
+     * 取得 活動 資料
+     */
+    public function getOneEventData($data){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `event_code` = '{$data['event_code']}'
+                LIMIT 1;";
+        $return = $this->cacheQuery($sql,10);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return[0];
+    }
+
+    /*
+     * 取得 活動 資料
+     * 判定 活動 是否申請過使用
+     */
+    public function getMemberEventData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無會員ID
+            return false;
+        }
+        if(empty($data['event_code']) && $data['event_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//無遊戲列表
+            return false;
+        }
+        if(empty($data['startTime']) && $data['startTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//無開始時間
+            return false;
+        }
+        if(empty($data['endTime']) && $data['endTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//無結束時間
+            return false;
+        }
+        $sql = "SELECT * FROM `common_event_{$data['event_code']}`
+                WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND `member_id` = '{$data['member_id']}' AND (`event_status` = 2 OR `event_status` = 0)";
+
+        //event_status 0未處理 1已取消 2完成  只有已取消才能再重複申請
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 新增 會員 活動單 申請資料
+     */
+    public function addMemberEventData($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["event_code"]) && $data["event_code"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "INSERT INTO `Common_Event_{$data['event_code']}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'event_code'){continue;}
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得活動code使用活動id
+     */
+    public function getEventCodeDataByEventId($data,&$err=""){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `event_id` = '{$data['event_id']}' LIMIT 1";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//此活動 無開放
+        }
+        return $return[0];
+    }
+    /*
+     * 對電子錢包上點
+     * 新增 活動 帳變紀錄
+     * 活動狀態 修改 完成
+     */
+    public function addEventDataByIdUseGiveMoney($data,&$err=""){
+        if(empty($data['event_id']) && $data['event_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['admin_id']) && $data['admin_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        if(empty($data['event_money']) && $data['event_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        $return = $this->getEventCodeDataByEventId($data,$err);
+        if($return === false){
+            return false;
+        }
+        $eventName = $return['event_name'];//活動名稱
+        $eventCode = $return['event_code'];//活動表名
+        $eventId = $return['event_id'];
+        $eventMoney = $data['event_money'];
+        //$infoId = $data['info_id']; 需先新增
+        $memberId = $data['member_id'];
+        $adminId = $data['admin_id'];
+        $agentId = $data['agent_id'];
+        $agentTree = $data['agent_tree'];
+        $agentRatio = $data['ratio_tree'];
+        $eventStatus = $data['event_status'];
+        
+        $nowTime = time();//取得現在時間戳
+        $ip = get_ip_inet_pton(getIp());//取得ip
+        
+        //事務處理開始
+        $this->startTrans();
+        
+        $CommonEventName = D("CommonEvent".ucfirst($eventCode));
+        $data = array(
+            'event_id' => $eventId,
+            'member_id' => $memberId,
+            'agent_id' => $agentId,
+            'agent_tree' => $agentTree,
+            'ratio_tree' => $agentRatio,
+            'event_status' =>'0',//0未處理
+            'event_money'=>$eventMoney,
+            'event_createTime' =>$nowTime,
+            'event_ip'=>$ip
+        );
+        $return = $CommonEventName->addEventData($data);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        $infoId = $return; //需先新增 取得id
+        
+        //讀取 會員電子錢包    鎖表   開始
+        $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$memberId}'
+                FOR UPDATE;";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+            return false;
+        }
+        if(empty($return[0])){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08'));
+            return false;
+        }
+        //讀取 會員電子錢包   鎖表   結束
+        $memberWalletDataArray = $return[0];//會員錢包資料
+        
+        $walletLogBefore = $memberWalletDataArray["wallet_money"];
+        $walletLogAfter = $walletLogBefore + $eventMoney;
+        
+        //對電子錢包 加款 開始
+        $data = array(
+            "member_id" => $memberId,
+            "wallet_money" => $eventMoney,
+            "wallet_totalRecharge" => 0
+        );
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_09"));
+            return false;
+        }
+        //對電子錢包 加款 結束
+        
+        //新增帳變紀錄 開始
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        $data = array(
+            "member_id" => $memberId,
+            "agent_id" => $agentId,
+            "agent_tree" => $agentTree,
+            "ratio_tree" => $agentRatio,
+            "walletLog_operating" => 1,//1點數增加 2點數減少
+            "walletLog_type" => 4,//帳變類型 1儲值表 2託售表 3.轉移表  4活動表 5退水表
+            "walletLog_type_class"=>2,//type=4 1系統自動扣點OR上點 2後台操作上點下點
+            "walletLog_item_id" => $eventId,//活動ID
+            "walletLog_money" => (int)$eventMoney,
+            "walletLog_before" => (int)$walletLogBefore,
+            "walletLog_after" => (int)$walletLogAfter,
+            "walletLog_main" => $eventName.";自動上點;錢包;加款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $walletLogId = $return;
+        //新增帳變紀錄 結束
+        
+        //修改 活動 資料 開始
+        $data = array(
+            "info_id" => $infoId,
+            "event_code"=>$eventCode,
+            "admin_id"=> $adminId,
+            "event_modifyTime"=> $nowTime,
+            "walletLog_id"=> $walletLogId,
+            "event_status"=>$eventStatus
+        );
+        $return = $this->setEventDataById($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_10"));
+            return false;
+        }
+        //修改 活動 資料 結束
+        
+        $this->commit();//事務處理成功
+        return true;
+    }
+    public function setEventDataById($data,&$err=""){
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'info_id'){continue;}
+            if($key == 'event_code'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_event_{$data['event_code']}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `info_id` = '{$data['info_id']}' AND `event_status` = 0";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    
+}

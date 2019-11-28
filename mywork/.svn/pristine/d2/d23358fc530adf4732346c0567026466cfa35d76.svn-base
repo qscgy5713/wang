@@ -1,0 +1,493 @@
+<?php
+class GameQTAction extends MemberAction {
+    const API_NAME = 'QT電子';
+    protected $power = false;
+    protected $gameName = "Qt";
+    /*
+     * 如果有初始化 可以設定在初始化中
+     */
+    protected function _initialize() {
+        parent::_initialize();
+        
+        $request = $this->getRequest();
+        //測試API
+        if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+            cookie('MIS','@@aaa123','expire=3600');
+        }
+        $MIS = cookie('MIS');
+        if($MIS === "@@aaa123"){
+            $this->power = true;
+            $function_links = '';
+            $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+            $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+            $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+            $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+            $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+            $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a>";
+            $this->assign('function_links', $function_links);
+            
+            $this->assign('api_name', self::API_NAME);
+            $this->assign('op_desc', '輸入參數按下送出');
+        }
+    }
+    //QT 遊戲菜單
+    public function gameMenu(){
+        $this->assign('noLoad','1');
+        $GameQtMenu = D("GameQtMenu");
+        
+        //從 GameQtMenuModel getGameQtMenuData() 取得QT菜單資訊
+        $return = $GameQtMenu->getGameQtMenuData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        
+        $arrGameDisplayCat = array(
+            'NEWSHIT' => '新遊戲',
+            'HOTSHIT' => '熱門遊戲',
+            'CASINO/SLOT' => '老虎機',
+            'CASINO/TABLEGAME' => '桌面遊戲',
+        );
+        
+        $arrGamesByDisplayCat = array(
+            'NEWSHIT' => array(),
+            'HOTSHIT' => array(),
+            'CASINO/SLOT' => array(),
+            'CASINO/TABLEGAME' => array(),
+        );
+        
+        $arrGamesCountData = array(
+            'NEWSHIT' => '',
+            'HOTSHIT' => '',
+            'CASINO/SLOT' => '',
+            'CASINO/TABLEGAME' => '',
+        );
+        
+        $arrGames = array();
+        $gameNum = 0;
+        foreach($return as $value){
+            $game_type = $value['game_type'];
+            //echo $game_type.'<BR>';
+            foreach ($arrGamesByDisplayCat as $cat => &$arrDisplayGames) {
+                if (strpos($game_type, $cat) !== false) {
+                    $arrDisplayGames[] = $value;
+                }
+            }
+        }
+        //var_dump($arrGamesByDisplayCat);exit();
+        foreach($arrGamesByDisplayCat as $key => $value){
+            $arrGamesCountData[$key] = count($value);
+        }
+        
+        foreach ($arrGamesByDisplayCat as $key1 => $value1){
+            foreach ($value1 as $key2 => $value2){
+                $game_provider = $value2['provider'];
+                $game_id = $value2['game_id'];
+                $game_type = $value2['game_type'];
+                $returnTypes = explode('/', $game_type);
+                $gameTypeStr = $returnTypes[1];
+                $game_is_support_demo = $value2['is_support_demo'];
+                $game_name_en = trim($value2['game_name_en']);
+                $game_name_ch = trim($value2['game_name_ch']);
+                $picNameStr = $game_id;  //圖片名稱. 為英文遊戲名稱轉為小寫, 空白轉為底線, 並去除單引號('), 最後加上附檔名.
+                $picNameStr = strtolower($picNameStr);
+                $arrPicNameStrs = explode('-', $picNameStr);
+                $picNameStr = $arrPicNameStrs[1];
+                $picNameStr = "{$game_provider}-{$picNameStr}";//檔名
+                
+                $arrGamesByDisplayCat[$key1][$key2]['image_src'] = "{$game_provider}/{$gameTypeStr}/{$picNameStr}";
+                $arrGamesByDisplayCat[$key1][$key2]['game_name_ch'] = $game_name_ch;
+            }
+        }
+        
+        $this->assign('GameQtMenu', $arrGamesByDisplayCat);
+        $this->assign("GameQtChMenu", $arrGameDisplayCat );
+//         var_dump($arrGameDisplayCat);
+//         var_dump($arrGamesByDisplayCat);
+//         exit();
+        $this->assign("GameQtMenuCount", $arrGamesCountData );
+        $this->display();
+    }
+    
+    //TODO:QT遊戲頁面
+    public function gameEnter(){
+        $this->isMemberLoginShowErr();
+        $this->assign('gameName','QT電子');
+        
+        $request = $this->getRequest();
+        if(!isset($request['game_id']) && empty($request['game_id'])){
+            $this->assign('gameLink', "false");
+            $this->assign('errMessage',L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無選擇遊戲
+            $this->display();
+            return false;
+        }
+        $isMobile = isMobile();
+        if($isMobile){
+            $isMobileStr = '1';
+        } else {
+            $isMobileStr = '0';
+        }
+        
+        //取得 遊戲連結 開始
+        $data = array(
+            "game_name" => $this->gameName,
+            "game_id" => $request['game_id'],
+            "is_mobile" => $isMobileStr
+        );
+        $return = $this->loginMember($data,$err);
+        if($return === false){
+            $this->assign('gameLink', "false");
+            $this->assign('errMessage', $err);
+            $this->display();
+            return false;
+        }
+        $gameLink = $return;
+        //取得 遊戲連結 結束
+        
+        //轉移點數 開始
+        $memberWallet = $_SESSION['Member']['money'];
+        if($memberWallet != 0){
+            $data = array(
+                "transferMoney" => $memberWallet,
+                "gameName" => $this->gameName
+            );
+            $return = $this->walletTransferGameBalance($data,$err);
+            if($return === false){
+                $this->assign('gameLink', "false");
+                $this->assign('errMessage', $err);
+                $this->display();
+                return false;
+            }
+            $this->getMemberWalletMoney();//讀取電子錢包
+        } else {
+            cookie('member_newMember',null);//清除不讀轉移表的cookie
+        }
+        $data = array(
+            "game_name" => $this->gameName
+        );
+        $return = $this->getMemberBalance($data,$err);
+        if($return === false){
+            $this->assign('gameLink', "false");
+            $this->assign('errMessage', $err);
+            $this->display();
+            return false;
+        }
+        $memberBalance = $return;
+        //轉移點數 結束
+        
+        $this->assign('isMobile',$isMobile);
+        $this->assign('memberBalance', $memberBalance);//遊戲點數
+        $this->assign('gameLink', $gameLink);//遊戲連結
+        $this->display();
+    }
+    
+    //1. 創新帳號
+    public function index(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || !strlen($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            $qt = D('GameQt');
+            
+            $err = null;
+            $res = $qt->createMember(array(
+                'user_name' => $user_name,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $qt->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        
+        $this->assign('method_name', 'createMember');
+        $this->assign('method_desc', '建立一個新的遊戲帳號');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //2. 取得遊戲連結
+    public function game_link(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        
+        $request = $this->getRequest();
+        
+        
+        $requireMobile = false;  //只要支援手機板的
+        //$qtGames = D('QtGames');
+        //$arrQtGames = $qtGames->getGames($requireMobile);
+        
+        $GameQtMenu = D("GameQtMenu");
+        
+        $arrQtGames = $GameQtMenu->getGameQtMenuData();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 game_id 傳入 並且不為空
+            if (!isset($request['game_id']) || empty($request['game_id'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//game_id 為空，請重新輸入
+            }
+            $game_id = $request['game_id'];
+            
+            //檢查是否有 is_mobile 傳入 並且不為空
+            if (!isset($request['is_mobile']) || !strlen($request['is_mobile'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//is_mobile 為空，請重新輸入
+            }
+            $is_mobile = $request['is_mobile'];
+            
+            $qt = D('GameQt');
+            
+            $err = null;
+            $res = $qt->loginMember(array(
+                'user_name' => $user_name,
+                'game_id' => $game_id,
+                'is_mobile' => $is_mobile,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $qt->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        $this->assign('array_qt_games', $arrQtGames);
+        
+        $this->assign('method_name', 'loginMember');
+        $this->assign('method_desc', '用現存遊戲帳號+遊戲代號進入遊戲');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //3. 取得會員餘額
+    public function balance(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            $qt = D('GameQt');
+            
+            $err = null;
+            $res = $qt->getMemberBalance(array(
+                'user_name' => $user_name,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $qt->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        
+        $this->assign('method_name', 'getMemberBalance');
+        $this->assign('method_desc', '取得會員的當前餘額');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //4. 上點
+    public function deposit(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $amount = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 amount 傳入 並且不為空
+            if (!isset($request['amount']) || empty($request['amount'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+            }
+            $amount = $request['amount'];
+            
+            $err = null;
+            $qt = D('GameQt');
+            
+            $res = $qt->rechargeMemberBalance(array(
+                'user_name' => $user_name,
+                'amount' => $amount,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $qt->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('method_name', 'rechargeMemberBalance');
+        $this->assign('method_desc', '增加會員的點數餘額');
+        $this->assign('user_name', $user_name);
+        $this->assign('amount', $amount);
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //5. 下點
+    public function withdraw(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $amount = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 amount 傳入 並且不為空
+            if (!isset($request['amount']) || empty($request['amount'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+            }
+            $amount = $request['amount'];
+            
+            $err = null;
+            $qt = D('GameQt');
+            
+            $res = $qt->withdrawMemberBalance(array(
+                'user_name' => $user_name,
+                'amount' => $amount,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $qt->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('method_name', 'withdrawMemberBalance');
+        $this->assign('method_desc', '減少會員的點數餘額');
+        $this->assign('user_name', $user_name);
+        $this->assign('amount', $amount);
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //6. 抓報表明細
+    public function report(){
+        if(!$this->power){exit();}
+        $begin_datetime = date('Y-m-d 12:00:00', time()-60*60*24*1);
+        $end_datetime = date('Y-m-d 11:59:59', time());
+        $page = 0;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 begin_datetime 傳入 並且不為空
+            if (!isset($request['begin_datetime']) || empty($request['begin_datetime'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//開始時間為空，請重新輸入帳號
+            }
+            $begin_datetime = $request['begin_datetime'];
+            
+            //檢查是否有 end_datetime 傳入 並且不為空
+            if (!isset($request['end_datetime']) || empty($request['end_datetime'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//結束時間為空，請重新輸入帳號
+            }
+            $end_datetime = $request['end_datetime'];
+            
+            //檢查是否有 page 傳入 並且不為空
+            if (!isset($request['page']) || !is_numeric($request['page'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//page 為空，請重新輸入帳號
+            }
+            $page = $request['page'];
+            
+            $qt = D('GameQt');
+            
+            $err = null;
+            $res = $qt->getGameRecord(array(
+                'begin_datetime' => $begin_datetime,
+                'end_datetime' => $end_datetime,
+                'page' => $page,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $qt->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('begin_datetime', $begin_datetime);
+        $this->assign('end_datetime', $end_datetime);
+        $this->assign('page', $page);
+        
+        $this->assign('method_name', 'getGameRecord');
+        $this->assign('method_desc', '抓取注單明細。');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    public function renewQtGameMenu(){
+        $GameQtMenu = D("GameQtMenu");
+        
+        $data['gameIdStr'] = "TK-pinkelephants,BNG-bookofsun,BPG-buffalorisingmegaways,BPG-diamondminemegaways,TK-roastymcfryandtheflamebusters,TK-thefalconhuntress,QS-dragonshrine,BPG-napoleon,BPG-geniejackpotsmegaways,TK-rocketfellasinc,RG-multiplierman,TK-jaguartemple,QS-sakurafortune,HAB-happiestchristmastree,QS-easternemeralds,TK-esqueletoexplosivo,TK-wildheistatpeacockmanor,RG-parrotsofcaribbean,TK-froggrog,QS-bigbadwolf,TK-yeti,QS-tigersglory,BPG-superwilddiamonds,ELK-route777,BPG-wildantics,BPG-grizzlygold,TK-tigerrush,TK-fruitwarp,HAB-koigate,QS-winsoffortune,ELK-valkyrie,TK-1429unchartedseas,BPG-wishuponajackpot,QS-bigbotcrew,ELK-vegasdiamonds,HAB-12zodiacs,TK-therift,QS-stickybandits,BPG-redhotrepeater,TK-birdsonawire,RG-lottolucky,BPG-magicmirror,BPG-kingkongcash,TK-wellofwonders,QS-ivanandtheimmortalking,BPG-kingdomoffortune,HAB-goldrush,QS-jokerstrike,NLC-iceiceyeti,QS-arkofmystery";
+        $data['enGameNameStr'] = "Pink Elephants,Book of Sun,Buffalo Rising Megaways,Diamond Mine Megaways,Roasty McFry and The Flame Busters,The Falcon Huntress,Dragon Shrine,Napoleon,Genie Jackpots Megaways,Rocket Fellas Inc,Multiplier Man,Jaguar Temple,Sakura Fortune,Happiest Christmas Tree,Eastern Emeralds,Esqueleto Explosivo,Wild Heist at Peacock Manor,Parrots of Caribbean,Frog Grog,Big Bad Wolf,Yeti,Tiger's Glory,Super Wild Diamonds,Route777,Wild Antics,Grizzly Gold,Tiger Rush,Fruit Warp,Koi Gate,Wins of Fortune,Valkyrie,1429 Uncharted Seas,Wish Upon A Jackpot,Big Bot Crew,Vegas Diamonds,12 Zodiacs,The Rift,Sticky Bandits,Red Hot Repeater,Birds On A Wire,Lotto Lucky,Magic Mirror Deluxe II,King Kong Cash,Well of Wonders,Ivan and the Immortal King,Kingdom Of Fortune,Gold Rush,Joker Strike,Ice Ice Yeti,Ark Of Mystery";
+        $data['chGameNameStr'] = "粉象,法老寶典,水牛崛起,鑽石礦,滅火特工隊,獵鷹女獵手,龍神殿,拿破崙,精靈獎池,費拉斯火箭隊,超級英雄大亂鬥,美洲虎神廟,櫻花俠女,快樂聖誕,至尊寶玉,骷髏樂隊,孔雀莊園,加勒比鸚鵡,格羅格醉蛙,灰太狼,夜帝,猛虎鬥獸場,超狂鑽石,公路777,螞蟻特攻隊,灰熊黃金,老虎寶石,水果大戰,鯉魚門,美猴王,女武神,未知海洋探險-1429,許願中獎,超能陸戰隊,維加斯寶石,十二生肖,密室逃亡,西部劫匪,紅熱重複器,憤怒的小鳥,幸運大樂透,豪華魔鏡2,金剛鈔票,魔幻森林,伊凡和不朽之王,財富王國,淘金瘋狂,暴擊小丑,冰緣雪人,至尊寶箱";
+        $data['gameTypeStr'] = "6 reel,5 reel,6 reel,6 reel,5 reel,5 reel,5 reel,5 reel,6 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,6 reel,5 reel,3 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel,3 reel,5 reel,5 reel,5 reel,3 reel,5 reel,9 reel,5 reel,5 reel,7 reel,5 reel,5 reel,5 reel,5 reel,5 reel,5 reel";
+        
+        $data['setTypeStr'] = "HOTSHIT;";//設定的分類
+        
+        $GameQtMenu->renewGameMenu($data);
+        
+    }
+}

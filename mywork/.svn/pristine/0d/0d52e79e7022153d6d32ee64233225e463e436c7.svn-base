@@ -1,0 +1,84 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<div class="row">
+					<div class="col-md-12 col-sm-12">
+					<!-- Useful Elements -->
+						<div class="card card-default">
+
+							<div class="card-block">
+
+								<form id="applyForm" name="applyForm" method="post" action='__APP__/MemberCenter/formService' onclick="return false">
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<label>{$Think.lang.QuestionType}</label>
+												<select class="form-control pointer" id="exampleSelect1" name="mailTitle">
+								                     <option value="會員資料">{$Think.lang.MemberInfo}</option>
+								                     <option value="遊戲帳號">{$Think.lang.GameAccount}</option>
+								                     <option value="儲值託售">{$Think.lang.RechargeSale}</option>
+								                     <option value="紅利商城">{$Think.lang.BonusMall}</option>
+								                     <option value="優惠活動">{$Think.lang.PreferentialActivity}</option>
+								                     <option value="其他問題">{$Think.lang.OtherQuestion}</option>
+								                </select>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<label>{$Think.lang.QuestionContent}</label>
+												<textarea id="mailMain" name="mailMain" rows="4" placeholder="{$Think.lang.QuestionContentHold}" class="form-control"></textarea>
+												<small>{$Think.lang.QuestionContentLeng}</small>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<button type="submit" id="setBtn" class="btn btn-secondary btn-shadow-1">{$Think.lang.Submit}</button>
+											</div>
+										</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery("#setBtn").click(function(){
+		var mailMain = jQuery("#mailMain").val();
+	       if(mailMain == ""){
+	           alert("您尚未填寫問題內容");
+	           return;
+	       }else{
+	       		jQuery("#loader-bg").show();
+	      	 	document.applyForm.submit();
+	       }
+	 })
+});
+</script>
+
+

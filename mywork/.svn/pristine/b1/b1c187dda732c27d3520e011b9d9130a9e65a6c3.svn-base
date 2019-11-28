@@ -1,0 +1,611 @@
+<?php
+class RegistPageAction extends MemberAction {
+    protected $phone = '0900000000';
+    protected $verificationCode = "888987";
+    protected $agentId = 2;//預設的代理
+    protected $agentAccount = '1a';//預設的帳號
+    protected $registerName = "1a";
+    protected $registerUrl = "";
+    protected $registerIp = "";
+    protected $registerId = 0;
+    
+    protected function _initialize() {
+        parent::_initialize();
+        $this->registerIp = get_ip_inet_pton(getIp());
+        if($this->isMemberLogin()){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//您已登入成功!
+        }
+    }
+    //TODO:2.註冊頁
+    public function index(){
+        $this->display();
+    }
+    
+    //TODO:2.1註冊功能1
+    public function formRegist(){
+        //使用 common.php filterStr($data) 公用函數  過濾取得 使用者輸入的Data
+        $request = $this->getRequest();
+        //var_dump($request);
+        
+        if(IS_AJAX){
+            if(!isset($request['addPassword']) || empty($request['addPassword'])){
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))//會員密碼為空，請重新輸入
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            //判斷 會員密碼 是否符合規定 6~20位之間
+            if(!(strlen($request['addPassword']) >= 6 && strlen($request['addPassword']) <= 20)){
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))//會員密碼，不符合規定 6~20位之間
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            //判斷 確認密碼 是否與會員密碼一致
+            if($request['addPassword'] !== $request['addCheckPassword']){
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'))//密碼與確認密碼不符，請重新輸入。
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            //驗證手機號碼
+            if(!isset($request['addPhone']) || empty($request['addPhone']) || !isPhone($request['addPhone'])){
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'))//手機號碼為空，請重新輸入。
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            
+            $_SESSION['Registered']['Phone'] = $request['addPhone'];
+            $_SESSION['Registered']['Passwrod'] = strtolower($request['addPassword']);
+            switch ($request['addPhone']){
+                case '0900000000'://測試電話
+                    //把預設的6碼驗證存入SESSION
+                    $_SESSION['Registered']['VerificationCode'] = $this->verificationCode;
+                    break;
+                default:
+                    $return = $this->checkKostmsLimit('registered');//檢查簡訊限制
+                    if(!$return){
+                        $returnArray = array(
+                            "return" => 0,
+                            "errMessage" => $return//簡訊限制 錯誤訊息
+                        );
+                        $this->ajaxReturn(array_to_json($returnArray));
+                    }
+                    //判斷此電話號碼 是否註冊過
+                    $data = array(
+                        "member_phone"=>$_SESSION['Registered']['Phone']
+                    );
+                    $return = $this->checkMemberPhoneDataByPhone($data);
+                    if ($return === true) {//有此電話 無法註冊
+                        $returnArray = array(
+                            "return" => 0,
+                            "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'))//此電話已被註冊，請重新輸入。
+                        );
+                        $this->ajaxReturn(array_to_json($returnArray));
+                    }
+                    //產生6碼驗證 存入SESSION
+                    $_SESSION['Registered']['VerificationCode'] = $this->GetRandStr(6);
+                    //var_dump($_SESSION['Registered']['VerificationCode']);
+                    //寄 6碼驗證簡訊 給會員
+                    $CommonKotsms = D("CommonKotsms");
+                    $phone = $_SESSION['Registered']['Phone'];
+                    $smbody = $_SESSION['Registered']['VerificationCode'];
+                    $data = array(
+                        "smbody" => $smbody, //驗證碼
+                        "dstaddr" => $phone //電話
+                    );
+                    $return = $CommonKotsms->sendRegistVerificationCode($data,$err);
+                    if($return === false){
+                        $returnArray = array(
+                            "return" => 0,
+                            "errMessage" => $err//資料庫錯誤訊息
+                        );
+                        $this->ajaxReturn(array_to_json($returnArray));
+                    }
+                    $_SESSION['Kostms']['registered'] = $_SESSION['Kostms']['registered'] + 1;
+                    break;
+            }
+            $returnArray = array(
+                "return" => 1
+            );
+            $this->ajaxReturn(array_to_json($returnArray));//成功
+        } else {
+            if(!isset($request['addPassword']) || empty($request['addPassword'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//會員密碼為空，請重新輸入
+            }
+            //判斷 會員密碼 是否符合規定 6~20位之間
+            if(!(strlen($request['addPassword']) >= 6 && strlen($request['addPassword']) <= 20)){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//會員密碼，不符合規定 6~20位之間
+            }
+            //判斷 確認密碼 是否與會員密碼一致
+            if($request['addPassword'] !== $request['addCheckPassword']){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//密碼與確認密碼不符，請重新輸入。
+            }
+            //驗證手機號碼
+            if(!isset($request['addPhone']) || empty($request['addPhone']) || !isPhone($request['addPhone'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//手機號碼為空，請重新輸入。
+            }
+            
+            $_SESSION['Registered']['Phone'] = $request['addPhone'];
+            $_SESSION['Registered']['Passwrod'] = strtolower($request['addPassword']);
+            switch ($request['addPhone']){
+                case '0900000000'://測試電話
+                    //把預設的6碼驗證存入SESSION
+                    $_SESSION['Registered']['VerificationCode'] = $this->verificationCode;
+                    break;
+                default:
+                    $return = $this->checkKostmsLimit('registered');//檢查簡訊限制
+                    if(!$return){
+                        $this->error($return);
+                    }
+                    //判斷此電話號碼 是否註冊過
+                    $data = array(
+                        "member_phone"=>$_SESSION['Registered']['Phone']
+                    );
+                    $return = $this->checkMemberPhoneDataByPhone($data);
+                    if ($return === true) {//有此電話 無法註冊
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//此電話已被註冊，請重新輸入。
+                    }
+                    //產生6碼驗證 存入SESSION
+                    $_SESSION['Registered']['VerificationCode'] = $this->GetRandStr(6);
+                    //var_dump($_SESSION['Registered']['VerificationCode']);
+                    //寄 6碼驗證簡訊 給會員
+                    $CommonKotsms = D("CommonKotsms");
+                    $phone = $_SESSION['Registered']['Phone'];
+                    $smbody = $_SESSION['Registered']['VerificationCode'];
+                    $data = array(
+                        "smbody" => $smbody, //驗證碼
+                        "dstaddr" => $phone //電話
+                    );
+                    $return = $CommonKotsms->sendRegistVerificationCode($data,$err);
+                    if($return === false){
+                        $this->error($err);
+                    }
+                    $_SESSION['Kostms']['registered'] = $_SESSION['Kostms']['registered'] + 1;
+                    break;
+            }
+            $this->assign("addPhone",$_SESSION['Registered']['Phone']);
+            $this->display();
+            //轉跳
+        }
+        
+        
+    }
+    
+    //TODO:註冊功能2
+    public function formRegistCheck(){
+        //使用 common.php filterStr($data) 公用函數  過濾取得 使用者輸入的Data
+        $request = $this->getRequest();
+        
+        if(IS_AJAX){
+            //驗證手機號碼
+            if(!isset($request['addVerificationCode']) || empty($request['addVerificationCode']) || !(strlen($request['addVerificationCode']) == 6)){
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))//驗證碼不符合6碼，請重新輸入。
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            
+            if($_SESSION['Registered']['Phone'] === '0900000000'){//測試電話
+                if($request['addVerificationCode'] !== $this->verificationCode){//與測試驗證碼測試
+                    $returnArray = array(
+                        "return" => 0,
+                        "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))//手機驗證碼不符，請重新輸入。
+                    );
+                    $this->ajaxReturn(array_to_json($returnArray));
+                }
+            } else {
+                if($request['addVerificationCode'] !== $_SESSION['Registered']['VerificationCode']){
+                    $returnArray = array(
+                        "return" => 0,
+                        "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))//手機驗證碼不符，請重新輸入。
+                    );
+                    $this->ajaxReturn(array_to_json($returnArray));
+                }
+            }
+            
+            $RCode = "";
+            //讀取推廣碼
+            if(isset($_SESSION['RCode']) && !empty($_SESSION['RCode'])){
+                $RCode .= "/?R=".$_SESSION['RCode'];
+            }
+            $registeUrl = $_SERVER['HTTP_HOST'].$RCode;
+            //讀取網址
+            $data = array(
+                'promotionsite_site' => $registeUrl
+            );
+            $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+            $return = $CommonAgentDomainPromotionsite->getPromotionsiteDataBySite($data);
+            if ($return === false) {//否，顯示錯誤
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'))//資料庫錯誤訊息
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            $registerName = "";//註冊抬頭
+            if(empty($return['promotionsite_registerName'])){
+                $registerName = $this->registerName;
+                $agentId = $this->agentId;
+                $registerId = $this->registerId;
+                $agentAccount = $this->agentAccount;
+            } else {
+                $registerId = $return['promotionsite_id'];
+                $registerName = $return['promotionsite_registerName'];
+                $agentId = $return['agent_id'];
+                $agentAccount = $return['agent_account'];
+            }
+            //比對 是否屬於推廣網址 讀取 註冊開頭
+            
+            
+            $stime=microtime(true); //計算 生成會員帳號開始時間
+            $data = array(
+                "registerName"=>$registerName
+            );
+            $return = $this->getNewMemberAccount($data);//取得會員新帳號
+            if ($return === false) {//否，顯示錯誤
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'))//取得新帳號失敗
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            $addAccount = $return['member_account'];
+            $CommonMember = D("CommonMember");
+            $PassWord = $CommonMember->getMd5Password($_SESSION['Registered']['Passwrod']);
+            $nowTime = time();//取得現在時間戳
+            $data = array(
+                "agent_id"=>$agentId,//代理ID
+                "agent_account"=>$agentAccount,//代理帳號
+                "member_account"=>$addAccount,
+                "member_password"=>$PassWord,
+                "member_createTime"=>$nowTime,
+                "promotionsite_id"=>$registerId,
+                "member_url"=>$registeUrl,
+                "member_ip"=>$this->registerIp,
+                "member_phone"=>$_SESSION['Registered']['Phone']
+            );
+            //CommonMemberModel addMemberData() 新增會員資料
+            $return = $CommonMember->addMemberData($data,$err);
+            if ($return === false) {//否，顯示錯誤
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => $err//資料庫錯誤訊息
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            
+            $data = array(
+                'member_id'=>$return
+            );
+            $return = $CommonMember->getMemberDataById($data,$err);
+            if ($return === false) {//否，顯示錯誤
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => $err//資料庫錯誤訊息
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            
+            //將會員資料 存入SESSION。
+            //註冊後自動登入功能
+            $_SESSION['Member']['id'] = $return['member_id'];
+            $_SESSION['Member']['account'] = $return['member_account'];
+            $_SESSION['Member']['phone'] = $return['member_phone'];
+            $_SESSION['Member']['status'] = $return['member_status'];
+            $_SESSION['Member']['agentId'] = $return['agent_id'];
+            $_SESSION['Member']['agentAccount'] = $return['agent_account'];
+            $_SESSION['Member']['agentTree'] = $return['agent_tree'];
+            $_SESSION['Member']['agentRatio'] = $return['ratio_tree'];
+            $_SESSION['Member']['checkMemberTime'] = time();//重讀會員資料時間
+            $_SESSION['Member']['loginTime'] = time();//會員登入時間
+            
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $nowTime = time();//取得現在時間戳
+            $CommonMemberLoginLog = D("CommonMemberLoginLog");
+            //新增登入LOG
+            $data = array(
+                "member_id" => $_SESSION['Member']['id'],
+                "member_account" => $_SESSION['Member']['account'],
+                "loginLog_status"=>1,
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonMemberLoginLog->addMemberLoginLogData($data,$err);
+            if ($return === false) {
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => $err//資料庫錯誤訊息
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            
+            $CommonMemberOnline = D("CommonMemberOnline");
+            $data = array(
+                "member_id"=>$_SESSION['Member']['id'],
+                "member_account"=>$_SESSION['Member']['account'],
+                "agent_id"=>$_SESSION['Member']['agentId'],
+                "agent_account"=>$_SESSION['Member']['agentAccount'],
+                "online_createTime"=>$nowTime,
+                "online_modifyTime"=>$nowTime,
+                "online_ip"=>$ip,
+                "online_os"=>$os,
+                "online_url"=>$url
+            );
+            $return = $CommonMemberOnline->setMemberOnlineData($data,$err);
+            if ($return === false) {
+                //$this->error($err);
+            }
+            cookie('upOnlineTime',$nowTime);
+            
+            $uid = $CommonMember->getMd5Password($nowTime); //把時間戳 變成 uid
+            $_SESSION['Member']['login_uid'] = $uid;
+            $_SESSION['Member']['uid'] = $uid;
+            $data = array(
+                "member_id" => $_SESSION['Member']['id'],
+                "member_uid" => $_SESSION['Member']['login_uid'],
+                "member_lastLoginTime" => $nowTime,
+                "member_lastLoginIp" => $ip
+            );
+            //修改會員 uid
+            $return = $CommonMember->setMemberById($data);
+            if ($return === false) {
+                unset($_SESSION['Member']);
+                $returnArray = array(
+                    "return" => 0,
+                    "errMessage" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'))
+                );
+                $this->ajaxReturn(array_to_json($returnArray));
+            }
+            $returnArray = array(
+                "return" => 1,
+                "addPhone"=>$_SESSION['Registered']['Phone'],
+                "addAccount"=>$addAccount,
+                "addPassword"=>$_SESSION['Registered']['Passwrod']
+            );
+            unset($_SESSION['Registered']);
+            $this->ajaxReturn(array_to_json($returnArray));//成功
+        } else {
+            //驗證手機號碼
+            if(!isset($request['addVerificationCode']) || empty($request['addVerificationCode']) || !(strlen($request['addVerificationCode']) == 6)){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//驗證碼不符合6碼，請重新輸入。
+            }
+            
+            if($_SESSION['Registered']['Phone'] === '0900000000'){//測試電話
+                if($request['addVerificationCode'] !== $this->verificationCode){//與測試驗證碼測試
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//手機驗證碼不符，請重新輸入。
+                }
+            } else {
+                if($request['addVerificationCode'] !== $_SESSION['Registered']['VerificationCode']){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//手機驗證碼不符，請重新輸入。
+                }
+            }
+            
+            $RCode = "";
+            //讀取推廣碼
+            if(isset($_SESSION['RCode']) && !empty($_SESSION['RCode'])){
+                $RCode .= "/?R=".$_SESSION['RCode'];
+            }
+            $registeUrl = $_SERVER['HTTP_HOST'].$RCode;
+            //讀取網址
+            $data = array(
+                'promotionsite_site' => $registeUrl
+            );
+            $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+            $return = $CommonAgentDomainPromotionsite->getPromotionsiteDataBySite($data);
+            if ($return === false) {//否，顯示錯誤
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+            }
+            $registerName = "";//註冊抬頭
+            if(empty($return['promotionsite_registerName'])){
+                $registerName = $this->registerName;
+                $agentId = $this->agentId;
+                $registerId = $this->registerId;
+                $agentAccount = $this->agentAccount;
+            } else {
+                $registerId = $return['promotionsite_id'];
+                $registerName = $return['promotionsite_registerName'];
+                $agentId = $return['agent_id'];
+                $agentAccount = $return['agent_account'];
+            }
+            //比對 是否屬於推廣網址 讀取 註冊開頭
+            
+            
+            $stime=microtime(true); //計算 生成會員帳號開始時間
+            $data = array(
+                "registerName"=>$registerName
+            );
+            $return = $this->getNewMemberAccount($data);//取得會員新帳號
+            if ($return === false) {//否，顯示錯誤
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+            }
+            $addAccount = $return['member_account'];
+            $CommonMember = D("CommonMember");
+            $PassWord = $CommonMember->getMd5Password($_SESSION['Registered']['Passwrod']);
+            $nowTime = time();//取得現在時間戳
+            $data = array(
+                "agent_id"=>$agentId,//代理ID
+                "agent_account"=>$agentAccount,//代理ID
+                "member_account"=>$addAccount,
+                "member_password"=>$PassWord,
+                "member_createTime"=>$nowTime,
+                "promotionsite_id"=>$registerId,
+                "member_url"=>$registeUrl,
+                "member_ip"=>$this->registerIp,
+                "member_phone"=>$_SESSION['Registered']['Phone']
+            );
+            //CommonMemberModel addMemberData() 新增會員資料
+            $return = $CommonMember->addMemberData($data,$err);
+            if ($return === false) {//否，顯示錯誤
+                $this->error($err);
+            }
+            
+            $data = array(
+                'member_id'=>$return
+            );
+            $return = $CommonMember->getMemberDataById($data,$err);
+            if ($return === false) {//否，顯示錯誤
+                $this->error($err);
+            }
+            
+            //將會員資料 存入SESSION。
+            //註冊後自動登入功能
+            $_SESSION['Member']['id'] = $return['member_id'];
+            $_SESSION['Member']['account'] = $return['member_account'];
+            $_SESSION['Member']['phone'] = $return['member_phone'];
+            $_SESSION['Member']['status'] = $return['member_status'];
+            $_SESSION['Member']['agentId'] = $return['agent_id'];
+            $_SESSION['Member']['agentAccount'] = $return['agent_account'];
+            $_SESSION['Member']['agentTree'] = $return['agent_tree'];
+            $_SESSION['Member']['agentRatio'] = $return['ratio_tree'];
+            $_SESSION['Member']['checkMemberTime'] = time();//重讀會員資料時間
+            $_SESSION['Member']['loginTime'] = time();//會員登入時間
+            
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $nowTime = time();//取得現在時間戳
+            $CommonMemberLoginLog = D("CommonMemberLoginLog");
+            //新增登入LOG
+            $data = array(
+                "member_id" => $_SESSION['Member']['id'],
+                "member_account" => $_SESSION['Member']['account'],
+                "loginLog_status"=>1,
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonMemberLoginLog->addMemberLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            
+            $CommonMemberOnline = D("CommonMemberOnline");
+            $data = array(
+                "member_id"=>$_SESSION['Member']['id'],
+                "member_account"=>$_SESSION['Member']['account'],
+                "agent_id"=>$_SESSION['Member']['agentId'],
+                "agent_account"=>$_SESSION['Member']['agentAccount'],
+                "online_createTime"=>$nowTime,
+                "online_modifyTime"=>$nowTime,
+                "online_ip"=>$ip,
+                "online_os"=>$os,
+                "online_url"=>$url
+            );
+            $return = $CommonMemberOnline->setMemberOnlineData($data,$err);
+            if ($return === false) {
+                //$this->error($err);
+            }
+            cookie('upOnlineTime',$nowTime);
+            
+            $uid = $CommonMember->getMd5Password($nowTime); //把時間戳 變成 uid
+            $_SESSION['Member']['login_uid'] = $uid;
+            $_SESSION['Member']['uid'] = $uid;
+            $data = array(
+                "member_id" => $_SESSION['Member']['id'],
+                "member_uid" => $_SESSION['Member']['login_uid'],
+                "member_lastLoginTime" => $nowTime,
+                "member_lastLoginIp" => $ip
+            );
+            //修改會員 uid
+            $return = $CommonMember->setMemberById($data);
+            if ($return === false) {
+                unset($_SESSION['Member']);
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+            }
+            
+            $etime=microtime(true);//獲取程式執行結束的時間
+            $totalTime=$etime-$stime;  //計算差值
+            
+            $this->assign("addPhone",$_SESSION['Registered']['Phone']);
+            $this->assign("addAccount",$addAccount);
+            $this->assign("addPassword",$_SESSION['Registered']['Passwrod']);
+            unset($_SESSION['Registered']);
+            $this->display();
+        }
+        
+    }
+    
+    /**
+     * 傳入 註冊抬頭
+     * 回傳 會員新帳號
+     * @param $data['registerName']
+     * @return $return['member_account']
+     */
+    protected function getNewMemberAccount($data){
+        $registerName = $data['registerName'];
+        
+        $newAccount = "";
+        $newAccountBool = true;
+        $CommonMember = D("CommonMember");
+        do{
+            switch (strlen($registerName)){
+                case 2:
+                    $newAccount = $registerName.$this->getNewAccountRandStr(rand(2,4));
+                    break;
+                case 3:
+                    $newAccount = $registerName.$this->getNewAccountRandStr(rand(2,3));
+                    break;
+                default:
+                    $newAccount = $registerName.$this->getNewAccountRandStr(rand(2,3));
+                    break;
+            }
+            $data = array(
+                "member_account"=>$newAccount
+            );
+            $return = $CommonMember->getMemberDataByAccount($data);
+            if ($return === false) {//否，顯示資料庫錯誤
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            if($return['member_account'] === NULL){
+                $newAccountBool = false;
+            }
+        }while ($newAccountBool);
+        $return = array(
+            "member_account"=>$newAccount
+        );
+        return $return;
+    }
+    protected function getNewAccountRandStr($len)//取得新帳號使用
+    {
+        $chars = array(
+            "0", "1", "2", "3", "5", "6", "7", "8", "9"
+        );
+        $charsLen = count($chars) - 1;
+        shuffle($chars);
+        $output = "";
+        for ($i=0; $i<$len; $i++)
+        {
+            $output .= $chars[mt_rand(0, $charsLen)];
+        }
+        return $output;
+    } 
+    
+    public function ajaxCheckMemberPhone(){
+        //使用 common.php filterStr($data) 公用函數  過濾取得 使用者輸入的Data
+        $request = $this->getRequest();
+        if(!isPhone($request['addPhone'])){
+            echo '電話號碼格式錯誤，請重新輸入!';
+            return;
+        }
+        $data = array(
+            "member_phone"=>$request['addPhone']
+        );
+        $return = $this->checkMemberPhoneDataByPhone($data);
+        if ($return === true) {//有此電話 無法註冊
+            echo '電話號碼已被註冊，請重新輸入!';
+            return;
+        }
+        echo true;
+        return;
+    }
+}

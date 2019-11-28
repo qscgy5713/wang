@@ -1,0 +1,12 @@
+<include file="Common:header"/>
+<body>
+   <div class="loader-bg">
+   	  <div id="loader" class="loader loader-area"></div>
+   	  <h6 id="loader-text" class="ml9 text-center">
+		  <span id="loader-span" class="text-wrapper">
+		    <span id="loader-span2" class="letters text-white">讀取中，請稍後!</span>
+		  </span>
+	  </h6>
+   </div>
+</body>
+</html>

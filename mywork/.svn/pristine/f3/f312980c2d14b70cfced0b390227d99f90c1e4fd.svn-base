@@ -1,0 +1,822 @@
+<?php
+//託售處理
+class ProcessWithdrawAction extends AdminAction {
+    protected $processWithdraw = 10; //分頁筆數
+    protected $pageMoreNumber = 5; //一頁最多幾筆
+    protected $processWithdrawError = 10; //未處理 分頁筆數
+    protected $pageMoreNumberError = 5; //未處理 分頁筆數
+    protected function _initialize() {
+        parent::_initialize();
+    }
+    //TODO: 託售單處理 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        //未處理託售定單開始
+        $CashflowWithdraw = D("CashflowWithdraw");
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        //取得總筆數
+        /*$return = $CashflowWithdraw->getWithdrawDataErrorTotalNumber();
+        var_dump($return);exit();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ .'_01')));
+        }
+        $totalNumberError = $return['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumberError / $this->processWithdrawError); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumberError); //頁數陣列
+        $data = array(
+            "selectWithdrawStarus"=>$selectWithdrawStarus,
+            'page' => array(
+                'number' => $this->processWithdrawError,
+                'pageNumber' => $pageNumber,
+            ),
+        );*/
+        $data = array();
+        $return = $CashflowWithdraw->getNotProcessWithdrawAllData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "withdraw_id"=>"id",
+            "member_id"=>"memberId",
+            "member_account"=>"memberAccount",
+            "withdraw_money"=>"money",
+            "withdraw_createTime"=>"createTime",
+            "withdraw_modifyTime"=>"modifyTime",
+            "withdraw_memberIp"=>"ip",
+            "withdraw_status"=>"status",
+            "withdraw_adminRemark"=>"adminRemark",
+            "admin_id"=>"adminId",
+            "admin_account"=>"adminAccount"
+        );
+        $showStr = "";
+        $allDataId = "";
+        foreach ($return as $key => $value){
+            if(empty($allDataId)){
+                $allDataId = $value['withdraw_id'];
+            } else {
+                $allDataId .= ','.$value['withdraw_id'];
+            }
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'withdraw_status':
+                        $showStr = $CashflowWithdraw->getWithdrawStatusStr($value[$key1]);
+                        break;
+                    case 'admin_account':
+                        if(empty($value[$key1])){
+                            $showStr = "無";
+                            $showArray[$key]["processingOrder"] = "true";
+                            break;
+                        }
+                        if($value[$key1] === $_SESSION["Admin"]["account"]){
+                            $showStr = "本帳號";
+                            $showArray[$key]["processingOrder"] = "true";
+                            if($return[$key]['withdraw_status'] != '0' && $return[$key]['withdraw_status'] != '1'){
+                                $showArray[$key]["processingOrder"] = "false";
+                            }
+                        } else {
+                            $showStr = $value[$key1];
+                            $showArray[$key]["processingOrder"] = "false";
+                        }
+                        break;
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        $this->assign("allDataId",$allDataId);//訂單所有ID
+        $this->assign("showArray",$showArray); //未處理託售訂單
+        $this->assign("showEmpty","<tr><td colspan='9'>無等待處理的訂單</td></tr>");
+        /*$this->assign("pageNumber", $pageNumber); //未處理 目前頁數
+        $this->assign("totalPage", $totalPage); //未處理 總頁數
+        $this->assign("pageArray", $pageArray); //未處理 頁數陣列*/
+        $this->display();
+    }
+
+    //TODO: 未處理託售紀錄ajax
+    public function getAjaxUnprocessedForm(){
+        $request = $this->getRequest();
+        //讀取 頁面資料
+        $CashflowWithdraw = D("CashflowWithdraw");
+        $data = array();
+        $return = $CashflowWithdraw->getNotProcessWithdrawAllData($data);
+        if($return === false){
+            echo 'err;;'.$err;
+            exit();
+        }
+        $showField = array(
+            "withdraw_id","member_account","withdraw_status","withdraw_money","withdraw_createTime",
+            "withdraw_memberIp","withdraw_modifyTime","admin_account"
+        );
+        $allDataId = "";
+        $allDataStr = "";
+        $i = 0;
+        $showStr = "";
+        foreach ($return as $key => $value){
+            if(empty($allDataId)){
+                $allDataId = $value['withdraw_id'];
+            } else {
+                $allDataId .= ','.$value['withdraw_id'];
+            }
+            if(!empty($allDataStr)){
+                $allDataStr .= ",";
+                $i = 0;
+            }
+            foreach ($showField as $field){
+                //欄位特別處理
+                switch ($field){
+                    case 'withdraw_status':
+                        $showStr = $CashflowWithdraw->getWithdrawStatusStr($value[$field]);
+                        break;
+                    case 'admin_account':
+                        if(empty($value[$field])){
+                            $showStr = "無;true";
+                            break;
+                        }
+                        if($value[$field] === $_SESSION["Admin"]["account"]){
+                            $showStr = "本帳號;true";
+                            if($return[$key]['withdraw_status'] != '0' && $return[$key]['withdraw_status'] != '1'){
+                                $showStr = "本帳號;false";
+                            }
+                        } else {
+                            $showStr = $value[$field].";false";
+                        }
+                        break;
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$field]);
+                        break;
+                    case 'withdraw_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$field]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$field]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$field];
+                        break;
+                }
+                if($i == 0){
+                    $allDataStr .= $showStr;
+                } else {
+                    $allDataStr .= ';'.$showStr;
+                }
+                $i++;
+            }
+        }
+        echo $allDataId.';;'.$allDataStr;
+    }
+    public function withdrawCheck(){
+        $request = $this->getRequest();
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無託售單號 ，請重新選擇。
+        }
+        //讀取託售單 開始
+        $CashflowWithdraw = D("CashflowWithdraw");
+
+        $data = array(
+            "withdraw_id" => $request['setId'], //單號
+            "admin_id" => $_SESSION['Admin']['id'],
+            "admin_account" => $_SESSION['Admin']['account'],
+            "withdraw_status" => 1
+        );
+        $return = $CashflowWithdraw->setWithdrawDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//資料庫錯誤
+        }
+
+        /*
+         * //修改資料失敗 代表訂單已在處理中
+        if($return !== 1){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//訂單已在處理中，請重新選擇。
+        }*/
+
+        $data = array(
+            "withdraw_id"=>$request['setId']
+        );
+        $return = $CashflowWithdraw->getWithdrawDataById($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        if($return[0]["admin_id"] != $_SESSION["Admin"]["id"]){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//訂單已在處理中，請重新選擇。
+        }
+        $memberId = $return[0]["member_id"];
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "withdraw_id"=>"id",
+            "member_id"=>"memberId",
+            "member_account"=>"memberAccount",
+            "withdraw_money"=>"money",
+            "withdraw_code"=>"code",
+            "withdraw_account"=>"account",
+            "withdraw_name"=>"name",
+            "withdraw_branch"=>"branch",
+            "withdraw_createTime"=>"createTime",
+            "withdraw_modifyTime"=>"modifyTime",
+            "withdraw_memberIp"=>"ip",
+            "withdraw_status"=>"status",
+            "withdraw_adminRemark"=>"adminRemark",
+            "admin_id"=>"adminId",
+            "admin_account"=>"adminAccount"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        //讀取託售單 結束
+
+        //讀取登入紀錄 開始
+        $CommonMemberLoginLog = D("CommonMemberLoginLog");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonMemberLoginLog->getMemberLoginDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $loginArray = array();
+        $FieldChange = array(
+            "member_id"=>"id",
+            "member_account"=>"account",
+            "loginLog_createTime"=>"createTime",
+            "loginLog_ip"=>"ip",
+            "loginLog_os"=>"os",
+            "loginLog_url"=>"url",
+        );
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'loginLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'loginLog_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $loginArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取登入紀錄 結束
+
+        //讀取儲值紀錄 開始
+        $CashflowRecharge = D("CashflowRecharge");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CashflowRecharge->getMemberRechargeDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $rechargeArray = array();
+        $lastRechargeTime = "";//最後儲值時間
+        $FieldChange = array(
+            "recharge_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "recharge_createTime"=>"createTime",
+            "recharge_ip"=>"ip",
+            "cashflow_name"=>"cashflowName",
+            "cashflow_showName"=>"cashflowShowName",
+            "recharge_paymentCode"=>"paymentCode",
+            "recharge_money"=>"money",
+        );
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'recharge_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        if(empty($lastRechargeTime)){
+                            $lastRechargeTime = $showStr;
+                        }
+                        break;
+                    case 'recharge_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $rechargeArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取儲值紀錄 結束
+
+        //讀取託售紀錄 開始
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CashflowWithdraw->getMemberWithdrawDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $withdrawArray = array();
+        $lastWithdrawTime = "";//最後託售時間
+        $FieldChange = array(
+            "withdraw_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "withdraw_createTime"=>"createTime",
+            "withdraw_memberIp"=>"memberIp",
+            "withdraw_money"=>"money",
+            "admin_account"=>"adminAccount",
+            "withdraw_adminIp"=>"adminIp",
+        );
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        if(empty($lastWithdrawTime)){
+                            $lastWithdrawTime = $showStr;
+                        }
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    case 'withdraw_adminIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $withdrawArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取託售紀錄 結束
+
+
+        //讀取會員基本資料 開始
+        $CommonMember = D("CommonMember");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonMember->getMemberDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $memberArray = array();
+        $FieldChange = array(
+            "member_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "member_createTime"=>"createTime",
+            "member_ip"=>"ip",
+            "member_url"=>"url",
+            "member_lastLoginTime"=>"lastLoginTime",
+            "member_lastLoginIp"=>"lastLoginIp",
+            "wallet_money"=>"money",
+            "wallet_gift"=>"gift",
+            "wallet_totalRecharge"=>"totalRecharge",
+            "wallet_totalWithdraw"=>"totalWithdraw",
+            "bankdata_code"=>"bankCode",
+            "bankdata_account"=>"bankAccount",
+            "bankdata_name"=>"bankName",
+            "bankdata_branch"=>"bankBranch",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_id'://用會員ID 查詢最後儲值
+                        $memberArray[$key]["lastRechargeTime"] = $lastRechargeTime;
+                        $memberArray[$key]["lastWithdrawTime"] = $lastWithdrawTime;
+                        $memberArray[$key]["total"] = $return[0]["wallet_totalRecharge"] - $return[0]["wallet_totalWithdraw"];
+                        $showStr = $value[$key1];
+                        break;
+                    case 'member_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'member_lastLoginTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後登入時間";
+                            break;
+                        }
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $memberArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取會員基本資料 結束
+
+        //讀取會員活動資料 開始
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonEvent->getMemberEventData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $eventArray = array();
+        $FieldChange = array(
+            "event_name"=> "eventName",
+            "info_id"=> "id",
+            "member_account"=>"memberAccount",
+            "event_money"=>"money",
+            "event_createTime"=>"createTime",
+            "event_modifyTime"=>"modifyTime",
+            "event_ip"=>"ip",
+            "event_status"=>"status",
+            "admin_account"=>"adminAccount"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'event_status':
+                        $showStr = $CommonEvent->getEventStatusStr($value[$key1]);
+                        break;
+                    case 'event_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'event_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'event_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    case 'admin_account':
+                        $showStr = $value[$key1];
+                        if(empty($value[$key1])){
+                            $showStr = "無操作帳號";
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $eventArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取會員活動資料 結束
+
+        $this->assign("showArray",$showArray);//託售單資訊
+        $this->assign("memberArray",$memberArray);//會員基本資料
+        $this->assign("withdrawArray",$withdrawArray);//會員託售紀錄
+        $this->assign("withdrawEmpty","<tr><td colspan='8'>無託售紀錄</td></tr>");
+        $this->assign("rechargeArray",$rechargeArray);//會員儲值紀錄
+        $this->assign("rechargeEmpty","<tr><td colspan='9'>無儲值紀錄</td></tr>");
+        $this->assign("loginArray",$loginArray);//會員登入紀錄
+        $this->assign("loginEmpty","<tr><td colspan='6'>無登入紀錄</td></tr>");
+        $this->assign("eventArray",$eventArray);//會員登入紀錄
+        $this->assign("eventEmpty","<tr><td colspan='10'>無活動紀錄</td></tr>");
+        $this->display();
+    }
+
+    //TODO: 託售單處理
+    public function formSetWithdrawProcess(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        if(!isset($request['processButton']) || (empty($request['processButton']) && $request['processButton'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//權限不足，請重新登入。
+        }
+        //檢查是否有 Id 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//修改ID為空，請重新登入。
+        }
+
+        $CashflowWithdraw = D("CashflowWithdraw");
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        switch ($request['processButton']){
+            case 2://完成訂單
+                $data = array(
+                    "admin_id"=>$_SESSION['Admin']['id'],
+                    "withdraw_id" => $request['setId'], //託售單ID
+                    "withdraw_status"=>2,
+                    "withdraw_modifyTime" => $nowTime,//託售單處理時間
+                    "withdraw_adminIp"=>$ip,
+                    "withdraw_adminRemark" => "已完成出款。"
+                );
+                $return = $CashflowWithdraw->setWithdrawFinishDataById($data,$err);
+                break;
+            case 3://取消訂單  退款回電子錢包
+                $data = array(
+                    "admin_id"=>$_SESSION['Admin']['id'],
+                    "withdraw_id" => $request['setId'], //託售單ID
+                    "withdraw_status"=>3,
+                    "withdraw_modifyTime" => $nowTime,//託售單處理時間
+                    "withdraw_adminIp"=>$ip,
+                    "withdraw_adminRemark" => $request['setRemark']
+                );
+                $return = $CashflowWithdraw->setWithdrawCancelDataById($data,$err);
+                break;
+            case 4://取消綁定  把狀態回退到 未處理 清除 admin_id admin_account
+                $data = array(
+                    "withdraw_id" => $request['setId'], //託售單ID
+                    "withdraw_status"=>0,
+                    "admin_id"=>null,
+                    "admin_account"=>null
+                );
+                $return = $CashflowWithdraw->setWithdrawStatusDataById($data,$err);
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//按鈕參數錯誤，請重新登入。
+                exit();
+                break;
+        }
+
+        if($return === false){
+            //否，顯示錯誤
+            $this->error($err);
+            return;
+        }
+        //是，影響筆數為1，顯示成功訊息
+        switch ($request['processButton']){
+            case '2':
+                $this->assign("jumpUrl","__APP__/ProcessWithdraw/index");
+                $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//完成訂單成功。
+                break;
+            case '3':
+                $this->assign("jumpUrl","__APP__/ProcessWithdraw/index");
+                $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//取消訂單成功。
+                break;
+            case '4':
+                $this->assign("jumpUrl","__APP__/ProcessWithdraw/index");
+                $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//取消綁定成功。
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//權限不足或操作錯誤，請重新操作。
+                break;
+        }
+    }
+    public function ajaxWithdraw(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $returnArray = array(
+                "return" => 0,
+                "type"=>1,
+                "err"=>"缺少參數"
+            );
+            $returnJson = array_to_json($returnArray);
+            $this->ajaxReturn($returnJson);
+        }
+        $CashflowWithdraw = D("CashflowWithdraw");
+        $data = array(
+            "withdraw_id" => $request['setId'], //單號
+            "admin_id" => $_SESSION['Admin']['id'],
+            "admin_account" => $_SESSION['Admin']['account'],
+            "withdraw_status" => 1
+        );
+        $return = $CashflowWithdraw->setWithdrawDataById($data);
+
+        if($return === false){//否，顯示錯誤
+            $returnArray = array(
+                "return" => 0,
+                "type"=>1,
+                "err"=>"資料庫錯誤"
+            );
+            $returnJson = array_to_json($returnArray);
+            $this->ajaxReturn($returnJson);
+        }
+        //修改資料失敗 代表訂單已在處理中
+        if($return !== 1){
+            $data = array(
+                "withdraw_id" => $request['setId'] //單號
+            );
+            $return = $CashflowWithdraw->getWithdrawDataById($data);
+            if($return === false){//否，顯示錯誤
+                $returnArray = array(
+                    "return" => 0,
+                    "type"=>1,
+                    "err"=>"資料庫錯誤"
+                );
+                $returnJson = array_to_json($returnArray);
+                $this->ajaxReturn($returnJson);
+            }
+            $returnArray = array(
+                "return" => 0,
+                "type"=>2,
+                "adminAccount"=>$return[0]['admin_account']
+            );
+            $returnJson = array_to_json($returnArray);
+            $this->ajaxReturn($returnJson);
+        }
+
+        $returnArray = array(
+            "return" => 1
+        );
+        $returnJson = array_to_json($returnArray);
+        $this->ajaxReturn($returnJson);
+    }
+
+    /**
+     * 託售歷史紀錄
+     */
+    public function withdrawDetail(){
+        $request = $this->getRequest();
+
+        //時間列表 開始
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        //時間列表 結束
+
+        if(empty($request['selectClass'])){
+            $selectClass = "all";
+        } else {
+            $selectClass = $request['selectClass'];
+        }
+        //託售紀錄開始
+        $CashflowWithdraw = D("CashflowWithdraw");
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        $data = array(
+            'selectClass' => $selectClass,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+        );
+        //取得總筆數
+        $return = $CashflowWithdraw->getWithdrawDataTotalNumber($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ .'_03')));
+        }
+        $totalNumber = $return['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->processWithdraw); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //頁數陣列
+        $data = array(
+            'selectClass' => $selectClass,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            'page' => array(
+                'number' => $this->processWithdraw,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $CashflowWithdraw->getWithdrawDataPage($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "withdraw_id"=>"id",
+            "member_id"=>"memberId",
+            "member_account"=>"memberAccount",
+            "withdraw_money"=>"money",
+            "withdraw_bankcode"=>"code",
+            "withdraw_bankaccount"=>"account",
+            "withdraw_bankname"=>"name",
+            "withdraw_bankbranch"=>"branch",
+            "withdraw_createTime"=>"createTime",
+            "withdraw_modifyTime"=>"modifyTime",
+            "withdraw_memberIp"=>"ip",
+            "withdraw_status"=>"status",
+            "withdraw_adminRemark"=>"adminRemark",
+            "admin_id"=>"adminId",
+            "admin_account"=>"adminAccount"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'withdraw_status':
+                        $showStr = $CashflowWithdraw->getWithdrawStatusStr($value[$key1]);
+                        break;
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //託售紀錄結束
+
+        $this->assign("showEmpty","<tr><td colspan='10' align='center'>本時間區段無紀錄</td></tr>");
+        $this->assign("showArray",$showArray); //託售訂單
+        $this->assign("selectClass",$selectClass); //託售訂單
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageArray", $pageArray); //頁數陣列
+        $this->display();
+    }
+}

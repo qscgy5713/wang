@@ -1,0 +1,176 @@
+<?php 
+class ProcessMailAction extends AdminAction{
+	//TODO: 處理信件 首頁
+	public function index(){
+		$request = $this->getRequest();
+		
+		if(!isset($request['statusSelect'])){
+			$statusSelect = "2";
+		} else {
+			$statusSelect = $request['statusSelect'];
+		}
+
+		$CommonMemberMail = D("CommonMemberMail");
+
+		//CommonMemberMail getCommonMemberMailData取得頁面類別資料
+		$return = $CommonMemberMail->getCommonMemberMailData($statusSelect);
+
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		$showArray = array();
+
+		//使用欄位轉換 資料庫欄位
+		$FieldChange = array(
+			'mail_id' => 'id',
+			'member_id' => 'memberId',
+		    'member_account' => 'memberAccount',
+			'mail_createTime' => 'createTime',
+			'mail_status' => 'status',
+			'mail_title' => 'title',
+			'mail_main' => 'main',
+			'mail_ip' => 'ip',
+			'admin_id' => 'adminId',
+			'mail_modifyTime' => 'modifyTime',
+			'mail_reply' => 'reply',
+		);
+
+		$showStr = "";
+
+		foreach($return as $key => $value){
+			foreach ($FieldChange as $key1 => $value1) {
+				//欄位特別處理
+				switch ($key1) {
+					case 'ip': //IP轉換
+						$showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+						break;
+
+					case 'createTime'://頁面建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+
+                    case 'modifyTime'://頁面建立時間 時間戳 轉換 日期
+                        $showStr = "無修改時間";
+                        if(!empty($value[$key1])){
+                            $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        }
+                        break;
+                    case 'admin_id': //無客服ID
+                    	$showStr = $value[$key1];
+						break;
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		var_dump($showArray);
+		$this->assign("showArray", $showArray);
+		$this->assign("statusSelect", $request['statusSelect']);
+		$this->display();
+	}
+
+	//TODO: 新增後台頁面類別
+	public function formAddMailManage() {
+		//使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+		$request = $this->getRequest();
+
+		//檢查是否有 memberAccount 傳入 並且不為空
+		if(!isset($request['memberAccount']) || empty($request['memberAccount'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		//檢查是否有 title 傳入 並且不為空
+		if(!isset($request['title']) || empty($request['title'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		//檢查是否有 main 傳入 並且不為空
+		if(!isset($request['main']) || empty($request['main'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		$CommonMemberMail = D('CommonMemberMail');
+
+		$CommonMember = D('CommonMember');
+
+		$mailStatus = "2";
+
+		$nowTime = time();
+		
+		$ip = getIp();		
+		$ip = get_ip_inet_pton($ip);
+
+		$memberAccount = array(
+			'member_account' => $request['memberAccount'],
+		);
+		$memberAccount = $CommonMember->getMemberDataByAccount($memberAccount);
+
+		$data = array(
+			'member_id' => $memberAccount['member_id'],
+			'mail_createTime' =>$nowTime,
+			'mail_status' => $mailStatus,
+			'mail_title' => $request['title'],
+			'mail_main' => $request['main'],
+			'mail_ip' => $ip,
+			'admin_id' => $_SESSION['Admin']['id'],
+		);
+
+		$return = $CommonMemberMail->addCommonMemberMailData($data);
+
+		if($return === false){
+			//否，顯示錯誤
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+
+		//是，顯示訊息成功
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+
+	//TODO: 訊息回覆
+	public function formReplyMailManage(){
+		//使用 common.php filterStr($data) 公用函數過濾取得資料
+		$request = $this->getRequest();
+
+		//檢查是否有 mailId 傳入 並且不回空
+		if(!isset($request['mailId']) || empty($request['mailId'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+
+		//檢查是否有 reply 傳入且不為空
+		if(!isset($request['reply']) || empty($request['reply'])){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+
+		$CommonMemberMail = D('CommonMemberMail');
+
+		$nowTime = time();
+
+		$data = array(
+			'mail_id' => $request['mailId'],
+			'mail_reply' => $request['reply'],
+			'admin_id' => $_SESSION['Admin']['id'],
+			'mail_status' => "0",
+			'mail_modifyTime' => $nowTime,
+		);
+
+		$return = $CommonMemberMail->replyCommonMemberMailData($data);
+
+		//否，顯示錯誤
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+		}
+
+		//是，影響數為1，顯示訊息成功
+		if($return === 1){
+			$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+			return;
+		}
+
+		//操作錯誤，請重新登入
+		$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+	}
+}

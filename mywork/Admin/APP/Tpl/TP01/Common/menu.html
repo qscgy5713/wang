@@ -1,0 +1,26 @@
+
+<nav class="navbar navbar-expand-lg navbar-light navbar-transparent bg-faded nav-sticky menu-bg-color">
+	<div class=" hidden-sm-down">
+    <!--logo-->
+        <a class="navbar-brand" href="__APP__/MemberIndex/index">
+            <img class='logo logo-dark' src="__CSS__/images/logo-light.png" alt="">
+            <img class='logo logo-light hidden-md-down' src="__CSS__/images/logo-light.png" alt="">
+        </a>
+    </div>
+    
+    <div class="mq-height">
+		<div>
+			<marquee class="mq-style" behavior="scroll" onmousemove="this.stop()" onmouseout="this.start()" scrollamount="5" direction="left">
+				
+				<span id="mq_contents" class="mq-sp-style">
+					<VOLIST name="marqueeArray" id="marquee">
+						<!-- <div class="mq-item">{$marquee.marquee_text}</div> -->
+						<div class="mq-item">text</div>
+					</VOLIST>
+				</span>
+			</marquee>
+	 	</div>
+	</div>
+</nav>
+<!--  -->
+ 

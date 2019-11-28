@@ -1,0 +1,105 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">{$Think.lang.PrivatePoilcy1}</h2>
+
+					<div class="responsibility_title"><i class="fa fa-gavel responsibility-icon-style"></i></div>
+				</header>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<p class="mb-30 fw-700" style="line-height: 30px;">{$Think.lang.PrivatePoilcy2}</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h3>{$Think.lang.PrivatePoilcy3}</h3>
+					</div>
+					<div class="col-md-6 col-sm-6 pl-35">
+						<h4 style="line-height: 30px;">{$Think.lang.PrivatePoilcy4}</h4>
+						<ul class="responsibility_list">
+	                        <li>{$Think.lang.PrivatePoilcy5}</li>
+	                        <li>{$Think.lang.PrivatePoilcy6}</li>
+	                        <li>{$Think.lang.PrivatePoilcy7}</li>
+	                        <li>{$Think.lang.PrivatePoilcy8}</li>
+	                    </ul>
+	                    <h4>{$Think.lang.PrivatePoilcy9}</h4>
+	                    <p style="line-height: 30px;">{$Think.lang.PrivatePoilcy10}</p>
+						<h4>{$Think.lang.PrivatePoilcy11}</h4>
+						<p style="line-height: 30px;">{$Think.lang.PrivatePoilcy12}</p>
+					</div>
+					<div class="col-md-6 col-sm-6">
+						<p class="mb-40" style="line-height: 30px;">{$Think.lang.PrivatePoilcy13}</p>
+						<h4>{$Think.lang.PrivatePoilcy16}(Cookies)</h4>
+
+						<p class="mb-40" style="line-height: 30px;">{$Think.lang.PrivatePoilcy14}</p>
+
+						<p class="fw-700" style="line-height: 30px;">{$Think.lang.PrivatePoilcy15}</p>
+
+					</div>
+					<div class="col-md-12 col-sm-12 pl-35">
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h3>{$Think.lang.PrivatePoilcy17}</h3>
+						<p>{$Think.lang.PrivatePoilcy18}</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+						<h3>{$Think.lang.PrivatePoilcy21}</h3>
+						<p style="line-height: 30px;">{$Think.lang.PrivatePoilcy19}</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+						<p class="text-center fw-700">{$Think.lang.PrivatePoilcy20}</p>
+					</div>
+				</div>
+			</div>
+
+
+		</section>
+
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 }
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+

@@ -1,0 +1,7 @@
+<?php
+class GivenRecordAction extends AgentAction {
+    //TODO:8 贈點記錄
+    public function index(){
+        $this->display();
+    }
+}

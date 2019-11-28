@@ -1,0 +1,97 @@
+<?php
+/*
+ * 活動列表
+ */
+class CommonEventModel extends AdminModel {
+    protected $tableName = "common_event";
+    protected $tableId = "event_id";
+    
+    public function getEventData(){
+        $sql = "SELECT * FROM `{$this->tableName}`";
+        $return = $this->cacheQuery($sql,300);
+        return $return;
+    }
+    
+    /**
+     * 取得活動 完成或取消 總筆數
+     */
+    public function getEventTotalNumberData($data, $err){
+        
+        $sql = "SELECT `event_code` FROM `{$this->tableName}`
+                WHERE `event_process` = '1'";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+        }
+        $eventTableNameSql = "";
+        foreach ($return AS $value){
+            if(empty($eventTableNameSql)){
+                $eventTableNameSql = "(SELECT * FROM `common_event_{$value['event_code']}` WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}') AND `event_status` != 0)";
+            } else {
+                $eventTableNameSql .= "UNION ALL  (SELECT * FROM `common_event_{$value['event_code']}` WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}') AND `event_status` != 0)";
+            }
+        }
+        $sql = "SELECT count(*) as totalNumber FROM ({$eventTableNameSql}) as newEvent";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+        }
+        return $return[0];
+    }
+    
+    /**
+     * 取得活動 完成或取消 資料
+     */
+    public function getEventAllData($data,&$err = ""){
+        
+        $sql = "SELECT `event_code` FROM `{$this->tableName}`
+                WHERE `event_process` = '1'";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+        }
+        
+        $eventTableNameSql = "";
+        foreach ($return AS $value){
+            if(empty($eventTableNameSql)){
+                $eventTableNameSql = "(SELECT * FROM `common_event_{$value['event_code']}` WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}') AND `event_status` != 0)";
+            } else {
+                $eventTableNameSql .= "UNION ALL  (SELECT * FROM `common_event_{$value['event_code']}` WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}') AND `event_status` != 0)";
+            }
+        }
+        $startSql = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $endSql = $data['page']['number'];
+        $pageSql = " LIMIT {$startSql},{$endSql}";
+        
+        $sql = "SELECT * FROM ({$eventTableNameSql}) as newEvent
+                JOIN `common_member` b ON (newEvent.member_id = b.member_id)
+                JOIN `common_event` c ON (newEvent.`event_id` = c.`event_id`)
+                LEFT OUTER JOIN `internal_admin` d ON (newEvent.`admin_id` = d.`admin_id`)
+                ORDER BY `event_createTime` DESC {$pageSql};";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 活動 狀態 文字
+     */
+    public function getEventStatusStr($data){
+        $returnStr = "";
+        switch ($data){
+            case "0":
+                $returnStr = "未處理";
+                break;
+            case "1":
+                $returnStr = "已取消";
+                break;
+            case "2":
+                $returnStr = "已贈點";
+                break;
+            default:
+                $returnStr = "狀態錯誤";
+                break;
+        }
+        return $returnStr;
+    }
+}
+    

@@ -1,0 +1,24 @@
+<!-- <marquee class="mq-style mq-style-md hidden-lg-up" behavior="scroll" onmousemove="this.stop()" onmouseout="this.start()" scrollamount="5" direction="left">
+	<span id="mq_contents" class="mq-sp-style">
+		<VOLIST name="marqueeArray" id="marquee">
+			{$marquee.marquee_text}
+		</VOLIST>  
+	</span>
+</marquee>  -->
+
+<div class="col-1 mq-div-md pr-0 pl-0 hidden-lg-up">
+<i class="fa fa-volume-up pr-2 language-icon pv-3 pl-10" style="padding-bottom: 1px;"></i>
+</div>
+    
+<div class="col-11 pr-0 pl-0 mb-10">
+	<marquee class="mq-style mq-style-md hidden-lg-up" style="position: absolute;" direction="up" onmousemove="this.stop()" onmouseout="this.start()" scrolldelay="800">
+		<VOLIST name="marqueeArray" id="marquee">
+			<div class="mq-style-div" >
+				<a class="text-white font-size-16" href="#">
+				 	{$marquee.marquee_text} 
+				</a> 			
+			</div>
+		</VOLIST>
+	</marquee>
+</div> 
+

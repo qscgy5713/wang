@@ -1,0 +1,657 @@
+<?php
+/**
+ * 會員Action
+ */
+class MemberAction extends ApiAction {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+
+
+
+        $this->getLangArray();//取得語系檔陣列到前端
+
+
+        $sietData = C('SIETDATA');
+        $titleName = "";
+        switch ($sietData){
+            case 'test':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 'demo':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 'official':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+        }
+        $this->assign("sietData",$sietData);
+        $this->assign("titleName",$titleName);
+
+        $request = $this->getRequest();
+
+
+        $returnArray = array(
+            "ajaxMemberGameBalance",
+            "setAnnouncementAjax",
+            "ajaxGetGameLink"
+        );
+        if(in_array($request['_URL_'][1], $returnArray)){
+            if(!($this->isMemberLogin())){
+                exit();
+            }
+            return;
+        }
+
+        $actionName = "";
+        if(isset($request['_URL_'][0])){
+            $actionName = $request['_URL_'][0];
+        } else {
+            $actionName = "MemberIndex";
+        }
+        $this->assign('actionName',$actionName);
+        $functionName = "";
+        if(isset($request['_URL_'][0])){
+            $functionName = $request['_URL_'][1];
+        } else {
+            $functionName = "index";
+        }
+        $this->assign('functionName',$functionName);
+
+        $isMobile = isMobile();
+
+        //判斷是否有https
+        $http_type = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? '2' : '1';//2 有https 1無https
+        $this->assign('isHttps',$http_type);//使用於header 是否加上這段https連線 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+        $this->assign('isMobile',$isMobile);
+
+        $this->getClientMarquee();//跑馬燈
+        $this->getMenuData();//取得菜單資料
+
+        //判斷 會員 是否登入
+        if(!($this->isMemberLogin())){
+            if(isset($_SESSION['Registered']['Phone']) && isset($_SESSION['Registered']['VerificationCode']) && isset($_SESSION['Registered']['Passwrod'])){
+                $this->assign("addPhone",$_SESSION['Registered']['Phone']);
+            }
+            //否，無登入狀態
+            $this->assign("isLogin","false");
+            return;
+        }
+
+
+        //判定有 登入後 所做的事
+        $this->getMemberData();
+
+        $this->getLastGameNameTransferWallet();//將最後轉別的點數 轉回 電子錢包 新會員有cookie不會去執行
+        $this->getServiceMailNumber();//取得會員未讀信件數量
+        $this->getMovieUrl();//取得免費影城連結
+
+
+        if($isMobile && preg_match("/Game/i", $request['_URL_'][0])){
+
+            $gameName = $request['_URL_'][0];
+            $soonGameArray=unserialize($_COOKIE["soonGameArray"]);
+            if(empty($soonGameArray)){
+                $soonGameArray[0] = $gameName;
+                setcookie("soonGameArray",serialize($soonGameArray));
+            } else {
+                $key = array_search($gameName,$soonGameArray);
+                if($key === false){
+                    if(count($soonGameArray) == 4){
+                        array_splice($soonGameArray,3);
+                    }
+                    array_unshift($soonGameArray,$gameName);
+                    setcookie("soonGameArray",serialize($soonGameArray));
+                } else {
+                    if($key != 0){
+                        array_splice($soonGameArray,$key,1);
+                        array_unshift($soonGameArray,$gameName);
+                        setcookie("soonGameArray",serialize($soonGameArray));
+                    }
+                }
+            }
+        }
+
+        $this->assign("isLogin","true");
+        $this->assign("memberAccount",$_SESSION['Member']['account']);
+    }
+    /*
+     * TODO:7.1讀取用戶資料
+     * 重新取得 會員 資訊
+     */
+    protected function getMemberData(){
+        $checkMemberTime = $_SESSION['Member']['checkMemberTime'];
+        if(empty($checkMemberTime)){
+            $_SESSION['Member']['checkMemberTime'] = time();
+            $checkMemberTime = time();
+        }
+        if((time() - $checkMemberTime) > 3){
+            $_SESSION['Member']['checkMemberTime'] = time();
+            $CommonMember = D("CommonMember");
+            $data = array(
+                "member_account" => $_SESSION['Member']['account'] //登入的帳號
+            );
+            $return = $CommonMember->getMemberDataByAccount($data);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            $_SESSION['Member']['uid'] = $return['member_uid'];
+            $_SESSION['Member']['status'] = $return['member_status'];
+            $_SESSION['Member']['agentTree'] = $return['agent_tree'];
+            $_SESSION['Member']['agentRatio'] = $return['ratio_tree'];
+
+
+            //是，登入狀態，判斷 會員 是否停權 開始
+            if($this->isMemberLosePower()){
+                //是  倒回首頁 顯示停權 視窗
+                $status = $_SESSION['Member']['status'];
+                $this->clearMemberData();//清除會員資料
+                //$this->assign("waitSecond","15");
+                $this->assign("jumpUrl","__APP__/MemberIndex/index");
+                switch($status){
+                    case 1://一般停權
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                        break;
+                    case 3://儲值地不符停權
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+                        break;
+                }
+                return;
+            }
+            //是，登入狀態，判斷 會員 是否停權 結束
+
+            //判斷 會員 是否被踢登出 或 重複登入  開始
+            if($this->isMemberOutLogin()){
+                //是  倒回首頁 顯示停權 視窗
+                $this->clearMemberData();//清除會員資料
+                //$this->assign("waitSecond","15");
+                $this->assign("jumpUrl","__APP__/MemberIndex/index");
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+                return;
+            }
+            //判斷 會員 是否被踢登出 或 重複登入  結束
+
+            //寫入線上名單 開始
+            $upOnlineTime = cookie('upOnlineTime');
+            if(empty($upOnlineTime)){
+                cookie('upOnlineTime',time());
+                $upOnlineTime = time();
+            }
+            if((time() - $upOnlineTime) > 600){
+                $CommonMemberOnline = D("CommonMemberOnline");
+                $data = array(
+                    "member_id"=>$_SESSION['Member']['id'],
+                    "member_account"=>$_SESSION['Member']['account'],
+                    "agent_id"=>$_SESSION['Member']['agentId'],
+                    "agent_account"=>$_SESSION['Member']['agentAccount'],
+                    "online_createTime"=>$_SESSION['Member']['loginTime'],
+                    "online_modifyTime"=>time(),
+                    "online_ip"=>get_ip_inet_pton(getIp()),
+                    "online_os"=>get_os(),
+                    "online_url"=>get_url()
+                );
+                $return = $CommonMemberOnline->setMemberOnlineData($data,$err);
+                if ($return === false) {
+                    //$this->error($err);
+                }
+            }
+            //寫入線上名單 結束
+        }
+
+
+
+        $this->getMemberWalletMoney();//讀取電子錢包
+    }
+    /**
+     * 如果電子錢包為0 找到上一次的轉移的遊戲館別 把點轉回來
+     * @return void|boolean
+     */
+    protected function getLastGameNameTransferWallet(){
+        $memberNewMember = $_COOKIE['member_newMember'];
+        if(!empty($memberNewMember)){
+            return;
+        }
+        /*
+        if($_SESSION['Member']['money'] != 0){
+            return;
+        }*/
+        $CashflowTransfer = D("CashflowTransfer");
+        $data = array(
+            "member_id"=>$_SESSION['Member']['id']
+        );
+        $return = $CashflowTransfer->getLastTransferDataByMemberId($data,$err);
+        if($return === false){
+            return;
+        }
+        //var_dump($return);//exit();
+        if(empty($return)){
+            cookie('newMember',1,'expire=7200&prefix=member_');//1代表新會員 不去讀轉移表
+            return;
+        }
+        $gameName = $return;//取得最後一館 遊戲代碼
+        //var_dump($gameName);exit();
+
+        $request = $this->getRequest();
+        if($request["_URL_"][0] == "Game".strtoupper($gameName)){
+            return;//等同 會員再點選一次遊戲館  不做轉移
+        }
+
+        //var_dump("getMemberBalance");
+        //取得遊戲餘額 開始
+        $data = array(
+            "game_name" => $gameName
+        );
+        $return = $this->getMemberBalance($data,$err);
+        if($return === false){
+            cookie('newMember',1,'expire=7200&prefix=member_');//1代表最後一館沒錢 不去讀轉移表
+            //$this->error($err);
+        }
+        $memberBalance = floor($return);
+        //var_dump($memberBalance);
+        //取得遊戲餘額 結束
+        if($memberBalance == 0){
+            cookie('newMember',1,'expire=7200&prefix=member_');//1代表最後一館沒錢 不去讀轉移表
+            return;
+        }
+        $data = array(
+            "transferMoney" => $memberBalance,
+            "gameName" => $gameName
+        );
+        $return = $this->gameBalanceTransferWallet($data,$err);
+        if($return === false){
+            cookie('newMember',1,'expire=7200&prefix=member_');//1轉移失敗 只轉一次
+            //$this->error($err);
+            return false;
+        }
+        $this->getMemberWalletMoney();//讀取電子錢包
+    }
+    /*
+     * 判斷 會員 是否登入
+     */
+    protected function isMemberLogin() {
+        //判斷 SESSION 是否存在
+        if(!isset($_SESSION['Member']['account'])){
+            //否，回傳 false
+            return false;
+        }
+        //是，回傳 true
+        return true;
+    }
+    /*
+     * 判斷 會員 是否登入
+     * 否 顯示先登入會員
+     */
+    protected function isMemberLoginShowErr() {
+        //判斷 SESSION 是否存在
+        if(!isset($_SESSION['Member']['account'])){
+            //否，回傳 false
+            $this->assign("jumpUrl","__APP__/MemberIndex/index");
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+    }
+    /*
+     * 判斷 會員 是否登入
+     * 否 導回首頁
+     */
+    protected function isMemberLoginReturnIndex() {
+        //判斷 SESSION 是否存在
+        if(!isset($_SESSION['Member']['account'])){
+            //否，導回首頁
+            redirect(__APP__.'/MemberIndex/index');
+        }
+    }
+    /*
+     *  判斷 會員 是否被踢除或異地登入
+     */
+    protected function isMemberOutLogin() {
+        //判斷 uid 是否與SESSION 的 login_uid 一致
+        if($_SESSION['Member']['uid'] === $_SESSION['Member']['login_uid']){
+            //是，回傳 false
+            return false;
+        }
+        //否，回傳 true
+        return true;
+    }
+    /*
+     *  判斷 會員 是否停權
+     */
+    protected function isMemberLosePower() {
+        //判斷 common_member member_status 是否是停權狀態
+        if($_SESSION['Member']['status'] == 1 || $_SESSION['Member']['status'] == 3){
+            //是，回傳 true
+            return true;
+        }
+        //否，回傳 false
+        return false;
+    }
+    //TODO:7.2免費影城連結產生
+    protected function getMovieUrl(){
+        $memberMovieUrl = $_COOKIE['member_movieUrl'];
+        //var_dump($memberNewMember);
+        if(empty($memberMovieUrl)){
+            $CommonMemberMovie = D("CommonMemberMovie");
+            $return = $CommonMemberMovie->getMovieKey();//從 CommonMemberMovieModel getMovieKey() 函數 取得 加密的Key
+            if ($return === false) {
+                //$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            //將連結輸出到按鈕上
+            $movieUrl = "https://av9453.co?Identify=".$return;
+            cookie('movieUrl',$movieUrl,'expire=7200&prefix=member_');
+        } else {
+            $movieUrl = $memberMovieUrl;
+        }
+        $this->assign("movieUrl",$movieUrl);
+    }
+    //TODO:檢查是否綁定銀行
+    protected function isBankBindingCheck(){
+        $CommonMemberBankdata = D("CommonMemberBankdata");
+        $data = array(
+            "member_id"=> $_SESSION['Member']['id']
+        );
+        $return = $CommonMemberBankdata->getMemberBankDataByMembeerId($data,$err);
+        if($return === false){
+            $this->error($err);
+            return false;
+        }
+        if(empty($return['bankdata_id']) && $return['bankdata_id'] !== 0){
+            return false;
+        } else {
+            return true;
+        }
+    }
+    /**
+     * 會員錢包金額
+     * 前端顯示使用
+     * @return $memberWallet
+     */
+    protected function getMemberWalletMoney(){
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $data = array(
+            "member_id"=>$_SESSION['Member']['id']
+        );
+        $return = $CommonMemberWallet->getWalletData($data,$err);
+        if($return === false){
+            $this->error($err);//資料庫錯誤
+        }
+        $_SESSION['Member']['money'] = $return["wallet_money"];
+        $this->assign("memberWallet",$return["wallet_money"]);
+        return $return["wallet_money"];
+    }
+    /**
+     * 清除會員資料
+     * 登出做的事
+     */
+    protected function clearMemberData(){
+        cookie(null,'game_');
+        cookie(null, 'client_');
+        cookie(null, 'event_');
+        cookie(null, 'member_');
+        //cookie('member_newMember',null);//清除不讀轉移表的cookie
+        cookie('upOnlineTime',null);
+        unset($_SESSION['Member']);
+    }
+    /**
+     * 電子錢包所有金額 轉入第三方 須帶入第三方參數 和 轉點金額
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    protected function walletTransferGameBalance($data,&$err){
+        $transferMoney = $data["transferMoney"];
+        $gameName = $data["gameName"];
+
+        cookie('member_newMember',null);//清除不讀轉移表的cookie
+        $CashflowTransfer = D("CashflowTransfer");
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "agent_id" => $_SESSION['Member']['agentId'],
+            "agent_tree" => $_SESSION['Member']['agentTree'],
+            "ratio_tree" => $_SESSION['Member']['agentRatio'],
+            "transfer_money" => $transferMoney,
+            "transfer_from" => "Wallet",
+            "transfer_to" => $gameName
+        );
+        $return = $CashflowTransfer->addTransferDataByDeductWallet($data,$err);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 第三方所有餘額 轉入電子錢包 須帶入第三方參數 和 轉點金額
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    protected function gameBalanceTransferWallet($data,&$err){
+        $transferMoney = $data["transferMoney"];
+        $gameName = $data["gameName"];
+
+        cookie('member_newMember',null);//清除不讀轉移表的cookie
+        $CashflowTransfer = D("CashflowTransfer");
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "agent_id" => $_SESSION['Member']['agentId'],
+            "agent_tree" => $_SESSION['Member']['agentTree'],
+            "ratio_tree" => $_SESSION['Member']['agentRatio'],
+            "transfer_money" => $transferMoney,
+            "transfer_from" => $gameName,
+            "transfer_to" => "Wallet"
+        );
+        $return = $CashflowTransfer->addTransferDataByPlusWallet($data,$err);
+        if($return === false){
+            return false;
+        }
+    }
+    /**
+     * 傳入 新增電話
+     * 回傳是否有此電話
+     * @param $data['addPhone']
+     * @return boolean
+     */
+    protected function checkMemberPhoneDataByPhone($data){
+        $CommonMember = D("CommonMember");
+        $return = $CommonMember->getMemberDataByAccount($data,$err);
+        if ($return === false) {//否，顯示錯誤
+            $this->error($err);
+        }
+        if($return['member_id'] === NULL){
+            return false;
+        }
+        return true;
+    }
+    /**
+     * 寄送 簡訊 限制
+     */
+    protected function checkKostmsLimit($str){
+        if(empty($_SESSION['Kostms'][$str])){
+            $_SESSION['Kostms'][$str] = 0;
+        }
+        if(empty($_SESSION['Kostms']['date'])){
+            $_SESSION['Kostms']['date'] = date("Y-m-d");
+        }
+        if($_SESSION['Kostms']['date'] !== date("Y-m-d")){
+            $_SESSION['Kostms'][$str] = 0;
+        }
+        if($_SESSION['Kostms'][$str] > 2){
+            switch ($str){
+                case 'registered':
+                    return L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//已達本日註冊上限
+                    break;
+                case 'forget':
+                    return L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//已達本日忘記帳密上限
+                    break;
+                default:
+                    return L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//已達本日簡訊上限
+                    break;
+            }
+
+        }
+        return true;
+    }
+    //TODO:遊戲菜單
+    protected function getMenuData(){
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameNameData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取菜單失敗，請重新登入
+        }
+        $showArray = array();
+        $classArray = array();
+        $i = 0;
+        foreach ($return as $key => $value){
+            if(!in_array($value['gameClass_code'], $classArray)){
+                $classArray[$value['gameClass_code']] = $value['gameClass_showName'];
+            }
+            if(count($showArray[$value['gameClass_showName']]) == 0){
+                $i = 0;
+            }
+            $data = array(
+                "gameCode"=>strtoupper($value['game_code']),
+                "gameName"=>$value['game_name'],
+                "gameEnabled"=>$value['game_enabled'],
+                "gameDefendMessage"=>$value['game_defendMessage']
+            );
+            $showArray[$value['gameClass_showName']][$i++] = $data;
+        }
+        //var_dump($classArray);
+        //var_dump($showArray);
+
+        foreach($classArray AS $key => $value){
+            $noShowArray = array();
+            for($i=0;$i<floor((10-count($showArray[$value]))/2);$i++){
+                array_push($noShowArray, $i);
+            }
+            $this->assign("game".$key."NoShowMenuArray",$noShowArray);
+            $this->assign("game".$key."MenuArray",$showArray[$value]);
+        }
+//         $this->assign("gameSportMenuArray",$showArray['體育']);
+//         $this->assign("gamePersonMenuArray",$showArray['真人娛樂']);
+//         $this->assign("gameLotteryMenuArray",$showArray['彩票賓果']);
+//         $this->assign("gameElectronicMenuArray",$showArray['電子遊戲']);
+    }
+    //TODO:跑馬燈
+    protected function getClientMarquee(){
+        //從 CommonMarqueeModel getClientMarqueeData() 取得前台跑馬燈資料
+        $CommonMarquee = D("CommonMarquee");
+        $return = $CommonMarquee->getClientMarqueeData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $marqueeShowArray = array();
+        foreach($return as $value){
+            $textArray = json_decode($value['marquee_text'], true);
+            $data = array(
+                'marquee_text' => $textArray[$_COOKIE['think_language']]
+            );
+            array_push($marqueeShowArray, $data);
+        }
+        $this->assign("marqueeArray",$marqueeShowArray);
+    }
+    /*
+     * 取得會員信件未讀數量
+     */
+    protected function getServiceMailNumber(){
+
+        $CommonMemberMail = D("CommonMemberMail");
+        $data = array(
+            "member_id" => $_SESSION["Member"]["id"],
+            "mail_createTime" => strtotime("-30 day")
+        );
+        $return = $CommonMemberMail->getUnreadNumberMailData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        //var_dump($return['unreadNumber']);exit();
+        $this->assign("unreadNumber",$return['unreadNumber']);
+    }
+    /**
+     * 取得銀行代碼資料
+     */
+    protected function getBankCodeData(){
+        $CommonBankcode = D("CommonBankcode");
+        $return = $CommonBankcode->getBankCodeData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->assign("bankCodeArray",$return);
+    }
+    //驗證碼使用
+    protected function getRandStr($len)
+    {
+        $chars = array(
+            "0", "1", "2","3", "4", "5", "6", "7", "8", "9"
+        );
+        $charsLen = count($chars) - 1;
+        shuffle($chars);
+        $output = "";
+        for ($i=0; $i<$len; $i++)
+        {
+            $output .= $chars[mt_rand(0, $charsLen)];
+        }
+        return $output;
+    }
+    /**
+     * 新增 操作紀錄
+     * @param [array] $addData
+     */
+    public function addMemberOperateLog($addData){
+        $CommonMemberOperateLog = D("CommonMemberOperateLog");
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            'member_id'=>$addData['member_id'],
+            'agent_id'=>$addData['agent_id'],
+            'agent_account'=>$addData['agent_account'],
+            'operateLog_class'=>$addData['operateLog_class'],
+            'operateLog_objectId'=>$addData['operateLog_objectId'],
+            'operateLog_objectAccount'=>$addData['operateLog_objectAccount'],
+            'operateLog_main'=>json_encode($addData['operateLog_main']),
+            'operateLog_createTime'=>$nowTime,
+            'operateLog_ip'=>$ip,
+            'operateLog_url'=>get_url(),
+        );
+        $return = $CommonMemberOperateLog->addMemberOperateLogData($data);
+    }
+    /*
+     * 語系檔陣列
+     */
+    protected function getLangArray(){
+
+
+        $langArray = array(
+            'zh-TW' => array(
+                'iconName' => 'icon-hk',
+                'cnName' => '繁體中文',
+                'langCode' => 'zh-TW'
+            ),
+            'zh-CN' => array(
+                'iconName' => 'icon-china',
+                'cnName' => '简体中文',
+                'langCode' => 'zh-CN'
+            ),
+            'en-US' => array(
+                'iconName' => 'icon-usa',
+                'cnName' => 'English',
+                'langCode' => 'en-US'
+            ),
+        );
+        $showLangArray = array();
+        foreach($langArray as $key => $value){
+            if($key != $_COOKIE['think_language']){
+                array_push($showLangArray,$langArray[$key]);
+            }
+            if($key == $_COOKIE['think_language']){
+                $this->assign('currentIconName',$value['iconName']);
+                $this->assign('currentCnName',$value['cnName']);
+            }
+        }
+        $this->assign('langStr',$_COOKIE['think_language']);//當前正在使用的版本標記
+        $this->assign('showLangArray',$showLangArray);
+    }
+}

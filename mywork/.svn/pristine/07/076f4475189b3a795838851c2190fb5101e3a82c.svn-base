@@ -1,0 +1,91 @@
+<html>
+<body>
+	新增資料
+	<form method="post" action="__APP__/MemberNote/formAddMemberNote">
+		<input type='hidden' name='className' value="process">
+		會員帳號 : <input type="text" name="addMemberAccount" id="member_account2" value="{$addMemberAccount}"><br>
+		處理的會員帳號 :<input type="text" name="addProcessAccount" ><br>
+		處理內容 :<input type="text" name="addProcessMain"><br>
+		處理備註1 :<textarea name="addProcessRemark1"></textarea><br>
+		處理備註2 :<textarea name="addProcessRemark2"></textarea><br>
+		<input type="submit" value="提交">
+	</form>
+	<div>
+		<form method="post" action="__APP__/MemberNote/noteProcess">
+			搜索帳號 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+			<input type="submit" value="查詢">
+		</form>
+	</div>
+	<table>
+		<tr>
+			<th>會員帳號</th>
+			<th>處理的會員帳號</th>
+			<th>處理內容</th>
+			<th>處理備註1</th>
+			<th>處理備註2</th>
+			<th>修改時間</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<if condition="$vo.process eq '1'">
+					<td>{$vo.memberAccount}</td>
+					<td>{$vo.processAccount}</td>
+					<td>{$vo.processMain}</td>
+					<td>{$vo.processRemark1}</td>
+					<td>{$vo.processRemark2}</td>
+					<td>{$vo.processModifyTime}</td>
+					<td>
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="process">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							<input type="hidden" name="setNote" value="0">
+							<input type="hidden" name="setProcessAccount" value="null">
+							<input type="hidden" name="setProcessMain" value="null">
+							<input type="hidden" name="setProcessRemark1" value="null">
+							<input type="hidden" name="setProcessRemark2" value="null">
+							<input type="submit" value="刪除">
+						</form>
+					</td>
+				</if>
+			</tr>
+			<tr>
+				<if condition="$vo.process eq '1'">
+					<td>修改資料</td>
+					<td colspan="4">
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="process">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							處理的會員帳號 :<input type="text" name="setProcessAccount">
+							處理內容 :<input type="text" name="setProcessMain">
+							處理備註1 :<textarea name="setProcessRemark1"></textarea>
+							處理備註2 :<textarea name="setProcessRemark2"></textarea>
+							<input type="submit" value="提交">
+						</form>
+					</td>
+				</if>
+			</tr>
+		</VOLIST>
+	</table>
+	<volist name="classArray" id="vo">
+  		<a href="__APP__/MemberNote/{$vo}">{$key}</a>&nbsp;
+  	</volist>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	$('#member_account').typeahead({
+		ajax: {
+			url: '__URL__/searchProcessMemberName',
+			timeout: 200
+		}
+	});
+	$('#member_account2').typeahead({
+		ajax: {
+			url: '__URL__/searchMemberName',
+			timeout: 200
+		}
+	});
+});
+</script>
+</body>
+</html>

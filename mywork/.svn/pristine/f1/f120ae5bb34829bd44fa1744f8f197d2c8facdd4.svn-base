@@ -1,0 +1,53 @@
+<?php
+/*
+ * 儲值加碼贈點
+ */
+class CommonEventStoreplusModel extends MemberModel {
+    protected $tableName = "common_event_storeplus";
+    protected $tableId = "info_id";
+    
+    /*
+     * 新增 儲值加碼贈點單
+     */
+    public function addEventStoreplusData($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        return $return;
+    }
+    /**
+     * 取得儲值加送資料
+     */
+    public function checkEventStoreplusDataById($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` WHERE `member_id` = '{$data['member_id']}'
+                AND `event_status` <> 1
+                AND `event_createTime` > '{$data['event_createTime']}'";
+        $return = $this->query($sql);
+        if($return  === false){
+            return false;
+        }
+        return $return;
+    }
+    
+}

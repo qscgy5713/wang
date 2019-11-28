@@ -1,0 +1,99 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+<if condition='$gameLink eq "false"'>
+ <div class="banner clearfix">
+     <div id="slider-banner-fullscreen" class="hc-slideshow hc-slideshow--fullscreen carousel slide carousel-fade" data-ride="carousel" data-interval="9000" data-wrap="true">
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <div class="fullscreen-slide">
+                <div class="background-image" style="background-image:url('__CSS__/images/bg2.jpg');"></div>
+                <div class="background-image-overlay"></div>
+                <div class="container">
+                  <div class="hc-slideshow-caption hc-slideshow-caption--large p-3 text-center w-100 md-hc-slideshow-caption">
+                    <h4 class="text-white text-capitalize animated fadeInDown hc-animation-delay-1000" style="font-size: 44px;">{$gameName}</h4>
+                    
+                   	<div class="animated fadeInUp hc-animation-delay-1250 row">
+                  		<div class="col-md-3 mr-auto ml-auto">
+                  			<div class="form-group">
+			                  <label for="exampleInputEmail1">電子錢包</label>
+			                  <input type="text" class="form-control" id="" value="{$memberWallet}" readonly>
+			                  
+			                </div>
+			                <div class="form-group">
+			                  <label for="exampleInputEmail1">遊戲點數</label>
+			                  <input type="text" class="form-control" id="memberBalance" value="{$memberBalance}" readonly>
+			                </div>
+                  		</div>
+                  	</div>
+                  	
+                    <a href="#" onclick="reloadPage()" class="btn btn-danger btn-lg animated fadeInLeft hc-animation-delay-1500">GO <i class="pl-2 fa fa-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> 
+<else/>
+	<iframe  class="md-gameEnter la-gameEnter" src="{$gameLink}" name="gameIframe" width="100%" height="100%" frameborder="0" scrolling="auto"></iframe>
+</if>
+
+
+
+<include file="Common:game_footer"/> 
+<script type="text/javascript">
+$(document).ready(function(){
+	if("{$gameLink}" == "false"){
+	    $("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+	    alert("{$errMessage}");
+	  }
+});
+function reloadPage(){
+	location.reload();
+}
+/* $(document).ready(function(){
+	var gamehtml = window.open('', 'gamePage');
+	  if("{$gameLink}" == "false"){
+	    gamehtml.close();
+	    $("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+	    alert("{$errMessage}");
+	  } else {
+	    gamehtml.document.location.href='{$gameLink}';
+	  }
+});
+function ajaxbutton(){
+	// 進入遊戲
+	if("{$gameLink}" == "false"){
+		var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+		window.location.reload();
+	} else {
+		window.open("{$gameLink}", '_blank');
+	}
+}*/
+/*
+function ajaxf(TransferMoney){
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxTransfer",
+        data:{TransferMoney:TransferMoney},
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		alert(dataObject.err);
+        	} else {
+        		//alert("轉移成功");
+        	}
+            //console.log(dataObject);
+        },
+		error:function(){
+			alert("網路錯誤");
+		}
+	});
+}*/
+</script>
+
+
+
+

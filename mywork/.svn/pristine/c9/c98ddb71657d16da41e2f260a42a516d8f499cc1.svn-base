@@ -1,0 +1,65 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+      	<div class="container pt20 pb50 bg-min-height" >
+            <div class="row">
+                <div class="col-md-12 mb40">
+                
+	                    <h2 class="text-center">託售點數</h2> 
+	                   
+	                    <hr>
+	                 <ul class="nav  tabs-circle-icon justify-content-center" role="tablist">
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t7" id="am-s1-link" aria-controls="home" role="tab" data-toggle="tab" aria-selected="true"> 
+				         		<i class="ti-shopping-cart-full"></i>
+				         		<h4 class="mt5 font15">確認託售內容</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link active show" href="#t8" id="am-s2-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-check"></i>
+				         		<h4 class="mt5 font15">完成託售申請</h4>
+				         </a>
+				        </li>
+				        
+				       
+				    </ul> 
+			        <div class="tab-content">
+			        <!-- 確認託售內容 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t7">
+			        		<div class="col-md-6 mr-auto ml-auto">
+                            
+                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp  text-center RegistPage_border animated" data-wow-duration="1.5s" data-wow-delay=".2s" style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	  已成功送出託售申請，<br>
+											請繼續完成託售<br>
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s2-link').click();">繼續</button>
+		                        </div>
+                        		
+                        	</div>
+                        </div>
+                        <!-- /確認託售內容 -->
+                        
+                        <!-- 完成託售申請 -->
+                        <div role="tabpanel" class="tab-pane fade active show" id="t8">
+                        	<div class="col-md-6 mr-auto ml-auto">
+                            
+                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp  text-center RegistPage_border animated" data-wow-duration="1.5s" data-wow-delay=".2s" style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	  已成功送出託售申請，<br>
+										此次託售紀錄請至<a href="#">會員中心--託售紀錄</a>查詢。<br>
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="self.location.href='__APP__/MemberIndex/index'">完成</button>
+		                        </div>
+                        		
+                        	</div>
+                        </div>
+                        <!-- /完成託售申請 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+ <include file="Common:footer"/>

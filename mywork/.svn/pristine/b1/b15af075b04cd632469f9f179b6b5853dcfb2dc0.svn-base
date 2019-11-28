@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,minimum=1.0,user-scalable=no">
+		<title>小牛</title>
+		<style>
+			body{
+				margin: 0;
+				padding: 0;
+			}
+			.down{
+				position: absolute;
+				top: 4.5rem;
+				/*left: 50%;*/
+				width: 3.2rem;
+				/*text-align: center;*/
+				height: 0.8rem;
+				border: 1px solid #ff407f;
+				border-radius: 0.12rem;
+				line-height: 0.9rem;
+				float: left;
+				left: 50%;
+				margin-left: -1.6rem;
+			}
+			.down img{
+				float: left;
+				width: 0.55rem;
+				margin-left: 0.2rem;
+				margin-top: 0.125rem;
+			}
+			.down span{
+				float: left;
+				font-size: 0.3rem;
+				color: #ff407f;
+				display: inline-block;
+				height: 0.8rem;
+				line-height: 0.8rem;
+				margin-left: 0.15rem;
+			}
+          	.prompt{
+				left: 0;
+				top: 0;
+				width: 100%;
+				position: absolute;
+				height: 100%;
+				background-color: rgba(0,0,0,0.5);
+				z-index: 999;
+				display: none;
+			}
+			.prompt img{
+				width: 95%;
+			}
+		</style>
+	</head>
+	<body>
+		<script>document.documentElement.style.fontSize = document.documentElement.clientWidth / 6.4 + 'px';</script>
+		<div style="text-align:center;margin-top:30%;">
+			<img src="__CSS__/downloadPage/logo_zh-tw.png">
+		</div>
+		<a href="__APP__/MemberIndex/download">
+				<p class="down" style="top: 6rem;">
+						<img src="__CSS__/downloadPage/kissiphone.png" alt="" />
+							<span>iPhone版下載</span>
+				</p>
+		</a>
+		<a href="https://dl.x599.net/apk/Xn591.apk">
+			<p class="down">
+				<img src="__CSS__/downloadPage/kissandroid.png" alt="" />
+				<span>Android版下載</span>
+			</p>
+		</a>
+		<div class="prompt" id="prompt">
+			<img src="./alert.png" alt="" />
+		</div>
+		<script>
+			is_weixn_qq();
+			function is_weixn_qq(){
+				var ua = navigator.userAgent.toLowerCase();
+				if(ua.match(/MicroMessenger/i)=="micromessenger") {
+					document.getElementById('prompt').style.display = 'block';
+				} else if (ua.match(/QQ/i) == "qq") {
+					return "QQ";
+    			}else{
+    				document.getElementById('prompt').style.display = 'none';
+    			}
+			}  
+		</script>
+	</body>
+</html>

@@ -1,0 +1,243 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div class="form-group row m-b-15">
+			<ol class="breadcrumb pull-left">
+				<VOLIST name="loginArray" id="vo">
+					<li class="breadcrumb-item">
+						<a onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')" href="#" >{$vo.agentAccount}</a>
+					</li>
+				</VOLIST>
+			</ol>
+		</div>
+		
+		
+		<form class="div-style" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<div class="form-group row m-b-15">
+				<div class="col-md-2 col-sm-2 m-b-2">
+					<input class="btn btn-pink f-s-13 p-5 m-b-2" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+					<input class="btn btn-pink f-s-13 p-5 m-b-2" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+					<input class="btn btn-pink f-s-13 p-5 m-b-2" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+					<input class="btn btn-pink f-s-13 p-5 m-b-2" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+					<input class="btn btn-pink f-s-13 p-5 m-b-2" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+					<input class="btn btn-pink f-s-13 p-5 m-b-2" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+					
+				</div>
+				<div class="col-md-10 col-sm-10 m-b-2"> 
+					<input id="startTime" name="startTime" type="text" class="form-control div-style" style="width: 175px;" value="{$startTime}"/> 至
+					<input id="endTime"   name="endTime" type="text" class="form-control div-style" style="width: 175px;" value="{$endTime}"/>
+					<input id="agentTree" type='hidden' name='agentTree' value='{$comeAgentTree}'>
+					<input id="agentAccount" type='hidden' name='agentAccount' value='{$comeAgentAccount}'>
+					<input class="btn btn-pink f-s-13 p-5 m-b-1" type='submit' value='查詢'>
+					
+				</div>
+			</div>
+			
+		</form>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">代理帳務</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="agentTable" class="table table-striped m-b-0">
+							   <thead>
+							   	 <tr>
+								   	 <td colspan="2" class="">總計</td>
+								   	 <th>{$agentTotalBettingMoney}</th>
+									 <th>{$agentTotalSurplus}</th>
+									 <th>{$agentTotalEffective}</th>
+									 <th>{$agentTotalBetNumber}</th>
+									 <th>{$agentTotalGiven}</th>
+									 <th>{$agentTotalTopMoney}</th>
+									 <th></th>
+									 <th>{$agentTotalRatioMoney}</th>
+									 <th></th>
+									 <th>{$agentTotalUnderMoney}</th>
+							   	 </tr>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>代理</th>
+				                      <th>投注金額</th>
+				                      <th>輸贏金額</th>
+				                      <th>有效注額</th>
+				                      <th>注單數量</th>
+				                      <th>贈點</th>
+				                      <th>上級金額</th>
+				                      <th>佔成</th>
+				                      <th>佔成金額</th>
+				                      <th>下級佔成</th>
+				                      <th>下級金額</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="agentArray" id="vo" empty="">
+										<tr>
+											<td>{$i}</td>
+											<td>
+												<input class="btn btn-pink f-s-13 p-5" type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+											</td>
+											<td>{$vo.sumBettingMoney}</td>
+											<td>{$vo.sumSurplus}</td>
+											<td>{$vo.sumEffective}</td>
+											<td>{$vo.sumBetNumber}</td>
+											<td>{$vo.givenMoney}</td>
+											<td>{$vo.topMoney}</td>
+											<td>{$vo.agentRatio}</td>
+											<td>{$vo.ratioMoney}</td>
+											<td>{$vo.underRatio}</td>
+											<td>{$vo.underMoney}</td>
+										</tr>
+									</VOLIST>
+										<tr><td id="agentShowMessage" colspan="12" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">{$comeAgentAccount} 會員帳務</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="memberTable" class="table table-striped m-b-0">
+							   <thead>
+							   	 <tr>
+								   	 <td colspan="2" class="">總計</td>
+								   	 <th>{$memberTotalBettingMoney}</th>
+									 <th>{$memberTotalSurplus}</th>
+									 <th>{$memberTotalEffective}</th>
+									 <th>{$memberTotalBetNumber}</th>
+									 <th>{$memberTotalGiven}</th>
+									 <th>{$memberTotalTopMoney}</th>
+									 <th></th>
+									 <th>{$memberTotalRatioMoney}</th>
+							   	 </tr>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>會員</th>
+				                      <th>投注金額</th>
+				                      <th>輸贏金額</th>
+				                      <th>有效注額</th>
+				                      <th>注單數量</th>
+				                      <th>贈點</th>
+				                      <th>上級金額</th>
+				                      <th>代理佔成</th>
+				                      <th>佔成金額</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="memberArray" id="vo" empty="">
+										<tr>
+											<td>{$i}</td>
+											<td>{$vo.memberAccount}</td>
+											<td>{$vo.sumBettingMoney}</td>
+											<td>{$vo.sumSurplus}</td>
+											<td>{$vo.sumEffective}</td>
+											<td>{$vo.sumBetNumber}</td>
+											<td>{$vo.topMoney}</td>
+											<td>{$vo.agentRatio}</td>
+											<td>{$vo.ratioMoney}</td>
+										</tr>
+									</VOLIST>
+									<tr><td id="memberShowMessage" colspan="10" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/>
+
+<script>
+$(function(){
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+    
+    if($("#agentTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#agentShowMessage").show()
+	}
+    if($("#memberTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#memberShowMessage").show()
+	}
+    
+    $("#"+"財務部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function formAgent(agentAccount,agentTree){
+	$("#agentAccount").val(agentAccount);
+	$("#agentTree").val(agentTree);
+	$("#formInquire").submit();
+}
+</script>
+	

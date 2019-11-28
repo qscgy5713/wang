@@ -1,0 +1,32 @@
+<?php
+/*
+ * 代理加盟
+ */
+class CommonAgentAgentjoinModel extends AgentModel {
+    /*
+     * INSERT 代理加盟  Data
+     */
+    public function addAgentjoinData($data){
+        $sql = "INSERT INTO `common_agent_agentjoin` ";
+        $sqlKey = '';
+        $sqlValues = '';
+        foreach ($data as $key => $value) {
+            if(empty($sqlKey)){
+                $sqlKey = "(`".$key."`";
+                $sqlValues = "('".$value."'";
+            } else {
+                $sqlKey .= ",`".$key."`";
+                $sqlValues .= ",'".$value."'";
+            }
+        }
+        $sqlKey .= ")";
+        $sqlValues .= ")";
+        $sql .= $sqlKey." VALUES ".$sqlValues.";";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return true;
+    }
+}

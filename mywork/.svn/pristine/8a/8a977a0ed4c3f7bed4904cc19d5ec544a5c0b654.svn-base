@@ -1,0 +1,37 @@
+<?php
+/**
+ * 會員統計資料
+ */
+class CommonMemberStatisticsModel extends AdminModel{
+	protected $tableName = "common_member_statistics";
+	/**
+	 * 紀錄上線人數
+	 */
+	public function duplicateData($data){
+		$sql = "INSERT INTO `{$this->tableName}`";
+		$insKey = "";
+		$insVal = "";
+		$dupSql = "";
+		foreach ($data as $key => $value) {
+			if(empty($insKey)){
+				$insKey = "(`{$key}`";
+			} else {
+				$insKey .= ",`{$key}`";
+			}
+			if(empty($insVal)){
+				$insVal = "('{$value}'";
+			} else {
+				$insVal .= ",'{$value}'";
+			}
+			if(empty($dupSql)){
+				$dupSql = "`{$key}`='{$value}'";
+			} else {
+				$dupSql .= ",`{$key}`='{$value}'";
+			}
+		}
+		$sql .= "{$insKey}) VALUES {$insVal}) ON DUPLICATE KEY UPDATE {$dupSql}";
+
+		$return = $this->query($sql);
+		return $return;
+	}
+}

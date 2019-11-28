@@ -1,0 +1,87 @@
+<html>
+<body>
+	新增資料
+	<form method="post" action="__APP__/MemberNote/formAddMemberNote">
+		<input type='hidden' name='className' value="problem">
+		會員帳號 : <input type="text" name="addMemberAccount" id="member_account2" value="{$addMemberAccount}"><br>
+		對應帳號 :<input type="text" name="addProblemAccount"><br>
+		處理方式 :<input type="text" name="addProblemProcess"><br>
+		備註 :<textarea name="addProblemRemark"></textarea><br>
+		<input type="submit" value="提交">
+	</form>
+	<div>
+		<form method="post" action="__APP__/MemberNote/noteProblem">
+			搜索帳號 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+			<input type="submit" value="查詢">
+		</form>
+	</div>
+	<table>
+		<tr>
+			<th>會員帳號</th>
+			<th>對應帳號</th>
+			<th>處理方式</th>
+			<th>備註</th>
+			<th>修改時間</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<if condition="$vo.problem eq '1'">
+					<td>{$vo.memberAccount}</td>
+					<td>{$vo.problemAccount}</td>
+					<td>{$vo.problemProcess}</td>
+					<td>{$vo.problemRemark}</td>
+					<td>{$vo.problemModifyTime}</td>
+					<td>
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="problem">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							<input type="hidden" name="setNote" value="0">
+							<input type="hidden" name="setProblemAccount" value="null">
+							<input type="hidden" name="setProblemProcess" value="null">
+							<input type="hidden" name="setProblemRemark" value="null">
+							<input type="submit" value="刪除">
+						</form>
+					</td>
+				</if>
+			</tr>
+			<tr>
+				<if condition="$vo.problem eq '1'">
+						<td>修改資料</td>
+					
+					<td colspan="4">
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="problem">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							對應帳號 :<input type="text" name="setProblemAccount">
+							處理方式 :<input type="text" name="setProblemProcess">
+							備註 :<textarea name="setProblemRemark"></textarea>
+							<input type="submit" value="提交">
+						</form>
+					</td>
+				</if>
+			</tr>
+		</VOLIST>
+	</table>
+	<volist name="classArray" id="vo">
+  		<a href="__APP__/MemberNote/{$vo}">{$key}</a>&nbsp;
+  	</volist>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+ 	$('#member_account').typeahead({
+   		ajax: {
+     		url: '__URL__/searchProblemMemberName',
+      		timeout: 200
+    }
+ 	 });
+  	$('#member_account2').typeahead({
+		ajax: {
+			url: '__URL__/searchMemberName',
+			timeout: 200
+		}
+	});
+});
+</script>
+</body>
+</html>

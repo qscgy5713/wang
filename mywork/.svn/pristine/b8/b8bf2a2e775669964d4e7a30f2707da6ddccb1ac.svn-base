@@ -1,0 +1,39 @@
+.m-l-auto{
+	margin-left: auto !important;
+}
+.card-shadow{
+	box-shadow: 2px 2px 7px #11111154;
+}
+.div-style{
+   display: initial !important;
+}
+.div-style-contents{
+	display: contents !important;
+}
+.div-style-inline-flex{
+	/*display: -webkit-inline-box !important;*/
+	display: inline-flex;
+}
+
+.mq-item {
+    font-size: 15px;
+    font-weight: 100;
+    color: #000000;
+}
+.mq-height{
+	float: left;
+    padding: 10px 20px;
+    height: 50px;
+    /*width: 77%;*/
+    font-size: 18px;
+    text-decoration: none;
+}
+
+.mq-sp-style{
+	white-space: nowrap;
+}
+
+
+
+
+

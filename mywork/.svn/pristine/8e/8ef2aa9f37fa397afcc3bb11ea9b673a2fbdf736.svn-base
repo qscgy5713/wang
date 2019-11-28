@@ -1,0 +1,68 @@
+<?php
+/*
+ * 會員返水紀錄
+ */
+class CommonMemberBackwaterLogModel extends MemberModel {
+    protected $tableName = "common_member_backWater_log";
+    protected $tableId = "backWaterLog_id";
+    /*
+     * 取得 狀態值 
+     */
+    public function getMemberBackWaterLogStatusStr($data){
+        $return = "";
+        switch ($data){
+            case '0':
+                $return = "上點失敗";
+                break;
+            case '1':
+                $return = "上點成功";
+                break;
+            default:
+                $return = "參數錯誤";
+                break;
+        }
+        return $return;
+    }
+    /*
+     * 取得 總頁數 資料
+     * 返水紀錄 使用
+     */
+    public function getTotalNumberBackWaterLogData($data){
+        
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        
+        $sql = "SELECT COUNT(*) AS totalNumber
+                FROM `{$this->tableName}` a
+                JOIN `game_info` b ON (a.`game_id` = b.`game_id`)
+                WHERE `backWaterLog_createTime` > '{$data['backWaterLog_createTime']}'
+                AND `member_id` = '{$data['member_id']}'
+                ORDER BY `backWaterLog_createTime` DESC;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 會員 返水紀錄
+     * 返水紀錄 使用
+     */
+    public function getMemberBackWaterLogData($data){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+        
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `game_info` b ON (a.`game_id` = b.`game_id`)
+                WHERE `backWaterLog_createTime` > '{$data['backWaterLog_createTime']}'
+                AND `backWaterLog_status` = 1
+                AND `member_id` = '{$data['member_id']}'
+                ORDER BY `backWaterLog_createTime` DESC {$pageSql}";
+        $return = $this->query($sql);
+        return $return;
+        
+    }
+}

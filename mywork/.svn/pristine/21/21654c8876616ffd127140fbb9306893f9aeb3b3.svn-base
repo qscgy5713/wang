@@ -1,0 +1,94 @@
+<include file="Common:header"/>
+<div class="row">
+	<div class="col-lg-12 ui-sortable">
+		<!-- begin panel -->
+		<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+			<!-- begin panel-heading -->
+			<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+				<div class="panel-heading-btn">
+					<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+				</div>
+				<h4 class="panel-title f-s-15">遊戲帳務</h4>
+			</div>
+			<!-- end panel-heading -->
+
+			<!-- begin panel-body -->
+			<div class="panel-body">
+				<!-- begin table-responsive -->
+				<div class="table-responsive">
+					<table class="table table-striped m-b-0">
+					   <thead>
+					   	 <tr>
+						   	 <td colspan="2" class="">總計</td>
+						   	 <th>{$gameTotalBettingMoney}</th>
+							 <th>{$gameTotalSurplus}</th>
+							 <th>{$gameTotalEffective}</th>
+							 <th>{$gameTotalBetNumber}</th>
+					   	 </tr>
+	                      <tr>
+		                      <th>序</th>
+		                      <th>遊戲名稱</th>
+		                      <th>投注金額</th>
+		                      <th>輸贏金額</th>
+		                      <th>有效注額</th>
+		                      <th>注單數量</th>
+	                      </tr>
+		                </thead>
+						<tbody>
+							<VOLIST name="gameShowArray" id="vo" empty="$gameShowEmpty">
+								<tr>
+									<td>{$i}</td>
+									<td>
+										<input type='button' value="{$key}" class="btn btn-info f-s-13 p-5" onClick="openGamemodal('{$vo.game_code}','{$comeAgentTree}','{$key}')">
+									</td>
+									<td>{$vo.allBettingMoney}</td>
+									<IF condition='$vo.allSurplus lt 0'>
+										<td style='color:red;'>{$vo.allSurplus}</td>
+									<ELSE/>
+										<td style='color:green;'>{$vo.allSurplus}</td>
+									</IF>
+									<td>{$vo.allEffective}</td>
+									<td>{$vo.allBetNumber}</td>
+								</tr>
+							</VOLIST>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="gameDetailDiv" style="display: none;max-hight:800px">
+	<div class="modal-dialog"style="max-width: 1172px;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">
+					<span id='gameName'></span>明細
+				</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			</div>
+			<div class="modal-body modal-body-s">
+				<iframe id="gameDetailIframe" style="width: 100%;min-height: 700px;" src="__APP__/Common/loading" frameborder="0" scrolling="no"></iframe>
+			</div>
+			<div class="modal-footer">
+			</div>
+		</div>
+	</div>
+</div>
+
+<include file="Common:footer"/>
+<script type="text/javascript">
+
+$(function () { $('#gameDetailDiv').on('hide.bs.modal', function () {
+	 $("#gameDetailIframe").attr("src", "__APP__/Common/loading");
+ })
+});
+
+function openGamemodal(gameCode,AgentTree,gameName){
+	$('#gameName').html(gameName);
+	$('#gameDetailDiv').modal('show');
+	$("#gameDetailIframe").attr("src", "__APP__/GameReport/eachGameDetail&startTime={$startTime}&endTime={$endTime}&agentTree=1,&memberId={$memberId}&gameCode="+gameCode);
+}
+
+</script>

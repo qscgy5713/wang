@@ -1,0 +1,19 @@
+<?php
+/*
+ * 簡訊預設
+ */
+class KotsmsMainModel extends MemberModel {
+    protected $tableName = "kotsms_main";
+    protected $tableId = "main_code";
+    
+    public function getKotsmsMainData($data){
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `main_code` = '{$data['main_code']}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+}

@@ -1,0 +1,193 @@
+<include file="Common:header"/>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div id="content" class="content">
+
+		<form id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<input type="hidden" id="pageNumber" name="pageNumber" value="{$pageNumber}">
+		</form>
+	  	<p>
+            <button id="add_btn" class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">新增訊息預設</button>
+        </p>
+		<div class="modal fade add-page" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+			<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title">新增訊息預設</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/NewsletterNotification/addFormNewsletterData'>
+						<div class="modal-body">
+	                        <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">訊息識別碼 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" name="addMessageCode">
+								</div>
+							</div>
+	                       	<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">訊息內容 :</label>
+								<div class="col-md-8 col-sm-8">
+									<textarea class="form-control" name="addMessageMain"></textarea>
+								</div>
+							</div>
+	                       	<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+						</div>
+                  	 </div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">訊息通知</h4>
+					</div>
+
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>訊息識別碼</th>
+										<th>訊息內容</th>
+										<th>建立時間</th>
+										<th>修改時間</th>
+										<th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<volist name="showArray" id="vo" empty="$showEmpty">
+			                        	<tr>
+				                        	<td>{$vo.messageCode}</td>
+											<td>{$vo.messageMain}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.modifyTime}</td>
+											<td>
+												<a onclick="openmodal('setModal','{$vo.messageCode}','{$vo.messageMain}')"><i class="fas fa-wrench fa-fw icon-size"></i></a>
+				                                <form id="delform{$vo.messageCode}" class="div-style" method="post" action='__APP__/NewsletterNotification/delFormNewsletterData'>
+				                                	<input type="hidden" value="{$vo.messageCode}" name="delMessageCode">
+				                                	<a onclick="submit('delform{$vo.messageCode}','{$vo.messageCode}')"><i class="fas fa-trash fa-fw icon-size"></i></a>
+				                                </form>
+			                                </td>
+										</tr>
+									</volist>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<if condition="$pageNumber neq ''">
+	                 	<div class="row">
+		                  	<div class="main col-lg-12">
+		                  		<nav aria-label="Page navigation">
+					                <ul class="pagination justify-content-center">
+
+					                <if condition="$pageNumber-1 neq 0">
+					                 	<li id="" class="page-item"><a class="page-link" href="#" onClick="goPage('1')">第一頁</a></li>
+					                 	<li class="page-item">
+					                    <a class="page-link" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+					                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+					                      <span class="sr-only">Previous</span>
+					                    </a>
+					                  	</li>
+					                </if>
+
+				                  	<volist name="pageArray" id="vo" >
+		                                <IF condition="$pageNumber eq $vo" >
+		                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+		                                <else/>
+		                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+		                                </IF>
+	                            	</volist>
+
+				                  	<if condition="$pageNumber+1 elt $totalPage ">
+					                 	 <li class="page-item">
+					                    <a class="page-link" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+					                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+					                      <span class="sr-only">Next</span>
+					                    </a>
+					                 	 </li>
+					                  	<li id="{$totalPage}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$totalPage}')">最末頁</a></li>
+				                  	</if>
+					                </ul>
+					     	    </nav>
+		                  	</div>
+	                  	</div>
+	               	</if>
+				</div>
+				<!-- end panel -->
+			</div>
+        </div>
+
+        <div class="modal fade" id="setModal" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 修改訊息訊息</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/NewsletterNotification/setFormNewsletterData'>
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">訊息識別碼 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" value="" name="setmessageCode" id="setmessageCode">
+									<input type="hidden" value="" name="setmessageCode1" id="setmessageCode1">
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">訊息內容 :</label>
+								<div class="col-md-8 col-sm-8">
+									<textarea class="form-control" type="text" value="" name="setmessageMain" id="setmessageMain"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" name="okbtn" class="btn btn-info f-s-15">確認修改</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+function openmodal(modal_id,vo_code,vo_main){
+	$('#'+modal_id).modal('show');
+	$('#setmessageMain').val(vo_main);
+	$('#setmessageCode').val(vo_code);
+	$('#setmessageCode1').val(vo_code);
+}
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+});
+
+function submit(formId,vo_class){
+ 	if(confirm('是否刪除 訊息識別碼"'+vo_class+'" 的訊息')){
+	 $("#"+formId).submit();
+	} else {
+		alert('已取消');
+	}
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

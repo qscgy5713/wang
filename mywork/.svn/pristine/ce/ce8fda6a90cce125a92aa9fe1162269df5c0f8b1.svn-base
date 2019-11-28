@@ -1,0 +1,458 @@
+<?php
+/*
+ * SP體育抓帳
+ * 抓帳限制: 
+ *     每次長度:
+ *     每次間隔:
+ *     最遠時間:
+ */
+class ScriptGameReportSpAction extends ScriptGameReportAction {
+    
+    protected function _initialize() {
+        $this->gameCode = 'Sp';
+        $request = $this->getRequest();
+        if (isset($request['startTime']) && isset($request['endTime'])){
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+            if(strtotime($this->endTime) > (strtotime($this->startTime)+(60*60*24))){
+                $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*24));
+                $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*(24+24)));
+                
+                $this->allStartTime = $this->startTime;
+                $this->allEndTime = $this->endTime;
+                
+                $this->endTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*24));
+            }
+        } else {  //沒給時的預設抓帳起始
+            $nowTs = time();
+            if ($nowTs < strtotime(date('Y-m-d').' 12:00:00')) {  //未超過當日12點: 前日到當日
+                $this->startTime = date('Y-m-d', $nowTs-60*60*24*1);
+                $this->endTime = date('Y-m-d', $nowTs);
+            } else {  //已超過當日12點: 當日到明日
+                $this->startTime = date('Y-m-d', $nowTs);
+                $this->endTime = date('Y-m-d', $nowTs+60*60*24*1);
+            }
+        }
+        
+        if(isset($request['allStartTime']) && isset($request['allEndTime'])){
+            $this->allStartTime = $request['allStartTime'];
+            $this->allEndTime = $request['allEndTime'];
+            
+            if(strtotime($this->endTime) >= strtotime($this->allEndTime)){
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+                
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+            } else {
+                $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*24));
+                $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*(24+24)));
+            }
+        }
+
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function index(){
+        if (!$this->power){exit();}
+
+        $GameReportData = D("GameReportData");
+        $GameModel = D("Game".$this->gameCode);
+        if (!method_exists($GameModel,'getGameRecord')){
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'無此代號(Err000)</span>');
+            $this->display();
+            exit();
+        }
+        
+        $this->getSpGameReportData($err);//抓前一天的
+        //if ($this->startTime != date('Y-m-d', time()) && $this->endTime != date('Y-m-d', //strtotime('+1 days'))){
+        //    $this->setTime(date('Y-m-d', strtotime($this->endTime)),date('Y-m-d', strtotime('+1 days',strtotime($this->endTime))));//修改時間
+        //    $this->getSpGameReportData($err);
+        //}
+
+
+        //設定抓總結的起始時間
+        $this->reportStartTime = $this->getBetDate($this->startTime).' 00:00:00';
+        $this->reportEndTime = $this->getBetDate($this->endTime).' 23:59:59';
+
+        $return = $this->getReportApi();
+        if ($return === false){
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err002) Err=>'.$this->err.'</span>');
+            $this->display();
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        $this->assign("detailNumber",count($this->allDetailArray));//更新總注單
+        $this->assign("allDetailArray",$this->allDetailArray);
+        
+        $this->assign("reportNumber",count($this->allReportArray));//更新總統整
+        $this->assign("allReportArray",$this->allReportArray);
+        
+        $this->assign("status","<span style='color:Blue;'>".$this->gameCode.$this->success.'</span>');
+        $this->display();
+    }
+    
+    /*
+     * 抓帳
+     */
+    protected function getSpGameReportData(&$err=''){
+        $this->timeStr .= ((!empty($this->timeStr))? '<BR>' : '').$this->startTime.' ~ '.$this->endTime;
+        
+        $GameModel = D("Game".$this->gameCode);
+
+        $accLevel = $GameModel::SP_ACCOUNT_LEVEL_AGENT;
+        $arrParams = array(
+            'begin_date' => $this->startTime,
+            'end_date' => $this->endTime,
+            //'array_user_names' => $arrTarAccs,
+            'account_level' => $accLevel,
+        );
+
+        $arrBetSums = array();
+        $arrBetSums = $GameModel->getTotalReportWithMembers($arrParams, $err);
+        if($arrBetSums === false){
+            //紀錄錯誤到Db
+            $this->err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')).$err;//抓總結發生錯誤
+            return false;
+        }
+        $arrUserIds = self::__getUniqueGameIdsFromBetSums($arrBetSums);
+/*
+      'begin_date' => array('required'=>1,),
+      'end_date' => array('required'=>1,),
+      'array_user_names' => array('required'=>1,),
+*/
+        $data = array(
+            'begin_date' => $this->startTime,
+            'end_date' => $this->endTime,
+            'array_user_names' => $arrUserIds,
+        );
+        $arrRawBets = $GameModel->getGameRecord($data,$err);
+        if ($arrRawBets === false){
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err001) Err=>'.$err.'</span>');
+            $this->display();
+            exit();
+        }
+
+        foreach ($arrRawBets as $bk => $bv){
+            //把遊戲帳號 加入 搜尋會員帳號陣列 Start
+            if (!in_array($bv['m_id'], $this->allMemberGameAccount)){
+                array_push($this->allMemberGameAccount, $bv['m_id']);
+            }
+            //把遊戲帳號 加入 搜尋會員帳號陣列 End
+            
+            $arrMbAndSb = self::_splitSingleBet($bv);
+            $data = array(
+                "detail_id" => $bv['sn'],
+                "detail_gameAccount" => $bv['m_id'],
+                "detail_createTime" => strtotime($bv['m_date']),
+                "detail_bettingMoney" => $bv['gold'],
+                "detail_surplus" => $bv['result_gold'],
+                "detail_effective" => $bv['bet_gold'],
+                "detail_needBackWater"=> 0,
+                "detail_isBackWater" =>0,
+                "detail_dataInJson" => $arrMbAndSb['dataInJson'],  //json_encode($dataInJson, JSON_UNESCAPED_UNICODE),
+                "detail_subbetInJson" => $arrMbAndSb['subbetInJson'],  //json_encode($arrSubbets, JSON_UNESCAPED_UNICODE),
+            );
+            $data["detail_orderDate"] = strtotime($this->getBetDate($bv['count_date']).' 12:00:00');
+            array_push($this->allDetailArray, $data);
+        }
+    }
+
+    /*-----------------------------------------------
+     * 將單一筆注單(含子注單或不含)轉為注單、子注單結構方便寫入，然後傳回
+     */
+    protected function _splitSingleBet($argBet) {
+        $arrMainBet = array();
+        $arrSubbets = array();
+        //Dbgr::preout($argBet);
+
+        if (isset($argBet['detail'])&&is_array($argBet['detail'])&&sizeof($argBet['detail'])) { //含子注單
+            $m_id        = $argBet["m_id"];      //string(6) "kkk588"
+            //$m_name           = $argBet["m_name"];    //string(7) "leeeeeo"
+            $up_no1      = $argBet["up_no1"];    //string(7) "fortune"
+            $up_no2      = $argBet["up_no2"];    //string(8) "BALZYIKK"
+            $sn          = $argBet["sn"];            //string(15) "121416534593288"
+            $m_date      = $argBet["m_date"];    //string(19) "2016-12-14 16:53:45"
+            $count_date  = $argBet["count_date"];    //string(10) "2016-12-15"
+            $team_no     = $argBet["team_no"];  //string(2) "12"
+            $gold        = $argBet["gold"];       //string(3) "100"
+            $bet_gold    = $argBet["bet_gold"];  //string(3) "100"
+            $sum_gold    = $argBet["sum_gold"];  //string(4) "0.00"
+            $result_gold = $argBet["result_gold"];  //string(7) "-100.00"
+            $status      = $argBet["status"];            //string(1) "l"
+            //$gType             = $argBet["gType"];     //string(1) "0"
+            $matter      = $argBet["matter"];    //string(136) "第五場~第一名小數點後一位 4.5 小 0.940" 下注字串
+            $end         = $argBet["end"];       //string(1) "1"
+            $now         = $argBet["now"];       //string(1) "0"
+            $detail      = $argBet["detail"];    //子注單們
+            $matter = strip_tags($matter, '<br>');
+            $matter = str_replace('&nbsp;',' ',$matter);
+            $arrMatters = explode('<br>',$matter);
+            //Dbgr::preout($arrMatters);
+            $idxMatter = 0;
+
+            foreach ($detail as $sb) {
+                $fashion     = $sb["fashion"];  //string(1) "2"
+                $g_type      = $sb["gType"];  //string(1) "0" 多重子注單內只有gType沒有g_type
+                $league      = $sb["league"];     //string(22) "香港賽馬~跑馬地"
+                $main_team   = $sb["main_team"];            //string(37) "第五場~第一名小數點後一位"
+                $visit_team  = $sb["visit_team"];        //string(0) ""
+                $mv_set      = $sb["mv_set"];                        //string(1) "1"
+                $mode        = $sb["mode"];                  //string(0) ""
+                $chum_num    = $sb["chum_num"];  //string(3) "4.5"
+                $compensate  = $sb["compensate"];    //string(5) "0.940"
+                $score1      = $sb["score1"];            //string(1) "8"
+                $score2      = $sb["score2"];            //string(0) ""
+                $status_note = $sb["status_note"];  //string(1) "Y"
+                $end         = $sb["end"];       //string(1) "1"
+
+                $sbMatter       = $arrMatters[$idxMatter+1];
+                $idxMatter += 2;
+    /*
+                ["team_no"]=>                string(2) "10"
+                ["fashion"]=>                string(1) "2"
+                ["gType"]=>              string(1) "0"
+                ["league"]=>                 string(21) "意大利職業聯賽"
+                ["main_team"]=>              string(15) "瑪撤拉塔瑟"
+                ["visit_team"]=>                 string(12) "隆美辛尼"
+                ["mv_set"]=>                 string(1) "0"
+                ["mode"]=>               string(3) "-50"
+                ["chum_num"]=>               string(5) "2/2.5"
+                ["compensate"]=>                 string(5) "0.950"
+                ["score1"]=>                 string(1) "1"
+                ["score2"]=>                 string(1) "0"
+                ["status_note"]=>                string(1) "Y"
+                ["end"]=>                string(1) "1"
+    */
+                $arrMainBet['dataInJson'] = json_encode(array(
+                    'sn' => $sn,
+                    'm_id' => $m_id,
+                    'up_no1' => $up_no1,
+                    'up_no2' => $up_no2,
+                    'm_date' => $m_date,
+                    'count_date' => $count_date,
+                    'team_no' => $team_no,
+                    'fashion' => $fashion,
+                    'gold' => $gold,
+                    'bet_gold' => $bet_gold,
+                    'result_gold' => $result_gold,
+                    'status' => $status,
+                    'status_note' => $status_note,
+                    'end' => $end,
+                    'now' => $now,
+                ), JSON_UNESCAPED_UNICODE);
+
+                $subbet = array(
+                    'sn' => $sn ,
+                    'fashion' => $fashion ,
+                    'g_type' => $g_type ,
+                    'league' => $league ,
+                    'main_team' => $main_team,
+                    'visit_team' => $visit_team,
+                    'matter' => $sbMatter,
+                    'mv_set' => $mv_set ,
+                    'mode' => $mode ,
+                    'chum_num' => $chum_num ,
+                    'compensate' => $compensate,
+                    'score1' => $score1 ,
+                    'score2' => $score2 ,
+                    'status_note' => $status_note,
+                    'end' => $end ,
+                );
+                //$subbetId = createSubbetId($subbet);
+                //$subbet['subbet_id'] = $subbetId;
+                $arrSubbets[] = $subbet;
+            }
+        } else {    //不含子注單
+            $m_id           = $argBet["m_id"];      //string(6) "kkk588"
+            //$m_name           = $argBet["m_name"];    //string(7) "leeeeeo"
+            $up_no1         = $argBet["up_no1"];    //string(7) "fortune"
+            $up_no2         = $argBet["up_no2"];    //string(8) "BALZYIKK"
+            $sn                 = $argBet["sn"];            //string(15) "121416534593288"
+            $m_date         = $argBet["m_date"];    //string(19) "2016-12-14 16:53:45"
+            $count_date = $argBet["count_date"];    //string(10) "2016-12-15"
+            $team_no        = $argBet["team_no"];   //string(2) "12"
+            $fashion        = $argBet["fashion"];   //string(1) "2"
+            $g_type         = $argBet["g_type"];     //string(1) "0"
+            $league         = $argBet["league"];     //string(22) "香港賽馬~跑馬地"
+            $gold               = $argBet["gold"];       //string(3) "100"
+            $bet_gold       = $argBet["bet_gold"];  //string(3) "100"
+            $sum_gold       = $argBet["sum_gold"];  //string(4) "0.00"
+            $result_gold = $argBet["result_gold"];  //string(7) "-100.00"
+            $main_team   = $argBet["main_team"];            //string(37) "第五場~第一名小數點後一位"
+            $visit_team = $argBet["visit_team"];        //string(0) ""
+            $mv_set         = $argBet["mv_set"];                        //string(1) "1"
+            $mode               = $argBet["mode"];                  //string(0) ""
+            $chum_num       = $argBet["chum_num"];  //string(3) "4.5"
+            $compensate = $argBet["compensate"];    //string(5) "0.940"
+            $status         = $argBet["status"];            //string(1) "l"
+            $score1         = $argBet["score1"];            //string(1) "8"
+            $score2         = $argBet["score2"];            //string(0) ""
+            $status_note = $argBet["status_note"];  //string(1) "Y"
+            //$gType             = $argBet["gType"];     //string(1) "0"
+            $matter         = $argBet["matter"];    //string(136) "第五場~第一名小數點後一位 4.5 小 0.940"
+            $end                = $argBet["end"];        //string(1) "1"
+            $now                = $argBet["now"];        //string(1) "0"
+            $matter         = $argBet["matter"];         //string(?) "~@%$#^%$&^" 下注字串
+            $matter = strip_tags($matter, '<br>');
+            $matter = str_replace('&nbsp;',' ',$matter);
+            $arrMatters = explode('<br>',$matter);
+            //Dbgr::preout($arrMatters);
+
+            $arrMainBet['dataInJson'] = json_encode(array(
+                'sn' => $sn,
+                'm_id' => $m_id,
+                'up_no1' => $up_no1,
+                'up_no2' => $up_no2,
+                'm_date' => $m_date,
+                'count_date' => $count_date,
+                'team_no' => $team_no,
+                'fashion' => $fashion,
+                'gold' => $gold,
+                'bet_gold' => $bet_gold,
+                'result_gold' => $result_gold,
+                'status' => $status,
+                'status_note' => $status_note,
+                'end' => $end,
+                'now' => $now,
+            ), JSON_UNESCAPED_UNICODE);
+
+            $subbet = array(
+                'sn' => $sn ,
+                'fashion' => $fashion ,
+                'g_type' => $g_type ,
+                'league' => $league ,
+                'main_team' => $main_team,
+                'visit_team' => $visit_team,
+                'matter' => $arrMatters[1],
+                'mv_set' => $mv_set ,
+                'mode' => $mode ,
+                'chum_num' => $chum_num ,
+                'compensate' => $compensate,
+                'score1' => $score1 ,
+                'score2' => $score2 ,
+                'status_note' => $status_note,
+                'end' => $end ,
+            );
+            //$subbetId = createSubbetId($subbet);
+            //$subbet['subbet_id'] = $subbetId;
+            $arrSubbets[] = $subbet;
+        }
+
+        $arrMainBet['subbetInJson'] = json_encode($arrSubbets, JSON_UNESCAPED_UNICODE);
+
+        return $arrMainBet;
+    }  //--function _splitSingleBet
+
+    /*************************************** ex.SP一筆注單
+    array(30) {
+        ["m_id"]=>       string(6) "kkk588"
+        ["m_name"]=>         string(7) "leeeeeo"
+        ["up_no1"]=>         string(7) "fortune"
+        ["up_no2"]=>         string(8) "BALZYIKK"
+        ["sn"]=>         string(15) "121417564376402"
+        ["m_date"]=>         string(19) "2016-12-14 17:56:43"
+        ["count_date"]=>         string(10) "2016-12-15"
+        ["team_no"]=>        string(2) "10"
+        ["fashion"]=>        string(2) "20"
+        ["g_type"]=>         string(1) "0"
+        ["league"]=>         string(15) "法國聯賽盃"
+        ["gold"]=>       string(3) "101"
+        ["bet_gold"]=>       string(3) "101"
+        ["sum_gold"]=>       string(6) "101.00"
+        ["result_gold"]=>        string(7) "-101.00"
+        ["main_team"]=>      NULL
+        ["visit_team"]=>         NULL
+        ["mv_set"]=>         string(1) "0"
+        ["mode"]=>       NULL
+        ["chum_num"]=>       string(0) ""
+        ["compensate"]=>         string(5) "0.000"
+        ["status"]=>         string(1) "l"
+        ["score1"]=>         string(0) ""
+        ["score2"]=>         string(0) ""
+        ["status_note"]=>        string(1) "Y"
+        ["gType"]=>      string(1) "0"
+        ["matter"]=>        string(805) "查洛摩利 VS 盧多格瑞特拉茲格勒 (主) 一球半/兩球 查洛摩利 0.920 隆美辛尼 VS 瑪撤拉塔瑟 (主) 2/2.5 大 0.950"
+        ["end"]=>        string(1) "1"
+        ["now"]=>        string(1) "0"
+        ["detail"]=>         array(2) {
+            [0]=>            array(14) {
+                ["team_no"]=>                string(2) "10"
+                ["fashion"]=>                string(1) "1"
+                ["gType"]=>              string(1) "0"
+                ["league"]=>                 string(24) "保加利亞甲組聯賽"
+                ["main_team"]=>              string(27) "盧多格瑞特拉茲格勒"
+                ["visit_team"]=>                 string(12) "查洛摩利"
+                ["mv_set"]=>                 string(1) "0"
+                ["mode"]=>               string(1) "1"
+                ["chum_num"]=>               string(16) "一球半/兩球"
+                ["compensate"]=>                 string(5) "0.920"
+                ["score1"]=>                 string(1) "1"
+                ["score2"]=>                 string(1) "1"
+                ["status_note"]=>                string(1) "Y"
+                ["end"]=>                string(1) "1"
+            }
+            [1]=>
+             array(14) {
+                ["team_no"]=>                string(2) "10"
+                ["fashion"]=>                string(1) "2"
+                ["gType"]=>              string(1) "0"
+                ["league"]=>                 string(21) "意大利職業聯賽"
+                ["main_team"]=>              string(15) "瑪撤拉塔瑟"
+                ["visit_team"]=>                 string(12) "隆美辛尼"
+                ["mv_set"]=>                 string(1) "0"
+                ["mode"]=>               string(3) "-50"
+                ["chum_num"]=>               string(5) "2/2.5"
+                ["compensate"]=>                 string(5) "0.950"
+                ["score1"]=>                 string(1) "1"
+                ["score2"]=>                 string(1) "0"
+                ["status_note"]=>                string(1) "Y"
+                ["end"]=>                string(1) "1"
+            }
+        }
+    }
+    */
+
+    //-----------------------------------------------
+    //找出一個時間的歸帳日
+    public static function getBetDate($argTime) {
+        if (date('Y-m-d',strtotime($argTime))==$argTime) {
+            return $argTime;
+        }
+        $splitTimeS = '12:00:00';  //區分不同歸帳日的時間點
+        $orderDate = null;
+        if (is_int($argTime)&&($argTime >= strtotime('1970-01-01 00:00:00'))) {  //傳入timestamp
+            $dateTime = $argTime;
+        } else {  //傳入日期時間字串
+            $dateTime = strtotime($argTime);
+        }
+        $splitDatetime = date("Y-m-d {$splitTimeS}", $dateTime);
+        $splitTime = strtotime($splitDatetime);
+
+        if ($dateTime >= $splitTime) {  //若已經跨越區分不同歸帳日的時間點-->當日
+            $orderDate = date("Y-m-d", $splitTime);
+        } else {  //未跨越-->前一日
+            $orderDate = date("Y-m-d", $splitTime-60*60*24*1);
+        }
+        //echo "getBetDate({$argTime})={$orderDate}<br/>";
+        return $orderDate;
+    }  //--function getBetDate
+
+    //-----------------------------------------------
+    //取出不重複的gameId
+    private function __getUniqueGameIdsFromBetSums($argArrBetSums) {
+        $arrGameIds = array();
+        foreach ($argArrBetSums as $betSum) {
+            $m_id = $betSum['m_id'];
+            if (!in_array($m_id,$arrGameIds)) {
+                $arrGameIds[] = $m_id;
+            }
+        }
+        return $arrGameIds;
+    }
+}

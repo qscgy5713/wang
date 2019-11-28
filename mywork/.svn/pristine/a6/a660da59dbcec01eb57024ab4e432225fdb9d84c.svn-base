@@ -1,0 +1,81 @@
+<html>
+<body>
+	新增資料
+	<form method="post" action="__APP__/MemberNote/formAddMemberNote">
+		<input type='hidden' name='className' value="stop">
+		會員帳號 : <input type="text" name="addMemberAccount" id="member_account2" value="{$addMemberAccount}"><br>
+		停權理由 :<textarea name="addStopStatus"></textarea><br>
+		停權備註 :<textarea name="addStopRemark"></textarea><br>
+		<input type="submit" value="提交">
+	</form>
+	<div>
+		<form method="post" action="__APP__/MemberNote/noteStop">
+			搜索帳號 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+			<input type="submit" value="查詢">
+		</form>
+	</div>
+	<table>
+		<tr>
+			<th>會員帳號</th>
+			<th>停權理由</th>
+			<th>停權備註</th>
+			<th>修改時間</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<if condition="$vo.stop eq '1'"> 
+					<td>{$vo.memberAccount}</td>
+					<td>{$vo.stopStatus}</td>
+					<td>{$vo.stopRemark}</td>
+					<td>{$vo.stopModifyTime}</td>
+					<td>
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="stop">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							<input type="hidden" name="setNote" value="0">
+							<input type="hidden" name="stopStatus" value="null">
+							<input type="hidden" name="setStopRemark" value="null">
+							<input type="submit" value="刪除">
+						</form>
+					</td>
+				</if>
+			</tr>
+			<tr>
+				<if condition="$vo.stop eq '1'"> 
+					<td>修改資料</td>
+					<td colspan="3">
+						<form method="post" action="__APP__/MemberNote/formSetMemberNote">
+							<input type='hidden' name='className' value="stop">
+							<input type="hidden" name="setMemberAccount" value="{$vo.memberAccount}">
+							停權理由 :<textarea name="stopStatus"></textarea>
+							停權備註 :<textarea name="setStopRemark"></textarea>
+							<input type="submit" value="提交">
+						</form>
+					</td>
+				</tr>
+			</if>
+		</VOLIST>
+	</table>
+	<volist name="classArray" id="vo">
+  		<a href="__APP__/MemberNote/{$vo}">{$key}</a>&nbsp;
+  	</volist>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	$('#member_account').typeahead({
+		ajax: {
+			url: '__URL__/searchStopMemberName',
+			timeout: 200
+		}
+	});
+	$('#member_account2').typeahead({
+		ajax: {
+			url: '__URL__/searchMemberName',
+			timeout: 200
+		}
+	});
+});
+</script>
+</body>
+</html>

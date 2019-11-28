@@ -1,0 +1,45 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:menuRwd"/>
+			<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up" style="margin-top: 54px;">
+			
+				<VOLIST name="gameSportMenuArray" id="gameTable">
+					<div class="row game-row-rwd">
+						<IF condition="$gameTable.gameEnabled eq '1'">
+							<IF condition='$isLogin eq "true"'>
+								<a id="{$gameTable.gameCode}GameButton" onClick="goGameEnter('__APP__/Game{$gameTable.gameCode}/{$gameTable.gameHref}')" class="sportsHall-game-bg-{$i%2==0?'left':'right'} game-a-rwd {$isApp=='yes'?'loading':''}">
+							<ELSE/>
+								<a onClick="noLogin()" class="sportsHall-game-bg-{$i%2==0?'left':'right'} game-a-rwd ">
+							</IF>
+						<ELSE/>
+							<a id="{$gameTable.gameCode}GameButton" href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')">
+								<div class="caution ">
+									<img src="__CSS__/images/menu-img/warn.svg">
+								</div>
+							</a>
+							<a id="{$gameTable.gameCode}GameButton" href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="sportsHall-game-bg-{$i%2==0?'left':'right'} game-gray game-a-rwd">
+						</IF>
+							<div class="col-6 p-0">
+								<img class="{$i%2==0?'':'li-transform'}" style="width: 100%;" src="__CSS__/images/{$i%2==0?$langStr:''}/rwd-game-img/sportsHall/{$i%2==0?'logo':'game'}{$gameTable.gameCode}.png">
+							</div>
+							<div class="col-6 p-0">
+								<img class="" style="width: 100%;" src="__CSS__/images/{$i%2==0?'':$langStr}/rwd-game-img/sportsHall/{$i%2==0?'game':'logo'}{$gameTable.gameCode}.png">
+							</div>
+						</a>
+					</div>
+				</VOLIST>
+			</section>
+		<include file="Common:footer"/>
+<script>
+//RWD調整畫面高度
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+}
+
+</script>

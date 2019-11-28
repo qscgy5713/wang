@@ -1,0 +1,82 @@
+<?php
+/**
+ * 簡訊通知
+ */
+class CommonMobliemessageModel extends AdminModel{
+	protected $tableName = 'common_mobilemessage';
+	protected $tableCode = 'mobilemessage_code';
+	/**
+	 * 取得簡訊資料 總筆數
+	 */
+	public function getCommonMobliemessagePageNumberData(){
+		$sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}`";
+		$return = $this->query($sql);
+		return $return[0];
+	}
+	/**
+	 * 取得簡訊資料 總筆數
+	 */
+	public function getCommonMobliemessagePageData($data){
+		$startSql = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+		$endSql = $data['page']['number'];
+		$pageSql = "LIMIT {$startSql},{$endSql}";
+		$sql = "SELECT * FROM `{$this->tableName}` ORDER BY `mobilemessage_createTime` DESC {$pageSql}";
+		$return = $this->query($sql);
+		return $return;
+	}
+	/**
+	 * 新增簡訊資料
+	 */
+	public function addCommonMobliemessageData($data){
+		$sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = "(`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = "('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+		$sql .= "{$keysql} ) VALUES {$valuesql});";
+		$return = $this->query($sql);
+		return $return;
+	}
+	/**
+	 * 修改簡訊通知
+	 */
+	public function setCommonMobliemessageData($data){
+		if(empty($data["{$this->tableCode}"]) && $data["{$this->tableCode}"] !== 0){
+			return false;
+		}
+		$sql = "";
+		foreach ($data as $key => $value) {
+			if($key == "mobilemessage_code1"){continue;}
+			if(empty($sql)){
+				$sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+			} else {
+				$sql .= ",`{$key}` = '{$value}'";
+			}
+		}
+		$sql .= "WHERE `{$this->tableCode}` = '{$data['mobilemessage_code1']}'";
+		$return = $this->query($sql);
+		return $return;
+	}
+	/**
+	 * 刪除簡訊通知
+	 */
+	public function delCommonMobliemessageData($data){
+		if(empty($data["{$this->tableCode}"]) && $data["{$this->tableCode}"] !== 0){
+			return false;
+		}
+		$sql = "DELETE FROM `{$this->tableName}`
+                WHERE `{$this->tableCode}` = '{$data[$this->tableCode]}';";
+		$return = $this->query($sql);
+		return $return;
+	}
+}

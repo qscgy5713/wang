@@ -1,0 +1,114 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 	
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">銀行綁定</h2>
+				
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+			                 
+	                  			 <form id="applyForm" name="applyForm" method="post" action='__APP__/BankcodeBinding/formBankcodeBinding'>
+					                <fieldset>
+					                  
+					                   <div class="form-group">
+						                    <label for="disabledTextInput">銀行代號</label>
+						                    
+						                    <select id="addCode" name="addCode" class="form-control form-control-select2 mb-5">
+						                    	<option >請選擇銀行</option>
+						                    	<VOLIST name="bankCodeArray" id="bank">
+						                    		<option value="{$bank.bankcode_code}">{$bank.bankcode_code} - {$bank.bankcode_name}</option>
+						                    	</VOLIST>	                    
+						                    </select>
+					                  </div>
+					                  
+					                  
+					                  <div class="form-group">
+						                  <label for="inputDanger1">銀行帳號</label>
+						                  <input type="text" id="addAccount" name="addAccount" class="form-control" placeholder="請輸入銀行帳號">
+						                  <div id="checkAccount" class="invalid-feedback">帳號長度應介於6~14位之間!</div>
+						                  
+						              </div>
+					                  
+						              
+						              <div class="form-group">
+						                  <label for="inputDanger1">銀行戶名</label>
+						                  <input type="text" id="addAccountName" name="addName" placeholder="請輸入銀行戶名" class="form-control">
+						              </div>
+						              
+						              <div class="form-group">
+						                  <label for="inputDanger1">銀行分行</label>
+						                  <input type="text" id="addBranch" name="addBranch" placeholder="請輸入銀行分行" class="form-control">
+						              </div>
+					                  
+						              <button type="submit" name="btnok" id="btnok" class="btn btn-outline-danger">送出</button>
+						              
+					                </fieldset>
+					              </form>
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+<script>
+$( "input[name='addAccount']" ).change(function() {
+	var addAccount = $("input[name='addAccount']").val();
+	addAccount = $.trim(addAccount);
+	
+	if(addAccount.length < 6 || addAccount.length > 14){
+		$("input[name='addAccount']").removeClass();
+    	$("input[name='addAccount']").addClass("form-control is-invalid");
+	}else{
+		$("input[name='addAccount']").removeClass();
+    	$("input[name='addAccount']").addClass("form-control is-valid");
+	}
+	
+});
+
+$(document).ready(function(){
+	//送出
+	$("button[name='btnok']").click(function(){
+		var addAccount = $("input[name='addAccount']").val();//銀行帳號
+		var addName = $("input[name='addName']").val();//銀行戶名
+		var addBranch = $("input[name='addBranch']").val();//銀行分行
+		
+		addAccount = $.trim(addAccount);
+		addName = $.trim(addName);
+		addBranch = $.trim(addBranch);
+		
+	     if(addAccount.length < 6 || addAccount.length > 14){
+	    	 alert("帳號長度應介於6~14位之間!");
+			 return false;
+		 }
+		
+		 if (addAccount == 0){
+			 alert("銀行帳號不可為空");
+			 return false;
+		 }
+		 if (addName == 0){
+			 alert("銀行戶名不可為空");
+			 return false;
+		 }
+		 if (addBranch == 0){
+			 alert("銀行分行不可為空");
+			 return false;
+		 }
+		 $("#loader-bg").show();
+		 $("#loader-text").show();
+		
+	 })
+	//有搜尋功能的select
+	$("#addCode").select2();
+});
+ </script>				   
+ 

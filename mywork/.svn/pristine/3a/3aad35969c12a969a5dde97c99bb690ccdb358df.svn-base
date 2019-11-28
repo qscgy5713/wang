@@ -1,0 +1,226 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	
+	<div id="content" class="content">
+		
+		<form method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<div class="row m-b-10">
+			    <div class="col-md-5">
+				    <label class="col-form-label div-style m-b-5">會員名稱/電話/各館帳號:</label>
+				    <input class="form-control width-auto div-style" type="search" id="member_account" name="memberAccount" value="{$memberAccount}" >
+					<input type='submit' value='查詢'  class="btn btn-info f-s-15 div-style loading">
+				</div>
+			</div>
+	    </form>
+		<IF condition='$MemberPointBool eq "true"'>
+        	<div class="row">
+	        	<div class="col-lg-12 ui-sortable">
+					
+					<div class="panel panel-inverse">
+						<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+							<div class="panel-heading-btn">
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+							</div>
+							<h4 class="panel-title">會員資料</h4>
+						</div>
+						<div class="panel-body">
+									
+							<div class=" table-responsive">
+								<table id="showtable" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th colspan="2" class="text-center">總金額:</th>
+											<th colspan="2" class="text-center"  id="totalPoint"></th>
+										</tr>
+										<tr>
+											<th colspan="4" class="text-center">會員資料</th>
+										</tr>
+										<tr>
+											<td class="text-center" style="line-height: 35px;">電子錢包:</td>
+											<td class="text-center" style="line-height: 35px;">{$walletMoney}</td>
+											<td colspan="2">
+												<form method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+													<input type="hidden" value="{$memberAccount}" name="memberAccount">
+													金額：<input type="text" name="upMoney" value="" class="form-control width-auto div-style">
+												
+														<select name="upType"  class="form-control width-auto div-style">
+															<option value ="3">轉移問題</option>
+															<option value ="4">贈點問題</option>
+															<option value ="5">退水問題</option>
+															<option value ="6">其他</option>
+														</select>
+												
+														<select name="upGameId" class="form-control width-auto div-style">
+															<VOLIST name="gameArray" id="classArray">
+																<VOLIST name="classArray" id="vo">
+																	<option value ="{$vo.gameId}">{$vo.gameName}</option>
+																</VOLIST>
+															</VOLIST>
+														</select>
+												
+														<select name="upEventId" class="form-control width-auto div-style">
+															<VOLIST name="eventArray" id="vo">
+																<option value ="{$vo.event_id}">{$vo.event_name}</option>
+															</VOLIST>
+														</select>
+												
+													
+													理由：<input type="text" name="upMain" value="" class="form-control width-auto div-style">
+													<input type="submit" name="additionMoney" value="上點" class="btn btn-info f-s-15 div-style loading">
+													<input type="submit" name="deductMoney" value="下點" class="btn btn-info f-s-15 div-style loading">
+												</form>
+											</td>
+										</tr>
+								     </thead>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+           </div>
+           
+           <div class="row">
+	           <VOLIST name="gameArray" id="classArray">
+	           		<div class="col-lg-12 ui-sortable">
+						<!-- begin panel -->
+						<div class="panel panel-inverse">
+							
+							<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+								<div class="panel-heading-btn">
+									<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+								</div>
+								<h4 class="panel-title">{$key}</h4>
+							</div>
+							
+							<div class="panel-body">
+										<!-- begin table-responsive -->
+								<div class=" table-responsive">
+									<table id="showtable" class="table table-striped m-b-0">
+										<thead>
+											<tr>
+												<th>遊戲名稱</th>
+												<th>遊戲帳號</th>
+												<th>餘額</th>
+												<th>操作</th>
+											</tr>
+									     </thead>
+										
+										<tbody>
+											<VOLIST name="classArray" id="vo">
+												<tr>
+						                        	<td>{$vo.gameName}</td>
+													<IF condition="$vo.gameAccount eq ''">
+														<td id="{$key}gameAccount">無</td>
+														<td id="{$key}point">無</td>
+														<td id="{$key}operting"><input class="btn btn-purple f-s-13 p-5 m-r-5 m-b-5 loading" type="button" value="開通" onClick="openAccount('{$vo.gameCode}')"></td>
+													<ELSE />
+														<td id="{$key}gameAccount">{$vo.gameAccount}</td>
+														<td id="{$key}point"></td>
+														<td id="{$key}operting"><input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5 loading" type="button" value="重製" onClick="remakeAccount('{$vo.gameCode}')"></td>
+													</IF>
+												</tr>	
+					                        </VOLIST>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</VOLIST>
+           </div>
+        </IF>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+var searchArray = {$searchJson};
+var totalPoint = "{$walletMoney}";
+$(function(){
+	$("#totalPoint").html(totalPoint);
+	for(var i=0;i<searchArray.length;i++){
+		getMemberPoint(searchArray[i]);
+	}
+	
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	
+});
+function openAccount(gameCode){
+	//alert(gameCode);
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxOpenMemberGameAccount",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	var dataArray = data.split(";");
+        	if(data.indexOf("false")!=-1){
+        		$("#"+gameCode+"point").html("開通帳號失敗");
+        		console.log(dataArray[1]);
+        	} else {
+        		$("#"+gameCode+"gameAccount").html(dataArray[1]);
+            	$("#"+gameCode+"operting").html("<input type='button' value='重製' onClick=\"openAccount('"+gameCode+"')\">");
+            	$("#"+gameCode+"point").html("0");
+            	//alert(data[0]);
+        	}
+        	
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+function remakeAccount(gameCode){
+	
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxRemakeMemberGameAccount",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	$("#"+gameCode+"gameAccount").html("");
+        	$("#"+gameCode+"operting").html("<input type='button' value='開通' onClick=\"openAccount('"+gameCode+"')\">");
+        	alert(data);
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+function getMemberPoint(gameCode){
+	//alert(gameCode);
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxGetMemberPoint",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	//var dataObject = JSON.parse(data);
+        	if(data.indexOf("false")!=-1){
+        		var dataArray = data.split(";");
+        		$("#"+gameCode+"point").html("查詢點數失敗");
+        		console.log(dataArray[1]);
+        	} else {
+        		totalPoint = Number(totalPoint) + Number(data);
+        		$("#totalPoint").html(totalPoint);
+        		$("#"+gameCode+"point").html(data);
+        	}
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+</script>

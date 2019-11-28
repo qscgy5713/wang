@@ -1,0 +1,103 @@
+<?php
+/*
+ * 活動表
+ */
+class CommonEventModel extends MemberModel {
+    protected $tableName = "common_Event";
+    protected $tableId = "event_id";
+    /*
+     * 取得 活動 資料
+     */
+    public function getEventData(){
+        $sql = "SELECT * FROM `{$this->tableName}`;";
+        $return = $this->cacheQuery($sql,10);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return;
+    }
+    
+    /*
+     * 取得 活動 資料
+     */
+    public function getOneEventData($data){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `event_code` = '{$data['event_code']}'
+                LIMIT 1;";
+        $return = $this->cacheQuery($sql,10);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return[0];
+    }
+    
+    /*
+     * 取得 活動 資料
+     * 判定 活動 是否申請過使用
+     */
+    public function getMemberEventData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無會員ID
+            return false;
+        }
+        if(empty($data['event_code']) && $data['event_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//無遊戲列表
+            return false;
+        }
+        if(empty($data['startTime']) && $data['startTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//無開始時間
+            return false;
+        }
+        if(empty($data['endTime']) && $data['endTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//無結束時間
+            return false;
+        }
+        $sql = "SELECT * FROM `common_event_{$data['event_code']}`
+                WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND `member_id` = '{$data['member_id']}' AND (`event_status` = 2 OR `event_status` = 0)";
+        
+        //event_status 0未處理 1已取消 2完成  只有已取消才能再重複申請
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 新增 會員 活動單 申請資料
+     */
+    public function addMemberEventData($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["event_code"]) && $data["event_code"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "INSERT INTO `Common_Event_{$data['event_code']}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'event_code'){continue;}
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+}

@@ -1,0 +1,58 @@
+ <!--  <footer id="footer" class="clearfix dark light hidden-sm-down">
+  <div class="subfooter">
+    <div class="container">
+      <div class="subfooter-inner">
+        <div class="row">
+          <div class="col-md-12">
+            <p class="text-center">Copyright © 2018. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer> -->
+ </div>
+    <!-- page-wrapper end -->
+
+    <!-- Jquery and Bootstap core js files -->
+    <script src="__CSS__/plugins/jquery.min.js"></script>
+    <script src="__CSS__/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery Revolution Slider  -->
+    <script src="__CSS__/plugins/rs-plugin-5/js/jquery.themepunch.tools.min.js"></script>
+    <script src="__CSS__/plugins/rs-plugin-5/js/jquery.themepunch.revolution.min.js"></script>
+    <!-- Isotope javascript -->
+    <script src="__CSS__/plugins/isotope/imagesloaded.pkgd.min.js"></script>
+    <script src="__CSS__/plugins/isotope/isotope.pkgd.min.js"></script>
+    <!-- Magnific Popup javascript -->
+    <script src="__CSS__/plugins/magnific-popup/jquery.magnific-popup.min.js"></script>
+    <!-- Appear javascript -->
+    <script src="__CSS__/plugins/waypoints/jquery.waypoints.min.js"></script>
+    <script src="__CSS__/plugins/waypoints/sticky.min.js"></script>
+    <!-- Count To javascript -->
+    <script src="__CSS__/plugins/countTo/jquery.countTo.js"></script>
+    <!-- Slick carousel javascript -->
+    <script src="__CSS__/plugins/slick/slick.min.js"></script>
+    <!-- Initialization of Plugins -->
+    <script src="__CSS__/js/template.js"></script>
+    <!-- Custom Scripts -->
+    <script src="__CSS__/js/custom.js"></script>
+    <!-- Color Switcher (Remove these lines) -->
+    <script src="__CSS__/style-switcher/style-switcher.js"></script>
+  </body>
+</html>
+<script>
+$('.loading').click(function(){
+ 		
+ 		$("#loader-bg").show();
+ 		$("#loader-text").show();
+ 	});
+$(document).ready(function(){
+	$(document).ready(function () {
+		$("#loader-bg").hide();
+		$("#loader-text").hide();
+		
+	})
+	
+	$("#rebate").hide();
+});
+</script>

@@ -1,0 +1,97 @@
+<include file="Common:header"/>
+<if condition='$isLogin eq "true"'>
+	
+		<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+			<include file="Common:menu"/>
+			<include file="Common:menu2"/>
+			
+			
+			<div id="content" class="content">
+			</div>
+			
+			<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+		</div>
+	
+<else />
+ 	<body class="pace-top  pace-done">
+	 	<div class="pace  pace-inactive">
+		 	<div class="pace-progress" data-progress-text="100%" data-progress="99" style="width: 100%;">
+		  		<div class="pace-progress-inner"></div>
+			</div>
+			<div class="pace-activity"></div>
+		</div>
+	<!-- begin #page-loader -->
+	<div id="page-loader" class="fade show d-none">
+		<div class="material-loader">
+			<svg class="circular" viewBox="25 25 50 50">
+				<circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle>
+			</svg>
+			<div class="message">Loading...</div>
+		</div>
+	</div>
+	<!-- end #page-loader -->
+	
+	<!-- begin #page-container -->
+	<div id="page-container" class="fade show">
+		<!-- begin login -->
+		<div class="login bg-black animated fadeInDown">
+			<!-- begin brand -->
+			<div class="login-header">
+				<div class="brand">
+					Admin
+				</div>
+				<div class="icon">
+					<i class="fa fa-lock"></i>
+				</div>
+			</div>
+			<!-- end brand -->
+			<!-- begin login-content -->
+			<div class="login-content">
+				<form method="post" action='__APP__/AdminIndex/formLogin' name="loginForm" onclick="return false">
+					<div class="form-group m-b-20">
+						<input type="text" name='account' id="account" class="form-control form-control-lg inverse-mode" placeholder="請輸入帳號" value="">
+					</div>
+					<div class="form-group m-b-20">
+						<input type="password" name='password' id="password" class="form-control form-control-lg inverse-mode" placeholder="請輸入密碼">
+					</div>
+					
+					<div class="login-buttons">
+						<button type="submit" id="loginBtn" class="btn btn-success btn-block btn-lg">登入</button>
+					</div>
+				</form>
+			</div>
+			<!-- end login-content -->
+		</div>
+		<!-- end login -->
+
+	</div>
+	<!-- end page container -->
+</if>
+ 
+<include file="Common:footer"/>
+<script>
+//判斷登入帳號密碼
+$("#loginBtn").click(function() {
+	var account = $("#account").val();
+	var password = $("#password").val();
+	account = $.trim(account);
+	password = $.trim(password);
+	//alert(account);
+	//alert(password);
+	if(account == "" || password == ""){
+		
+		errorMsgShow("請輸入帳號或密碼!");
+		return;
+	}
+	$("#loader-bg").show();
+	document.loginForm.submit();
+});
+</script>
+
+
+
+	
+	
+	
+
+

@@ -1,0 +1,99 @@
+<?php
+/*
+ * 會員資料
+ */
+class GameMemberInfoModel extends MemberModel {
+    protected $tableName = "";
+    protected $tableId = "info_id";
+    /**
+     *
+     * @param $data
+     * @param string $err
+     */
+    public function getMemberInfoDataByMemberId($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得會員資料失敗，缺少參數。
+            return false;
+        }
+        if(empty($data['game_name']) && $data['game_name'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//缺少遊戲CODE
+            return false;
+        }
+        $gameTableStr = strtolower($data['game_name']);
+        $sql = "SELECT * FROM `game_{$gameTableStr}_member_info`
+                WHERE `member_id` = '{$data['member_id']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 新增 會員遊戲 資料
+     * @param $data //$data['member_id']
+     * @param $err //錯誤訊息
+     * @return boolean
+     */
+    public function addMemberInfoData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//註冊失敗
+            return false;
+        }
+        if(empty($data['game_account']) && $data['game_account'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//註冊失敗
+            return false;
+        }
+        if(empty($data['game_password']) && $data['game_password'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//註冊失敗
+            return false;
+        }
+        if(empty($data['game_name']) && $data['game_name'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//缺少遊戲CODE
+            return false;
+        }
+        $gameTableStr = strtolower($data['game_name']);
+        unset($data['game_name']);//清除 陣列中 遊戲Code
+        $sql = "INSERT INTO `game_{$gameTableStr}_member_info` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return $return;
+        }
+        return true;
+    }
+    /*
+     * 刪除 會員遊戲帳號
+     */
+    public function delMemberInfoData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得會員資料失敗，缺少參數。
+            return false;
+        }
+        if(empty($data['game_name']) && $data['game_name'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//缺少遊戲CODE
+            return false;
+        }
+        $gameTableStr = strtolower($data['game_name']);
+        $sql = "DELETE FROM `game_{$gameTableStr}_member_info`
+                WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

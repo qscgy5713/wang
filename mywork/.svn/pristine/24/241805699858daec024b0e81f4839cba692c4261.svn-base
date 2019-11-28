@@ -1,0 +1,38 @@
+<?php
+/*
+ * 優惠活動
+ */
+class CommonEventModel extends AgentModel {
+    protected $tableName = "common_event";
+    protected $tableId = "event_id";
+    
+    /*
+     * 
+     */
+    public function getAllEventData($data,&$err=""){
+        /*
+        $sql = "SELECT * FROM `{$this->tableName}`;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        foreach($return as $key => $value){
+            $value['event_code'];
+        }*/
+        
+        $sql = "SELECT sum(`event_money`) FROM 
+                    `common_event_storegift`,
+                    `common_event_lottofour_memberNumber`
+                GROUP BY `member_id`;";
+        $return = $this->query($sql);
+        var_dump($sql);
+        var_dump($return);exit();
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        var_dump($return);exit();
+        return $return;
+    }
+}

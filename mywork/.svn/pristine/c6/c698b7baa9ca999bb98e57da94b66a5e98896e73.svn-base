@@ -1,0 +1,443 @@
+<?php
+
+class GameOgAction extends MemberAction {
+  const API_NAME = 'Og 東方真人二代';
+  protected $power = false;
+  protected $gameName = "Og";
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+    $request = $this->getRequest();
+    //測試API
+    if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+        cookie('MIS','@@aaa123','expire=3600');
+    }
+    $MIS = cookie('MIS');
+    if($MIS === "@@aaa123"){
+        $this->power = true;
+        $function_links = '';
+        $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+        $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+        $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+        $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+        $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+        $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a> | ";
+        $function_links .= "<a href=\"__URL__/set_default_bet_limit_id\" target=\"_self\">setDefaultBetLimitId</a> | ";
+        $function_links .= "<a href=\"__URL__/set_user_bet_limit_id\" target=\"_self\">setUserBetLimitId</a>";
+        $this->assign('function_links', $function_links);
+        
+        $this->assign('api_name', self::API_NAME);
+        $this->assign('op_desc', '輸入參數按下送出');
+    }
+  }
+  
+  public function gameEnter(){
+      $this->isMemberLoginShowErr();
+      $this->assign('gameName','東方真人');
+      //取得 遊戲連結 開始
+      $data = array(
+          "game_name" => $this->gameName,
+      );
+      $return = $this->loginMember($data,$err);
+      if($return === false){
+          $this->assign('gameLink', "false");
+          $this->assign('errMessage', $err);
+          $this->display();
+          return false;
+      }
+      $gameLink = $return;
+      //取得 遊戲連結 結束
+      
+      $memberWallet = $_SESSION['Member']['money'];
+      if($memberWallet != 0){
+          $data = array(
+              "transferMoney" => $memberWallet,
+              "gameName" => $this->gameName
+          );
+          $return = $this->walletTransferGameBalance($data,$err);
+          if($return === false){
+              $this->assign('gameLink', "false");
+              $this->assign('errMessage', $err);
+              $this->display();
+              return false;
+          }
+          $this->getMemberWalletMoney();//讀取電子錢包
+      } else {
+          cookie('member_newMember',null);//清除不讀轉移表的cookie
+      }
+      
+      $this->addLastGameData();//成功進入遊戲 加入最後一館陣列中
+      
+      $this->assign('gameLink', $gameLink);//遊戲連結
+      $this->display();
+  }
+
+  //1. 創新帳號
+  public function index(){
+    if(!$this->power){exit();}
+    $account = 'ogtest001';
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if(!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      $og = D('GameOg');
+
+      $err = null;
+
+      $res = $og->createMember(array(
+        'account' => $account,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'createMember');
+    $this->assign('method_desc', '建立一個新的遊戲帳號。除了帳號名稱以外，其他欄位基本都是廢值。');
+    $this->assign('account', $account);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //2. 取得遊戲連結
+  public function game_link(){
+    if(!$this->power){exit();}
+    $account = 'ogtest001';
+
+    $request = $this->getRequest();
+
+    //var_dump($request);
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if(!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      //處理 is_mobile
+      if(isset($request['is_mobile']) && strlen($request['is_mobile'])){
+        $is_mobile = $request['is_mobile'];
+      }
+
+      $og = D('GameOg');
+
+      $err = null;
+      $res = $og->loginMember(array(
+        'account' => $account,
+        'is_mobile' => ($is_mobile=='mobile'),
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'loginMember');
+    $this->assign('method_desc', '用現存遊戲帳號取得遊戲的連結');
+    $this->assign('account', $account);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //3. 取得會員餘額
+  public function balance(){
+      if(!$this->power){exit();}
+    $account = 'ogtest001';
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if(!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      $og = D('GameOg');
+
+      $err = null;
+      $res = $og->getMemberBalance(array(
+        'account' => $account,
+      ), $err);
+      
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+    $this->assign('method_name', 'getMemberBalance');
+    $this->assign('method_desc', '取得會員的當前餘額');
+    $this->assign('res', $res);
+    $this->assign('account', $account);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //4. 上點
+  public function deposit(){
+      if(!$this->power){exit();}
+    $account = 'ogtest001';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if(!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if(!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $og = D('GameOg');
+
+      $res = $og->rechargeMemberBalance(array(
+        'account' => $account,
+        'amount' => $amount,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'rechargeMemberBalance');
+    $this->assign('method_desc', '增加會員的點數餘額');
+    $this->assign('account', $account);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //5. 下點
+  public function withdraw(){
+      if(!$this->power){exit();}
+    $account = 'ogtest001';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if(!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if(!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $og = D('GameOg');
+
+      $res = $og->withdrawMemberBalance(array(
+        'account' => $account,
+        'amount' => $amount,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'withdrawMemberBalance');
+    $this->assign('method_desc', '減少會員的點數餘額');
+    $this->assign('account', $account);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //6. 抓報表明細
+  public function report(){
+      if(!$this->power){exit();}
+    $begin_datetime = date('Y-m-d H:00:00');
+    $end_datetime = date('Y-m-d H:10:00');
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      $og = D('GameOg');
+
+      $arrDatas = array();
+
+      //處理 begin_datetime
+      if(isset($request['begin_datetime']) && strlen($request['begin_datetime'])){
+        $begin_datetime = $request['begin_datetime'];
+      } else {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//begin_datetime 為空，請重新輸入
+      }
+
+      //處理 end_datetime
+      if(isset($request['end_datetime']) && strlen($request['end_datetime'])){
+        $end_datetime = $request['end_datetime'];
+      } else {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//end_datetime 為空，請重新輸入
+      }
+
+      $err = null;
+      $res = $og->getGameRecord(array(
+        'begin_datetime' => $begin_datetime,
+        'end_datetime' => $end_datetime,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getGameRecord');
+    $this->assign('method_desc', '抓取注單明細, 開始與結束時間相距不能超過10分鐘。每次查詢相距限制為10秒以上。');
+    $this->assign('begin_datetime', $begin_datetime);
+    $this->assign('end_datetime', $end_datetime);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //7. setDefaultBetLimit
+  public function set_default_bet_limit_id(){
+      if(!$this->power){exit();}
+    $video_limit_id = '69';  //69=(50,30000)
+    $roulette_limit_id = '6';  //6=(50,750)
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 video_limit_id 傳入 並且不為空
+      if(!isset($request['video_limit_id']) || empty($request['video_limit_id'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//video_limit_id 為空，請重新輸入
+      }
+      $video_limit_id = $request['video_limit_id'];
+
+      //檢查是否有 roulette_limit_id 傳入 並且不為空
+      if(!isset($request['roulette_limit_id']) || empty($request['roulette_limit_id'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//roulette_limit_id 為空，請重新輸入
+      }
+      $roulette_limit_id = $request['roulette_limit_id'];
+
+      $og = D('GameOg');
+
+      $err = null;
+      $res = $og->setDefaultBetLimitId(array(
+        'video_limit_id' => $video_limit_id,
+        'roulette_limit_id' => $roulette_limit_id,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'setDefaultBetLimitId');
+    $this->assign('method_desc', '設定成功操作後新創建的會員的限押及籌碼面額。');
+    $this->assign('video_limit_id', $video_limit_id);
+    $this->assign('roulette_limit_id', $roulette_limit_id);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //8. setDefaultBetLimit
+  public function set_user_bet_limit_id(){
+      if(!$this->power){exit();}
+    $account = 'ogtest001';
+    $video_limit_id = '69';  //69=(50,30000)
+    $roulette_limit_id = '6';  //6=(50,750)
+
+    $request = $this->getRequest();
+
+    if(isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 video_limit_id 傳入 並且不為空
+      if(!isset($request['video_limit_id']) || empty($request['video_limit_id'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//video_limit_id 為空，請重新輸入
+      }
+      $video_limit_id = $request['video_limit_id'];
+
+      //檢查是否有 roulette_limit_id 傳入 並且不為空
+      if(!isset($request['roulette_limit_id']) || empty($request['roulette_limit_id'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//roulette_limit_id 為空，請重新輸入
+      }
+      $roulette_limit_id = $request['roulette_limit_id'];
+
+      //檢查是否有 account 傳入 並且不為空
+      if(!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      $og = D('GameOg');
+
+      $err = null;
+      
+      $res = $og->setUserBetLimitId_old(array(
+        'account' => $account,
+        'video_limit_id' => $video_limit_id,
+        'roulette_limit_id' => $roulette_limit_id,
+      ), $err);     
+
+      if ($res === false) {
+        $op_result = $err;
+        $op_result2 = $og->curlError;
+        $this->assign('op_result2', $op_result2);
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'setUserBetLimitId');
+    $this->assign('method_desc', '修改單一現存會員的限押及籌碼面額。');
+    $this->assign('account', $account);
+    $this->assign('video_limit_id', $video_limit_id);
+    $this->assign('roulette_limit_id', $roulette_limit_id);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+}

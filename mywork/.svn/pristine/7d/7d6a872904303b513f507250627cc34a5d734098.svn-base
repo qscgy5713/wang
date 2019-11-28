@@ -1,0 +1,214 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+		<form id="formInquire" method="post" action="__APP__/{$Think.MODULE_NAME}/index">
+			<div class="row m-b-5">
+				<div class="col-md-5">
+					<input type="hidden" id="pageNumber" name="pageNumber" value="">
+					<label class="col-form-label div-style m-b-5">會員帳號 :</label>
+					<input class="form-control width-auto div-style" type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+					<input type='submit' value='查詢'  class="btn btn-info f-s-15 div-style ">
+				</div>
+			</div>
+	    </form>
+
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">綁定紀錄</h4>
+					</div>
+
+					<div class="panel-body">
+						<div class="table-responsive">
+							<table id="table1" class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+										<th>會員帳號</th>
+										<th>銀行代碼</th>
+										<th>銀行帳號</th>
+										<th>銀行戶名</th>
+										<th>銀行分行</th>
+										<th>建立時間</th>
+										<th>修改時間</th>
+										<th>備註</th>
+										<th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo" empty="$showEmpty">
+			                        	<tr>
+				                        	<td>{$key+1}</td>
+											<td>{$vo.memberAccount}</td>
+											<td>{$vo.bankName}</td>
+											<td>{$vo.account}</td>
+											<td>{$vo.name}</td>
+											<td>{$vo.branch}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.modifyTime}</td>
+											<td>{$vo.remark}</td>
+											<td>
+												<a onclick="openmodal('setModal','{$vo.memberAccount}','{$vo.id}','{$vo.code}','{$vo.account}','{$vo.name}','{$vo.branch}','{$vo.remark}')"><i class="fas fa-wrench fa-fw icon-size"></i></a>
+												<form id="delform{$vo.id}" class="div-style" method="post" action='__APP__/ManageBank/formDelMemberBank'>
+													<input type="hidden" value="{$vo.id}" name="delId">
+													<a onclick="submit('delform{$vo.id}')"><i class="fas fa-trash fa-fw icon-size"></i></a>
+												</form>
+				                            </td>
+										</tr>
+			                        </VOLIST>
+								</tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+						<if condition="$pageNumber neq ''">
+		                  <div class="row">
+			                  <div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+
+						                <if condition="$pageNumber-1 neq 0">
+						                  <li id="" class="page-item"><a class="page-link" href="#" onClick="goPage('1')">第一頁</a></li>
+						                  <li class="page-item">
+						                    <a class="page-link" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  </li>
+						                 </if>
+
+						                  <volist name="pageArray" id="vo" >
+			                                <IF condition="$pageNumber eq $vo" >
+			                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+			                                <else/>
+			                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+			                                </IF>
+			                              </volist>
+
+						                  <if condition="$pageNumber+1 elt $totalPage ">
+							                  <li class="page-item">
+							                    <a class="page-link" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+							                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+							                      <span class="sr-only">Next</span>
+							                    </a>
+							                  </li>
+							                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$totalPage}')">最末頁</a></li>
+						                  </if>
+						                </ul>
+						            </nav>
+			                  </div>
+		                  </div>
+		               </if>
+					</div>
+				</div>
+			</div>
+		</div>
+        <div class="modal fade" id="setModal" style="display: none; padding-right: 16px;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title">修改綁定紀錄</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/ManageBank/formSetMemberBank'>
+						<div class="modal-body">
+
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">帳號 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input type="hidden" value="" name="setId" id="setId">
+
+									<input class="form-control" type="text" readonly="readonly" value="" id="setText">
+								</div>
+							 </div>
+
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">銀行代碼 :</label>
+								<div class="col-md-8 col-sm-8">
+									<select class="form-control" id="setCode" name="setCode">
+										<VOLIST name="bankArray" id="ba">
+											<option value="{$ba.bankCode}">{$ba.bankCode}{$ba.bankName}</option>
+										</VOLIST>
+									</select>
+								</div>
+							 </div>
+
+						     <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">銀行帳號 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setAccount" name="setAccount" value="">
+								</div>
+						     </div>
+
+						     <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">銀行戶名 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setName" name="setName" value="">
+								</div>
+						     </div>
+
+						     <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">銀行分行 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setBranch" name="setBranch" value="">
+								</div>
+						     </div>
+
+						     <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" id="setRemark" name="setRemark" value="">
+								</div>
+						     </div>
+						</div>
+						<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-primary f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name ="okbtn" class="btn btn-primary f-s-15">確認修改</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+function openmodal(modalId, vo_memberAccount, vo_id, vo_code, vo_account, vo_name, vo_branch, vo_remark){
+	//alert(id);
+	$('#setId').val(vo_id);
+	$('#setText').val(vo_memberAccount);
+	$('#setCode').val(vo_code);
+	$('#setAccount').val(vo_account);
+	$('#setName').val(vo_name);
+	$('#setBranch').val(vo_branch);
+	$('#setRemark').val(vo_remark);
+	$('#'+modalId).modal('show');
+}
+$(document).ready(function(){
+  $('#member_account').typeahead({
+    ajax: {
+      url: '__URL__/searchMemberName',
+      timeout: 200
+    }
+  });
+});
+function submit(formId){
+	 $("#"+formId).submit();
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

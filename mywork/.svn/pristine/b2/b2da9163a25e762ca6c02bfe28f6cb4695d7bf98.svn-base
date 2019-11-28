@@ -1,0 +1,46 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/OnlineService-bg.jpg);">
+		
+			
+		
+		
+		
+		
+			
+				<!--<img class="" style="width:100%;" src="__CSS__/images/OnlineService-girl.png">  -->
+			
+			
+			<div class="container mt-30">
+			
+				
+				
+			</div>
+		</section>
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+</script>
+
+
+			

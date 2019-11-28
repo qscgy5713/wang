@@ -1,0 +1,136 @@
+<?php
+/**
+ * 會員影城
+ */
+class CommonMemberMovieAction extends AdminAction {
+	protected $CommonMemberMovie = 10; //分頁筆數
+	protected $pageMoreNumber = 5; //一頁最多幾筆
+	public function index(){
+		$request = $this->getRequest();
+		if(empty($request['pageNumber'])){
+			$pageNumber = 1;
+		} else {
+			$pageNumber = $request['pageNumber'];
+		}
+		$CommonMemberMovie = D('CommonMemberMovie');
+		$nowTime = time();
+		$data = array(
+			'nowTime' => $nowTime,
+		);
+		$return = $CommonMemberMovie->getAllMemberAccountNumberData($data); //總筆數
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		$totalNumber = $return['totalNumber']; //總筆數
+		$totalPage = ceil($totalNumber / $this->CommonMemberMovie); //總頁數
+		$pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //頁數陣列
+
+		$data = array(
+			'nowTime' => $nowTime,
+			'page' => array(
+				'number' => $this->CommonMemberMovie,
+				'pageNumber' => $pageNumber,
+			),
+		);
+		$return = $CommonMemberMovie->getAllMemberAccountPageData($data); //總筆數
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$showArray = array();
+		$FieldChange = array(
+			'member_account' => 'memberAccount',
+		    'movie_startTime' => 'startTime',
+		    'movie_endTime' => 'endTime',
+		    'game_showName' => 'gameShowName',
+		    'detail_createTime' => 'detailCreateTime',
+		);
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FieldChange as $key1 => $value1) {
+				switch ($key1) {
+					case 'movie_startTime': //時戳轉換日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						if(empty($value[$key1])){
+							$showStr = "無開始時間";
+						}
+						break;
+					case 'movie_endTime': //時戳轉換日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						if(empty($value[$key1])){
+							$showStr = "無結束時間";
+						}
+						break;
+					case 'game_showName': //時戳轉換日期
+						$showStr = $value[$key1];
+						if(empty($value[$key1])){
+							$showStr = "無遊戲名稱";
+						}
+						break;
+					case 'detail_createTime': //時戳轉換日期
+						$showStr = date('m-d H:i:s', $value[$key1]);
+						if(empty($value[$key1])){
+							$showStr = "無注單時間";
+						}
+						break;
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		$this->assign('showArray', $showArray);
+		$this->assign('pageNumber', $pageNumber); //目前頁數
+		$this->assign('totalPage', $totalPage); //總頁數
+		$this->assign('pageArray', $pageArray); //頁數陣列
+		$this->assign("showEmpty","<tr><td colspan='6' align='center'>無資料</td></tr>");
+        $this->display();
+	}
+	//TODO: 新增帳號
+	public function addMemberMovieAccount(){
+		$request = $this->getRequest();
+
+		if(!isset($request['addAccount']) || empty($request['addAccount'])){ //檢查帳號是否有傳入
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		$data = array(
+			'member_account' => $request['addAccount'],
+		);
+		$CommonMember = D('CommonMember');
+
+		$return = $CommonMember->getMemberDataByAccount($data);
+		if($return === null){ //檢查是否有帳號
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+		}
+		$startTime = time();
+		$endTime = time() + (60 * 60 * 24);
+		$CommonMemberMovie = D('CommonMemberMovie');
+		$data = array(
+			'member_account' => $return['member_account'],
+		    'movie_startTime' => $startTime,
+		    'movie_endTime' => $endTime,
+		);
+		$return = $CommonMemberMovie->setMembermovieDataByAccount($data);
+		if($return === false){ //顯示錯誤
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+		}
+		//顯示成功訊息
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+	public function searchMemberName(){
+		$request = $this->getRequest();
+		$CommonMember = D('CommonMember');
+		$data = array(
+            "member_acount" => $request["query"],
+            "limit"=> 7,
+		);
+		$member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+	}
+}

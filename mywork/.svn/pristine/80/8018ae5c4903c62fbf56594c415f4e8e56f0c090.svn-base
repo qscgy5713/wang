@@ -1,0 +1,112 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">{$Think.lang.Reality1}</h2>
+					<h2 class="mb-20 mt-20">{$Think.lang.Reality2}</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>
+				</header>
+				<!-- 返水級別 -->
+				<if condition='$isLogin eq "true"'>
+					<h4 class="text-center mb-0">{$Think.lang.Reality27}&nbsp;&nbsp;<img class="medal-img lastLevel-img" src="__CSS__/images/{$langStr}/medal-{$lastLevel}.png">{$Think.lang.Reality3}{$lastEffective}</h4>
+					<div class="row mb-10">
+						<div class="col-2 m-auto ml-0 medal-div"><img class="medal-img" src="__CSS__/images/{$langStr}/medal-{$startLevel}.png"></div>
+						<div class="col-2 m-auto mr-0 text-right medal-div"><img class="medal-img" src="__CSS__/images/{$langStr}/medal-{$endLevel}.png"></div>
+						<div class="col-12 medal-div2">
+							<div class="progress">
+								<div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: {$percentageEffective}%">
+								</div>
+							</div>
+						</div>
+						<div class="col-1 col-xl-2 medal-div startEffective-style"><span class="fs-25 fw-800 medal-span">{$startEffective}</span></div>
+						<div class="col-8 col-xl-5 m-auto medal-div2 text-center"><span class="fs-18 medal-span2">{$Think.lang.Reality4} {$thisMonth} {$Think.lang.Reality5}{$thisEffective}</span></div>
+						<div class="col-3 col-xl-2 text-right medal-div endEffective-style"><span class="fs-25 fw-800 medal-span">{$endEffective}</span></div>
+					</div>
+					<div class="row mb-10">
+						<div class="col-2 m-auto mr-0 medal-div"><img class="medal-img2" src="__CSS__/images/{$langStr}/medal-1.png"></div>
+						<div class="col-2 medal-div"><img class="medal-img2" src="__CSS__/images/{$langStr}/medal-2.png"></div>
+						<div class="col-2 medal-div"><img class="medal-img2" src="__CSS__/images/{$langStr}/medal-3.png"></div>
+						<div class="col-2 m-auto ml-0 medal-div"><img class="medal-img2" src="__CSS__/images/{$langStr}/medal-4.png"></div>
+					</div>
+				</if>
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30">
+							<strong class="text-warning">{$Think.lang.Reality6}</strong><BR><BR>
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle" style="background-color: #0000000f;">
+									<thead>
+										<tr>
+											<th>{$Think.lang.Reality7}</th>
+											<th>{$Think.lang.Reality8}</th>
+											<th>{$Think.lang.Reality9}</th>
+											<th>{$Think.lang.Reality10}</th>
+											<th>{$Think.lang.Reality11}</th>
+
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>{$Think.lang.Reality12}</td>
+											<td>{$Think.lang.Reality13}</td>
+											<td>{$Think.lang.Reality14}</td>
+											<td>{$Think.lang.Reality15}</td>
+											<td>{$Think.lang.Reality16}</td>
+										</tr>
+										<tr>
+											<td>{$Think.lang.Reality17}</td>
+											<td>0.3％</td>
+											<td>0.4％</td>
+											<td>0.5％</td>
+											<td>0.6％</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<BR>
+							<strong class="text-warning">{$Think.lang.Reality18}</strong><BR>
+		                    <BR>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">{$Think.lang.Reality19}</li>
+		                        <li style="list-style:decimal;" >{$Think.lang.Reality20}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.Reality21}</li>
+   								<li style="list-style:decimal;">{$Think.lang.Reality22}</li>
+  						 		<li style="list-style:decimal;">{$Think.lang.Reality23}</li>
+   								<li style="list-style:decimal;">{$Think.lang.Reality24}</li>
+   								<li style="list-style:decimal;">{$Think.lang.Reality25}</li>
+   								<li style="list-style:decimal;">{$Think.lang.Reality26}</li>
+		                    </ul>
+
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

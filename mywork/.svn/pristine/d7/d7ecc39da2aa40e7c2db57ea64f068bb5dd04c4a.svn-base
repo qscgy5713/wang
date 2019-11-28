@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title></title>
+</head>
+<body>
+<span> Test {$Think.MODULE_NAME}/{$Think.ACTION_NAME} </span>
+	<BR>
+	
+	<input type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+	<form id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input id="startTime" name="startTime" type="text" value="{$startTime}"/> 至
+		<input id="endTime"   name="endTime"   type="text" value="{$endTime}"/>
+		
+		<input id="agentTree" type='hidden' name='agentTree' value='{$comeAgentTree}'>
+		<input id="agentAccount" type='hidden' name='agentAccount' value='{$comeAgentAccount}'>
+		<input type='submit' value='查詢'>
+	</form>
+	<BR>
+	
+	<VOLIST name="loginArray" id="vo">
+		<input type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+	</VOLIST>
+	
+	<table>
+		<tr><th colspan="4">代理帳務</th></tr>
+		
+		
+		<tr>
+			<th colspan="2">總計</th>
+			<th>{$agentTotalBettingMoney}</th>
+			<th>{$agentTotalSurplus}</th>
+			<th>{$agentTotalEffective}</th>
+			<th>{$agentTotalBetNumber}</th>
+			<th>{$agentTotalGiven}</th>
+			<th>{$agentTotalTopMoney}</th>
+			<th></th>
+			<th>{$agentTotalRatioMoney}</th>
+			<th></th>
+			<th>{$agentTotalUnderMoney}</th>
+		</tr>
+		<tr>
+			<th>序</th><th>代理</th><th>投注金額</th><th>輸贏金額</th><th>有效注額</th><th>注單數量</th>
+			<th>贈點</th><th>上級金額</th><th>佔成</th><th>佔成金額</th><th>下級佔成</th><th>下級金額</th>
+		</tr>
+		<VOLIST name="agentArray" id="vo" empty="">
+			<tr>
+				<td>{$i}</td>
+				<td>
+					<input type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+				</td>
+				<td>{$vo.sumBettingMoney}</td>
+				<td>{$vo.sumSurplus}</td>
+				<td>{$vo.sumEffective}</td>
+				<td>{$vo.sumBetNumber}</td>
+				<td>{$vo.givenMoney}</td>
+				<td>{$vo.topMoney}</td>
+				<td>{$vo.agentRatio}</td>
+				<td>{$vo.ratioMoney}</td>
+				<td>{$vo.underRatio}</td>
+				<td>{$vo.underMoney}</td>
+			</tr>
+		</VOLIST>
+	</table>
+	<table>
+		<tr>
+			<th colspan="2">總計</th>
+			<th>{$memberTotalBettingMoney}</th>
+			<th>{$memberTotalSurplus}</th>
+			<th>{$memberTotalEffective}</th>
+			<th>{$memberTotalBetNumber}</th>
+			<th>{$memberTotalGiven}</th>
+			<th>{$memberTotalTopMoney}</th>
+			<th></th>
+			<th>{$memberTotalRatioMoney}</th>
+		</tr>
+		<tr>
+			<th>序</th><th>會員</th><th>投注金額</th><th>輸贏金額</th><th>有效注額</th><th>注單數量</th>
+			<th>贈點</th><th>上級金額</th><th>代理佔成</th><th>佔成金額</th>
+		</tr>
+		<VOLIST name="memberArray" id="vo" empty="">
+			<tr>
+				<td>{$i}</td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.sumBettingMoney}</td>
+				<td>{$vo.sumSurplus}</td>
+				<td>{$vo.sumEffective}</td>
+				<td>{$vo.sumBetNumber}</td>
+				<td>{$vo.topMoney}</td>
+				<td>{$vo.agentRatio}</td>
+				<td>{$vo.ratioMoney}</td>
+			</tr>
+		</VOLIST>
+	</table>
+	
+	
+</body>
+</html>
+
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function formAgent(agentAccount,agentTree){
+	$("#agentAccount").val(agentAccount);
+	$("#agentTree").val(agentTree);
+	$("#formInquire").submit();
+}
+</script>

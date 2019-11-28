@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+	<head>
+		
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		
+	    <title>{$Think.lang.MessageRemind}</title>
+	    <!-- Favicon -->
+	    <link rel="shortcut icon" type="image/x-icon" href="__CSS__/images/cow.ico">
+	   
+		<!-- mobile settings -->
+		<meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=0" />
+		<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+		
+		<!-- WEB FONTS : use %7C instead of | (pipe) -->
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600%7CRaleway:300,400,500,600,700%7CLato:300,400,400italic,600,700" rel="stylesheet" type="text/css" />
+
+		<!-- CORE CSS -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+
+		<!-- REVOLUTION SLIDER -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/css/extralayers.css" rel="stylesheet" type="text/css" />
+		<link href="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/css/settings.css" rel="stylesheet" type="text/css" />
+
+		<!-- THEME CSS -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/css/essentials.css" rel="stylesheet" type="text/css" />
+		<link href="__CSS__/Smarty/HTML_BS4/assets/css/layout.css" rel="stylesheet" type="text/css" />
+
+		<!-- PAGE LEVEL SCRIPTS -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/css/header-1.css" rel="stylesheet" type="text/css" />
+		<link href="__CSS__/Smarty/HTML_BS4/assets/css/color_scheme/green.css" rel="stylesheet" type="text/css" id="color_scheme" />
+		<link href="__CSS__/Smarty/HTML_BS4/assets/plugins/styleswitcher/styleswitcher.css" rel="stylesheet" type="text/css">
+		
+	    <!-- 自己修改的css -->
+	    <link href="__CSS__/css/anna_css.css?t=20190226" rel="stylesheet">
+	     <!-- icon -->
+    	<link href="__CSS__/fonts/icomoon/style.css" rel="stylesheet">
+    	
+		<!-- SWIPER SLIDER -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.swiper/dist/css/swiper.min.css" rel="stylesheet" type="text/css" />
+
+	   
+	</head>
+	
+	<body class="smoothscroll enable-animation menu-vertical menu-vertical-hide">
+		<div id="wrapper">
+			<section id="slider" class="fullheight" style="height: 969px;">
+
+				<div class="swiper-container swiper-container-horizontal swiper-container-fade" data-effect="fade" data-autoplay="false">
+					<div class="swiper-wrapper" style="transition-duration: 0ms;">
+
+						<!-- SLIDE 1 -->
+						<div class="swiper-slide swiper-slide-active" style="background-image: url(__CSS__/images/userpersonal_bg.jpg); width: 1903px; opacity: 1; transform: translate3d(0px, 0px, 0px); transition-duration: 0ms;">
+							<div class="overlay dark-1"><!-- dark overlay [1 to 9 opacity] --></div>
+							
+							<div class="display-table">
+								<div class="display-table-cell vertical-align-middle">
+									<div class="container">
+
+										<div class="row">
+											<div class="text-center col-md-8 col-12 offset-md-2">
+
+												<h3 class="bold font-raleway wow fadeInUp animated tex-black" data-wow-delay="0.4s">{$msgTitle}</h3>
+												
+												<present name="error" >
+													<p class="lead font-lato fw-600 wow fadeInUp animated" data-wow-delay="0.6s" 
+													style="color:red">
+														{$error}
+													</p>
+										      	</present>
+										      	<present name="message" >
+										      		<p class="lead font-lato fw-600 wow fadeInUp animated" data-wow-delay="0.6s" 
+										      		style="color:blue">
+										      			{$message}
+										      		</p>
+										      	</present>
+												<a class="fs-20 font-lato wow fadeInUp animated" data-wow-delay="1.0s">
+													<if condition="$jumpUrl eq ''">
+											      		<button type="button" class="btn btn-secondary btn-round btn-shadow-1" style="padding: 5px 50px;height: 60px;" onclick="javascript:location.href='{$APP_URL}'">{$Think.lang.Close}</button>
+													<else />
+														<button type="button" class="btn btn-secondary btn-round btn-shadow-1 fs-20" style="padding: 5px 50px;height: 60px;" onclick="javascript:location.href='{$jumpUrl}'">{$Think.lang.Close}</button>
+													</if>
+												</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>	
+		<!-- JAVASCRIPT FILES -->
+	    <script>var plugin_path = '__CSS__/Smarty/HTML_BS4/assets/plugins/';</script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/jquery/jquery-3.3.1.min.js"></script>
+		<!-- SCRIPTS -->
+		<script src="__CSS__/Smarty/HTML_BS4/assets/js/scripts.js"></script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/bootstrap/popper.min.js"></script>
+		
+		<!-- SWIPER SLIDER -->
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.swiper/dist/js/swiper.min.js"></script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/js/view/demo.swiper_slider.js"></script>
+	</body>
+</html>

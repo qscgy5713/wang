@@ -1,0 +1,92 @@
+ <include file="Common:header"/> 
+ <include file="Common:menu"/> 
+    
+        
+      	<div class="container pb50 bg-min-height height-size-667 height-size-731 height-size-812 height-size-823" >
+      		<div class="container">
+                <div class="row pb30">
+                    <div class="col-lg-4 col-md-6 mr-auto ml-auto col-sm-8">
+                        <h3 class="text-black text-center mb30">代理加盟</h3>
+                        <form id="applyForm" name="applyForm" method="post" action='__APP__/AgentJoin/formAgentJoin' onclick="return false">
+                            <div class="form-group">
+	                            <label for="applyName">聯絡姓名</label>
+	                            <input type="text" class="form-control" id="applyName" name="applyName" placeholder="請輸入姓名">
+	                        </div>
+	                        
+	                        <div class="form-group">
+	                            <label for="applyWay">聯絡方式</label>
+	                            <select class="form-control" id="applyWay" name="applyWay">
+	                                <option value="LINE">LINE</option>
+	                                <option value="微信">微信</option>
+	                                <option value="E-Mail">E-Mail</option>
+	                                <option value="其他">其他</option>
+                            	</select>
+	                            <input type="text" id="applyContact" name="applyContact" class="form-control" placeholder="聯絡方式">
+	                        </div>
+	                        
+	                        <div class="form-group">
+	                            <label for="applyMsg">申請留言</label>
+	                            <textarea class="form-control" id="applyMsg" name="applyMsg" rows="3" placeholder="若您有任何問題或需求，請在此留言"></textarea>
+	                        </div>
+	                        
+	                        <div class="text-center">
+	                        	<a href="#" class="btn btn-link btn-block" data-toggle="modal" data-target="#ModalLong666">代理加盟制度表</a>
+	                        	<div class="modal fade" id="ModalLong666" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+				                    <div class="modal-dialog" role="document">
+				                        <div class="modal-content">
+				                            <div class="modal-header">
+				                                <h5 class="modal-title" id="exampleModalLongTitle">代理加盟制度表</h5>
+				                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				                                    <span aria-hidden="true">×</span>
+				                                </button>
+				                            </div>
+				                            
+				                            <div class="modal-body">
+				                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/180608.jpg">
+				                            </div>
+				                            
+				                            <div class="modal-footer"></div>
+				                        </div>
+				                    </div>
+                				</div>
+	                        </div>
+	                        
+                            <hr class="hr-color">
+                            <div class="text-center">
+                                <button type="submit" name="btnok" id="btnok" class="btn btn-outline-primary mb5">送出申請</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>    
+ <include file="Common:footer"/> 
+ 
+ <script>
+ $(document).ready(function(){
+	 
+	 $("#btnok").click(function(){
+		 var applyName = $("#applyName").val();
+		 var applyContact = $("#applyContact").val();
+		 //alert(applyName);
+		 //alert(applyContact);
+		 applyName = $.trim(applyName);
+		 applyContact = $.trim(applyContact);
+		 
+         if(applyName == 0){
+             alert("您尚未填寫姓名");
+             eval("document.applyForm['applyName'].focus()");
+             return;
+         }else if(applyContact == 0){
+             alert("您尚未填寫聯絡方式");
+             eval("document.applyForm['applyContact'].focus()");    
+             return;
+         }else{
+        	 document.applyForm.submit();
+         }
+         
+         
+         
+	 })
+});
+ </script>

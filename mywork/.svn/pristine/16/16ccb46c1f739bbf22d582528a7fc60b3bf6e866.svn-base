@@ -1,0 +1,40 @@
+<html>
+<body>
+	<table border="1">
+		<tr>
+			<th colspan="5" align="center">項目</th>
+		</tr>
+		<tr>
+			<th>遊戲ID</th>
+			<th>遊戲代號</th>
+			<th>遊戲名稱</th>
+			<th>開關</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+			<td colspan="5" align="center">{$key}</td>
+			</tr>
+			<VOLIST name="vo" id="vo1">
+				<tr>				
+					<td>{$vo1.gameId}</td>
+					<td>{$vo1.gameCode}</td>
+					<td>{$vo1.gameName}</td>
+					<td>{$vo1.gameEnable}</td>
+					<td>
+						<form method="post" action="__APP__/FeaturesManage/formSetFeaturesManageEnable">
+							<input type="hidden" value="{$vo1.gameId}" name="setGameId">
+							<input type="hidden" value="{$vo1.gameEnable}" name="setGameEnable">
+							<if condition="$vo1.gameEnable eq '啟用中'">
+								<input type="submit" value="關閉">
+							<else/>
+								<input type="submit" value="啟用">
+							</if>
+						</form>
+					</td>
+				</tr>
+			</VOLIST>
+		</VOLIST>
+	</table>
+</body>
+</html>

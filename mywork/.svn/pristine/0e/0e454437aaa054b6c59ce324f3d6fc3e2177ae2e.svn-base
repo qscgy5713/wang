@@ -1,0 +1,141 @@
+<include file="Common:header"/>
+<title>AdminPageClassManage首頁</title>
+<body style="background-image: url(__CSS__/images/1.jpg);">
+<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+		  <div class="content admin-div">
+		  	 <p>
+                <button class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                       新增後台頁面類別
+                </button>
+             </p>
+			 
+			  <div class="collapse mb10" id="collapseExample" style="">
+                 <div class="card card-body pt5 pb5">
+                 
+                  <form method="post" action='__APP__/AdminPageClassManage/formAddAdminPageClass'>
+                  	<div class="form-group form-group-m">
+	                       <label class=" col-form-label">顯示名稱</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-AgentPageClassManage" type="text" name="addShowName">
+	                       </div>
+	                       <button type="submit" name="addbtn" class="btn btn-info btn-style ml10">確認新增</button>
+                  	 </div>
+                  </form>
+                 </div>
+             </div>
+             
+             <div class="row">
+         			<table class="table table-striped">
+                        <thead>
+                            <tr>
+                            	<th>序</th>
+                            	<th>顯示名稱</th>
+                            	<th>開關</th>
+                            	<th>排序</th>
+                            	<th>建立時間</th>
+                            	<th>修改時間</th>
+                            	<th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <VOLIST name="showArray" id="vo">
+                        	<tr>
+	                        	<td>{$key+1}</td>
+								<td>{$vo.showName}</td>
+								<td>{$vo.enabled}</td>
+								<td>{$vo.order}</td>
+								<td>{$vo.createTime}</td>
+								<td>{$vo.modifyTime}</td>
+								<td>
+								
+								<a class="popup-content btn btn-info btn-style" href="#{$key+1}">修改</a>
+								<form class="div-style" method="post" action='__APP__/AdminPageClassManage/formStopAdminPageClass'>
+									<input type="hidden" value="{$vo.id}" name="stopId">
+                                	<button type="submit" class="btn btn-info btn-style">停用</button>
+                                </form>
+                                <form class="div-style" method="post" action='__APP__/AdminPageClassManage/formStartAdminPageClass'>
+                                	<input type="hidden" value="{$vo.id}" name="startId">
+                                	<button type="submit" class="btn btn-info btn-style">啟用</button>
+                                </form>
+                                <form class="div-style" method="post" action='__APP__/AdminPageClassManage/formDelAdminPageClass'>
+                                	<input type="hidden" value="{$vo.id}" name="delId">
+                                	<button type="submit" class="btn btn-info btn-style">刪除</button>
+                                </form>	
+                                
+                                	<div id="{$key+1}" class="popup-content-area white-popup mfp-hide popup-content-area-max-width">
+				                        <h4>修改後台頁面類別資料</h4><hr>
+				                        <form method="post" action='__APP__/AdminPageClassManage/formSetAdminPageClass'>
+				                           
+				                            <div class="form-group mb5">                
+				                                <label >顯示名稱</label>
+				                                <input type="text" name="setShowName" class="form-control">
+												<input type="hidden" value="{$vo.id}" name="setId">
+				                            </div>
+				                            <div class="clearfix">
+				                                <button type="submit" name ="okbtn" class="btn btn-info float-right btn-style">確認修改</button>
+				                            </div>
+				                        </form>
+				                    </div>
+				                    
+                                </td>
+							</tr>
+                        </VOLIST>
+                        
+                        </tbody>
+                    </table>
+         		</div>
+		  </div>
+<include file="Common:footer"/> 
+<!-- 	<form method="post" action='__APP__/AdminPageClassManage/formAddAdminPageClass'>
+		顯示名稱<input type="text" name="addShowName">
+		<button type="submit" class="btn btn-primary">確認新增</button>
+	</form>
+	<table>
+		<tr><th>序</th><th>顯示名稱</th><th>開關</th><th>排序</th><th>建立時間</th><th>修改時間</th><th>操作</th></tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.showName}</td>
+				<td>{$vo.enabled}</td>
+				<td>{$vo.order}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.modifyTime}</td>
+				<td>
+					修改資料BUTTON
+					關閉BUTTON
+					<form method="post" action='__APP__/AdminPageClassManage/formStopAdminPageClass'>
+						<input type="hidden" value="{$vo.id}" name="stopId">
+						<button type="submit" class="btn btn-primary">停用</button>
+					</form>
+					啟用BUTTON
+					<form method="post" action='__APP__/AdminPageClassManage/formStartAdminPageClass'>
+						<input type="hidden" value="{$vo.id}" name="startId">
+						<button type="submit" class="btn btn-primary">啟用</button>
+					</form>
+					刪除BUTTON
+					<form method="post" action='__APP__/AdminPageClassManage/formDelAdminPageClass'>
+						<input type="hidden" value="{$vo.id}" name="delId">
+						<button type="submit" class="btn btn-primary">刪除</button>
+					</form>
+				</td>
+			</tr>
+			<tr>
+			<form method="post" action='__APP__/AdminPageClassManage/formSetAdminPageClass'>
+				<td></td>
+				<td>顯示名稱<input type="text" name="setShowName">
+				<input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td><button type="submit" class="btn btn-primary">確認修改</button></td>
+			</form>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>  -->
+
+	

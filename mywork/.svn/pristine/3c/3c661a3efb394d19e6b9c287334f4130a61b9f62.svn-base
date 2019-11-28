@@ -1,0 +1,75 @@
+<?php 
+/*
+ * 後台頁面分類	
+ */
+class CommonMemberMailModel extends CommonModel{
+	protected $tableName = "common_member_mail";
+
+	/*
+	 * 取得後台頁面
+	 * 顯示 頁面 使用 
+	 */
+	public function getCommonMemberMailData($data){
+		$sql = "SELECT {$this->tableName}.*, common_member.member_account  FROM `{$this->tableName}` INNER JOIN `common_member` ON {$this->tableName}.member_id = common_member.member_id WHERE `mail_status` = '" . $data . "';";
+
+		$return = $this->query($sql);
+
+		return $return;
+	}
+
+	/*
+	 * 新增後台頁面類別 
+	 */
+	public function addCommonMemberMailData($data){
+		$sql = "INSERT INTO `{$this->tableName}`";
+		$keysql = "";
+		$valuesql = "";
+
+		foreach ($data as $key => $value) {
+			if(empty($keysql)){
+				$keysql = "(`{$key}`";
+			} else {
+				$keysql .= ",`{$key}`";
+			}
+
+			if(empty($valuesql)){
+				$valuesql = "('{$value}'";
+			} else {
+				$valuesql .= ",'{$value}'";
+			}
+		}
+
+		$sql .= $keysql . ") VALUES " . $valuesql . ");";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+
+	/*
+	 * 修改 後台頁面 資料
+	 * 回覆訊息
+	 */
+	public function replyCommonMemberMailData($data){
+		if(empty($data['mail_id']) && $data['mail_id'] !== '0'){
+            return false;
+        }
+
+        $sql = "";
+
+        foreach ($data as $key => $value) {
+            if($key == 'mail_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+
+        $sql .= " WHERE `mail_id` = '{$data['mail_id']}'";
+        
+        $return = $this->execute($sql);
+
+        return $return;
+		
+	}
+}

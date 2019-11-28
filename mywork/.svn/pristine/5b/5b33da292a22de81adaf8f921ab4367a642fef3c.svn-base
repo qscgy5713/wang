@@ -1,0 +1,91 @@
+<?php
+/*
+ * 會員帳號
+ */
+class CommonMemberBankdataModel extends MemberModel {
+    protected $tableName = "common_member_bankdata";
+    protected $tableId = "bankdata_id";
+    /**
+     * 綁定銀行卡
+     * 取得是否重複資料
+     */
+    public function getBankRepeatData($data,&$err = ""){
+        $sql = "SELECT count(*) as totalNumber FROM `{$this->tableName}`
+                WHERE `bankdata_code` = '{$data['bankdata_code']}'
+                AND `bankdata_account` = '{$data['bankdata_account']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//資料庫錯誤
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 取得 會員 資料
+     * @param $data['member_account'] || $data['member_phone']
+     * @param string $err錯誤碼
+     * @return boolean|array
+     */
+    public function getMemberBankDataByMembeerId($data,&$err = ""){
+        if(!isset($data['member_id']) || (empty($data['member_id']) && $data['member_id'] !== 0)){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無傳入會員帳號
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//無傳入會員帳號
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 新增 會員銀行 資料
+     */
+    public function addMemberBankData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//註冊失敗
+            return false;
+        }
+        if(empty($data['bankdata_code']) && $data['bankdata_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//註冊失敗
+            return false;
+        }
+        if(empty($data['bankdata_account']) && $data['bankdata_account'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//註冊失敗
+            return false;
+        }
+        if(empty($data['bankdata_name']) && $data['bankdata_name'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//註冊失敗
+            return false;
+        }
+        if(empty($data['bankdata_branch']) && $data['bankdata_branch'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));//註冊失敗
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+            return false;
+        }
+        return $return;
+    }
+}

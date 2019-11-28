@@ -1,0 +1,157 @@
+<?php
+/*
+ * Og抓帳
+ */
+class ScriptGameReportOgAction extends ScriptGameReportAction {
+    
+    protected function _initialize() {
+        $this->gameCode = 'Og';
+        $request = $this->getRequest();
+        if(isset($request['startTime']) && isset($request['endTime'])){
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+            
+            if(strtotime($this->endTime) > (strtotime($this->startTime)+600)){
+                $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+600);
+                $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+1200);
+                
+                $this->allStartTime = $this->startTime;
+                $this->allEndTime = $this->endTime;
+                
+                $this->endTime = date('Y-m-d H:i:s',strtotime($this->startTime)+600);
+            }
+        } else {
+            $this->startTime = date('Y-m-d H:i:s', strtotime('-10 minute'));
+            $this->endTime = date('Y-m-d H:i:s', time());
+        }
+        
+        if(isset($request['allStartTime']) && isset($request['allEndTime'])){
+            $this->allStartTime = $request['allStartTime'];
+            $this->allEndTime = $request['allEndTime'];
+            
+            if(strtotime($this->endTime) >= strtotime($this->allEndTime)){
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+                
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+            } else {
+                $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+600);
+                $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+1200);
+            }
+        }
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function index(){
+        if(!$this->power){exit();}
+        
+        $GameReportData = D("GameReportData");
+        $GameModel = D("Game".$this->gameCode);
+        if(!method_exists($GameModel,'getGameRecord')){
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'無此代號(Err000)</span>');
+            $this->display();
+            exit();
+        }
+        
+        $this->detailId = 'bettingcode';
+        $this->gameAccount = 'membername';
+        $this->createTime = 'bettingdate';
+        $this->bettingMoney = 'bettingamount';
+        $this->surplus = 'winloseamount';
+        $this->effective = 'validbet';
+        //OG抓帳 只能抓十分鐘 相距10秒以上
+        $this->getOgGameReportData($err);
+        
+        $return = $this->getReportApi();
+        if($return === false){
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err002) Err=>'.$this->err.'</span>');
+            $this->display();
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        $this->assign("detailNumber",count($this->allDetailArray));//更新總注單
+        $this->assign("allDetailArray",$this->allDetailArray);
+        
+        $this->assign("reportNumber",count($this->allReportArray));//更新總統整
+        $this->assign("allReportArray",$this->allReportArray);
+        
+        $this->assign("status","<span style='color:Blue;'>".$this->gameCode.$this->success.'</span>');
+        $this->display();
+    }
+    
+    /*
+     * OG 抓帳
+     */
+    protected function getOgGameReportData(&$err=''){
+        $this->timeStr .= ((!empty($this->timeStr))? '<BR>' : '').$this->startTime.' ~ '.$this->endTime;
+        
+        $GameModel = D("Game".$this->gameCode);
+        $data = array(
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+        );
+        $return = $GameModel->getGameRecord($data,$err);
+        if($return === false){
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err001) Err=>'.$err.'</span>');
+            $this->display();
+            exit();
+        }
+        
+        foreach($return as $key => $value){
+            //把遊戲帳號 加入 搜尋會員帳號陣列 Start
+            
+            $dataInJson = array();
+            foreach ($value as $subKey => $subValue){
+                $dataInJson[$subKey] = dowith_sql($subValue);
+            }
+            
+            //轉換投注日期
+            $createTime = str_replace('/Date(', '', $value[$this->createTime]);
+            $createTime = str_replace(')/', '', $createTime);
+            $createTime = substr(trim($createTime), 0, 10);  //"/Date(1549707409000)/"
+            $createTime = date('Y-m-d H:i:s', intVal($createTime));
+            
+            //處理歸帳日
+            $orderDate = strtotime(date('Y-m-d 12:00:00', strtotime($createTime)));
+            if($orderDate > strtotime($createTime)){
+                $orderDate = $orderDate-(24*60*60);
+            }
+            
+            //處理遊戲帳號
+            $gameAccount = strtolower(trim($value[$this->gameAccount]));  //"wkyl_og2test001"
+            $gameAccount = str_replace('wkyl_', '', $gameAccount);  //去除前綴字
+            
+            $needBackWater = 0;
+            if($value['gamename'] == 'Baccarat'){
+                $needBackWater = 1;
+            }
+            
+            //處理 surplus (輸贏金額)
+            //$value[$this->surplus] = bcmul($value[$this->surplus], -1);  //正負號互換 //當會員有效=100且輸時，winloseamount = -100
+            
+            if(!in_array($value[$gameAccount], $this->allMemberGameAccount)){
+                array_push($this->allMemberGameAccount, $gameAccount);
+            }
+            //把遊戲帳號 加入 搜尋會員帳號陣列 End
+            $data = array(
+                "detail_id" => $value[$this->detailId],
+                "detail_gameAccount" => $gameAccount,
+                "detail_createTime" => strtotime($createTime),
+                "detail_orderDate" => $orderDate,
+                "detail_bettingMoney" => $value[$this->bettingMoney],
+                "detail_surplus" => $value[$this->surplus],
+                "detail_effective" => $value[$this->effective],
+                "detail_needBackWater"=> $needBackWater,
+                "detail_isBackWater" => 0,
+                "detail_dataInJson" =>json_encode($dataInJson, JSON_UNESCAPED_UNICODE),
+            );
+            array_push($this->allDetailArray, $data);
+        }
+    }
+}

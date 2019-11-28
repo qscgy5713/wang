@@ -1,0 +1,405 @@
+<?php
+/*
+ * 藍新金流
+ */
+class CashflowNewebPayModel extends MemberModel {
+    //商店編號號 461940
+    //一般商品履約完成回傳網址: https://newebpay.8857tw.net/
+    
+    
+    protected $apiUrl = "https://aquarius.newebpay.com.tw/CashSystemFrontEnd/Payment";//API網址
+    
+    protected $code = "KR294DQq";//交易密碼
+    protected $merchantnumber = "461862";//商店編號int(6)
+    
+    protected $ordernumber = "";//訂單編號。英數(30)
+    protected $amount = "";//交易金額。int(9)
+    
+    protected $viraccountPaymenttype = "ATM";
+    protected $storePaymenttype = "MMK";//付款方式
+    
+    protected $paytitle = "";//付款說明
+    protected $paymemo = "";//備註
+    
+    protected $payname = "";//繳款人姓名
+    protected $payphone = "";//繳款人電話
+    
+    protected $bankid = "";//銀行代碼 不需填寫
+    
+    protected $duedate = "";//繳費期限 預設為3天
+    protected $returnvalue = "1";//回傳結果值
+    protected $nexturl = "ok6666.net";//回商店網頁 的網址 
+    
+    protected $hash = "";//驗證碼  hash = md5(merchantnumber+code+amount+ordernumber) 
+    
+    protected $method = "POST";
+    
+    /**
+     * 藍新超商繳款
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function getNewebPayStoreData($data,&$err){
+        if(empty($data["ordernumber"]) && $data["ordernumber"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["payname"]) && $data["payname"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["payphone"]) && $data["payphone"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data["amount"]) && $data["amount"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        $return = $CashflowInfoNewebPayData->getNewebPayData();
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        $this->merchantnumber = $return['newebPayData_merchantnumber'];
+        $this->code = $return['newebPayData_code'];
+        
+        $return = $this->NewebPayStoreSendRequest($data,$err);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 藍新虛擬帳戶
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function getNewebPayVirAccountData($data,&$err){
+        if(empty($data["ordernumber"]) && $data["ordernumber"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["payname"]) && $data["payname"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["payphone"]) && $data["payphone"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data["amount"]) && $data["amount"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        $return = $CashflowInfoNewebPayData->getNewebPayData();
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        $this->merchantnumber = $return['newebPayData_merchantnumber'];
+        $this->code = $return['newebPayData_code'];
+        $this->bankid = "007";
+        
+        $return = $this->NewebPayVirAccountSendRequest($data,$err);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /* send request */
+    //虛擬帳戶 CURL
+    protected function NewebPayVirAccountSendRequest($data,&$err="") {
+        $argUrl = $this->apiUrl;
+        $plaintext = $this->merchantnumber.$this->code.$data['amount'].$data['ordernumber'];
+        
+        $arrData = array(
+            "merchantnumber"=>$this->merchantnumber,
+            "ordernumber"=>$data['ordernumber'],
+            "amount"=>$data['amount'],
+            "paymenttype"=>$this->viraccountPaymenttype,
+            "bankid"=>$this->bankid,
+            "paytitle"=>$this->paytitle,
+            "paymemo"=>$this->paymemo,
+            "payname"=>$data['payname'],
+            "payphone"=>$data['payphone'],
+            "duedate"=>$this->duedate,
+            "returnvalue"=>$this->returnvalue,
+            "hash"=>md5($plaintext),
+            "nexturl"=>$this->nexturl
+        );
+        
+        $argMethod = $this->method;
+        $sendJsonData = json_encode($arrData);
+        //var_dump($arrData);exit();
+        
+        $method = strtoupper($argMethod);
+        $arrCurlDatas = array(
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CONNECTTIMEOUT_MS => 5000,
+            CURLOPT_TIMEOUT_MS => 15000
+        );
+        if ( $method == 'GET') {  //GET
+            $queryStr = http_build_query($arrData);
+            $url = "{$argUrl}?{$queryStr}";
+        } else {  //POST
+            $url = $argUrl;
+            //$dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+            $arrCurlDatas[CURLOPT_POSTFIELDS] = http_build_query($arrData);
+        }
+        $ch = curl_init($url);
+        foreach ($arrCurlDatas as $cKey => $cVal ) {
+            curl_setopt($ch, $cKey, $cVal);
+        }
+        $result = curl_exec($ch);
+        $header = curl_getinfo($ch);
+        //echo $result;
+        //var_dump($result);
+        
+        if (curl_errno($ch)) {
+            $curlError = array(
+                'curl_error' => curl_error($ch),
+                'curl_errno' => curl_errno($ch),
+            );
+        } else {
+            $curlError = null;
+        }
+        //var_dump($curlError);
+        curl_close($ch);
+        //var_dump($header['http_code']);
+        if($header['http_code'] != '200'){
+            if($header['http_code']=="404"){
+                $resultStr = "404;網址錯誤，無法找到網頁!";
+            }else if($header['http_code']=="500"){
+                $resultStr = "500;伺服器錯誤!";
+            }else{
+                $resultStr = $header['http_code'].';'.$httpmessage;
+            }
+            $data = array(
+                "id" => 3,
+                "function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'),
+                "resultStr" => $resultStr,
+                "result" => $result,
+                "sendJsonData"=>$sendJsonData
+            );
+            $this->addErrData($data);
+            $err = $resultStr;
+            return false;
+        }
+        
+        $resultArray = array(
+            "rc" => "",//回覆碼  0:成功  其他:失敗
+            "merchantnumber" => "",//訂單編號
+            "ordernumber" => "",//訂單編號
+            "amount" => "",//訂單金額
+            "checksum" => "",//檢核碼
+            "bankid" => "",//銀行代碼
+            "virtualaccount" => ""//虛擬帳號
+        );
+        /*
+         * responsedata = "rc=0&amount=" + amount + "&merchantnumber=" + merchantnumber +
+         *                "&ordernumber=" + ordernumber + "&paycode=" + paycode;
+         * checksum = md5(responsedata + "&code=" + code);
+         */
+        if($result === false){
+            $resultStr = "result回傳false";
+            $data = array(
+                "id" => 3,
+                "function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'),
+                "resultStr" => $resultStr,
+                "result" => $result,
+                "sendJsonData"=>$sendJsonData
+            );
+            $this->addErrData($data);
+            $err = $resultStr;
+            return false;
+        }
+        
+        $explodeArray1 = explode("&",$result);
+        //var_dump($explodeArray1);
+        foreach ($explodeArray1 as $value){
+            //var_dump($value);
+            $explodeArray2 = explode("=",$value);
+            $resultArray[$explodeArray2[0]] = $explodeArray2[1];
+        }
+        //var_dump($resultArray);
+        if($resultArray['rc'] != '0'){
+            $resultStr = "rc不等於0，回傳錯誤";
+            $data = array(
+                "id" => 3,
+                "function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'),
+                "resultStr" => $resultStr,
+                "result" => $result,
+                "sendJsonData"=>$sendJsonData
+            );
+            //var_dump($data);
+            $this->addErrData($data);
+            $err = $resultStr;
+            return false;
+        }
+        //var_dump($resultArray["paycode"]);
+        return $resultArray["bankid"]."-".$resultArray["virtualaccount"];
+    }
+    
+    /* send request */
+    //超商繳款 CURL
+    protected function NewebPayStoreSendRequest($data,&$err="") {
+        $argUrl = $this->apiUrl;
+        $plaintext = $this->merchantnumber.$this->code.$data['amount'].$data['ordernumber'];
+        
+        $arrData = array(
+            "merchantnumber"=>$this->merchantnumber,
+            "ordernumber"=>$data['ordernumber'],
+            "amount"=>$data['amount'],
+            "paymenttype"=>$this->storePaymenttype,
+            "bankid"=>$this->bankid,
+            "paytitle"=>$this->paytitle,
+            "paymemo"=>$this->paymemo,
+            "payname"=>$data['payname'],
+            "payphone"=>$data['payphone'],
+            "duedate"=>$this->duedate,
+            "returnvalue"=>$this->returnvalue,
+            "hash"=>md5($plaintext),
+            "nexturl"=>$this->nexturl
+        );
+        
+        $argMethod = $this->method;
+        $sendJsonData = json_encode($arrData);
+        //var_dump($arrData);exit();
+        
+        $method = strtoupper($argMethod);
+        $arrCurlDatas = array(
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CONNECTTIMEOUT_MS => 5000,
+            CURLOPT_TIMEOUT_MS => 15000
+        );
+        if ( $method == 'GET') {  //GET
+            $queryStr = http_build_query($arrData);
+            $url = "{$argUrl}?{$queryStr}";
+        } else {  //POST
+            $url = $argUrl;
+            //$dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+            $arrCurlDatas[CURLOPT_POSTFIELDS] = http_build_query($arrData);
+        }
+        $ch = curl_init($url);
+        foreach ($arrCurlDatas as $cKey => $cVal ) {
+            curl_setopt($ch, $cKey, $cVal);
+        }
+        $result = curl_exec($ch);
+        $header = curl_getinfo($ch);
+        //echo $result;
+        //var_dump($result);
+        
+        if (curl_errno($ch)) {
+            $curlError = array(
+                'curl_error' => curl_error($ch),
+                'curl_errno' => curl_errno($ch),
+            );
+        } else {
+            $curlError = null;
+        }
+        //var_dump($curlError);
+        curl_close($ch);
+        //var_dump($header['http_code']);
+        if($header['http_code'] != '200'){
+            if($header['http_code']=="404"){
+                $resultStr = "404;網址錯誤，無法找到網頁!";
+            }else if($header['http_code']=="500"){
+                $resultStr = "500;伺服器錯誤!";
+            }else{
+                $resultStr = $header['http_code'].';'.$httpmessage;
+            }
+            $data = array(
+                "id" => 3,
+                "function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'),
+                "resultStr" => $resultStr,
+                "result" => $result,
+                "sendJsonData"=>$sendJsonData
+            );
+            $this->addErrData($data);
+            $err = $resultStr;
+            return false;
+        }
+        
+        $resultArray = array(
+            "rc" => "",//回覆碼  0:成功  其他:失敗
+            "merchantnumber" => "",//訂單編號
+            "ordernumber" => "",//訂單編號
+            "amount" => "",//訂單金額
+            "checksum" => "",//檢核碼
+            "paycode" => ""//繳款編碼  
+        );
+        /*
+         * responsedata = "rc=0&amount=" + amount + "&merchantnumber=" + merchantnumber + 
+         *                "&ordernumber=" + ordernumber + "&paycode=" + paycode;
+         * checksum = md5(responsedata + "&code=" + code);
+         */
+        if($result === false){
+            $resultStr = "result回傳false";
+            $data = array(
+                "id" => 3,
+                "function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'),
+                "resultStr" => $resultStr,
+                "result" => $result,
+                "sendJsonData"=>$sendJsonData
+            );
+            $this->addErrData($data);
+            $err = $resultStr;
+            return false;
+        }
+        
+        $explodeArray1 = explode("&",$result);
+        //var_dump($explodeArray1);
+        foreach ($explodeArray1 as $value){
+            //var_dump($value);
+            $explodeArray2 = explode("=",$value);
+            $resultArray[$explodeArray2[0]] = $explodeArray2[1];
+        }
+        //var_dump($resultArray);
+        if($resultArray['rc'] != '0'){
+            $resultStr = "rc不等於0，回傳錯誤";
+            $data = array(
+                "id" => 3,
+                "function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'),
+                "resultStr" => $resultStr,
+                "result" => $result,
+                "sendJsonData"=>$sendJsonData
+            );
+            //var_dump($data);
+            $this->addErrData($data);
+            $err = $resultStr;
+            return false;
+        }
+        //var_dump($resultArray["paycode"]);
+        return $resultArray["paycode"];
+    }
+    protected function addErrData($data){
+        $CommonCurlErr = D("CommonCurlErr");
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $data = array(
+            "curlErr_type" => 1,//1金流錯誤 2遊戲錯誤
+            "curlErr_item_id" => $data["id"],//藍新 超商繳款ID //先寫死，後續要活動 在做讀取cashflow_info
+            "curlErr_user_id" => $_SESSION["Member"]["id"],
+            "curlErr_function" => $data["function"],
+            "curlErr_createTime" => time(),
+            "curlErr_curlMessage" => $data["resultStr"],
+            "curlErr_returnErr" => $data["result"],
+            "curlErr_ip" => $ip,
+            "curlErr_sendJsonData"=>$data["sendJsonData"]
+        );
+        $retrun = $CommonCurlErr->addCurlErrData($data);
+    }
+}

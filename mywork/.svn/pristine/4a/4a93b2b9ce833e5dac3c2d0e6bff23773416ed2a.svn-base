@@ -1,0 +1,422 @@
+<?php
+class GameBNGAction extends MemberAction {
+    const API_NAME = 'BNG 博狗電子';
+    protected $power = false;
+    protected $gameName = "Bng";
+    /*
+     * 如果有初始化 可以設定在初始化中
+     */
+    protected function _initialize() {
+        parent::_initialize();
+        $request = $this->getRequest();
+        //測試API
+        if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+            cookie('MIS','@@aaa123','expire=3600');
+        }
+        $MIS = cookie('MIS');
+        if($MIS === "@@aaa123"){
+            $this->power = true;
+            $function_links = '';
+            $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+            $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+            $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+            $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+            $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+            $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a>";
+            $this->assign('function_links', $function_links);
+            
+            $this->assign('api_name', self::API_NAME);
+            $this->assign('op_desc', '輸入參數按下送出');
+        }
+    }
+    //遊戲菜單
+    public function gameMenu(){
+        $GameBngMenu = D("GameBngMenu");
+        
+        //從 GameQtMenuModel getGameBngMenuData() 取得QT菜單資訊
+        $return = $GameBngMenu->getGameBngMenuData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //var_dump($return);
+        
+        $arrGamesByDisplayCat = array(
+            'slot' => array(),
+        );
+        
+        $arrGamesCountData = array(
+            'slot' => '',
+        );
+        
+        
+        $arrDisplayGames = array();
+        $gameNum = 0;
+        foreach($return as $value){
+            $game_type = $value['game_type'];
+            //echo $game_type.'<BR>';
+            foreach ($arrGamesByDisplayCat as $cat => &$arrDisplayGames) {
+                if (strpos($game_type, $cat) !== false) {
+                    $arrDisplayGames[] = $value;
+                }
+            }
+        }
+        
+        foreach ($arrGamesByDisplayCat as $key1 => $value1){
+            foreach ($value1 as $key2 => $value2){
+                $game_id = $value2['game_id'];
+                $game_type = $value2['game_type'];
+                //$title_zhtw = trim($value2['title_zhtw']);
+                //$title_enus = trim($value2['title_enus']);
+                $titleNameArray = json_decode($value2['title_name'], true);
+                $picNameStr = $game_id;
+                
+                $arrGamesByDisplayCat[$key1][$key2]['image_src'] = "{$picNameStr}";
+                $arrGamesByDisplayCat[$key1][$key2]['game_name_ch'] = $titleNameArray[$_COOKIE['think_language']];
+            }
+        }
+        $this->assign('GameBngMenu', $arrGamesByDisplayCat);
+        $this->display();
+    }
+    //TODO:BNG遊戲頁面(博狗)
+    public function gameEnter(){
+        $this->isMemberLoginShowErr();
+        $this->assign('gameName','博狗電子');
+        
+        $request = $this->getRequest();
+        if(!isset($request['game_id']) && empty($request['game_id'])){
+            $this->assign('gameLink', "false");
+            $this->assign('errMessage',L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無選擇遊戲
+            $this->display();
+            return false;
+        }
+        
+        //取得 遊戲連結 開始
+        $data = array(
+            "game_name" => $this->gameName,
+            "game_code" => $request['game_id']
+        );
+        $return = $this->loginMember($data,$err);
+        if($return === false){
+            $this->assign('gameLink', "false");
+            $this->assign('errMessage', $err);
+            $this->display();
+            return false;
+        }
+        $gameLink = $return;
+        //取得 遊戲連結 結束
+        
+        
+        //轉移點數 開始
+        $memberWallet = $_SESSION['Member']['money'];
+        if($memberWallet != 0){
+            $data = array(
+                "transferMoney" => $memberWallet,
+                "gameName" => $this->gameName
+            );
+            $return = $this->walletTransferGameBalance($data,$err);
+            if($return === false){
+                $this->assign('gameLink', "false");
+                $this->assign('errMessage', $err);
+                $this->display();
+                return false;
+            }
+            $this->getMemberWalletMoney();//讀取電子錢包
+        } else {
+            cookie('member_newMember',null);//清除不讀轉移表的cookie
+        }
+        //轉移點數 結束
+        
+        $this->addLastGameData();//成功進入遊戲 加入最後一館陣列中
+        
+        $this->assign('gameLink', $gameLink);//遊戲連結參數
+        $this->display();
+    }
+    
+    //1. 創新帳號
+    public function index(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $password = 'abcd1234';
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || !strlen($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            //處理 password
+            if (isset($request['password']) && strlen($request['password'])){
+                $password = $request['password'];
+            }
+            
+            $bng = D('GameBng');
+            
+            $err = null;
+            $res = $bng->createMember(array(
+                'user_name' => $user_name,
+                'password' => $password,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $bng->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        $this->assign('password', $password);
+        
+        $this->assign('method_name', 'createMember');
+        $this->assign('method_desc', '建立一個新的遊戲帳號');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //2. 取得遊戲連結
+    public function game_link(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 game_code 傳入 並且不為空
+            if (!isset($request['game_code']) || empty($request['game_code'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//game_code 為空，請重新輸入
+            }
+            $game_code = $request['game_code'];
+            
+            $bng = D('GameBng');
+            
+            $err = null;
+            $res = $bng->loginMember(array(
+                'user_name' => $user_name,
+                'game_code' => $game_code,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $bng->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        
+        $this->assign('method_name', 'loginMember');
+        $this->assign('method_desc', '用現存遊戲帳號+遊戲代號進入遊戲');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //3. 取得會員餘額
+    public function balance(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $password = 'abcd1234';
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            $bng = D('GameBng');
+            
+            $err = null;
+            $res = $bng->getMemberBalance(array(
+                'user_name' => $user_name,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $bng->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        
+        $this->assign('method_name', 'getMemberBalance');
+        $this->assign('method_desc', '取得會員的當前餘額');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //4. 上點
+    public function deposit(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $amount = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 amount 傳入 並且不為空
+            if (!isset($request['amount']) || empty($request['amount'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+            }
+            $amount = $request['amount'];
+            
+            $err = null;
+            $bng = D('GameBng');
+            
+            $res = $bng->rechargeMemberBalance(array(
+                'user_name' => $user_name,
+                'amount' => $amount,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $bng->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('method_name', 'rechargeMemberBalance');
+        $this->assign('method_desc', '增加會員的點數餘額');
+        $this->assign('user_name', $user_name);
+        $this->assign('amount', $amount);
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //5. 下點
+    public function withdraw(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $amount = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 amount 傳入 並且不為空
+            if (!isset($request['amount']) || empty($request['amount'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+            }
+            $amount = $request['amount'];
+            
+            $err = null;
+            $bng = D('GameBng');
+            
+            $res = $bng->withdrawMemberBalance(array(
+                'user_name' => $user_name,
+                'amount' => $amount,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $bng->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('method_name', 'withdrawMemberBalance');
+        $this->assign('method_desc', '減少會員的點數餘額');
+        $this->assign('user_name', $user_name);
+        $this->assign('amount', $amount);
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    
+    //6. 抓報表明細
+    public function report(){
+        if(!$this->power){exit();}
+        $begin_datetime = date('Y-m-d H:00:00', time());
+        $end_datetime = date('Y-m-d H:00:00', time()+60*60);
+        $page = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 begin_datetime 傳入 並且不為空
+            if (!isset($request['begin_datetime']) || empty($request['begin_datetime'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//開始時間為空，請重新輸入帳號
+            }
+            $begin_datetime = $request['begin_datetime'];
+            
+            //檢查是否有 end_datetime 傳入 並且不為空
+            if (!isset($request['end_datetime']) || empty($request['end_datetime'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//結束時間為空，請重新輸入帳號
+            }
+            $end_datetime = $request['end_datetime'];
+            
+            //處理 user_name
+            if (isset($request['user_name'])&&strlen($request['user_name'])) {
+                $user_name = $request['user_name'];
+            }
+            
+            $bng = D('GameBng');
+            
+            $err = null;
+            $res = $bng->getGameRecord(array(
+                'begin_datetime' => $begin_datetime,
+                'end_datetime' => $end_datetime,
+                'page' => $page,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $bng->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('begin_datetime', $begin_datetime);
+        $this->assign('end_datetime', $end_datetime);
+        $this->assign('page', $page);
+        
+        $this->assign('method_name', 'getGameRecord');
+        $this->assign('method_desc', '抓取注單明細。');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+}

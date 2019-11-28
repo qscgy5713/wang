@@ -1,0 +1,21 @@
+<?php
+/*
+ * 會員
+ */
+class MemberModel extends CommonModel {
+    /*
+     * AES加密
+     * (用於影城取連結)
+     */
+    function AESencode($value){
+        $hash_string = 'as5168';
+        $hash = hash('SHA384', $hash_string, true);
+        $app_cc_aes_key = substr($hash, 0, 32);
+        $app_cc_aes_iv = substr($hash, 32, 16);
+        $padding = 16 - (strlen($value) % 16);
+        $value .= str_repeat(chr($padding), $padding);
+        $encrypt = mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $app_cc_aes_key, $value, MCRYPT_MODE_CBC, $app_cc_aes_iv);
+        $encrypt_text = base64_encode($encrypt);
+        return $encrypt_text;
+    }
+}

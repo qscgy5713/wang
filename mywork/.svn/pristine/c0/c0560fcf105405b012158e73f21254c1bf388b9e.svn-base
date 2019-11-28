@@ -1,0 +1,7 @@
+<?php
+class OnlineServiceAction extends MemberAction {
+    //TODO:12.線上客服
+    public function index(){
+        $this->display();
+    }
+}

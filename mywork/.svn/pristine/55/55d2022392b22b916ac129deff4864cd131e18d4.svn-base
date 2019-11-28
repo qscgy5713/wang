@@ -1,0 +1,12 @@
+<?php
+class OperatingRecordAction extends AgentAction {
+    //TODO:10 操作記錄 (取得代理 和 自己子帳號的操作紀錄)
+    public function index(){
+        $CommonAgentOperateLog = D("CommonAgentOperateLog");
+        $data = array(
+            'agent_id' => $_SESSION['Agent']['id'],
+        );
+        $return = $CommonAgentOperateLog->getAgentOperateLogData($data);
+        $this->display();
+    }
+}

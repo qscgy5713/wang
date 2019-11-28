@@ -1,0 +1,5 @@
+<?php
+return array(
+    "login" => "登入",
+    "registered" => "注册",
+);

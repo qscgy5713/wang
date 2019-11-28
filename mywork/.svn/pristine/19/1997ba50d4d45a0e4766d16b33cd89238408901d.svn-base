@@ -1,0 +1,223 @@
+<include file="Common:header"/>
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div id="service" class="content m-auto p-0" data-scrollview="true">
+			<div class="container-my">
+				<h2 class="content-title m-b-0 f-s-27">小牛遊戲後台功能說明</h2>
+				<p class="content-desc">
+					『行銷部門』
+				</p>
+				<div class="row m-b-25">
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">推廣網址</h4>
+								<p class="desc">取得經銷資格後，點選【新增網址】，畫面分別呈現欄位為網址、網站名稱、關鍵字、網站敘述、備註。網址無法進行修改，其餘欄位可自行設計文字敘述，確認新增後，在此網址進行註冊的會員，皆為你的線下會員。</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-lightbulb"></i></div>
+							<div class="info">
+								<h4 class="title text-red">常見問題</h4>
+								<ul class="p-l-20">
+			                        <li style="list-style:decimal;">推廣網址最多新增4條。</li>
+			                        <li style="list-style:decimal;">使用通訊軟體進行推廣，需請會員複製該網址貼上Google瀏覽器開啟後進行註冊，切勿使用IOS系統內建瀏覽器。</li>
+			                        <li style="list-style:decimal;">新增不同的推廣網址，可分別用於不同的行銷方式，藉由後台分析每種行銷方式的成果。</li>
+			                    </ul>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-exclamation-triangle"></i></div>
+							<div class="info">
+								<h4 class="title text-red">注意事項</h4>
+								<p class="desc">嚴禁攻擊其他娛樂城，經查核違反規章，將撤銷經銷資格並取消推廣佣金。</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row m-b-25">
+					<div class="col-md-12 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated" ><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">註冊充託</h4>
+								<p class="desc">註冊會員、儲值、託售明細。</p>
+							</div>
+						</div>
+					</div>
+					<hr>
+				</div>
+				<hr class="m-t-15 m-b-15">
+				<p class="content-desc">
+					『人事部門』
+				</p>
+				<div class="row m-b-0">
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">會員管理</h4>
+								<p class="desc">線下會員總數。</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">代理管理</h4>
+								<p class="desc">經銷商個人資料、狀態。</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">子帳管理</h4>
+								<p class="desc">新增子帳號，意指開放權限給線下會員使用經銷商後台功能，可開放亦可不開放，開放項目可自由選擇，密碼設定完成後點選確認新增，即設定完成。</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<hr class="m-t-15 m-b-15">
+				<p class="content-desc">
+					『財務部門』
+				</p>
+				<div class="row m-b-25">
+					<div class="col-md-12 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">儲託總計</h4>
+								<p class="desc">線下會員的總儲值與總託售，搜尋可查看單一會員儲值與託售總計。</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row m-b-25">
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">贈點紀錄</h4>
+								<p class="desc">線下會員領取優惠贈點紀錄。</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-exclamation-triangle"></i></div>
+							<div class="info">
+								<h4 class="title text-red">注意事項</h4>
+								<p class="desc m-b-0">經銷商需共同承擔會員活動贈點</p>
+								<p class="desc m-b-5">範例：</p>
+								<ul class="p-l-20">
+			                        <li style="list-style:decimal;">翻本金888點，且當月佣金占比為20%</li>
+			                    </ul>
+			                    <p class="desc m-b-5">計算方式：</p>
+			                    <ul class="p-l-20">
+			                       <li style="list-style:decimal;">888 X 20%=177.6【四捨五入】</li>
+			                        <li style="list-style:decimal;">最終經銷商需承擔金額為178元。</li>
+			                    </ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				<hr class="m-t-15 m-b-15">
+				<p class="content-desc">
+					『報表部門』
+				</p>
+				<div class="row m-b-25">
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">遊戲報表</h4>
+								<p class="desc">線下會員各遊戲館輸贏報表。</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-exclamation-triangle"></i></div>
+							<div class="info">
+								<h4 class="title text-red">注意事項</h4>
+								<p class="desc m-b-0">經銷商需共同承擔會員儲值1%與託售手續費</p>
+								<p class="desc m-b-5">範例：</p>
+								<ul class="p-l-20">
+			                        <li style="list-style:decimal;">會員儲值1000點，且當月佣金占比為20%</li>
+			                        <li style="list-style:decimal;">1000 X 1% X 20%=2元</li>
+			                    </ul>
+			                    <p class="desc m-b-5">範例：</p>
+			                    <ul class="p-l-20">
+			                       <li style="list-style:decimal;">會員託售1筆，且當月佣金占比為20%，手續費固定金額為15元</li>
+			                        <li style="list-style:decimal;">15 X 20%=3元</li>
+			                        <li style="list-style:decimal;">最終經銷商需承擔手續費為5元。</li>
+			                    </ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				<hr class="m-t-15 m-b-15">
+				<p class="content-desc">
+					『系統部門』
+				</p>
+				<div class="row m-b-0">
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">會員點數</h4>
+								<p class="desc">查詢會員各遊戲館點數，使用手機號碼可查詢到會員帳號。</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">登入紀錄</h4>
+								<p class="desc">經銷商【含子帳號】登入帳號、IP、網址、狀態。</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<hr class="m-t-15 m-b-15">
+				<p class="content-desc">
+					『密碼修改』
+				</p>
+				<div class="row m-b-0">
+					<div class="col-md-12 col-sm-12">
+						<div class="service">
+							<div class="icon bg-theme bounce animated"><i class="fa fa-hand-point-right"></i></div>
+							<div class="info">
+								<h4 class="title text-green-darker">密碼修改</h4>
+								<p class="desc">修改經銷商後台密碼。</p>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+			
+		
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+
+
+
+

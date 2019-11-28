@@ -1,0 +1,124 @@
+<?php
+/**
+ * 會員轉換
+ */
+class MemberTransformAction extends AdminAction
+{
+
+	public function index()
+	{
+		$request = $this->getRequest();
+		$CommonMember = D('CommonMember');
+		$changeSelect = array(
+			'agentAcc' => 'agent_account',
+			'memberAcc' => 'member_account',
+		);
+		$searchAccount = "";
+    if(isset($request['searchAccount']) && !empty($request['searchAccount'])){
+        $searchAccount = $request['searchAccount'];
+    }
+    $select = $request['select'];
+		$data = array(
+			'select' => $changeSelect[$request['select']],
+			'search' => $searchAccount,
+		);
+		$return = $CommonMember->getMemberDataByAgent($data);
+		$FiedlChange = array(
+			'member_account' => 'memberAccount',
+			'member_id' => 'memberId',
+			'agent_account' => 'agentAccount',
+			'agent_id' => 'agentId',
+		);
+		$showStr = "";
+		$showArray = array();
+		foreach ($return as $key => $value) {
+			foreach ($FiedlChange as $key1 => $value1) {
+				switch ($key1) {
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+				$accountArray[] = $showArray[$key]['memberAccount'];
+		}
+		$accountJson = json_encode($accountArray);
+		$selectArray = array(
+			0 => array('key' => 'agentAcc', 'value' => '代理帳號'),
+			1 => array('key' => 'memberAcc', 'value' => '帳號開頭'),
+		);
+		$this->assign('selectArray', $selectArray);
+		$this->assign('accountJson', $accountJson);
+		$this->assign('showArray', $showArray);
+		$this->assign('searchAccount', $searchAccount);
+		$this->assign('select', $select);
+		$this->assign('showEmpty', '<tr><td colspan="5" align="center">無資料</td></tr>');
+		$this->display();
+	}
+	/**
+	 * 修改代理
+	 */
+	public function setAgentData(){
+    $request = $this->getRequest();
+    if(empty($request['memberAccount']) && $request['memberAccount'] !== '0'){
+    	$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    if(empty($request['newAgent']) && $request['newAgent'] !== '0'){
+    	$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+    }
+    $CommonAgent = D('CommonAgent');
+    $data = array(
+    	'agent_account' => $request['newAgent'],
+    );
+    $return = $CommonAgent->getAgentDataByAccount($data);
+    if(empty($return)){
+    	$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+    }
+
+    $agentAcc = $return['agent_account'];
+    $agentId = $return['agent_id'];
+
+    $CommonMember = D("CommonMember");
+    $accountArray = json_decode($request['memberAccount'], true);
+    $accNum = count($accountArray);
+    for($i = 0; $i < $accNum; $i++){
+	    $data = array(
+	    	'agent_account' => $agentAcc,
+	    	'agent_id' => $agentId,
+	    	'member_account' => $accountArray[$i],
+	    );
+	    $return = $CommonMember->setMemberByAgentAcc($data);
+	    if($return === fasle){
+	    	$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+	    }
+	  }
+	  // die;
+    $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+  /*
+  * 搜索 會員帳號
+  */
+  public function searchMemberName() {
+    // 判斷有無輸入
+    $request = $this->getRequest();
+
+    $CommonMember = D("CommonMember");
+    if (empty($request["query"])) {
+        exit();
+    }
+
+    $limit = 7;
+    $data = array(
+        "member_acount" => $request["query"],
+        "limit"=> 7
+    );
+    $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+    if ($member_child_arr === false) {
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+    }
+    foreach ($member_child_arr as $member_child) {
+        $can_send_name[] = $member_child["member_account"];
+    }
+    echo json_encode($can_send_name);
+  }
+}

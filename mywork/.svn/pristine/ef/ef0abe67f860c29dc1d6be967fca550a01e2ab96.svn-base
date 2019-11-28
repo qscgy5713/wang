@@ -1,0 +1,328 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		
+		<div class="row">
+			<div class="col-lg-3 col-sm-3">
+				 <button class="btn btn-pink m-r-5 m-b-5" type="button" id="add_btn">
+	                                              新增子帳號
+	       		</button>
+			</div>
+			<div class="modal fade" id="modal-dialog" style="display: none; padding-right: 16px;">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title"> 新增子帳號</h4>
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						</div>
+						
+						<form method="post" action='__APP__/SubManage/formAddAgentSub'>
+							<div class="modal-body">
+								<div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">帳號 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" readonly="readonly" type="text" value="{$newSubAccount}">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">密碼 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="password" name="addPassword">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">確認密碼 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="password" name="addCheckPassword">
+									</div>
+								 </div>
+									
+								 <div class="form-group row m-b-15">
+									<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+									<div class="col-md-8 col-sm-8">
+										<input class="form-control" type="text"  name="addRemark">
+									</div>
+								 </div>
+									
+								<foreach name="showPageArray" item="showPageVal">
+									<div class="form-group row m-b-15">
+										<label class="col-md-4 col-sm-4 col-form-label">{$key} :</label>
+										<div class="col-md-8 col-sm-8">
+											<div class="form-check">
+												<input type="checkbox" class="form-check-input" name ="addchkall{$showPageVal.0.classId}" onclick="addallselet({$showPageVal.0.classId})" > 
+												<label class="form-check-label">全選</label>
+											</div>
+											<foreach name="showPageVal" item="PageVal">
+												<div class="form-check">
+													<input type="checkbox" class="form-check-input addPageClass{$PageVal.classId}" value="{$PageVal.id}" name="addPageId[]"> 
+													<label class="form-check-label">{$PageVal.showName}</label>
+												</div>
+											</foreach>
+										</div>
+									</div>
+								</foreach>
+							</div>
+							<div class="modal-footer">
+								<a href="javascript:;" class="btn btn-danger f-s-15" data-dismiss="modal">取消</a>
+								<button type="submit" name="addbtn" class="btn btn-danger f-s-15">確認新增</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">子帳管理</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table1" class="table table-striped m-b-0">
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+					                  <th>帳號</th>
+					                  <th>狀態</th>
+					                  <th>備註</th>
+					                  <th>建立時間</th>
+					                  <th>修改時間</th>
+					                  <th>操作</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<foreach name="showArray" item="showVal">
+										<tr>
+											<td>{$key+1}</td>
+											<td>{$showVal.account}</td>
+											<td>{$showVal.status}</td>
+											<td>{$showVal.remark}</td>
+											<td>{$showVal.createTime}</td>
+											<td>{$showVal.modifyTime}</td>
+											<td>
+											<button onclick="openmodal({$key+1})" type="button" class="btn btn-danger f-s-13 p-5">修改</button>
+											
+											<if condition="$showVal.status eq '帳號正常'">
+												<form class="div-style" method="post" action='__APP__/SubManage/formStopAgentSub'>
+							                    	<input type="hidden" value="{$showVal.id}" name="stopId">
+							                    	<button type="submit" class="btn btn-warning f-s-13 p-5">停用</button>
+							                    </form>
+											<else/>
+												<form class="div-style" method="post" action='__APP__/SubManage/formStartAgentSub'>
+							                    	<input type="hidden" value="{$showVal.id}" name="startId">
+							                    	<button type="submit" class="btn btn-green f-s-13 p-5">啟用</button>
+							                    </form>
+											</if>
+						                    
+						                    <form class="div-style" method="post" action='__APP__/SubManage/formDelAgentSub'>
+						                    	<input type="hidden" value="{$showVal.id}" name="delId">
+						                    	<button type="submit" class="btn btn-danger f-s-13 p-5">刪除</button>
+						                    </form>
+												
+												<div class="modal fade" id="{$key+1}" style="display: none; padding-right: 16px;">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="modal-title">修改子帳號</h4>
+																<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+															</div>
+															
+															<form method="post" action='__APP__/SubManage/formSetAgentSub'>
+																<div class="modal-body">
+																
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">帳號 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input type="hidden" value="{$showVal.id}" name="setId">
+																			<input class="form-control" type="text" readonly="readonly" value="{$showVal.account}">
+																		</div>
+																	 </div>
+																		
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">密碼 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="password" name="setPassword">
+																		</div>
+																	 </div>
+																	 
+																	 <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">確認密碼 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="password" name="setCheckPassword">
+																		</div>
+																     </div>
+																     
+																     <div class="form-group row m-b-15">
+																		<label class="col-md-4 col-sm-4 col-form-label">備註 :</label>
+																		<div class="col-md-8 col-sm-8">
+																			<input class="form-control" type="text" name="setRemark" value="{$showVal.remark}">
+																		</div>
+																     </div>
+																     
+																     <foreach name="showVal.pageData" item="classVal">
+																     	<div class="form-group row m-b-15">
+																			<label class="col-md-4 col-sm-4 col-form-label">{$key} :</label>
+																			<div class="col-md-8 col-sm-8">
+																				<div class="form-check">
+																					<input type="checkbox" class="form-check-input" name ="set{$showVal.account}chkall{$classVal.0.classId}" onclick="setallselet({$classVal.0.classId},'{$showVal.account}')" > 
+																					<label class="form-check-label">全選</label>
+																				</div>
+																				<foreach name="classVal" item="pageVal">
+																					<eq name="pageVal.power" value="1">
+																						<div class="form-check">
+																							<input type="checkbox" class="form-check-input set{$showVal.account}PageClass{$pageVal.classId}" checked="checked" value="{$pageVal.id}" name="setPageId[]"> 
+																							<label class="form-check-label">{$pageVal.showName}</label>
+																						</div>
+																					<else/>
+																						<div class="form-check">
+																							<input type="checkbox" class="form-check-input set{$showVal.account}PageClass{$pageVal.classId}" value="{$pageVal.id}" name="setPageId[]"> 
+																							<label class="form-check-label">{$pageVal.showName}</label>
+																						</div>
+																					</eq>
+																				</foreach>
+																			</div>
+																		</div>
+																     </foreach>
+																</div>
+																<div class="modal-footer">
+																	<a href="javascript:;" class="btn btn-danger f-s-15" data-dismiss="modal">取消</a>
+																	<button type="submit" name ="okbtn" class="btn btn-danger f-s-15">確認修改</button>
+																</div>
+															</form>
+														</div>
+													</div>
+												</div>
+												
+											</td>
+										</tr>
+									</foreach>
+										<tr><td id="showMessage" colspan="7" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<if condition="$pageNumber neq ''">
+						<div class="col-md-12 panel-body text-center">
+						
+							<if condition="$pageNumber-1 neq 0">
+								<div class="btn-group">
+									<button type="button" onclick="self.location.href='__APP__/PromotionSite/index&pageNumber={$pageNumber-1}'" class="btn btn-white">上一頁</button>
+								</div>
+							</if>
+							
+							 <for start="0" end="$totalPage">
+							 	<if condition="$totalPage elt 5">
+							 		<div class="btn-group">
+										<button id="{$i+1}Page" type="button" onclick="self.location.href='__APP__/PromotionSite/index&pageNumber={$i+1}'" class="btn btn-white">{$i+1}</button>
+									</div>
+							 	</if>
+							 </for>
+						
+							<if condition="$pageNumber+1 elt $totalPage ">
+								<div class="btn-group">
+									<button type="button" onclick="self.location.href='__APP__/PromotionSite/index&pageNumber={$pageNumber+1}'" class="btn btn-white">下一頁</button>
+								</div>
+							</if>
+						</div>
+					</if>
+				</div>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	
+	$("#"+"人事部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	
+	//修改
+	$("button[name='setbtn']").click(function(){
+		var password = $("input[name='setPassword']").val();
+		var checkPassword = $("input[name='setCheckPassword']").val();
+		
+		password = $.trim(password);
+		checkPassword = $.trim(checkPassword);
+		
+		 if (password == 0 && checkPassword == 0){
+			 //alert("1");
+		 }
+		 else if(password == checkPassword){
+			 //alert("2");
+			
+		 }else{
+			 alert("請確認 密碼 與 確認密碼 資料是否一致");
+			 return false;
+		 }
+	 });
+	 //新增
+	 $("button[name='addbtn']").click(function(){
+		 var addPassword = $("input[name='addPassword']").val();
+		 var addCheckPassword = $("input[name='addCheckPassword']").val();
+		 
+		 addPassword = $.trim(addPassword);
+		 addCheckPassword = $.trim(addCheckPassword);
+		 
+		 if (addPassword == 0 || addCheckPassword == 0){
+			 alert("請輸入密碼");
+			 return false;
+		 }else if(addPassword != addCheckPassword){
+			 alert("請確認 密碼 與 確認密碼 資料是否一致");
+			 return false;
+		 }
+	 });
+	 
+	 if($("#table1 tbody tr").length <= 1){
+			//alert($("#test tbody tr").length);
+			$("#showMessage").show()
+		}
+});
+function openmodal(id){
+	//alert(id);
+	$('#'+id).modal('show');
+}
+
+function addallselet(thisa)
+{
+	 if ($("input[name='addchkall"+thisa+"']").prop('checked')) {
+	    $(".addPageClass"+thisa).prop("checked", true);
+	  } else {
+	    $(".addPageClass"+thisa).prop("checked", false);
+	  }
+}
+ function setallselet(thisa,AdminAccount)
+ {
+ 	 if ($("input[name='set"+AdminAccount+"chkall"+thisa+"']").prop('checked')) {
+ 	    $(".set"+AdminAccount+"PageClass"+thisa).prop("checked", true);
+ 	  } else {
+ 	    $(".set"+AdminAccount+"PageClass"+thisa).prop("checked", false);
+ 	  }
+ }
+ </script>

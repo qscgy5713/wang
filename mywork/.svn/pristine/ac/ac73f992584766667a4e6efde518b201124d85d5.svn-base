@@ -1,0 +1,145 @@
+<?php
+class NewebpayAccountAction extends AdminAction {
+    //TODO: 藍新帳戶首頁
+    public function index(){
+        //讀取 頁面資料
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        $return = $CashflowInfoNewebPayData->getNewebPayAllData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "newebPayData_id"=>"id",
+            "newebPayData_enabled"=>"enabled",
+            "newebPayData_merchantnumber"=>"merchantnumber",
+            "newebPayData_code"=>"code",
+            "newebPayData_remark"=>"remark",
+        );
+        $showStr = "";
+        $countEnabled = 0;
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'newebPayData_enabled'://開關  轉換 文字
+                        if($value[$key1] == 1){
+                            ++$countEnabled;
+                            $this->assign("nowUseMerchantnumber",$value["newebPayData_merchantnumber"]);
+                            $this->assign("nowUseCode",$value["newebPayData_code"]);
+                            $showStr = "啟用中";
+                            break;
+                        }
+                        $showStr = "停用中";
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        if($countEnabled > 1){
+            $this->test();
+        }
+        //var_dump($showArray);
+        $this->assign("showArray",$showArray);
+        $this->display();
+    }
+    //TODO: 管理帳號新增
+    public function formAddMerchantnumber(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查 帳號 傳入 並且不為空
+        if(!isset($request['addMerchantnumber']) || empty($request['addMerchantnumber'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//密碼為空，請重新輸入
+        }
+        //檢查是否有 addPassword 傳入 並且不為空
+        if(!isset($request['addCode']) || empty($request['addCode'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼為空，請重新輸入
+        }
+        
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        
+        $data = array(
+            "newebPayData_merchantnumber" => $request['addMerchantnumber'], //管理帳號
+            "newebPayData_code" => $request['addCode'],
+            "newebPayData_remark" => $request['addRemark']
+        );
+        $return = $CashflowInfoNewebPayData->addMerchantnumberData($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 修改
+    public function formSetMerchantnumber(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 Id 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['setId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改帳號為空，請重新登入。
+        }
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        $data = array(
+            "newebPayData_id" => $request['setId'], //管理帳號
+            "newebPayData_code" => $request['setCode'],
+            "newebPayData_remark" => $request['setRemark']
+        );
+        $return = $CashflowInfoNewebPayData->setMerchantnumberDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//權限不足或操作錯誤，請重新登入。
+    }
+    //TODO: 刪除
+    public function formDelMerchantnumber(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 setDomainId 傳入 並且不為空
+        if(!isset($request['delId']) || (empty($request['delId']) && $request['delId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除ID為空，請重新操作
+        }
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        $data = array(
+            "newebPayData_id" => $request['delId']
+        );
+        $return = $CashflowInfoNewebPayData->delMerchantnumberDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//操作錯誤，請重新登入。
+    }
+    //TODO: 啟用  啟用後就變成目前使用 其他的都會變成關閉
+    public function formStartMerchantnumber(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 ID 傳入 並且不為空
+        if(!isset($request['startId']) || (empty($request['startId']) && $request['startId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+        $data = array(
+            "newebPayData_id" => $request['startId'],
+            "newebPayData_enabled" => 1
+        );
+        $return = $CashflowInfoNewebPayData->setNowMerchantnumberDataByNowId($data,$err);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error($err);
+        }
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+}

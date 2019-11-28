@@ -1,0 +1,117 @@
+<?php
+//返水腳本
+class ScriptBackWaterAction extends ScriptAction {
+    protected $power = false;
+    protected $gameCode = "";
+    protected $gameCodeArray = array(
+        "Ab","Sb","Dg","Qt","Uc8","Rtg","Bng","Og"
+    );
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        $request = $this->getRequest();
+        if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+            cookie('MIS','@@aaa123','expire=3600');
+        }
+        $MIS = cookie('MIS');
+        if($MIS === "@@aaa123"){
+            if(!isset($request["gameCode"]) && empty($request["gameCode"])){
+                $this->power = false;
+            } else {
+                if(in_array(ucfirst($request["gameCode"]), $this->gameCodeArray)){
+                    $this->power = true;
+                    $this->gameCode = ucfirst($request["gameCode"]);
+                }
+            }
+        }
+    }
+    //返水頁面
+    public function index(){
+        if(!$this->power){exit();}
+        
+        //讀取遊戲基本資料 開始
+        $gameInfo = D("GameInfo");
+        $data = array(
+            'game_code' => $this->gameCode,
+            'waterRank_serial' => 1
+        );
+        $return = $gameInfo->getGameInfoData($data);//取得遊戲基本資料
+        if($return === false){
+            echo "讀取資料庫失敗";
+            exit();
+        }
+        $gameOneWaterRate = $return['waterRank_waterRate']; //無階層時第一次返水使用的 返水率
+        $gameClassId = $return['gameClass_id'];
+        $gameClassShowName = $return['gameClass_showName'];
+        $gameID = $return['game_id'];
+        $gameName = $return['game_name'];
+        //讀取遊戲基本資料 結束
+        
+        echo $return['game_code']." ".$return['gameClass_showName']."  <span style='color:red'>".$return['game_name']."</span> 返水開始<BR>";
+        
+        $gameDetail = D("Game".$this->gameCode."Detail");
+        
+        $data = array(
+            'gameClass_id'=>$return['gameClass_id']
+        );
+        $return = $gameDetail->getMemberBackWater($data);//讀取會員 返水明細
+        if($return === false){
+            echo "讀取資料庫失敗";
+            exit();
+        }
+        $memberWaterArray = array();
+        $memberIdArray = array();
+        foreach($return as $key => $value){
+            array_push($memberIdArray, $value['memberId']);
+            $memberWaterArray[$value['memberId']] = $value;
+            if(empty($value['waterRank_waterRate'])){
+                $memberWaterArray[$value['memberId']]['waterRank_waterRate'] = $gameOneWaterRate;
+            }
+            //$memberWaterArray[$value['memberId']]['backWaterMoney']
+            $backWaterMoney = bcmul($value['AllEffective'], $memberWaterArray[$value['memberId']]['waterRank_waterRate'], 4);
+            if(!empty($value['decimalPoint_money'])){
+                $oldDecimalPointMoney = $value['decimalPoint_money'];
+                $backWaterMoney = bcadd($backWaterMoney, $oldDecimalPointMoney, 4);
+            } else {
+                $oldDecimalPointMoney = 0;
+            }
+            $backWaterMoneyAfter = floor($backWaterMoney);//返水金額
+            $newDecimalPointMoney = bcsub($backWaterMoney, $backWaterMoneyAfter, 4);//剩餘小數點
+            //var_dump($backWaterMoney);var_dump($backWaterMoneyAfter);var_dump($decimalPointMoney);
+            $memberWaterArray[$value['memberId']]['backWaterMoney'] = $backWaterMoneyAfter;
+            $memberWaterArray[$value['memberId']]['decimalPoint_money'] = $newDecimalPointMoney;
+            $memberWaterArray[$value['memberId']]['game_id'] = $gameID;
+            $memberWaterArray[$value['memberId']]['game_name'] = $gameName;
+            $memberWaterArray[$value['memberId']]['betDetails'] = array(
+                "betId"=>$value['AllId'],//注單ID
+                "allEffective"=>$value['AllEffective'],//總洗碼
+                "waterRate"=>$memberWaterArray[$value['memberId']]['waterRank_waterRate'],//會員返水%數
+                "backWaterMoney"=>$backWaterMoneyAfter,//計算後 退水金額
+                "oldDecimalPointMoney"=>$oldDecimalPointMoney,//原始小數
+                "newDecimalPointMoney"=>$newDecimalPointMoney//計算後小數
+            );
+        }
+        //var_dump($memberWaterArray);exit();
+        $return = $gameDetail->programBackWater($memberWaterArray,$err);
+        if($return === false){
+            var_dump($err);
+            exit();
+        }
+        exit();
+        
+        
+        //計算會員返水階層 計算洗碼
+        $data = array(
+            "gameClassId"=>$gameClassId,
+            "gameClassShowName"=>$gameClassShowName,
+            "memberIdArray" => $memberIdArray
+        );
+        $return = $gameDetail->setMemberWaterrankLevel($data,$err);
+        if($return === false){
+            echo $err;
+        }
+    }
+}

@@ -1,0 +1,291 @@
+<?php
+class AdminPageClassManageAction extends AdminAction {
+    protected $adminPageClassManage = 10; //分頁筆數
+    protected $pageMoreNumber = 5; //一頁最多幾筆
+    //TODO: 頁面類別管理 首頁
+    public function index(){
+        $request = $this->getRequest();
+        //讀取 頁面資料
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        //取得總筆數
+        $return = $CommonAdminPageclass->getTotalNumberAdminPageClassData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $totalNumber = $return['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->adminPageClassManage);
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //頁數陣列
+
+        $data = array(
+            'page' => array(
+                'number' => $this->adminPageClassManage,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+        $return = $CommonAdminPageclass->getAdminPageClassDataNumber($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "pageclass_id"=>"id",
+            "pageclass_showName"=>"showName",
+            "pageclass_order"=>"order",
+            "pageclass_enabled"=>"enabled",
+            "pageclass_createTime"=>"createTime",
+            "pageclass_modifyTime"=>"modifyTime",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'pageclass_enabled'://頁面開關  轉換 文字
+                        if($value[$key1] == 1){
+                            $showStr = "啟用中";
+                            break;
+                        }
+                        $showStr = "關閉中";
+                        break;
+                    case 'pageclass_createTime'://頁面建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'pageclass_modifyTime'://頁面修改時間 時間戳 轉換 日期
+                        $showStr = "無修改時間";
+                        if(!empty($value[$key1])){
+                            $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("showArray",$showArray);
+        $this->assign("totalPage",$totalPage); //總頁數
+        $this->assign("pageNumber",$pageNumber); //目前頁數
+        $this->assign("pageArray",$pageArray); //分頁陣列
+        $this->assign("totalNumber",$totalNumber); //總筆數
+        $this->assign("showEmpty","<tr><td colspan='7' align='center'>無資料</td></tr>");
+        $this->display();
+    }
+    //TODO: 新增後台頁面類別
+    public function formAddAdminPageClass(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 addShowName 傳入 並且不為空
+        if(!isset($request['addShowName']) || empty($request['addShowName'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//類別顯示名稱為空，請重新輸入
+        }
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $return = $CommonAdminPageclass->getMaxOrderData();
+        $maxOrder = 0;
+        if(!empty($return)){
+            $maxOrder = $return['MaxOrder'];
+        }
+        $maxOrder++;
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "pageclass_showName" => $request['addShowName'],
+            "pageclass_order" => $maxOrder,
+            "pageclass_createTime" => $nowTime
+        );
+        $return = $CommonAdminPageclass->addAdminPageClassData($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 修改後台頁面類別
+    public function formSetAdminPageClass(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 setId 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['setId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//無選擇修改的類別，請重新選擇。
+        }
+        if(!isset($request['setShowName']) || empty($request['setShowName'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//顯示名稱為空，請重新輸入。
+        }
+
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "pageclass_id" => $request['setId'],
+            "pageclass_showName" => $request['setShowName'],
+            "pageclass_modifyTime" => $nowTime
+        );
+        $return = $CommonAdminPageclass->setAdminPageClassDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//操作錯誤，請重新登入。
+    }
+    //TODO: 刪除後台頁面
+    public function formDelAdminPageClass(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 setDomainId 傳入 並且不為空
+        if(!isset($request['delId']) || (empty($request['delId']) && $request['delId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除ID為空，請重新操作
+        }
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $data = array(
+            'pageclass_id' => $request['delId'],
+        );
+        $return = $CommonAdminPageclass->getAdminPageData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $data = array(
+            'pageclass_order' => $return['pageclass_order'],
+        );
+        $return = $CommonAdminPageclass->setAdminPageOrderByClassIdAndPageOrder($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        $data = array(
+            "pageclass_id" => $request['delId']
+        );
+        $return = $CommonAdminPageclass->delAdminPageClassDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//操作錯誤，請重新登入。
+    }
+    //TODO: 類別停用
+    public function formStopAdminPageClass(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 ID 傳入 並且不為空
+        if(!isset($request['stopId']) || (empty($request['stopId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $data = array(
+            "pageclass_id" => $request['stopId'],
+            "pageclass_enabled" => 0,
+        );
+        $return = $CommonAdminPageclass->setAdminPageClassDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//權限不足或操作錯誤，請重新登入。
+    }
+    //TODO: 類別啟用
+    public function formStartAdminPageClass(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 ID 傳入 並且不為空
+        if(!isset($request['startId']) || (empty($request['startId']) && $request['startId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $data = array(
+            "pageclass_id" => $request['startId'],
+            "pageclass_enabled" => 1,
+        );
+        $return = $CommonAdminPageclass->setAdminPageClassDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+    }
+    //TODO: 排序
+    public function formSortAgentPageClass(){
+        $request = $this->getRequest();
+
+        switch ($request['className']) {
+            case 'upSort':
+                if(!isset($request['orderSort']) || empty($request['orderSort']) && $request['orderSort'] !== 0){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_0')));
+                }
+
+                $data = array(
+                    'pageclass_order' => $request['orderSort'],
+                    'pageclass_order2' => ($request['orderSort'] - 1),
+                );
+                break;
+
+            case 'downSort':
+                if(!isset($request['orderSort']) || empty($request['orderSort']) && $request['orderSort'] !== 0){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_0')));
+                }
+
+                $data = array(
+                    'pageclass_order' => $request['orderSort'],
+                    'pageclass_order2' => ($request['orderSort'] + 1),
+                );
+                break;
+
+            default:
+                if($return === false){
+                    //否，顯示錯誤
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                }
+                break;
+        }
+
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $return = $CommonAdminPageclass->setSortAgentPageClassOrder($data);
+        redirect(__APP__.'/AdminPageClassManage/index');
+    }
+    //TODO: 開關AJAX
+    public function ajaxSwitch(){
+        $request = $this->getRequest();
+        $CommonAdminPageclass = D("CommonAdminPageclass");
+        $nowTime = time();
+        switch($request['mode_id']){
+            case 'stopId':
+                $nowTime = time();//取得現在時間戳
+                $data = array(
+                    "pageclass_id" => $request['stopId'],
+                    "pageclass_enabled" => 0,
+                );
+                $return = $CommonAdminPageclass->setAdminPageClassDataById($data);
+                break;
+            case 'startId':
+                $nowTime = time();//取得現在時間戳
+                $data = array(
+                    "pageclass_id" => $request['startId'],
+                    "pageclass_enabled" => 1,
+                );
+                $return = $CommonAdminPageclass->setAdminPageClassDataById($data);
+                break;
+            default:
+                break;
+        }
+    }
+}

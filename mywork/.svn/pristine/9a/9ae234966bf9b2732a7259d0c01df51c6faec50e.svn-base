@@ -1,0 +1,100 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">RTG 電子遊戲</h2>
+				<h6 class="text-white">
+					提供最新穎的斯洛、老虎機、桌面遊戲，及其他電子遊戲。
+				</h6>
+			 	<div class="separator-2"></div>
+			 	
+			 	<ul class="nav nav-tabs style-1" role="tablist">
+	                <VOLIST name="GameRtgMenu" id="data" key="k">
+				   		<if condition='$k eq "1"'>
+				   			<li class="nav-item">
+					   			<a class="nav-link active" href="#tab{$k}" role="tab" data-toggle="tab" data-filter="*">
+					   			{$key}({$GameRtgMenuCount[$key]})
+					   			</a>
+				   			</li>
+				   		<else/>
+				   			<li class="nav-item">
+					   			<a class=" nav-link" href="#tab{$k}" role="tab" data-toggle="tab" data-filter="*">
+					   			{$key}({$GameRtgMenuCount[$key]})
+					   			</a>
+				   			</li>
+				   		</if>
+				    </VOLIST>
+	           </ul>
+	           
+	           <div class="tab-content">
+	           
+	           <VOLIST name="GameRtgMenu" id="data" key="k">
+	           		<if condition='$k eq "1"'>
+	           			<div class="tab-pane fade show active" id="tab{$k}" role="tabpanel">
+	           		<else/>
+	           			<div class="tab-pane fade" id="tab{$k}" role="tabpanel">
+	           		</if>
+	           				<div class="row">
+	           					<VOLIST name="data" id="vo">
+	           						<div class="col-md-2 col-lg-2 isotope-item app-development">
+					                  <div class="image-box style-2 mb-20 hc-shadow-2 hc-shadow-2-m bordered light-gray-bg text-center">
+					                    <div class="overlay-container">
+					                      <img src="__CSS__/images/rtg/{$vo.image_src}.png" alt="">
+					                      <div class="overlay-to-top">
+					                        <p class="small margin-clear"><em></em></p>
+					                      </div>
+					                    </div>
+					                    <div class="body">
+					                      <h5 class="text-white">{$vo.game_name_ch}</h5>
+					                      <div class="separator"></div>
+					                      
+					                      <a href="#" onclick="openWindow({$vo.mach_id},{$vo.game_id})" class="btn btn-default-transparent btn-animation btn-animation--slide-horizontal margin-clear">
+					                      	go<i class="fa fa-arrow-right pl-10"></i>
+					                      </a>
+					                    </div>
+					                  </div>
+					                </div>
+	           					</VOLIST>
+	           				</div>
+	           		</div>
+	           </VOLIST>
+              </div>
+	         
+	     
+			
+              
+              
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+<script>
+ function openWindow(mi,gi){
+	 $.ajax({
+	      type:"POST",
+	      url:"__URL__/getGameLink",
+	      data:{machId:mi,gameId:gi},
+	      success:function(data){
+	      alert(data);
+	       windows.open(data, '_blank');
+	      }
+	  });
+ }
+
+ </script>
+
+
+
+
+
+
+
+
+
+  
+  
+ 

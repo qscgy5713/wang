@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW" class="demo-3 demo-dark">
+	<head>
+		 <link href="__CSS__/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+	    <!-- Font Awesome CSS -->
+	    <link href="__CSS__/fonts/font-awesome/css/font-awesome.css" rel="stylesheet">
+	
+	    <!-- Plugins -->
+	    <link href="__CSS__/plugins/magnific-popup/magnific-popup.css" rel="stylesheet">
+	    <link href="__CSS__/plugins/htmlcoder/sliders/fullscreen-slider-layout.css" rel="stylesheet">
+	    <link href="__CSS__/plugins/htmlcoder/sliders/slider-style.css" rel="stylesheet">
+	    <link href="__CSS__/css/animations.css" rel="stylesheet">
+	    <link href="__CSS__/plugins/slick/slick.css" rel="stylesheet">
+	     <link href="__CSS__/plugins/rs-plugin-5/css/settings.css" rel="stylesheet">
+	    <link href="__CSS__/plugins/rs-plugin-5/css/layers.css" rel="stylesheet">
+	    <link href="__CSS__/plugins/rs-plugin-5/css/navigation.css" rel="stylesheet">
+	    
+	    <!-- The Project's core CSS file -->
+	    <!-- Use css/rtl_style.css for RTL version -->
+	    <link href="__CSS__/css/style.css" rel="stylesheet" >
+	    <!-- The Project's Typography CSS file, includes used fonts -->
+	    <!-- Used font for body: Open Sans -->
+	    <!-- Used font for headings: Lato -->
+	    <!-- Use css/rtl_typography-scheme-3.css for RTL version -->
+	    <link href="__CSS__/css/typography-scheme-3.css" rel="stylesheet" >
+	    <!-- Color Scheme (In order to change the color scheme, replace the blue.css with the color scheme that you prefer) -->
+	    <link href="__CSS__/css/skins/light_blue.css" data-style="styles-no-cookie" rel="stylesheet">
+	    <link href="__CSS__/style-switcher/style-switcher.css" rel="stylesheet">
+	
+	    <!-- Custom css -->
+	    <link href="__CSS__/css/custom.css" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="__CSS__/loading/css/style.css" />
+		
+		<!--[if lte IE 9]><style>.main{display:none;} .support-note .note-ie{display:block;}</style><![endif]-->
+	</head>
+	<body>
+		<div class="container">
+			<header>
+			</header>
+			<section class="main">
+				<!-- the component -->
+				<ul class="bokeh">
+					<li></li>
+					<li></li>
+					<li></li>
+					<li></li>
+				</ul>
+			</section>
+			 <h6 id="loader-text" class="ml9 text-center">
+			  <span id="loader-span" class="text-wrapper">
+			    <span id="loader-span2" class="letters text-white">讀取中!</span>
+			  </span>
+		  </h6> 
+		</div>
+    </body>
+</html>

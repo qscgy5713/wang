@@ -1,0 +1,140 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+
+
+<if condition='$isMobile eq "1"'>
+	<if condition='$gameLink eq "false"'>
+		<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+			<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+				<div class="display-table">
+					<div class="display-table-cell vertical-align-middle">
+						<div class="container text-center">
+						<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+						<div class="row mt-30">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">{$Think.lang.ElectronicWallet}</label>
+								<input type="text" value="{$memberWallet}" readonly class="form-control required">
+							</div>
+						</div>
+
+							<div class="row mt-10">
+								<div class="col-md-3 col-sm-3 m-auto">
+									<label class="txt-white mb-10">{$Think.lang.ErrorMessage}</label>
+									<input type="text" id="memberBalance" value="{$memberBalance}" readonly class="form-control required">
+									<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+								</div>
+							</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	<else/>
+		<div id="loader-bg-page" class="loader-bg demo-3">
+			<div id="loader" class="container">
+				<section class="main pb-10 text-center pt-200" style="background:hsl(0, 0%, 0%);">
+					<img src="__CSS__/images/loading.gif">
+				</section>
+			</div>
+		</div>
+	</if>
+<else/>
+<include file="Common:loginMenu"/>
+<include file="Common:menuNoFixed"/>
+<include file="Common:menuRwd"/>
+	<if condition='$gameLink eq "false"'>
+		<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+			<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+			<div class="display-table">
+				<div class="display-table-cell vertical-align-middle">
+
+					<div class="container text-center">
+
+						<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+
+						<div class="row mt-30">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">電子錢包</label>
+								<input type="text" value="{$memberWallet}" readonly class="form-control required">
+							</div>
+						</div>
+						<div class="row mt-10">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">錯誤訊息</label>
+								<input type="text" id="memberBalance" value="{$memberBalance}" readonly class="form-control required">
+								<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	<else/>
+		<iframe id="game_iframe" class="md-gameEnter la-gameEnter" src="" name="gameIframe" width="100%" height="100%" frameborder="0" scrolling="auto"></iframe>
+	</if>
+</if>
+
+
+
+<include file="Common:game_footer"/>
+<script type="text/javascript">
+
+jQuery(document).ready(function(){
+	if("{$isMobile}" == "1"){
+		if("{$gameLink}" == "false"){
+			jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+		    alert("{$errMessage}");
+		} else {
+			document.location.href="{$gameLink}";
+			/*$(".gameNewHtml").click(function(){
+				var gamehtml = window.open('__APP__/Common/loading&xn', 'gamePage');
+			});
+			mobileChange();
+			var gamehtml = window.open('', 'gamePage');
+			gamehtml.document.location.href='{$gameLink}';*/
+		}
+	} else {
+		if("{$gameLink}" == "false"){
+			jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+		    alert("{$errMessage}");
+		} else {
+			jQuery("#game_iframe").attr("src","{$gameLink}");
+			mobileChange();
+		}
+	}
+});
+
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+
+function mobileChange() {
+	if("{$isMobile}" == "1"){
+		var h = jQuery(window).height();
+		jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+	} else {
+		var h = jQuery(window).height();
+		var topBar_h = jQuery('#topBar').height();
+		var header_h = jQuery('#header').height();
+
+		jQuery("#game_iframe").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+function reloadPage(){
+	if("{$isMobile}" == "1"){
+		var gamehtml = window.open('__APP__/Common/loading&xn', 'gamePage');
+	}
+	location.reload();
+}
+</script>
+
+
+

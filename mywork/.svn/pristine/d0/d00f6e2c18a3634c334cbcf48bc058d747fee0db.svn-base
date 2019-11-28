@@ -1,0 +1,34 @@
+<?php
+/*
+ * 遊戲資訊
+ */
+class GameInfoModel extends AdminModel {
+    protected $tableName = "game_info";
+    protected $tableId = "game_id";
+    
+    public function getGameInfoData($data){
+        if(empty($data['game_code']) && $data['game_code'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                LEFT OUTER JOIN `common_game_waterRank` c ON (a.`gameClass_id` = c.`gameClass_id`)
+                WHERE `game_code` = '{$data['game_code']}'
+                AND `waterRank_serial` = '{$data['waterRank_serial']}';";
+        $return = $this->query($sql);
+        if($return === false || empty($return)){
+            return false;
+        }
+        return $return[0];
+    }
+    public function getAllGameNameData(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->cacheQuery($sql,12);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+}

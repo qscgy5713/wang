@@ -1,0 +1,93 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:menuRwd"/>
+			<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up" style="margin-top: 54px;">
+			
+				<VOLIST name="gameLotteryMenuArray" id="gameTable">
+					
+						<IF condition="$gameTable.gameEnabled eq '1'">
+						
+							<IF condition="$i%2 eq 0">
+								<div class="row game-row-rwd">
+									<a id="{$gameTable.gameCode}GameButton" onClick="goGameEnter('__APP__/Game{$gameTable.gameCode}/gameEnter')" class="lotteryHall-game-bg-left game-a-rwd">
+										<!-- href="__APP__/Game{$gameTable.gameCode}/gameEnter" -->
+										<div class="col-6 p-0">
+											<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/logo{$gameTable.gameCode}.png">
+										</div>
+										<div class="col-6 p-0">
+											<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/game{$gameTable.gameCode}.png">
+										</div>
+									</a>
+								</div>
+							<ELSE/>
+								<div class="row game-row-rwd">
+									<a id="{$gameTable.gameCode}GameButton" onClick="goGameEnter('__APP__/Game{$gameTable.gameCode}/gameEnter')" class="lotteryHall-game-bg-right game-a-rwd"><!-- RTG -->
+										<div class="col-6 p-0">
+											<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/game{$gameTable.gameCode}.png">
+										</div>
+										<div class="col-6 p-0">
+											<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/logo{$gameTable.gameCode}.png">
+										</div>
+									</a>
+								</div>
+							</IF>
+						<ELSE/>
+							<IF condition="$i%2 eq 0">
+								<div class="row game-row-rwd">
+									<a  href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')">
+										<div class="caution ">
+											<img src="__CSS__/images/menu-img/warn.svg">
+										</div>
+									</a>
+									<a  href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="lotteryHall-game-bg-left game-gray game-a-rwd">
+										<div class="col-6 p-0">
+											<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/logo{$gameTable.gameCode}.png">
+										</div>
+										<div class="col-6 p-0">
+											<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/game{$gameTable.gameCode}.png">
+										</div>
+									</a>
+								</div>
+								
+							<ELSE/>
+								<div class="row game-row-rwd">
+									<a  href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')">
+										<div class="caution ">
+											<img src="__CSS__/images/menu-img/warn.svg">
+										</div>
+									</a>
+									<a  href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="lotteryHall-game-bg-right game-gray game-a-rwd"><!-- RTG -->
+										<div class="col-6 p-0">
+											<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/game{$gameTable.gameCode}.png">
+										</div>
+										<div class="col-6 p-0">
+											<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/lotteryHall/logo{$gameTable.gameCode}.png">
+										</div>
+									</a>
+								</div>
+							</IF>
+						</IF>
+				</VOLIST>
+			</section>
+		<include file="Common:footer"/>
+<script>
+//RWD調整畫面高度
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	
+	//var md_footer_h = jQuery('#md-footer').height();
+	//alert(h);
+	//alert(banner_h);
+	if(isLogin == "true"){
+		jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+	}else{
+		jQuery("#md-login-bg").css("min-height",h-home_page_rwd_h+"px");
+	}
+		   
+}
+</script>

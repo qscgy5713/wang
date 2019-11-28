@@ -1,0 +1,142 @@
+<?php
+/*
+ * 代理加盟
+ */
+class CommonAgentAgentjoinModel extends AdminModel {
+    protected $tableName = "common_agent_agentjoin";
+    protected $tableId = "agentjoin_id";
+    /**
+     * 取得未處理代理加盟
+     * @param  $err
+     * @return boolean|array
+     */
+    public function getAgentjoinDataByNoHandle(&$err){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `agentjoin_status` = '0';";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 取得已處理代理加盟
+     * @param  $err
+     * @return boolean|array
+     */
+    public function getAgentjoinDataByHandle(&$err){
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `internal_admin` b ON(a.`admin_id`=b.`admin_id`)
+                WHERE a.`agentjoin_status` = '1'
+                LIMIT 10;";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 處理代理加盟
+     * @param $data['agentjoin_id'] && $data["admin_id"]
+     * @return boolean|false
+     */
+    public function setAgentjoinDataById($data,&$err){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["admin_id"]) && $data["admin_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+     /**
+     * 取得未處理代理加盟 總筆數
+     * @param  $err
+     * @return boolean|array
+     */
+    public function getTotalNumberAgentjoinDataByNoHandle(&$err){
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `agentjoin_status` = '0';";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return[0];
+    }
+     /**
+     * 搜索未處理代理加盟 分頁
+     * @param  $err
+     * @return boolean|array
+     */
+    public function getAgentjoinDataByNoHandleNumber($data, &$err){
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `agentjoin_status` = '0' {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 取得已處理代理加盟總筆數
+     * @param  $err
+     * @return boolean|array
+     */
+    public function getTotalNumberAgentjoinDataByHandle(&$err){
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}` a
+                JOIN `internal_admin` b ON(a.`admin_id`=b.`admin_id`)
+                WHERE a.`agentjoin_status` = '1'
+                LIMIT 10;";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 取得已處理代理加盟
+     * @param  $err
+     * @return boolean|array
+     */
+    public function getAgentjoinDataByHandleNumber($data, &$err){
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `internal_admin` b ON(a.`admin_id`=b.`admin_id`)
+                WHERE a.`agentjoin_status` = '1'
+                {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+}

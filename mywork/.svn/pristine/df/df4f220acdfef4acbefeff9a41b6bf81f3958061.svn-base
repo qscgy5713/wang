@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		遊戲帳號: <input type="text" name="user_name" value="{$user_name}" /><br/>
+		帳號密碼: <input type="text" name="password" value="{$password}" /><br/>
+		盤口: <select name="win_limit">
+			<option value="E">E (100, 20000)</option>
+			<option value="A">A (100, 250000)</option>
+			<option value="B">B (50, 5000)</option>
+			<option value="C">C (50, 10000)</option>
+			<option value="D">D (100, 10000)</option>
+			<option value="F">F (100, 50000)</option>
+			<option value="G">G (100, 100000)</option>
+		</select><br/>
+		每日限紅: <input type="text" name="daily_win_limit" value="{$daily_win_limit}" /><br/>
+		貨幣代碼: <input type="text" name="currency_id" value="{$currency_id}" /><br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="$op_result">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+			<IF condition="strlen($op_result2)"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+	<ELSE/>
+		<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+	</IF>
+</body>
+</html>

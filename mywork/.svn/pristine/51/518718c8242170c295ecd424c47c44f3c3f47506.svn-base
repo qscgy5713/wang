@@ -1,0 +1,842 @@
+<?php
+
+class GameQtModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+//   protected $cfg_base_url = 'https://api.qtplatform.com/';
+//   protected $cfg_agent = 'api_csyl';
+//   protected $cfg_api_key = 'cd891ae2';
+  
+  protected $cfg_base_url = 'https://api-int.qtplatform.com/';
+  protected $cfg_agent = 'api_wegame';
+  protected $cfg_api_key = 'gYNkpH9n';
+
+  private $__token = null;
+
+  const QT_MEMBER_STATUS_FREEZE = 0;  //會員狀態:停用
+  const QT_MEMBER_STATUS_NORMAL = 1;  //會員狀態:正常
+  const QT_MEMBER_STATUS_LOCKED = 2;  //會員狀態:鎖定(不能下注)
+  const QT_TRANS_SUCCESS_CODE = 0;
+  const QT_TRANS_FAILED_CODE = 324;
+  const QT_DEFAULT_CURRENCY_CODE = 'TWD';
+  const QT_DEFAULT_LANG_CODE = 'zh_CN';
+  const QT_DEFAULT_COUNTRY_CODE = 'TW';
+  const QT_DEFAULT_REQUEST_METHOD = 'POST';
+  const QT_CURL_CONNECTTIMEOUT_MS = 15000;
+  const QT_CURL_TIMEOUT_MS = 28000;
+  const QT_REPORT_DEFAULT_TIMEZONE = 'Asia/Taipei';  //預設時區
+  const QT_REPORT_GAMEROUND_RETRIEVE_MAX_NUM = 100;  //每次抓取注明細, 最多可能回傳的注數量
+  const QT_REPORT_NGR_EMBED = 'items';  //[items],[summary],[items,summary]. items means retrieve NGR for each player
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+
+  public function __construct() {
+    //...
+  }
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['currency_type'] 3位貨幣代碼(非必須). 預設=TWD
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if (!($token = $this->getToken($argErr))) { return false; }
+    return true;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['game_code'] game_id
+   * @param $data['mach_id'] mach_id
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL (string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'game_id' => array('required'=>1,),
+      'is_mobile' => array('required'=>0,'default'=>false),
+      'currency' => array('required'=>0,'default'=>self::QT_DEFAULT_CURRENCY_CODE),
+      'language' => array('required'=>0,'default'=>self::QT_DEFAULT_LANG_CODE),
+      'country' => array('required'=>0,'default'=>self::QT_DEFAULT_COUNTRY_CODE),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if (!($token = $this->getToken($argErr))) { return false; }
+    $mode = 'real';  //'demo' for trial
+    $device = 'desktop';
+    if ($_is_mobile) { $device = 'mobile'; }
+    $arrParams = array(
+      'playerId' => $_user_name,
+      'currency' => $_currency,
+      'country' => $_country,
+      //'gender' => $gender,
+      //'birthDate' => $birthDate,
+      'lang' => $_language,
+      'mode' => $mode,
+      'device' => $device,
+      //'returnUrl' => $argHomeLink,
+    );
+    if ($_is_mobile) { $arrParams['returnUrl'] = '666we.net'; }
+    //var_dump($arrParams);exit();
+    $httpHeader = array(
+      "Authorization: Bearer {$token}",
+      "Content-Type: application/json",
+      "Accept: application/json"
+    );
+
+    $url = $this->cfg_base_url."v1/games/". trim( $_game_id ) . "/launch-url";
+    $httpCodeReturned = null;
+    $httpMethod = 'POST';
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    //var_dump($result);
+    if ($result!==false) {
+      if ( $httpCodeReturned === 200 ) {  //成功時返回http code: 200
+        //echo  $httpCodeReturned;
+        if (array_key_exists('url', $result)) {
+          $gameLink = $result['url'];
+          return $gameLink;
+        } else {
+          $errCode = 'essential_key_not_found';
+          $errMsg = 'cannot find essential key(s): '.'url';
+          $err = $this->_produceError($errCode, $errMsg);
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+          return false;
+        }
+      } else {  //失敗
+        $errCode = $result['code'];
+        $errMsg = $result['message'];
+        //var_dump($result);
+        $err = $this->_produceError($errCode, $errMsg);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')).': '.$err;  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_04'));  //CURL 結果為不成功
+    return false;
+	}
+	
+	/**
+	 * getGameList: 查詢QT所有可用遊戲及其當前狀態
+	 * @param &$err 盛裝錯誤(非必須)
+	 * @return 遊戲資料的陣列(array):
+	 
+	 結果範例:
+	 
+	 array(354) {
+	 [0] =>
+	 array(10) {
+	 'id' => string(13) "BNG-12animals"  //啟動遊戲用的id
+	 'name' => string(10) "12 Animals"  //英文名稱
+	 'provider' => string(3) "BNG"  //供應商
+	 'category' => string(17) "CASINO/SLOT/5REEL"  //類別分類
+	 'supportsDemo' => bool(true)  //是否支持試玩
+	 'clientTypes' => array(1) {  //客戶端的型態
+	 [0] => string(5) "HTML5"
+	 }
+	 'languages' => array(7) {  //適用的語言
+	 [0] => string(5) "en_US"
+	 [1] => string(5) "ja_JP"
+	 [2] => string(5) "zh_CN"
+	 [3] => string(5) "ko_KR"
+	 }
+	 'currencies' => array(24) {  //適用的貨幣
+	 [0] => string(3) "JPY"
+	 [1] => string(3) "CNY"
+	 [2] => string(3) "KRW"
+	 [3] => string(3) "VND"
+	 [4] => string(3) "THB"
+	 [5] => string(3) "INR"
+	 [6] => string(3) "IDR"
+	 [7] => string(3) "MYR"
+	 [8] => string(3) "TWD"
+	 [9] => string(3) "HKD"
+	 [10] => string(3) "USD"
+	 [11] => string(3) "RUB"
+	 }
+	 'supportedDevices' => array(3) {  //支持的遊戲設備
+	 [0] => string(6) "MOBILE"
+	 [1] => string(7) "DESKTOP"
+	 [2] => string(6) "NATIVE"
+	 }
+	 'freeSpinTrigger' => bool(false)  //是否有免費小遊戲(?)
+	 },
+	 
+	 [1] => ....
+	 }
+	 */
+	
+	public function getGameList(&$argErr = null) {
+	    $arrKeys = array();
+	    
+	    foreach ($arrKeys as $dk => $dv) {
+	        $dk = strtolower($dk);
+	        $isKeyRequired = ($dv['required']==1);
+	        if ( array_key_exists($dk, $arrDatas) ) {
+	            $temp = "_{$dk}";
+	            $$temp = $arrDatas[$dk];
+	        } else {
+	            if ($isKeyRequired) {
+	                $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+	                return false;
+	            } else {
+	                if ( array_key_exists('default', $dv) ) {
+	                    $temp = "_{$dk}";
+	                    $$temp = $dv['default'];
+	                }
+	            }
+	        }
+	    }
+	    
+	    if ( !($token = $this->getToken($argErr))) { return false; }
+	    $arrParams = array();
+	    $httpHeader = array(
+	        "Authorization: Bearer {$token}"
+	    );
+	    
+	    $url = $this->cfg_base_url."v1/games";
+	    $httpCodeReturned = null;
+	    $httpMethod = 'GET';
+	    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+	    //Dbgr::preout($result);
+	    if ($result!==false) {
+	        if ( $httpCodeReturned === 200 ) {  //成功時返回http code: 200
+	            if (array_key_exists('items', $result)) {
+	                $gameList = $result['items'];
+	                return $gameList;
+	            } else {
+	                $errCode = 'essential_key_not_found';
+	                $errMsg = 'cannot find essential key(s): '.'balance';
+	                $err = $this->_produceError($errCode, $errMsg);
+	                $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+	                return false;
+	            }
+	        } else {  //失敗
+	            $errCode = $result['error'];
+	            $errMsg = $result['error_description'];
+	            $err = $this->_produceError($errCode, $errMsg);
+	            $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')).': '.$err;
+	        }
+	    }
+	    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_04'));  //CURL 結果為不成功
+	    return false;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( !($token = $this->getToken($argErr))) { return false; }
+    $arrParams = array(
+    );
+    $httpHeader = array(
+      "Authorization: Bearer {$token}",
+      //"Content-Type: application/json",
+      "Accept: application/json"
+    );
+
+    $url = $this->cfg_base_url."v1/wallet/ext/{$_user_name}";
+    $httpCodeReturned = null;
+    $httpMethod = 'GET';
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    //var_dump($result);
+    if ($result!==false) {
+      if ( $httpCodeReturned === 200 ) {  //成功時返回http code: 200
+        //echo  $httpCodeReturned;
+        if (array_key_exists('amount', $result)) {
+          $balance = $result['amount'];
+          //$currency = $result['currency'];
+          return $balance;
+        } else {
+          $errCode = 'essential_key_not_found';
+          $errMsg = 'cannot find essential key(s): '.'balance';
+          $err = $this->_produceError($errCode, $errMsg);
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+          return false;
+        }
+      } else {  //失敗
+        $errCode = $result['error'];
+        $errMsg = $result['error_description'];
+        $err = $this->_produceError($errCode, $errMsg);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')).': '.$err;  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_04'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果 (bool)
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'currency' => array('required'=>0,'default'=>self::QT_DEFAULT_CURRENCY_CODE),
+      'trans_id' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( !($token = $this->getToken($argErr))) { return false; }
+    $transType = 'DEBIT';
+    if ($_trans_id) {
+      $transId = $_trans_id;
+    } else {
+      $transId = $this->_getTid($_user_name, $transType);
+    }
+    return $this->_transfer(
+      $token,
+      $transType, //CREDIT=存款, DEBIT=提款
+      $_user_name,  //會員帳號
+      $_amount,  //額度
+      $transId,  //交易號
+      $argErr,
+      $_currency
+    );
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果 (bool)
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'currency' => array('required'=>0,'default'=>self::QT_DEFAULT_CURRENCY_CODE),
+      'trans_id' => array('required'=>0,'default'=>$this->_getTid()),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( !($token = $this->getToken($argErr))) { return false; }
+    $transType = 'CREDIT';
+    if ($_trans_id) {
+      $transId = $_trans_id;
+    } else {
+      $transId = $this->_getTid($_user_name, $transType);
+    }
+    return $this->_transfer(
+      $token,
+      $transType, //CREDIT=存款, DEBIT=提款
+      $_user_name,  //會員帳號
+      $_amount,  //額度
+      $transId,  //交易號
+      $argErr,
+      $_currency
+    );
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['begin_date'] 起始日期時間
+   * @param $data['end_date'] 結束日期時間
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'page' => array('required'=>0,'default'=>0),
+      'page_size' => array('required'=>0,'default'=>self::QT_REPORT_GAMEROUND_RETRIEVE_MAX_NUM),
+      'timezone' => array('required'=>0,'default'=>self::QT_REPORT_DEFAULT_TIMEZONE),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( !($token = $this->getToken($argErr))) { return false; }
+    $beginDatetime = $this->_getFormattedDatetime($_begin_datetime);
+    $endDatetime = $this->_getFormattedDatetime($_end_datetime);
+    $arrParams = array(
+      'from' => $beginDatetime,
+      'to' => $endDatetime,
+      'page' => $_page,
+      'size' => $_page_size,
+    );
+    /*if ($argMemberAcc) {
+      $arrParams['playerId'] = $argMemberAcc;
+    }
+    if ($argGameRoundStatus) {
+      $arrParams['status'] = $argGameRoundStatus;
+    }*/
+    $httpHeader = array(
+      "Authorization: Bearer {$token}",
+      "Accept: application/json",
+      "Time-Zone: {$_timezone}",
+    );
+
+    //var_dump($httpHeader);
+    //var_dump($arrParams);
+
+    $url = $this->cfg_base_url."v1/game-rounds";
+    $httpCodeReturned = null;
+    $httpMethod = 'GET';
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    //var_dump($result);
+    if ($result!==false) {
+      if ( $httpCodeReturned === 200 ) {  //成功時返回http code: 200
+        if (array_key_exists('items', $result)) {
+          $gameRounds = $result['items'];
+          return $gameRounds;
+        } else {
+          $errCode = 'essential_key_not_found';
+          $errMsg = 'cannot find essential key(s): '.'url';
+          $err = $this->produceError($errCode, $errMsg);
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+          return false;
+        }
+      } else {  //失敗
+        $errCode = $result['code'];
+        $errMsg = $result['message'];
+        $err = $this->produceError($errCode, $errMsg);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')).': '.$err;  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_04'));  //CURL 結果為不成功
+    return false;
+	}
+
+  /* 傳回目前token */
+  public function getToken(&$argErr=null) {
+    if ($this->__token) {
+      return $this->__token;
+    } else {
+      $token = $this->retrieveToken();
+      if ($token) {
+        return $token;
+      } else {
+        $errCode = 'no_available_token';
+        $errMsg = 'cannot find available token to use. Try retreive one first';
+        $argErr = $this->_produceError($errCode, $errMsg);
+        return false;
+      }
+    }
+  }
+
+  /* 清除目前token */
+  public function resetToken() {
+    $this->__token = null;
+    $curntToken = $this->getToken();
+    if ($curntToken) {
+      $this->revokeToken($curntToken);
+    }
+    return true;
+  }
+
+  /* retrieveToken: get token for every request */
+  public function retrieveToken(&$argErr=null) {
+    $arrParams = array(
+      'grant_type' => 'password',
+      'response_type' => 'token',
+      'username' => $this->cfg_agent,
+      'password' => $this->cfg_api_key,
+    );
+    $httpHeader = array(
+      'Accept: application/json'
+    );
+
+    $url = $this->cfg_base_url."v1/auth/token";
+    //var_dump($url);
+    $httpCodeReturned = null;
+    $httpMethod = 'GET';
+    //var_dump($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    //var_dump($result);
+    if ($result!==false) {
+      if ($result && isset($result['access_token']) && strlen($result['access_token'])) {  //成功取得token
+        $token = $result['access_token'];
+        $expiresInSec = $result['expires_in'];
+        if ($this->__token = $token) {
+          return $token;
+        } else {
+          $errCode = 'set_up_token_failed';
+          $errMsg = 'cannot set up token';
+          $argErr = $this->_produceError($errCode, $errMsg);
+        }
+      } else {  //失敗
+        $errCode = $result['error'];
+        $errMsg = $result['error_description'];
+        $argErr = $this->_produceError($errCode, $errMsg);
+      }
+    }
+    return false;
+  }
+
+  /* revokeToken: revoke a token in case its being used illegally */
+  public function revokeToken($argTokenToRevoke, &$argErr=null) {
+    $arrParams = array(
+    );
+    $httpHeader = array(
+      "Authorization: Bearer {$argTokenToRevoke}"
+    );
+
+    $url = $this->cfg_base_url."v1/auth/token";
+    $httpCodeReturned = null;
+    $httpMethod = 'DELETE';
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    if ($result!==false) {
+      if ( $httpCodeReturned === 204 ) {  //成功時返回http code: 204 No Content
+        return true;
+      } else {  //失敗
+        $errCode = $result['error'];
+        $errMsg = $result['error_description'];
+        $argErr = $this->_produceError($errCode, $errMsg);
+      }
+    }
+    return false;
+  }
+
+	//--------------------非通用函數--------------------
+
+
+  /* transfer: 上下點 */
+  protected function _transfer(
+    $argToken,
+    $argTransType, //CREDIT=存款, DEBIT=提款
+    $_user_name,  //會員帳號
+    $argAmount,  //額度
+    $argTransId,  //交易號
+    &$argErr = null,
+    $argCurrency = self::QT_DEFAULT_CURRENCY_CODE
+    ) {
+    $transType = strtoupper($argTransType);
+    $arrParams = array(
+      'type' => $transType,
+      'referenceId' => $argTransId,
+      'playerId' => $_user_name,
+      'amount' => $argAmount,
+      'currency' => $argCurrency
+    );
+    $httpHeader = array(
+      "Authorization: Bearer {$argToken}",
+      "Content-Type: application/json",
+      "Accept: application/json"
+    );
+
+    $url = $this->cfg_base_url."v1/fund-transfers";
+    $httpCodeReturned = null;
+    $httpMethod = 'POST';
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    if ($result!==false) {
+      if ($result && isset($result['id']) && strlen($result['id'])) {  //成功送出TRANSFER請求
+        $qtTransId = $result['id'];
+        $transStatus = strtoupper($result['status']);
+        if ($transStatus == 'PENDING') {  //懸置中-->正常應有的狀態
+          $isToCancel = false;
+          return $this->_complete_transfer($argToken, $qtTransId, $argTransId, $argAmount, $argErr, $isToCancel);
+        } elseif ($transStatus == 'COMPLETED') {  //已完成
+          $errCode = 'transfer_was_completed';
+          $errMsg = 'this transfer cannot complete because it was already completed';
+        } elseif ($transStatus == 'CANCELLED') {  //已取消
+          $errCode = 'transfer_was_cancelled';
+          $errMsg = 'this transfer cannot complete because it was already cancelled';
+        } else {  //例外
+          $errCode = 'transfer_status_unexpected';
+          $errMsg = 'this transfer has a unexpected status: '.$transStatus;
+        }
+        return $token;
+      } else {  //失敗
+        $errCode = $result['code'];
+        $errMsg = $result['message'];
+      }
+      $err = $this->_produceError($errCode, $errMsg, __METHOD__);
+      $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+      return false;
+    }
+    return false;
+  }
+
+  /* complete transfer: 完成(pending的)交易, 也可作為取消交易 */
+  protected function _complete_transfer(
+    $argToken,
+    $argQtTransId, //_transfer()回傳的'id'
+    $argTransId,  //我方交易號
+    $argAmount,  //金額
+    &$argErr = null,
+    $argIsToCancel = false
+    ) {
+    $status = 'COMPLETED';
+    if ($argIsToCancel === true) {
+      $status = 'CANCELLED';
+    }
+    $arrParams = array(
+      'status' => $status,
+    );
+    $httpHeader = array(
+      "Authorization: Bearer {$argToken}",
+      "Content-Type: application/json",
+      "Accept: application/json"
+    );
+
+    $url = $this->cfg_base_url."v1/fund-transfers/{$argQtTransId}/status";
+    $httpCodeReturned = null;
+    $httpMethod = 'PUT';
+    $result = $this->_sendRequest($url, $arrParams, $httpHeader, $httpCodeReturned, $httpMethod);
+    if ($result!==false) {
+      if ($result && isset($result['status']) && strlen($result['status'])) {  //
+        $idReturned = $result['id'];
+        $amountReturned = $result['amount'];
+        $referenceIdReturned = $result['referenceId'];
+        $statusReturned = strtoupper($result['status']);
+        if ($statusReturned == 'COMPLETED') {  //已完成
+          if ($argIsToCancel) {
+            $errCode = 'transfer_was_completed_2';
+            $errMsg = 'this transfer cannot cancel because it was already completed';
+            $argErr = $this->_produceError($errCode, $errMsg);
+            return false;
+          } else {
+            return true;
+            //return $result;  //傳回交易結果細節
+          }
+        } elseif ($statusReturned == 'CANCELLED') {  //已取消
+          if ($argIsToCancel) {
+            return $result;  //傳回交易結果細節
+          } else {
+            $errCode = 'transfer_was_cancelled_2';
+            $errMsg = 'this transfer cannot complete because it was already cancelled';
+            $argErr = $this->_produceError($errCode, $errMsg);
+            return false;
+          }
+        } else {  //例外
+          $errCode = 'transfer_status_unexpected_2';
+          $errMsg = 'this transfer has a unexpected status: '.$transStatus;
+          $argErr = $this->_produceError($errCode, $errMsg);
+          return false;
+        }
+      } else {  //失敗
+        $errCode = $result['code'];
+        $errMsg = $result['message'];
+        $argErr = $this->_produceError($errCode, $errMsg);
+      }
+    }
+    return false;
+  }
+
+  /* send request */
+  protected function _sendRequest(
+    $argUrl,
+    $argArrData,
+    $argHttpHeader,
+    &$argHttpCodeReturned,
+    $argMethod=self::QT_DEFAULT_REQUEST_METHOD
+    ) {
+    $arrData = $argArrData;
+    $method = strtoupper($argMethod);
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::QT_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::QT_CURL_TIMEOUT_MS,
+      CURLOPT_HTTPHEADER => $argHttpHeader
+    );
+    //var_dump($arrCurlDatas);
+    if ( $method == 'GET') {  //GET
+      $queryStr = http_build_query($arrData);
+      $url = "{$argUrl}?{$queryStr}";
+    } else {  //POST
+      $url = $argUrl;
+      $dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStrInJson;
+    }
+    $ch = curl_init($url);
+    //var_dump($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+    $curlInfo = curl_getinfo($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+//     var_dump($curlInfo);echo '<br/>------------';
+//     var_dump($url);echo '<br/>------------';
+//     var_dump($arrData);echo '<br/>------------';
+//     var_dump($result);echo '<br/>------------';
+
+    $argHttpCodeReturned = $curlInfo['http_code'];
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //var_dump($curlInfo);
+      //echo "QT::_sendRequest: curlError={$curlError} (http code: {$argHttpCodeReturned}) <br/>";
+      return false;
+    }
+  }
+
+  /* produce error */
+  protected function _produceError($argErrCode,$argErrMsg=null) {
+    return "{$argErrMsg} (code {$argErrCode})";
+  }
+
+  /* get transaction id */
+  protected function _getTid($argAccount, $argTransactionType='CREDIT') {
+    $transactionType = strtoupper($argTransactionType);
+    $tidTime = $this->_getTidTime();
+    $rnd = rand(1,999);
+    $tid = "QT-{$transactionType}-{$tidTime}{$rnd}-{$argAccount}";
+    return $tid;
+  }
+
+  /* get formatted time for transaction id */
+  protected function _getTidTime() {
+    $time = date('YmdHis');
+    return $time;
+  }
+
+  /* get formatted datetime for initTickets */
+  protected function _getFormattedDatetime($argDatetime) {
+    $t = strtotime($argDatetime);
+    return date('Y-m-d',$t).'T'.date('H:i:s',$t);
+  }
+}

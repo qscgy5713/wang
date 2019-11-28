@@ -1,0 +1,15 @@
+<?php
+class MaintainPageAction extends CommonAction {
+    //TODO:維護頁面
+    public function index(){
+        
+        $isMaintain = $this->getMaintainData($maintainDataArray);//判斷是否維護
+        if(!$isMaintain){
+            //轉跳到首頁。
+            redirect(__APP__.'/MemberIndex/index');
+        }
+        $this->assign("maintainTitie",$maintainDataArray['info_protectTitle']);
+        $this->assign("maintainStr",$maintainDataArray['info_protectMessage']);
+        $this->display();
+    }
+}

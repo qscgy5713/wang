@@ -1,0 +1,37 @@
+<?php
+/*
+ * 金流資料
+ */
+class CashflowInfoModel extends MemberModel {
+    protected $tableName = "cashflow_info";
+    protected $tableId = "cashflow_id";
+    /**
+     *
+     * @param $data
+     * @param string $err
+     */
+    public function getCashflowInfoData(){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `cashflow_enabled` = '1';";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    
+    public function getCashflowInfoDataByCode($data,&$err = ""){
+        if(empty($data['cashflow_code']) && $data['cashflow_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `cashflow_enabled` = '1' AND `cashflow_code` = '{$data['cashflow_code']}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return[0];
+    }
+}

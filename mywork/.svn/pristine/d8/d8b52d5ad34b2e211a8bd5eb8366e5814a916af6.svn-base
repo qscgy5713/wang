@@ -1,0 +1,55 @@
+<?php
+
+class CommonAction extends Action {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        //宣告台灣時區
+        date_default_timezone_set('Asia/Taipei');
+        
+        // 跳過過濾字串參數
+        $ignore = array();
+        
+        // $_REQUEST過濾
+        foreach ($_REQUEST as $key => $val) {
+            if (!in_array($key, $ignore)) {
+                $_REQUEST[$key] = filterStr($val);
+            }
+        }
+        if(isset($_REQUEST['R'])){
+            $_SESSION['RCode'] = $_REQUEST['R'];
+        }
+    }
+    
+    public function loading(){
+        $this->display();
+    }
+    
+    protected function getMenuList(){
+        
+        $menu_model = D("CommonMenu");
+        $menu_list = $menu_model->getMenuList();
+        if ($menu_list === false) {
+            $this->error(__CLASS__ . '_' . __FUNCTION__ . '_01');
+        }
+    }
+    
+    /**
+     * 取得Request資料
+     *
+     * @return array
+     */
+    protected function getRequest() {
+        
+        foreach ($_REQUEST as $key => $val) {
+            if (is_array($val)) {
+                $data[$key] = ($val);
+            } else {
+                $data[$key] = trim($val);
+            }
+        }
+        
+        return $data;
+    }
+}

@@ -1,0 +1,57 @@
+<?php
+class CashflowInfoModel extends CommonModel{
+	protected $tableName = "cashflow_info";
+	/**
+	 * 取得 金流方式 資料
+	 * 顯示 頁面 使用
+	 */
+	public function getFormCashflowInfoData(){
+		$sql = "SELECT * FROM `{$this->tableName}`;";
+		$return = $this->query($sql);
+		return $return;
+	}
+	/**
+	 * 新增 金流方式 資料
+	 */
+	public function addFormCashflowInfoDAta($data){
+		$sql = "INSERT INTO `{$this->tableName}` ";
+		$keySql = "";
+		$valueSql = "";
+		foreach ($data as $key => $value) {
+			if(empty($keySql)){
+				$keySql = "(`{$key}`";
+			} else {
+				$keySql .= ",`{$key}`";
+			}
+			if(empty($valueSql)){
+				$valueSql = "('{$value}'";
+			} else {
+				$valueSql .= ",'{$value}'";
+			}
+		}
+		$sql .= "{$keySql}) VALUES {$valueSql});";
+		$return = $this->query($sql);
+		return $return;
+
+	}
+	/**
+	 * 修改 金流方式 資料
+	 */
+	public function setFormCashflowInfoDataById($data){
+		if(empty($data['cashflow_id']) && $data['cashflow_id'] !== '0'){
+			return false;
+		}
+		$sql = "";
+		foreach ($data as $key => $value) {
+			if($key == 'cashflow_id'){continue;}
+			if(empty($sql)){
+				$sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+			} else {
+				$sql .= ",`{$key}` = '{$value}'";
+			}
+		}
+		$sql .= " WHERE `cashflow_id` = '{$data['cashflow_id']}'";
+		$return = $this->query($sql);
+		return $return;
+	}
+}

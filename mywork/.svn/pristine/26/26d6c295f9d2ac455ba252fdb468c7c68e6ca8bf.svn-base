@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>訊息提示</title>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+	<meta content="" name="description" />
+	<meta content="" name="author" />
+	
+	<!-- ================== BEGIN BASE CSS STYLE ================== -->
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/plugins/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/plugins/font-awesome/5.3/css/all.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/plugins/ionicons/css/ionicons.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/plugins/animate/animate.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/css/apple/style.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/css/apple/style-responsive.min.css" rel="stylesheet" />
+	<link href="__CSS__/color-admin-v4.2/admin/assets/css/default/theme/default.css" rel="stylesheet" id="theme" />
+	<!-- ================== END BASE CSS STYLE ================== -->
+	<link href="__CSS__/color-admin-v4.2/admin/assets/css/mystyle.css" rel="stylesheet"/>
+	<!-- ================== BEGIN BASE JS ================== -->
+	<!--<script src="_CSS__/color-admin-v4.2/admin/assets/plugins/pace/pace.min.js"></script>-->
+	<!-- ================== END BASE JS ================== -->
+</head>
+<body class="pace-top">
+	
+	<div id="page-container" class="fade">
+		<!-- begin error -->
+		<div class="error">
+			<present name="error" >
+				<div class="error-code m-b-10"><i class="fas fa-lg fa-fw m-r-10 fa-minus-circle" style="color:red"></i></div>
+			</present>
+			<present name="message" >
+				<div class="error-code m-b-10 text-blue"><i class="fas fa-lg fa-fw m-r-10 fa-check-circle"></i></div>
+			</present>
+			
+			
+			<div class="error-content">
+				<present name="error" >
+					<div class="error-message" style="color:red">{$error}</div>
+		      	</present>
+		      	<present name="message" >
+		      		<div class="error-message text-blue">{$message}</div>
+		      	</present>
+				<div>
+					<a onclick="javascript:location.href='{$jumpUrl}'" class="btn btn-primary p-20 text-white m-t-20 f-s-35">返回</a>
+				</div>
+			</div>
+		</div>
+		<!-- end error -->
+	</div>
+	
+	<!-- ================== BEGIN BASE JS ================== -->
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery/jquery-3.3.1.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/js-cookie/js.cookie.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/theme/apple.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/apps.min.js"></script>
+	<!-- ================== END BASE JS ================== -->
+	
+	<script>
+		$(document).ready(function() {
+			App.init();
+		});
+	</script>
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-53034621-1', 'auto');
+	  ga('send', 'pageview');
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<?php
+/*
+ * 會員影城
+ */
+class CommonMemberMovieModel extends AgentModel {
+    protected $tableName = "Common_member_movie";
+    protected $tableId = "member_account";
+
+    /*
+     * 取得 會員影城 資料
+     * 登入使用
+     */
+    public function getMemberMovieDataByAccount($data){
+        if(empty($data['member_account']) && $data['member_account'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_account` = '{$data['member_account']}'
+                    AND `movie_endTime` > '{$data['nowTime']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+
+    public function setMembermovieDataByAccount($data){
+        if(empty($data['member_account']) && $data['member_account'] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}`(
+                `member_account`,`movie_startTime`,`movie_endTime`,
+                `game_showName`,`detail_createTime`)
+                 VALUES (
+                 '{$data['member_account']}','{$data['movie_startTime']}','{$data['movie_endTime']}',
+                '{$data['game_showName']}','{$data['detail_createTime']}')
+                ON DUPLICATE KEY UPDATE
+               `movie_startTime` = VALUES(`movie_startTime`),
+               `movie_endTime` = VALUES(`movie_endTime`),
+               `game_showName` = VALUES(`game_showName`),
+               `detail_createTime` = VALUES(`detail_createTime`)";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+            return false;
+        }
+    }
+
+    /*
+     * 取得會員最後注單最大時間
+     */
+    public function getMemberLastBetTimeData($data){
+        if(empty($data['member_account']) && $data['member_account'] !== '0'){
+            return false;
+        }
+
+        $sql = "SELECT `game_code` FROM `game_info`
+                WHERE `game_showEnabled` = 1";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+
+
+        $reportTableNameSql = "";
+        foreach($return as $key => $value){
+            if(empty($reportTableNameSql)){
+                $reportTableNameSql = "(SELECT MAX(`detail_createTime`) as maxBetTime,'{$value['game_code']}' as gameName FROM `game_{$value['game_code']}_detail` WHERE `member_account` = '{$data['member_account']}' AND `detail_createTime` > '{$data['limitTime']}')";
+            } else {
+                $reportTableNameSql .= "UNION ALL (SELECT MAX(`detail_createTime`) as maxBetTime,'{$value['game_code']}' as gameName FROM `game_{$value['game_code']}_detail` WHERE `member_account` = '{$data['member_account']}' AND `detail_createTime` > '{$data['limitTime']}')";
+            }
+        }
+        $sql = "SELECT `maxBetTime`,`gameName` FROM ({$reportTableNameSql}) as a ORDER BY `maxBetTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+
+    }
+    /**
+     * 取得影城所有資料
+     */
+    public function getAllMemberAccountNumberData($data){
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `movie_endTime` > '{$data['nowTime']}';";
+        $return = $this->query($sql);
+        return $return[0];
+    }
+    /**
+     * 取得影城所有資料
+     */
+    public function getAllMemberAccountPageData($data){
+        $startSql = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $endSql = $data['page']['number'];
+        $pageSql = "LIMIT {$startSql},{$endSql}";
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `movie_endTime` > '{$data['nowTime']}' {$pageSql};";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

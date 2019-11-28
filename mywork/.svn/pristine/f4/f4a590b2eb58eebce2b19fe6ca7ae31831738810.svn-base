@@ -1,0 +1,37 @@
+<?php
+/*
+ * 儲值贈點
+ */
+class CommonEventStoregiftModel extends MemberModel {
+    protected $tableName = "common_event_storegift";
+    protected $tableId = "storegift_id";
+    
+    /*
+     * 新增 儲值贈點單 
+     */
+    public function addEventStoregiftData($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        return $return;
+    }
+    
+}

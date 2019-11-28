@@ -1,0 +1,53 @@
+<?php
+/**
+ * 人數圖表
+ */
+class MemberChartAction extends AdminAction{
+	public function index(){
+      	$CommonMemberStatistics = D('CommonMemberStatistics');
+      	$showArray = array();
+      	$data = array(
+      		'time' => array(
+      			'hour' => date('H',time()),
+      			'hour' => 23,
+      			'day' => date('d', time()),
+      			'month' => date('m', time()),
+      			'year' => date('Y', time()),
+      		),
+      	);
+      	$return = $CommonMemberStatistics->getMemberStatisticsData($data);
+
+      	$time['totalMem'] = '總人數';
+      	$time['totalPc'] = '使用電腦人數';
+      	$time['totalPhone'] = '使用手機人數';
+      	$time['totalAll'] = '都使用人數';
+      	$time['totalApple'] = '使用蘋果系統';
+      	$time['totalAndroid'] = '使用安卓系統';
+      	$time['totalAllSys'] = '使用兩種系統';
+      	$time['withdrawName'] = '出售人數';
+      	$time['rechargeName'] = '儲值人數';
+      	$time['registeredName'] = '註冊人數';
+      	$total['withdrawName'] = '總出售金額';
+      	$total['rechargeName'] = '總儲值金額';
+      	foreach ($return as $key => $value) {
+      		$time['hour'][] = $value['statistics_hour']; //時間
+      		$time['peopleTotal'][] = $value['statistics_onlineNumber']; //總人數
+      		$time['pcUse'][] = $value['statistics_pcUseNumber']; //電腦使用
+      		$time['phoneUse'][] = $value['statistics_phoneUseNumber']; //手機使用
+      		$time['allUse'][] = $value['statistics_allUseNumber']; //都使用
+      		$time['apple'][] = $value['statistics_appleNumber']; //蘋果
+      		$time['android'][] = $value['statistics_androidNumber']; //安卓
+      		$time['allSystem'][] = $value['statistics_allSystemNumber']; //雙系統
+      		$time['withdrawPer'][] = $value['statistics_totalWithdrawNumber']; //脫售人數
+      		$time['rechargePer'][] = $value['statistics_totalRechargeNumber']; //儲值人數
+      		$time['registeredPer'][] = $value['statistics_totalRegisteredNumber']; //創號人數
+	      	$total['withdrawTotal'] += $value['statistics_totalWithdrawMoney']; //脫售金額
+	      	$total['rechargeTotal'] += $value['statistics_totalRechargeMoney']; //儲值金額
+      	}
+      	$timeData = json_encode($time, JSON_UNESCAPED_UNICODE);
+      	$totalData = json_encode($total, JSON_UNESCAPED_UNICODE);
+      	$this->assign('timeData', $timeData);
+      	$this->assign('totalData', $totalData);
+		$this->display();
+	}
+}

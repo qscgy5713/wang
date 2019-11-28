@@ -1,0 +1,254 @@
+<?php
+/*
+ * 抓帳model
+ */
+class GameReportDataModel extends AdminModel {
+    protected $tableName = "";
+    protected $maxNumber = 300;//儲存最大筆數
+    
+    public function setDetailData($data,&$err=""){
+        
+        $gameCode = $data['gameCode'];
+        $allDetailArray = $data['allDetailArray'];
+        
+        $this->tableName = "game_".strtolower($gameCode)."_detail";
+        
+        $needArray = array(
+            'detail_id','member_id','member_account','agent_id','agent_account','agent_tree','ratio_tree','detail_gameAccount','detail_needBackWater'
+        );
+        $i = 0;//明細筆數
+        $fieldArray = array();//傳入陣列的所有陣列欄位名稱
+        $isAddField = true;//是否抓取新增傳入的欄位
+        $valSql = "";
+        foreach($allDetailArray as $key => $value){
+            unset($value['detail_dataInJson']);
+            $i++;//筆數增加
+            if(empty($valSql)){
+                $valSql .= '(';
+            } else {
+                $valSql .= ',(';
+            }
+            $fieldStr = '';
+            foreach ($value as $fieldKey => $fieldValue){
+                if($isAddField){
+                    array_push($fieldArray, $fieldKey);
+                }
+                if(empty($fieldStr)){
+                    $fieldStr .= "'{$fieldValue}'";
+                } else {
+                    $fieldStr .= ",'{$fieldValue}'";
+                }
+            }
+            $valSql .= $fieldStr.')';
+            $isAddField = false;
+            
+            
+            if($i >= $this->maxNumber){
+                //超過 最大筆數 先執行sql
+                $return = $this->saveDetail($fieldArray,$needArray,$valSql,$err);
+                if($return === false){
+                    return false;
+                }
+                $i = 0;//累計歸0
+                $valSql = '';//明細sql清空
+            }
+        }
+        $return = $this->saveDetail($fieldArray,$needArray,$valSql,$err);
+        if($return === false){
+            return false;
+        }
+        return true;
+    }
+    
+    protected function saveDetail($fieldArray,$needArray,$valSql,&$err=''){
+        $fieldSql = '';
+        $updateSql = '';
+        foreach ($fieldArray AS $value){
+            if(empty($fieldSql)){
+                $fieldSql = $value;
+            } else {
+                $fieldSql .= ','.$value;
+            }
+            if(!in_array($value, $needArray)){//去除不更新的欄位
+                if(empty($updateSql)){
+                    $updateSql = ' '.$value.' = VALUES('.$value.')';
+                } else {
+                    $updateSql .= ', '.$value.' = VALUES('.$value.')';
+                }
+            }
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ({$fieldSql}) VALUES {$valSql}
+                ON DUPLICATE KEY UPDATE {$updateSql}";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+    }
+    
+    
+    public function getMemberDataByGameAccount($data,&$err=""){
+        
+        $gameCode = $data['gameCode'];
+        $allMemberGameAccount = $data['allMemberGameAccount'];
+        
+        $this->tableName = "game_".strtolower($gameCode)."_member_info";
+        
+        $valStr = "";
+        foreach($allMemberGameAccount as $value){
+            if(empty($valStr)){
+                $valStr = "'".$value."'";
+            } else {
+                $valStr .= ",'".$value."'";
+            }
+        }
+        
+        $sql = "
+			SELECT
+				m.member_id,
+				m.agent_id,
+				m.member_account,
+				m.agent_account,
+				LOWER(ga.game_account) as game_name,
+				t.agent_tree,
+				r.ratio_tree
+			FROM common_member m
+			JOIN `{$this->tableName}` ga
+				ON (ga.member_id=m.member_id)
+			JOIN `common_agent_tree` t
+				ON (m.`agent_id` = t.`agent_id`)
+			JOIN `common_agent_ratio` r
+				ON (m.`agent_id` = r.`agent_id`)
+			WHERE
+				ga.game_account IN ({$valStr})
+		";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    public function setReportData($data,&$err=""){
+        
+        $gameCode = $data['gameCode'];
+        $allReportArray = $data['allReportArray'];
+        
+        $this->tableName = "game_".strtolower($gameCode)."_report";
+        
+        $valStr = "";
+        foreach($allReportArray as $key => $value){
+            if(empty($valStr)){
+                $valStr = "('{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                            '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['report_gameAccount']}','{$value['report_orderDate']}',
+                            '{$value['report_bettingMoney']}','{$value['report_surplus']}','{$value['report_effective']}','{$value['report_betNumber']}')";
+            } else {
+                $valStr .= ",('{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                            '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['report_gameAccount']}','{$value['report_orderDate']}',
+                            '{$value['report_bettingMoney']}','{$value['report_surplus']}','{$value['report_effective']}','{$value['report_betNumber']}')";
+            }
+        }
+        
+        $sql = "
+        	INSERT INTO `{$this->tableName}`(
+        		member_id, member_account, agent_id, agent_account,
+        		agent_tree, ratio_tree, report_gameAccount, report_orderDate,
+                report_bettingMoney,report_surplus, report_effective,report_betNumber
+        	) VALUES {$valStr}
+        	ON DUPLICATE KEY UPDATE
+        		report_bettingMoney = VALUES(report_bettingMoney),
+        		report_surplus      = VALUES(report_surplus),
+        		report_effective    = VALUES(report_effective),
+        		report_betNumber   = VALUES(report_betNumber)
+        	";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    public function getGameReportData($data,&$err=""){
+        $gameCode = strtolower($data['gameCode']);
+        $startTime = $data['startTime'];
+        $endTime = $data['endTime'];
+        
+        
+        
+        $sql = "SELECT `member_id`,`member_account`,`agent_id`,`agent_account`,`agent_tree`,`ratio_tree`,`detail_gameAccount` as report_gameAccount,`detail_orderDate` as report_orderDate,
+                    sum(`detail_bettingMoney`) as report_bettingMoney,sum(`detail_surplus`) as report_surplus,sum(`detail_effective`) as report_effective,count(*) as report_betNumber
+                FROM `game_{$gameCode}_detail`
+                WHERE (`detail_orderDate` BETWEEN '{$startTime}' AND '{$endTime}')
+                GROUP BY `member_id`,`agent_tree`,`ratio_tree`,`detail_orderDate`";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    public function delGameReportData($data,&$err=""){
+        $gameCode = strtolower($data['gameCode']);
+        $startTime = $data['startTime'];
+        $endTime = $data['endTime'];
+        
+        
+        
+        $sql = "DELETE FROM `game_{$gameCode}_report`
+                WHERE (`report_orderDate` BETWEEN '{$startTime}' AND '{$endTime}')";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    
+    public function setDetailDataOld($data,&$err=""){
+        
+        $gameCode = $data['gameCode'];
+        $allDetailArray = $data['allDetailArray'];
+        
+        $this->tableName = "game_".strtolower($gameCode)."_detail";
+        
+        $valSql = "";
+        foreach($allDetailArray as $key => $value){
+            $str = "('{$value['detail_id']}','{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                     '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['detail_gameAccount']}','{$value['detail_createTime']}','{$value['detail_orderDate']}',
+                     '{$value['detail_bettingMoney']}','{$value['detail_surplus']}','{$value['detail_effective']}',
+                     '{$value['detail_needBackWater']}','{$value['detail_isBackWater']}','{$value['detail_dataInJson']}'";
+            if(empty($valStr)){
+                $valSql = $str.')';
+            } else {
+                $valSql .= ','.$str.')';
+            }
+        }
+        
+        $sql = "
+        	INSERT INTO `{$this->tableName}`(
+        		detail_id, member_id, member_account, agent_id, agent_account,
+        		agent_tree, ratio_tree, detail_gameAccount, detail_createTime, detail_orderDate,
+                detail_bettingMoney,detail_surplus, detail_effective,
+                detail_needBackWater, detail_isBackWater,detail_dataInJson
+        	) VALUES {$valSql}
+        	ON DUPLICATE KEY UPDATE
+        		detail_createTime   = VALUES(detail_createTime),
+        		detail_orderDate    = VALUES(detail_orderDate),
+        		detail_bettingMoney = VALUES(detail_bettingMoney),
+        		detail_surplus      = VALUES(detail_surplus),
+        		detail_effective    = VALUES(detail_effective),
+        		detail_dataInJson   = VALUES(detail_dataInJson)
+        	";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+}

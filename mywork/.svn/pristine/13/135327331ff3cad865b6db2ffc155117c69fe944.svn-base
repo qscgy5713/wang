@@ -1,0 +1,223 @@
+<?php
+class PromotionSiteAction extends AgentAction {
+    protected $promotionSite = 10; //分頁筆數
+    protected $pageMoreNumber = 5; //一頁最多幾筆
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        if($_SESSION['Agent']['account'] == "game"){
+            redirect(__APP__.'/AgentIndex/index');
+            exit();
+        }
+    }
+    
+    //TODO:1 推廣網址
+    public function index(){
+        $request = $this->getRequest();
+        
+        //讀取 代理 下線代理
+        $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'] //登入的帳號
+        );
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+        //取得總筆數
+        $return = $CommonAgentDomainPromotionsite->getTotalNumberAgentDomainPromotionSite($data);
+        if($return === false){
+            //讀取總比數，失敗
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        $totalNumber = $return[0]['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->promotionSite); //總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //取得分頁陣列
+
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'], //登入的帳號
+            "page" => array(
+                "number" => $this->promotionSite,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+
+        $return = $CommonAgentDomainPromotionsite->getAgentDomainPromotionSiteNumberData($data, $err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "promotionsite_id"=>"id",
+            "promotionsite_site"=>"site",
+            "promotionsite_title"=>"title",
+            "promotionsite_keywords"=>"keywords",
+            "promotionsite_description"=>"description",
+            "promotionsite_registeredUsers"=>"registeredUsers",
+            "promotionsite_remark"=>"remark",
+            "promotionsite_createTime"=>"createTime",
+            "promotionsite_modifyTime"=>"modifyTime"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'promotionsite_createTime'://推廣網址建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'promotionsite_modifyTime'://推廣網址修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        
+        //取得新的推廣網址資料
+        $data = $this->getNewPromotionsiteData();
+        $newPromotionsiteArray = $data['newPromotionsiteArray'];
+        
+        $this->assign("newPromotionsiteArray",$newPromotionsiteArray);
+        $this->assign("showArray",$showArray);
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); // 目前頁數
+        $this->assign("pageArray", $pageArray); // 分頁陣列
+        $this->display();
+    }
+    protected function getNewPromotionsiteData(){
+        $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id']
+        );
+        $return = $CommonAgentDomainPromotionsite->getAgentDomainPromotionSiteNumberingByAgentId($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        if(empty($return['MaxNumber'])){
+            $MaxNumber = 1;
+        } else {
+            $MaxNumber = $return['MaxNumber'];
+            $MaxNumber++;
+            while (strpos($MaxNumber,'4')!==false){  //避免含有數字'4'
+                $MaxNumber++;
+            }
+        }
+        $CommonAgentDomain = D("CommonAgentDomain");
+        $return = $CommonAgentDomain->getAgentDomainData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $newPromotionsiteArray = array();
+        foreach($return as $key=> $value){
+            $newPromotionsiteArray[$value['domain_id']] = $value['domain_site'].'/?R='.base64_encode(strtoupper($_SESSION['Agent']['account'])).$MaxNumber;
+        }
+        $data = array(
+            "MaxNumber"=>$MaxNumber,
+            "newPromotionsiteArray"=>$newPromotionsiteArray
+        );
+        return $data;
+    }
+    //TODO: 推廣網址新增
+    public function formAddPromotionSite(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 addDomainId 傳入 並且不為空
+        //var_dump($request);
+        if(!isset($request['addDomainId']) || (empty($request['addDomainId']) && $request['addDomainId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//新增網址為空，請重新輸入
+        }
+        if(!isset($request['addTitle']) || empty($request['addTitle'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//新增網址title為空，請重新輸入
+        }
+        if(!isset($request['addKeywords']) || empty($request['addKeywords'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//新增網址keywords為空，請重新輸入
+        }
+        if(!isset($request['addDescription']) || empty($request['addDescription'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//新增網址description為空，請重新輸入
+        }
+        
+        $data = $this->getNewPromotionsiteData();
+        $newPromotionsiteArray = $data['newPromotionsiteArray'];
+        $MaxNumber = $data['MaxNumber'];
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'], //代理的ID
+            "domain_id" => $request['addDomainId'],//網域ID
+            "promotionsite_site" => $newPromotionsiteArray[$request['addDomainId']],//新增的推廣網址
+            "promotionsite_registerName" => $_SESSION['Agent']['account'],
+            "promotionsite_siteNumbering" => $MaxNumber,
+            "promotionsite_title" => $request['addTitle'],
+            "promotionsite_keywords" => $request['addKeywords'],
+            "promotionsite_description" => $request['addDescription'],
+            "promotionsite_remark" => $request['addRemark'],
+            "promotionsite_registeredUsers" => 0,
+            "promotionsite_createTime" => $nowTime
+        );
+        $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+        $return = $CommonAgentDomainPromotionsite->addDomainPromotionsiteData($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 推廣網址刪除
+    public function formDelPromotionSite(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 delId 傳入 並且不為空
+        if(!isset($request['delId']) || (empty($request['delId']) && $request['delId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除網址為空，請重新操作
+        }
+        $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+        $data = array(
+            "promotionsite_id" => $request['delId'],
+            "agent_id" => $_SESSION['Agent']['id']
+        );
+        $return = $CommonAgentDomainPromotionsite->delAgentDomainPromotionSiteById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 推廣網址修改
+    public function formSetPromotionSite(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 delPromotionsiteId 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['setId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除網址為空，請重新操作
+        }
+        $nowTime = time();//取得現在時間戳
+        $CommonAgentDomainPromotionsite = D("CommonAgentDomainPromotionsite");
+        $data = array(
+            "promotionsite_id" => $request['setId'],//網域ID
+            "agent_id" => $_SESSION['Agent']['id'], //代理的ID
+            "promotionsite_title" => $request['setTitle'],
+            "promotionsite_keywords" => $request['setKeywords'],
+            "promotionsite_description" => $request['setDescription'],
+            "promotionsite_remark" => $request['setRemark'],
+            "promotionsite_modifyTime"=>$nowTime
+        );
+        $return = $CommonAgentDomainPromotionsite->setAgentDomainPromotionSiteById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+}

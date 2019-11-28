@@ -1,0 +1,193 @@
+<?php
+class GivenRecordAction extends AgentAction {
+    //TODO:8 贈點記錄
+    public function index(){
+        $request = $this->getRequest();
+        
+        //代理線開始
+        $CommonAgentTree = D("CommonAgentTree");
+        $loginArray = array(
+            0 => array(
+                "agentTree"=>$_SESSION['Agent']['tree'],
+                "agentId"=>$_SESSION['Agent']['id'],
+                "agentAccount"=>$_SESSION['Agent']['account']
+            )
+        );
+        if(empty($request["agentTree"])
+            || !preg_match("/".$_SESSION['Agent']['tree']."/i", $request["agentTree"])
+            || $request["agentTree"] == $_SESSION['Agent']['tree']
+            ){
+                $comeAgentTree = $_SESSION['Agent']['tree'];
+                $comeAgentId = $_SESSION['Agent']['id'];
+                $comeAgentAccount = $_SESSION['Agent']['account'];
+        } else {
+            $comeAgentTree = $request["agentTree"];
+            $comeReplace = str_replace ($_SESSION['Agent']['tree'],"",$comeAgentTree);
+            $exArray = explode(",",$comeReplace);
+            $return = $CommonAgentTree->getAgentTreeDataByManyAgentId($exArray);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            }
+            //var_dump($return);
+            foreach ($return as $value){
+                array_push($loginArray,$value);
+            }
+            //var_dump($loginArray);
+            $comeAgentAccount = $request["agentAccount"];
+        }
+        $exArray = explode(",",$comeAgentTree);
+        $comeAgentId = $exArray[count($exArray)-2];
+        //代理線結束
+        
+        $today = date('Y-m-d');
+        $startTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+        
+        if(isset($request['startTime'])){
+            $startTime = $request['startTime'];
+        }
+        if(isset($request['endTime'])){
+            $endTime = $request['endTime'];
+        }
+        
+        
+        if(date('D') === 'Mon') {
+            $tsThisWeek = strtotime('today');
+        } else {
+            $tsThisWeek = strtotime('last monday');
+        }
+        $tsYesterday = strtotime('yesterday');
+        $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+        $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+        $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+        $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+        $yesterday = date('Y-m-d',$tsYesterday);
+        $lastMonthA = date('Y-m-d',$tsLastMonth);
+        $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+        $this->assign("startTime",$startTime);//查詢開始時間
+        $this->assign("endTime",$endTime);//查詢最後時間
+        $this->assign("today",$today);//今日
+        $this->assign("yesterday",$yesterday);//昨日
+        $this->assign("thisWeekA",$thisWeekA);//本週第一天
+        $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+        $this->assign("lastWeekA",$lastWeekA);//上週第一天
+        $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+        $this->assign("thisMonthA",$thisMonthA);//本月第一天
+        $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+        $this->assign("lastMonthA",$lastMonthA);//上月第一天
+        $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+        
+        $typesArray = array();
+        $typesTotalMoney = 0;
+        $typesTotalNumber = 0;
+        
+        $agentArray = array();
+        $agentTotalMoney = 0;
+        $agentTotalNumber = 0;
+        
+        $memberArray = array();
+        $memberTotalMoney = 0;
+        $memberTotalNumber = 0;
+        
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        
+        $data = array(
+            "agent_tree"=>$comeAgentTree.$newAgnetTree,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"walletLog_type_class",
+            "walletLog_type"=>4 //搜尋活動
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $typesArray = $return;
+        foreach($typesArray as $key => $value){
+            $typesTotalMoney += $value['allMoney'];
+            $typesTotalNumber += $value['allNumber'];
+        }
+        
+        $data = array(
+            "agent_tree"=>$comeAgentTree.$newAgnetTree,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"walletLog_type_class",
+            "walletLog_type"=>5 //搜尋返水
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $waterArray = $return;
+        foreach($waterArray as $key => $value){
+            $typesTotalMoney += $value['allMoney'];
+            $typesTotalNumber += $value['allNumber'];
+            array_push($typesArray, $value);
+        }
+        //var_dump($typesArray);
+        
+        $data = array(
+            "agent_id"=>$comeAgentId,
+            "agent_tree"=>$comeAgentTree.$newAgnetTree,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"agent_id",
+            "walletLog_type"=>'all' //搜尋返水
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        $agentArray = $return;
+        foreach($agentArray as $key => $value){
+            $agentTotalMoney += $value['allMoney'];
+            $agentTotalNumber += $value['allNumber'];
+        }
+        //var_dump($agentArray);
+        
+        $data = array(
+            "agent_id"=>$comeAgentId,
+            "startTime"=>strtotime($startTime),
+            "endTime"=>strtotime($endTime),
+            "groupBy"=>"member_id",
+            "walletLog_type"=>'all' //搜尋返水
+        );
+        $return = $CommonMemberWalletLog->getMemberGivenData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        $memberArray = $return;
+        foreach($memberArray as $key => $value){
+            $memberTotalMoney += $value['allMoney'];
+            $memberTotalNumber += $value['allNumber'];
+        }
+        //var_dump($memberArray);exit();
+        
+        $this->assign("loginArray",$loginArray);
+        $this->assign("comeAgentAccount",$comeAgentAccount);
+        $this->assign("comeAgentId",$comeAgentId);
+        $this->assign("comeAgentTree",$comeAgentTree);
+        
+        $this->assign("typesArray",$typesArray);//依類型
+        $this->assign("typesTotalMoney",$typesTotalMoney);//依贈點總和
+        $this->assign("typesTotalNumber",$typesTotalNumber);//依贈點數量
+        $this->assign("typesEmpty","<tr><td colspan='4' style='text-align:center;'>無類型資料</td></tr>");//無資料時輸出
+        
+        $this->assign("agentArray",$agentArray);//依代理
+        $this->assign("agentTotalMoney",$agentTotalMoney);//依贈點總和
+        $this->assign("agentTotalNumber",$agentTotalNumber);//依贈點數量
+        $this->assign("agentEmpty","<tr><td colspan='4' style='text-align:center;'>無代理資料</td></tr>");//無資料時輸出
+        
+        
+        $this->assign("memberArray",$memberArray);//依會員
+        $this->assign("memberTotalMoney",$memberTotalMoney);//依贈點總和
+        $this->assign("memberTotalNumber",$memberTotalNumber);//依贈點數量
+        $this->assign("memberEmpty","<tr><td colspan='4' style='text-align:center;'>無會員資料</td></tr>");//無資料時輸出
+        $this->display();
+    }
+}

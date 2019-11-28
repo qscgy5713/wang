@@ -1,0 +1,195 @@
+<?php
+/*
+ * Bj電子抓帳
+ * 抓帳限制: 
+ *     每次長度:
+ *     每次間隔:
+ *     最遠時間:
+ */
+class ScriptGameReportBjAction extends ScriptGameReportAction {
+
+    protected function _initialize() {
+        $this->gameCode = 'Bj';
+        $request = $this->getRequest();
+        if (isset($request['startTime']) && isset($request['endTime'])) {
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+        } else {  //沒給時的預設抓帳起始
+            $nowTs = time();
+            $this->startTime = date('Y-m-d H:i:s', $nowTs-60*60*2+60*15);
+            $this->endTime = date('Y-m-d H:i:s', $nowTs+60*15-1);
+        }
+
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function index() {
+        if (!$this->power) {exit();}
+
+        $GameReportData = D("GameReportData");
+        $GameModel = D("Game".$this->gameCode);
+        if (!method_exists($GameModel,'getGameRecord')) {
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'無此代號(Err000)</span>');
+            $this->display();
+            exit();
+        }
+
+        $this->detailId = 'sno';
+        $this->gameAccount = 'name';
+        $this->createTime = 'time';
+        $this->bettingMoney = 'point';
+        $this->surplus = 'win_or_lose';
+        $this->effective = 'point';
+
+        $this->getBjGameReportData($err);
+
+        //設定抓總結的起始時間
+        $this->reportStartTime = $this->getBetDate($this->startTime).' 00:00:00';
+        $this->reportEndTime = $this->getBetDate($this->endTime).' 23:59:59';
+
+        $return = $this->getReportApi();
+        if ($return === false) {
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err002) Err=>'.$this->err.'</span>');
+            $this->display();
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        $this->assign("detailNumber",count($this->allDetailArray));//更新總注單
+        $this->assign("allDetailArray",$this->allDetailArray);
+        
+        $this->assign("reportNumber",count($this->allReportArray));//更新總統整
+        $this->assign("allReportArray",$this->allReportArray);
+        
+        $this->assign("status","<span style='color:Blue;'>".$this->gameCode.$this->success.'</span>');
+        $this->display();
+    }
+    
+    /*
+     * 抓帳
+     */
+    protected function getBjGameReportData(&$err='') {
+        $this->timeStr .= ((!empty($this->timeStr))? '<BR>' : '').$this->startTime.' ~ '.$this->endTime;
+        
+        $GameModel = D("Game".$this->gameCode);
+
+        $arrRawBets = array();
+        $isContinue = true;
+        $beginDatetime = date('Y-m-d H:i:s',strtotime($this->startTime));
+        $endDatetime = date('Y-m-d H:i:s',strtotime($beginDatetime)+60*60*2-1);  //每次抓2小時區間
+        do {  //日期 loop
+            $round = 1;
+            $offset = 0;
+            $hasMore = false;
+            do {  //page loop
+                $err = null;
+                $arrData = array(
+                    'begin_datetime' => $beginDatetime,
+                    'end_datetime' => $endDatetime,
+                    'offset' => $offset,
+                );
+                //echo "<hr/>";
+                //var_dump($arrData);
+                $arrThisRoundBets = $GameModel->getGameRecord($arrData, $err, $hasMore);
+                //echo "【hasmore={$hasMore}】.";
+                //var_dump($arrThisRoundBets);
+                if ((!is_array($arrThisRoundBets))||($arrThisRoundBets === false)) {
+                    //紀錄錯誤到Db
+                    $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err001) Err=>'.$err.'</span>');
+                    $this->display();
+                    $isContinue = false;
+                    $hasMore = false;
+                    exit();
+                }
+                $numData = sizeof($arrThisRoundBets);
+
+                if ($numData) {
+                    $arrRawBets = array_merge($arrRawBets, $arrThisRoundBets);
+                } else {
+                    $hasMore = false;
+                }
+                $offset += $numData;
+                ++$round;
+            } while ($hasMore);
+
+            if (strtotime($endDatetime) >= strtotime($this->endTime)) {
+                $isContinue = false;
+            } else {
+                $beginDatetime = date('Y-m-d H:i:s', strtotime($beginDatetime)+60*60*2);  //推進2小時
+                $endDatetime = date('Y-m-d H:i:s', strtotime($endDatetime)+60*60*2);  //推進2小時
+            }
+        } while ( $isContinue );
+
+        foreach ($arrRawBets as $bk => $bv) {
+            //把遊戲帳號 加入 搜尋會員帳號陣列 Start
+            if (!in_array($bv[$this->gameAccount], $this->allMemberGameAccount)) {
+                array_push($this->allMemberGameAccount, $bv[$this->gameAccount]);
+            }
+            //把遊戲帳號 加入 搜尋會員帳號陣列 End
+
+            $bv['point'] = str_replace(',', '', $bv['point']);
+            $bv['win'] = str_replace(',', '', $bv['win']);
+            $bv['bonus'] = str_replace(',', '', $bv['bonus']);
+            //$is_checkout = ($bv['checkout']==1)?(true):(false);
+            if ($bv['checkout'] == 0) {  //未結
+                $bv['win_or_lose'] = 0;
+            } elseif ($bv['checkout'] == 1) {  //已結
+                $bv['win_or_lose'] = bcsub($bv['win'], $bv['point']);
+            } elseif ($bv['checkout'] == 2) {  //註銷
+                $bv['win_or_lose'] = 0;
+                $bv['point'] = 0;
+            }
+
+            $dataInJson = array();
+            foreach ($bv as $subKey => $subValue){
+                $dataInJson[$subKey] = dowith_sql($subValue);
+            }
+
+            $detail_needBackWater = 0;  //Bj北京不返水
+
+            $data = array(
+                "detail_id" => $bv[$this->detailId],
+                "detail_gameAccount" => $bv[$this->gameAccount],
+                "detail_createTime" => strtotime($bv[$this->createTime]),
+                "detail_bettingMoney" => $bv[$this->bettingMoney],
+                "detail_surplus" => $bv[$this->surplus],
+                "detail_effective" => $bv[$this->effective],
+                "detail_needBackWater"=> $detail_needBackWater,
+                "detail_isBackWater" => 0,
+                "detail_dataInJson" => json_encode($dataInJson, JSON_UNESCAPED_UNICODE),
+                "detail_subbetInJson" => null,
+            );
+            $data["detail_orderDate"] = strtotime($this->getBetDate($bv[$this->createTime]).' 12:00:00');
+            array_push($this->allDetailArray, $data);
+        }
+    }
+
+    //-----------------------------------------------
+    //找出一個時間的歸帳日
+    public static function getBetDate($argTime) {
+        if (date('Y-m-d',strtotime($argTime))==$argTime) {
+            return $argTime;
+        }
+        $splitTimeS = '00:00:00';  //區分不同歸帳日的時間點
+        $orderDate = null;
+        if (is_int($argTime)&&($argTime >= strtotime('1970-01-01 00:00:00'))) {  //傳入timestamp
+            $dateTime = $argTime;
+        } else {  //傳入日期時間字串
+            $dateTime = strtotime($argTime);
+        }
+        $splitDatetime = date("Y-m-d {$splitTimeS}", $dateTime);
+        $splitTime = strtotime($splitDatetime);
+
+        if ($dateTime >= $splitTime) {  //若已經跨越區分不同歸帳日的時間點-->當日
+            $orderDate = date("Y-m-d", $splitTime);
+        } else {  //未跨越-->前一日
+            $orderDate = date("Y-m-d", $splitTime-60*60*24*1);
+        }
+        //echo "getBetDate({$argTime})={$orderDate}<br/>";
+        return $orderDate;
+    }  //--function getBetDate
+
+}

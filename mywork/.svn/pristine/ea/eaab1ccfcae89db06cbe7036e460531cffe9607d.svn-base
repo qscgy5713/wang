@@ -1,0 +1,14 @@
+//全版公告彈框
+jQuery(window).ready(function () {
+	if(isLogin == "true" && announcementBool == "1"){
+		 jQuery('#systemMsgModal').modal('show');
+	}
+	if(announcementBool == "2"){
+		 jQuery('#noshow').attr("checked","true");
+	}
+	if(isLogin == "true" && announcementBool != "0" && announcementBool != ""){
+		 jQuery('#systemMsgBtn').show();
+	}else{
+		 jQuery('#systemMsgBtn').hide();
+	}
+});

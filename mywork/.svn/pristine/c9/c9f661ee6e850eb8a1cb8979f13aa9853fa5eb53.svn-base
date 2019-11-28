@@ -1,0 +1,110 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 	
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">代理加盟</h2>
+				
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+			                 
+	                  			 <form id="applyForm" name="applyForm" method="post" action='__APP__/AgentJoin/formAgentJoin' onclick="return false">
+					                <fieldset>
+					                
+					                  <div class="form-group">
+						                  <label for="inputDanger1">聯絡姓名</label>
+						                  <input type="text" id="applyName" name="applyName" placeholder="請輸入姓名" class="form-control">
+						              </div>
+						              
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">聯絡方式</label>
+					                    <select id="exampleSelect1" name="code" class="form-control mb-5">
+					                        <option value="LINE">LINE</option>
+			                                <option value="微信">微信</option>
+			                                <option value="E-Mail">E-Mail</option>
+			                                <option value="其他">其他</option>				                    
+					                    </select>
+					                  	<input type="text" id="applyContact" name="applyContact" placeholder="聯絡方式" class="form-control">
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">申請留言</label>
+					                    <textarea class="form-control" id="applyMsg" name="applyMsg" rows="3" placeholder="若您有任何問題或需求，請在此留言"></textarea>
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                  	<a data-toggle="modal" onclick="openmodal('myModalLabel')"class="popup-content" href="#">代理加盟制度表</a>
+					                  </div>
+					                  
+					                  <div class="modal fade" id="myModalLabel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+						                <div class="modal-dialog modal-dialog-m" role="document">
+						                  <div class="modal-content">
+						                    <div class="modal-header">
+						                      <h4 class="modal-title" id="myModalLabel">代理加盟制度表</h4>
+						                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+						                    </div>
+						                    <div class="modal-body">
+						                      <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/180608.jpg">
+						                    </div>
+						                    <div class="modal-footer">
+						                      <button type="button" class="btn btn-sm btn-dark" data-dismiss="modal">Close</button>
+						                      
+						                    </div>
+						                  </div>
+						                </div>
+						              </div>
+					                  
+					                 
+					                  
+						              <button type="submit" name="btnok" id="btnok" class="btn btn-outline-danger loading">送出申請</button>
+						              
+					                </fieldset>
+					              </form>
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+<script>
+ $(document).ready(function(){
+	 
+	 $("#btnok").click(function(){
+		 var applyName = $("#applyName").val();
+		 var applyContact = $("#applyContact").val();
+		 //alert(applyName);
+		 //alert(applyContact);
+		 applyName = $.trim(applyName);
+		 applyContact = $.trim(applyContact);
+		 
+         if(applyName == 0){
+             alert("您尚未填寫姓名");
+             eval("document.applyForm['applyName'].focus()");
+             return;
+         }else if(applyContact == 0){
+             alert("您尚未填寫聯絡方式");
+             eval("document.applyForm['applyContact'].focus()");    
+             return;
+         }else{
+        	 document.applyForm.submit();
+         }
+         
+         
+         
+	 })
+});
+ function openmodal(id){
+		//alert(id);
+		$('#'+id).modal('show')
+	}
+ </script>				   
+  

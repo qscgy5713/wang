@@ -1,0 +1,86 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+
+<div>
+	<input type="text" class="form-control div-style" style="width: 175px;" value="{$startTime}"/> 至
+	<input type="text" class="form-control div-style" style="width: 175px;" value="{$endTime}"/>	
+</div>
+<ul class="nav nav-tabs nav-tabs-inverse">
+	<VOLIST name="gameDataArray" id="vo">
+		<IF condition="$i eq 1">
+			<li class="nav-item">
+				<a href="#{$vo.gameCode}Div" data-toggle="tab" class="nav-link active">
+					<i class="fa fa-fw fa-lg fa-cogs"></i>
+					<span class="d-none d-lg-inline">{$vo.gameName}</span>
+				</a>
+			</li>
+		<ELSE/>
+			<li class="nav-item">
+				<a href="#{$vo.gameCode}Div" data-toggle="tab" class="nav-link">
+					<i class="fa fa-fw fa-lg fa-cogs"></i>
+					<span class="d-none d-lg-inline">{$vo.gameName}</span>
+				</a>
+			</li>
+		</IF>
+		
+	</VOLIST>
+</ul>
+	
+<div class="tab-content">
+	<VOLIST name="gameDataArray" id="vo">
+		<IF condition="$i eq 1">
+			<div class="tab-pane show active" id="{$vo.gameCode}Div">
+				<div class="table-responsive">
+					<iframe id="" style="width: 100%;min-height: 676px;" src="__APP__/{$Think.MODULE_NAME}/eachGameDetail&gameCode={$vo.gameCode}&memberId={$memberId}&agentTree={$agentTree}&startTime={$startTime}&endTime={$endTime}" frameborder="0" scrolling="auto"></iframe>
+				</div>
+			</div>
+		<ELSE/>
+			<div class="tab-pane fade" id="{$vo.gameCode}Div">
+				<div class="table-responsive">
+					<iframe id="" style="width: 100%;min-height: 676px;" src="__APP__/{$Think.MODULE_NAME}/eachGameDetail&gameCode={$vo.gameCode}&memberId={$memberId}&agentTree={$agentTree}&startTime={$startTime}&endTime={$endTime}" frameborder="0" scrolling="auto"></iframe>
+				</div>
+			</div>	
+		</IF>
+	</VOLIST>
+</div>
+
+
+
+
+<include file="Common:footer"/>
+<script>
+	$(function(){
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

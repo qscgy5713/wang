@@ -1,0 +1,172 @@
+<?php
+/*
+ * 功能管理
+ */
+class FeaturesManageAction extends AdminAction {
+
+    public function index(){
+        //讀取 頁面資料
+        $GameInfo = D("GameInfo");
+
+        $return = $GameInfo->getAllGameInfoDataByManage();
+
+        if($return === false){
+        	$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $groupArray = array();
+        //使用欄位轉換 資料庫欄位
+        $FieldChange = array(
+			'gameClass_id' => 'gameClassId',
+			'gameClass_showName' => 'gameClassShowName',
+            'game_id' => 'gameId',
+			'game_order' => 'gameOrder',
+			'game_code' => 'gameCode',
+			'game_name' => 'gameName',
+            'game_enabled' => 'gameEnable',
+			'game_defendMessage' => 'defendMessage',
+            'game_showEnabled' => 'gameShowEnable',
+        );
+        $showStr = "";
+        foreach ($return as $key => $value) {
+        	foreach ($FieldChange as $key1 => $value1) {
+        		switch ($key1){
+                    case 'game_defendMessage':
+                        if($value[$key1] === null){
+                            $showStr = "無訊息";
+                            break;
+                        }
+                        $showStr = $value[$key1];
+                        break;
+        			default: //未做設定 正常顯示
+        				$showStr = $value[$key1];
+        				break;
+        		}
+        		$groupArray[$key][$value1] = $showStr;
+        	}
+        }
+     	$showArray = array();
+     	foreach ($groupArray as $key => $value) {
+     	    if(isset($showArray[$value['gameClassShowName']])){
+     	        $showArray[$value['gameClassShowName']][$key] = $value;
+     	        $showCount[$value['gameClassId']] = 1;
+     	        $showCount[$value['gameClassShowName']] = $value['gameClassShowName'];
+     	    } else {
+     	        $showArray[$value['gameClassShowName']][$key] = $value;
+     	        $showCount[$value['gameClassId']] = ++$showCount[$value['gameClassId']];
+     	        $showCount[$value['gameClassShowName']] = $value['gameClassShowName'];
+     	    }
+     	    
+     	};
+        //var_dump($showArray,$showCount);die;
+        $this->assign('showArray', $showArray);
+		$this->assign('showCount', $showCount);
+        $this->display();
+    }
+    //TODO: 開關AJAX
+    public function ajaxSwitch(){
+        $request = $this->getRequest();
+        $GameInfo = D("GameInfo");
+        $nowTime = time();
+        switch($request['mode_id']){
+            case 'stopId':
+                $nowTime = time();//取得現在時間戳
+                $data = array(
+                    "game_id" => $request['stopId'],
+                    "game_enabled" => 0,
+                );
+                $return = $GameInfo->setFeaturesManageEnableById($data);
+                break;
+            case 'startId':
+                $nowTime = time();//取得現在時間戳
+                $data = array(
+                    "game_id" => $request['startId'],
+                    "game_enabled" => 1,
+                );
+                $return = $GameInfo->setFeaturesManageEnableById($data);
+                break;
+            default:
+                break;
+        }
+    }
+    //TODO: 顯示AJAX
+    public function ajaxDisplay(){
+        $request = $this->getRequest();
+        $GameInfo = D("GameInfo");
+        $nowTime = time();
+        switch($request['mode_id']){
+            case 'nonDisplay':
+                $nowTime = time();//取得現在時間戳
+                $data = array(
+                    "game_id" => $request['nonDisplayId'],
+                    "game_showEnabled" => 0,
+                );
+                $return = $GameInfo->setFeaturesManageEnableById($data);
+                break;
+            case 'display':
+                $nowTime = time();//取得現在時間戳
+                $data = array(
+                    "game_id" => $request['displayId'],
+                    "game_showEnabled" => 1,
+                );
+                $return = $GameInfo->setFeaturesManageEnableById($data);
+                break;
+            default:
+                break;
+        }
+    }
+    //TODO: 新增維護公告
+    public function formAddFeaturesManage(){
+        $request = $this->getRequest();
+        if(empty($request['setId']) && $request['setId'] !== '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        //讀取 頁面資料
+        $GameInfo = D("GameInfo");
+        $data = array(
+            'game_id' => $request['setId'],
+            'game_defendMessage' => $request['setText'],
+        );
+        $return = $GameInfo->addDefendMessage($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ .'_01')));
+
+    }
+    //TODO: 排序
+    public function formSortFeaturesManage(){
+        $request = $this->getRequest();
+        switch ($request['className']){
+            case 'upSort':
+                if(!isset($request['orderSort']) || empty($request['orderSort']) && $request['orderSort'] !== 0){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_0')));
+                }
+                $data = array(
+                    'game_order' => $request['orderSort'],
+                    'game_order2' => ($request['orderSort'] - 1),
+                    'gameClass_id' => $request['sortId'],
+                );
+                break;
+            case 'downSort':
+                if(!isset($request['orderSort']) || empty($request['orderSort']) && $request['orderSort'] !== 0){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_1')));
+                }
+                $data = array(
+                    'game_order' => $request['orderSort'],
+                    'game_order2' => ($request['orderSort'] + 1),
+                    'gameClass_id' => $request['sortId'],
+                );
+                break;
+            default:
+                if($return === false){
+                    //否，顯示錯誤
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                }
+                break;
+        }
+        $GameInfo = D("GameInfo");
+        $GameInfo->setSortGameInfoOrder($data);
+        redirect(__APP__.'/FeaturesManage/index');
+    }
+}

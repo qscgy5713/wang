@@ -1,0 +1,42 @@
+<?php
+/**
+ * 人數圖表
+ */
+class MemberChartAction extends AdminAction{
+	public function index(){
+      	$CommonMemberStatistics = D('CommonMemberStatistics');
+      	$showArray = array();
+      	//轉換key
+      	$FieldChange = array(
+      		'statistics_year' => 'year',
+			'statistics_month' => 'month',
+			'statistics_day' => 'day',
+			'statistics_hour' => 'hour',
+			'statistics_onlineNumber' => 'onlineMember',
+			'statistics_pcUseNumber' => 'pcUseNumber',
+			'statistics_phoneUseNumber' => 'phoneUseNumber',
+			'statistics_allUseNumber' => 'allUseNumber',
+			'statistics_appleNumber' => 'appleNumber',
+			'statistics_androidNumber' => 'androidNumber',
+			'statistics_allSystemNumber' => 'allSystemNumber',
+			'statistics_totalRechargeMoney' => 'totalRechargeMoney',
+			'statistics_totalRechargeNumber' => 'totalRechargeNumber',
+			'statistics_totalWithdrawMoney' => 'totalWithdrawMoney',
+			'statistics_totalWithdrawNumber' => 'totalWithdrawNumber',
+			'statistics_totalRegisteredNumber' => 'totalRegisteredNumber',
+      	);
+      	$showStr = "";
+      	foreach ($return as $key => $value) {
+      		foreach ($FieldChange as $key1 => $value1) {
+      			switch ($key1) {
+      				default:
+      					$showStr = $value[$key1];
+      					break;
+      			}
+      			$showArray[$key][$value1] = $showStr;
+      		}
+      	}
+      	$this->assign('showArray', $showArray);
+		$this->display();
+	}
+}

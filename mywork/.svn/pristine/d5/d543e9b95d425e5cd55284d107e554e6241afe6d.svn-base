@@ -1,0 +1,405 @@
+<?php
+/*抓帳腳本 目前只使用 
+BG(賓果)->index   
+AE->getReportApi  
+RTG->getReportApi
+*/
+class ScriptGameReportAction extends ScriptAction {
+    protected $power = false;
+    
+    protected $gameCode = '';
+    protected $success = '';
+    protected $err = '';
+    
+    protected $startTime = '';
+    protected $endTime = '';
+    
+    protected $nextStartTime = '';
+    protected $nextEndTime = '';
+    
+    protected $allStartTime = '';
+    protected $allEndTime = '';
+    
+    protected $timeStr = '';
+    
+    protected $reportStartTime = '';
+    protected $reportEndTime = '';
+    
+    protected $allDetailArray = array();
+    protected $allReportArray = array();
+    protected $allMemberGameAccount = array();
+    protected $memberDataArray = array();
+    protected $delOrderDateArray = array();//需要刪除的order歸帳日期陣列
+    
+    protected $detailId = '';
+    protected $gameAccount = '';//遊戲欄位的名稱
+    protected $createTime = '';//遊戲時間 名稱
+    protected $bettingMoney = '';//投注金額 名稱
+    protected $surplus = '';//輸贏 名稱
+    protected $effective = '';//總洗碼 名稱
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        
+        $request = $this->getRequest();
+        if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+            cookie('MIS','@@aaa123','expire=3600');
+        }
+        $MIS = cookie('MIS');
+        if($MIS !== "@@aaa123"){
+            exit();
+        }
+        $this->assign('MIS',$MIS);
+        $this->power = true;
+        
+        if(empty($this->gameCode)){
+            $this->gameCode = $request["gameCode"];
+        }
+        /*
+        if(isset($request['startTime']) && isset($request['endTime'])){
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+            
+            switch($this->gameCode){
+                //傳入數值 做例外處理 og 因為 每次只能抓10分鐘 10秒後才能在執行
+                case 'Og':
+                    if(strtotime($this->endTime) > (strtotime($this->startTime)+600)){
+                        $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+600);
+                        $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+1200);
+                        
+                        $this->allStartTime = $this->startTime;
+                        $this->allEndTime = $this->endTime;
+                        
+                        $this->endTime = date('Y-m-d H:i:s',strtotime($this->startTime)+600);
+                    }
+                    break;
+                case 'Asg':
+                    if(strtotime($this->endTime) > (strtotime($this->startTime)+(60*60*6))){
+                        $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*6));
+                        $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*12));
+                        
+                        $this->allStartTime = $this->startTime;
+                        $this->allEndTime = $this->endTime;
+                        
+                        $this->endTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*6));
+                    }
+                    break;
+            }
+        } else {
+            switch($this->gameCode){
+                case 'Ae':
+                    $this->startTime = date('Y-m-d', strtotime('-1 days'));
+                    $this->endTime = date('Y-m-d', time());
+                    break;
+                case 'Rtg':
+                    $this->startTime = date('Y-m-d H:i:s', strtotime('-3 hour'));
+                    $this->endTime = date('Y-m-d H:i:s', time());
+                    break;
+                case 'Og':
+                    $this->startTime = date('Y-m-d H:i:s', strtotime('-10 minute'));
+                    $this->endTime = date('Y-m-d H:i:s', time());
+                    break;
+                case 'Asg':
+                    $this->endTime = date('Y-m-d H:i:00');
+                    $endTs = strtotime($this->endTime);
+                    $this->startTime = date('Y-m-d H:i:s', $endTs-(60*60*6));
+                    break;
+                default:
+                    $this->startTime = date('Y-m-d H:i:s', (time() - 60*60*2));
+                    $this->endTime = date('Y-m-d H:i:s', time());
+                    break;
+            }
+        }
+        
+        
+        if(isset($request['allStartTime']) && isset($request['allEndTime'])){
+            $this->allStartTime = $request['allStartTime'];
+            $this->allEndTime = $request['allEndTime'];
+            
+            
+            if(strtotime($this->endTime) >= strtotime($this->allEndTime)){
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+                
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+            } else {
+                switch($this->gameCode){
+                    case 'Og':
+                        $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+600);
+                        $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+1200);
+                        break;
+                    case 'Asg':
+                        $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*6));
+                        $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*12));
+                        break;
+                }
+            }
+        }*/
+        
+        $this->assign("nextStartTime",$this->nextStartTime);
+        $this->assign("nextEndTime",$this->nextEndTime);
+        
+        $this->assign("allStartTime",$this->allStartTime);
+        $this->assign("allEndTime",$this->allEndTime);
+        
+        if(empty($this->reportStartTime)){
+            $this->reportStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)-(60*60*24));
+        }
+        if(empty($this->reportEndTime)){
+            $this->reportEndTime = date('Y-m-d H:i:s',strtotime($this->endTime)+(60*60*24));
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("allDetailEmpty","<td colspan='9'>無明細清單</td>");
+        $this->assign("allReportEmpty","<td colspan='8'>無統整清單</td>");
+    }
+    protected function setTime($startTime,$endTime){
+        $this->startTime = $startTime;
+        $this->endTime = $endTime;
+        $this->reportEndTime = $this->endTime;
+    }
+    
+    protected function getReportApi(){
+        if(!$this->power){exit();}
+        if(empty($this->gameCode)){
+            //紀錄錯誤到Db
+            $this->err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無選擇遊戲
+            return false;
+        }
+        $GameReportData = D('GameReportData');
+        
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        if(count($this->allMemberGameAccount) == 0){
+            $this->success = '無新注單';
+            return true;
+        }
+        
+        //取得 遊戲帳號的平台帳號 Start
+        $data = array(
+            'gameCode' => $this->gameCode,
+            'allMemberGameAccount' => $this->allMemberGameAccount,
+        );
+        $return = $GameReportData->getMemberDataByGameAccount($data,$err);
+        if($return === false){
+            //紀錄錯誤到Db
+            $this->err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')).$err;//抓帳發生錯誤(Err002)
+            return false;
+        }
+        foreach($return as $value){
+            $this->memberDataArray[$value['game_name']] = $value;
+        }
+        //取得 遊戲帳號的平台帳號 End
+        //把明細加上 平台資訊 Start
+        foreach($this->allDetailArray as $key => $value){
+            $gameName = strtolower($value['detail_gameAccount']);
+            if(isset($this->memberDataArray[$gameName])){
+                $this->allDetailArray[$key]['member_id'] = $this->memberDataArray[$gameName]['member_id'];
+                $this->allDetailArray[$key]['member_account'] = $this->memberDataArray[$gameName]['member_account'];
+                $this->allDetailArray[$key]['agent_id'] = $this->memberDataArray[$gameName]['agent_id'];
+                $this->allDetailArray[$key]['agent_account'] = $this->memberDataArray[$gameName]['agent_account'];
+                $this->allDetailArray[$key]['agent_tree'] = $this->memberDataArray[$gameName]['agent_tree'];
+                $this->allDetailArray[$key]['ratio_tree'] = $this->memberDataArray[$gameName]['ratio_tree'];
+            } else {
+                unset($this->allDetailArray[$key]);
+            }
+        }
+        //把明細加上 平台資訊 End
+        
+        if(count($this->allDetailArray) == 0){
+            $this->success = '無可儲存的注單';
+            return true;
+        }
+        
+        //明細更新
+        $data = array(
+            'gameCode' => $this->gameCode,
+            'allDetailArray' => $this->allDetailArray,
+        );
+        $return = $GameReportData->setDetailData($data,$err);
+        if($return === false){
+            //紀錄錯誤到Db
+            $this->err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')).$err;//抓帳發生錯誤
+            return false;
+        }
+        
+        
+        switch ($this->gameCode){
+            case 'Ae':
+                $data = array(
+                    'gameCode' => $this->gameCode,
+                    'startTime' => strtotime($this->reportStartTime),
+                    'endTime' => strtotime($this->reportEndTime),
+                );
+                $return = $GameReportData->delGameReportData($data,$err);//刪除此區間的歸帳時間 (因結帳日改變歸帳時間)
+                break;
+            case 'Pa':
+                if(!empty($this->delOrderDateArray)){
+                    $data = array(
+                        'gameCode' => $this->gameCode,
+                        'orderDateArray' => $this->delOrderDateArray,
+                    );
+                    $return = $GameReportData->delGameReportDataByOrderArray($data,$err);//刪除此陣列的歸帳時間 (因結帳日改變歸帳時間)
+                }
+                break;
+        }
+        $data = array(
+            'gameCode' => $this->gameCode,
+            'startTime' => strtotime($this->reportStartTime),
+            'endTime' => strtotime($this->reportEndTime),
+        );
+        $return = $GameReportData->getGameReportData($data,$err);
+        if($return === false){
+            //紀錄錯誤到Db
+            $this->err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')).$err;//抓帳發生錯誤
+            return false;
+        }
+        $this->allReportArray = $return;
+        
+        if(count($this->allReportArray) > 0){
+            $data = array(
+                'gameCode' => $this->gameCode,
+                'allReportArray' => $this->allReportArray
+            );
+            $return = $GameReportData->setReportData($data,$err);
+            if($return === false){
+                //紀錄錯誤到Db
+                $this->err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')).$err;//抓帳發生錯誤
+                return false;
+            }
+        }
+        $this->success = '抓帳成功';
+        return true;
+    }
+    
+    
+    
+    
+    
+    
+    public function index(){
+        if(!$this->power){exit();}
+        $request = $this->getRequest();
+        
+        echo '抓 賓果注單 開始<BR>';
+        //$request['startTime'] = "2018-12-24 00:00:00";
+        //$request['endTime'] = "2019-01-31 23:59:59";
+        
+        if(isset($request['startTime']) && isset($request['endTime'])){
+            $startTime = $request['startTime'];
+            $endTime = $request['endTime'];
+        } else {
+            $startTime = date('Y-m-d H:i:s', (time() - 60*60*2));
+            $endTime = date('Y-m-d H:i:s', time());
+        }
+        $timeSql = "(tTime BETWEEN '{$startTime}' AND '{$endTime}') AND ";
+        
+        //var_dump($timeSql);exit();
+        
+        $mysql_server_name = "184.168.147.156";
+        $mysql_username = "ok6666";
+        $mysql_password = "@@aaaa8888";
+        $mysql_database = "bingo";
+        
+        $conn=mysql_connect($mysql_server_name,$mysql_username,$mysql_password) or die("error connecting") ; //連線資料庫
+        mysql_query("set names 'utf8'"); //資料庫輸出編碼 
+        mysql_select_db($mysql_database); //開啟資料庫
+        $sql ="SELECT * FROM `b_ticks` where {$timeSql} tBoss = 'wukongapi'"; //SQL語句
+        $result = mysql_query($sql,$conn); //查詢
+        
+        $allDetailArray = array();
+        $allMemberGameAccount = array();
+        $memberDataArray = array();
+        $i = 0;
+        while($row = mysql_fetch_assoc($result)){
+            $i++;
+            if(!in_array($row['tName'], $allMemberGameAccount)){
+                array_push($allMemberGameAccount, $row['tName']);
+            }
+            
+            $data = array(
+                "detail_id" =>$row['tId'],
+                "detail_gameAccount" =>$row['tName'],
+                "detail_createTime" => strtotime($row['tTime']),
+                "detail_orderDate" => strtotime(date('Y-m-d 00:00:00', strtotime($row['tTime']))),
+                "detail_bettingMoney" => $row['tPoint'],
+                "detail_surplus" =>bcsub($row['tWin'], $row['tPoint'], 4),
+                "detail_effective" =>$row['tPoint'],
+                "detail_needBackWater"=> 0,
+                "detail_isBackWater" =>0,
+                "detail_dataInJson" =>json_encode($row, JSON_UNESCAPED_UNICODE),
+            );
+            array_push($allDetailArray, $data);
+        }
+        
+        if($i != 0){
+            $GameBgDetail = D("GameBgDetail");
+            $return = $GameBgDetail->getMemberDataByGameAccount($allMemberGameAccount);
+            if($return === false){
+                echo "<span style='color:red;'>".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))."</span><BR>";
+            }
+            foreach($return as $value){
+                $memberDataArray[$value['game_name']] = $value;
+            }
+        }
+        
+        
+        foreach($allDetailArray as $key => $value){
+            $allDetailArray[$key]['member_id'] = $memberDataArray[$value['detail_gameAccount']]['member_id'];
+            $allDetailArray[$key]['member_account'] = $memberDataArray[$value['detail_gameAccount']]['member_account'];
+            $allDetailArray[$key]['agent_id'] = $memberDataArray[$value['detail_gameAccount']]['agent_id'];
+            $allDetailArray[$key]['agent_account'] = $memberDataArray[$value['detail_gameAccount']]['agent_account'];
+            $allDetailArray[$key]['agent_tree'] = $memberDataArray[$value['detail_gameAccount']]['agent_tree'];
+            $allDetailArray[$key]['ratio_tree'] = $memberDataArray[$value['detail_gameAccount']]['ratio_tree'];
+        }
+        
+        if($i != 0){
+            $return = $GameBgDetail->setBgDetailData($allDetailArray);
+            if($return === false){
+                echo "<span style='color:red;'>".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))."</span><BR>";
+            }
+            $endOrderTime1 = date('Y-m-d 00:00:00', strtotime($endTime));
+            $day = 0;
+            $allReportArray = array();
+            do {
+                $startOrderTime1 = date('Y-m-d 00:00:00', strtotime($startTime) + 60*60*24*$day);
+                $startOrderTime2 = date('Y-m-d 23:59:59', strtotime($startTime) + 60*60*24*$day);
+                echo "<span>更新 {$startOrderTime1} 統整</span><BR>";
+                $sql ="SELECT count(*) as report_betNumber,sum(tPoint) as report_bettingMoney,sum(tWin) as winmoney,tName
+                   FROM `b_ticks`
+                   WHERE (tTime BETWEEN '{$startOrderTime1}' AND '{$startOrderTime2}') AND tBoss = 'wukongapi'
+                   GROUP BY tName;"; //SQL語句
+                $result = mysql_query($sql,$conn); //查詢
+                while($row = mysql_fetch_assoc($result)){
+                    $data = array(
+                        "member_id" =>$memberDataArray[$row['tName']]['member_id'],
+                        "member_account" =>$memberDataArray[$row['tName']]['member_account'],
+                        "agent_id" => $memberDataArray[$row['tName']]['agent_id'],
+                        "agent_account" => $memberDataArray[$row['tName']]['agent_account'],
+                        "agent_tree" => $memberDataArray[$row['tName']]['agent_tree'],
+                        "ratio_tree" =>$memberDataArray[$row['tName']]['ratio_tree'],
+                        "report_gameAccount" =>$row['tName'],
+                        "report_orderDate" =>strtotime($startOrderTime1),
+                        "report_bettingMoney" =>$row['report_bettingMoney'],
+                        "report_surplus" =>bcsub($row['winmoney'], $row['report_bettingMoney'], 4),
+                        "report_effective" =>$row['report_bettingMoney'],
+                        "report_betNumber" =>$row['report_betNumber'],
+                    );
+                    array_push($allReportArray, $data);
+                }
+                $day++;
+            } while ($startOrderTime1 != $endOrderTime1);
+        
+        
+            $return = $GameBgDetail->setBgReportData($allReportArray);
+            if($return === false){
+                echo "<span style='color:red;'>".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'))."</span><BR>";
+            }
+        }
+        
+        echo "<span>更新 {$i} 筆 注單</span><BR>";
+        $this->display();
+    }
+}

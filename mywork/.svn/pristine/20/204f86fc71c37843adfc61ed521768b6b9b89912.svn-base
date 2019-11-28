@@ -1,0 +1,46 @@
+<?php
+class AgentJoinAction extends MemberAction {
+    //TODO:5.代理加盟
+    public function index(){
+        $this->display();
+    }
+    //TODO:5.1代理加盟功能
+    public function formAgentJoin(){
+        //使用 過濾方法 檢查傳入資料
+        $request = $this->getRequest();
+        
+        if (!isset($request['applyName']) || empty($request['applyName'])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        if (!isset($request['applyContact']) || empty($request['applyContact'])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //接收代理加盟資料
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $data = array(
+            "agentjoin_applyName" => $request['applyName'], //傳入的申請姓名
+            //"agentjoin_applyPhone" => $request['applyPhone'], //傳入的申請電話
+            "agentjoin_applyContact" => $request['applyWay'].':'.$request['applyContact'], //傳入的聯絡方式
+            "agentjoin_applyMsg" => $request['applyMsg'], //傳入的申請留言
+            "agentjoin_applyTime" => $nowTime,//現在時間
+            "agentjoin_applyIp" => $ip,//申請IP
+        );
+        $CommonAgentAgentjoin = D("CommonAgentAgentjoin");
+        //CommonAgentAgentjoinModel addAgentjoinData($data) 新增代理加盟資料
+        $return = $CommonAgentAgentjoin->addAgentjoinData($data);
+        //新增是否成功
+        if ($return === false) {
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //新增限制
+    //custName 或 contact 如果空白 回傳錯誤訊息
+    //同IP一天只能申請一次
+    //新增查詢功能
+    
+}

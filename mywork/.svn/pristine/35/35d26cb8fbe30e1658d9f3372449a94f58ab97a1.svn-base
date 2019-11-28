@@ -1,0 +1,34 @@
+<include file="Common:header"/>
+<body style="background-image: url(__CSS__/images/10.jpg);">
+
+	<if condition='$isLogin eq "false"'>
+		<div class="bg-parallax parallax-overlay accounts-page agent-login-bg" style="background-image:url(Public/TP01/images/wallpaper-36985.jpg);">
+            <div class="container">
+                <div class="row pb30">
+                    <div class="col-lg-4 col-md-6 mr-auto ml-auto col-sm-8">
+                        <h3 class="text-white text-center mb30">登入</h3>
+                        
+                        <form method="post" action='__APP__/AgentIndex/formLogin'>
+                            <div class="form-group">
+                                <input type="text" name='account' class="form-control" placeholder="帳號">
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name='password' class="form-control" placeholder="密碼">
+                            </div>
+                              <div class="form-group">
+                                  <button type="submit" class="btn btn-rounded btn-primary btn-block">登入</button>
+                            </div>
+                            
+                        </form>
+                    </div>
+                </div>
+            </div>
+		</div>
+	<else />
+		<include file="Common:menu"/>
+			<include file="Common:menu2"/>
+			  <div class="content admin-div">
+			  	 
+		      </div>
+	</if>
+<include file="Common:footer"/> 

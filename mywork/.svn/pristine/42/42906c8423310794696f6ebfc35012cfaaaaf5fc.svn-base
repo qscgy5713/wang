@@ -1,0 +1,14 @@
+<?php
+/*
+ * 功能管理
+ */
+class FeaturesManageAction extends AdminAction {
+    
+    public function index(){
+        
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameInfoDataByManage();
+        var_dump($return);
+        exit();
+    }
+}

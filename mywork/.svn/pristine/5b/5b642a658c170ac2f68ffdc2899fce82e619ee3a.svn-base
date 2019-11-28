@@ -1,0 +1,216 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+<if condition='$isMobile eq "true"'>
+	<if condition='$gameLink eq "false"'>
+		<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+			<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+			<div class="display-table">
+				<div class="display-table-cell vertical-align-middle">
+					<div class="container text-center">
+						<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+						<div class="row mt-30">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">電子錢包</label>
+								<input type="text" value="{$memberWallet}" readonly class="form-control required">
+							</div>
+						</div>
+						<div class="row mt-10">
+							<div class="col-md-3 col-sm-3 m-auto">
+									<label class="txt-white mb-10">錯誤訊息</label>
+								<input type="text" id="memberBalance" value="{$memberBalance}" readonly class="form-control required">
+								<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	<else/>
+		<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up" style="margin-top: 54px;">
+			<VOLIST name="gameElectronicMenuArray" id="gameTable">
+				<IF condition="$gameTable.gameEnabled eq '1'">
+					<IF condition="$i%2 eq 0">
+						<div class="row game-row-rwd">
+							<IF condition="$gameTable.gameCode eq 'UC8'">
+								<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="electronicHall-game-bg-left gameNewHtml">
+									<div class="col-6 p-0">
+										<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo{$gameTable.gameCode}.png">
+									</div>
+									<div class="col-6 p-0">
+										<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/game{$gameTable.gameCode}.png">
+									</div>
+								</a>
+							<ELSE/>
+								<a href="__APP__/Game{$gameTable.gameCode}/gameMenu" class="electronicHall-game-bg-left">
+									<div class="col-6 p-0">
+										<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo{$gameTable.gameCode}.png">
+									</div>
+									<div class="col-6 p-0">
+										<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/game{$gameTable.gameCode}.png">
+									</div>
+								</a>
+							</IF>
+						</div>
+					<ELSE/>
+						<div class="row game-row-rwd">
+							<IF condition="$gameTable.gameCode eq 'UC8'">
+								<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="electronicHall-game-bg-right gameNewHtml"><!-- RTG -->
+									<div class="col-6 p-0">
+										<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/game{$gameTable.gameCode}.png">
+									</div>
+									<div class="col-6 p-0">
+										<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo{$gameTable.gameCode}.png">
+									</div>
+								</a>
+							<ELSE/>
+								<a href="__APP__/Game{$gameTable.gameCode}/gameMenu" class="electronicHall-game-bg-right"><!-- RTG -->
+									<div class="col-6 p-0">
+										<img class="li-transform" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/game{$gameTable.gameCode}.png">
+									</div>
+									<div class="col-6 p-0">
+										<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo{$gameTable.gameCode}.png">
+									</div>
+								</a>
+							</IF>
+						</div>
+					</IF>
+				<ELSE/>
+					<IF condition="$i%2 eq 0">
+						<div class="row game-row-rwd">
+							<div class="caution ">
+								<img src="__CSS__/images/menu-img/warn.svg">
+							</div>
+							<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="electronicHall-game-bg-left game-gray">
+								<div class="col-6 p-0">
+									<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo{$gameTable.gameCode}.png">
+								</div>
+								<div class="col-6 p-0">
+									<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/game{$gameTable.gameCode}.png">
+								</div>
+							</a>
+						</div>
+					<ELSE/>
+						<div class="row game-row-rwd">
+							<div class="caution ">
+								<img src="__CSS__/images/menu-img/warn.svg">
+							</div>
+							<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="electronicHall-game-bg-right game-gray"><!-- RTG -->
+								<div class="col-6 p-0">
+									<img class="li-transform " style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/game{$gameTable.gameCode}.png">
+								</div>
+								<div class="col-6 p-0">
+									<img class="" style="width: 100%;" src="__CSS__/images/rwd-game-img/electronicHall/logo{$gameTable.gameCode}.png">
+								</div>
+							</a>
+						</div>
+					</IF>
+				</IF>
+			</VOLIST>
+		</section>
+	</if>
+	
+<else/>
+	<if condition='$gameLink eq "false"'>
+		<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+			<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+			<div class="display-table">
+				<div class="display-table-cell vertical-align-middle">
+					
+					<div class="container text-center">
+						
+						<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+						
+						<div class="row mt-30">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">電子錢包</label>
+								<input type="text" value="{$memberWallet}" readonly class="form-control required">
+							</div>
+						</div>
+						<div class="row mt-10">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">錯誤訊息</label>
+								<input type="text" id="memberBalance" value="{$memberBalance}" readonly class="form-control required">
+								<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	<else/>
+		<iframe id="game_iframe" class="md-gameEnter la-gameEnter" src="" name="gameIframe" width="100%" height="100%" frameborder="0" scrolling="auto"></iframe>
+	</if>
+</if>
+
+		
+
+<if condition='$isMobile eq "true"'>
+	<include file="Common:footer"/>
+<else/>
+	<include file="Common:game_footer"/>
+</if>
+<script type="text/javascript">
+
+jQuery(document).ready(function(){
+	if("{$isMobile}" == "1"){
+		if("{$gameLink}" == "false"){
+			jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+		    alert("{$errMessage}");
+		} else {
+			$(".gameNewHtml").click(function(){
+				var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+			});
+			mobileChange();
+			var gamehtml = window.open('', 'gamePage');
+			gamehtml.document.location.href='{$gameLink}';
+		}
+	} else {
+		if("{$gameLink}" == "false"){
+			jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+		    alert("{$errMessage}");
+		} else {
+			mobileChange();
+		}
+	}
+});
+		
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+
+function mobileChange() {
+	if("{$isMobile}" == "1"){
+		var h = jQuery(window).height();
+		jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+	} else {
+		var h = jQuery(window).height();
+		var topBar_h = jQuery('#topBar').height();
+		var header_h = jQuery('#header').height();
+		
+		jQuery("#game_iframe").attr("src","{$gameLink}");
+		jQuery("#game_iframe").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+function reloadPage(){
+	if("{$isMobile}" == "1"){
+		var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+	}
+	location.reload();
+}
+</script>
+
+
+

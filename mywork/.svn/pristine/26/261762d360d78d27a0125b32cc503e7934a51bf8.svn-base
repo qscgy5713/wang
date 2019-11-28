@@ -1,0 +1,42 @@
+<html>
+<body>
+	<table>
+		<tr>
+			<th>紀錄ID</th>	
+			<th>帳號</th>
+			<th>類別</th>
+			<th>操作時間</th>
+			<th>操作IP</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$vo.operateLogId}</td>
+				<if condition="$vo.subAccount neq null">
+					<td>{$vo.subAccount}</td>
+				<else/>
+					<td>{$vo.agentAccount}</td>
+				</if>
+				<td>{$vo.operateLogClass}</td>
+				<td>{$vo.operateLogCreateTime}</td>
+				<td>{$vo.operateLogIp}</td>
+				<td>
+					<form method="post" action="__APP__/OperatingRecord/setFormOperateLog">
+						<input type="hidden" name="setId" value="{$vo.operateLogId}">
+						<input type="hidden" name="setAccount" value="{$vo.agentAccount}">
+						<select name="selectLog">
+							<option selected>變更類別</option>
+							<option value="1">修改密碼</option>
+							<option value="2">停權代理操作</option>
+							<option value="3">啟用代理操作</option>
+							<option value="4">停權子帳號操作</option>
+							<option value="5">啟用子帳號操作</option>
+						</select>
+						<input type="submit" value="提交">
+					</form>
+				</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>

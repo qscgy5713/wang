@@ -1,0 +1,1860 @@
+<?php
+//set_time_limit(30);
+
+class GameBjModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'https://ag.ck888.net/api';
+  protected $cfg_game_url = 'http://jeff.ck888.net';
+  protected $cfg_api_key = '9d1805bd7fd56d5f';
+  protected $cfg_check_iv = '97a80e526640673a';
+
+  const BJ_DEFAULT_REQUEST_METHOD = 'GET';
+  const BJ_CURL_CONNECTTIMEOUT_MS = 8000;
+  const BJ_CURL_TIMEOUT_MS = 18000;
+  const BJ_TRANS_DEPOSIT_SIGN = 'IN';
+  const BJ_TRANS_WITHDRAW_SIGN = 'OUT';
+  const BJ_REPORT_ODD_SCALE_SIZE = 2;
+
+  const BJ_API_ERRORS = array(
+    //errorid => 中文錯誤
+    100 => '格式錯誤',
+    126 => '傳送資料缺少驗證金鑰',
+    127 => '找不到代理 (0x0001)',
+    128 => '找不到代理 (0x0002)',
+    200 => '帳號名稱已存在',
+    201 => '無法建立會員',
+    202 => '會員不存在',
+    203 => '訂單序號重複',
+    204 => '訂單序號不存在',
+    205 => '會員停權',
+    206 => '點數不足',
+  );
+
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+  }
+
+  //--------------------非通用函數--------------------
+
+  /**
+   * 註冊新會員
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果 (bool)
+   */
+  public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'method' => 'CreateUser',
+      'key' => $this->_getApiKey(),
+      'time' => $this->_getTime(),
+      'name' => trim($_user_name),
+      'pass' => $_password,
+    );
+
+    $url = $this->cfg_base_url;
+    $result = $this->_sendRequest($url,$arrData);
+
+    if ($result!==false) {
+      if ($result && (!isset($result['errorid'])) && (!isset($result['errormsg']))) {  //成功
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['errorid']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['token'] 登入用的 token (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL (string)
+   */
+  public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'token' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ((!isset($_token)) || (!strlen($_token))) {
+      $token = $this->getLoginToken(array(
+        'user_name' => $_user_name,
+      ),$argErr);
+      if ($token !== false) {
+        $gameLink = $this->cfg_game_url . "/login?token={$token}";
+        return $gameLink;
+      } else {
+        return false;
+      }
+    } else {
+      $gameLink = $this->cfg_game_url . "/login?token={$_token}";
+      return $gameLink;
+    }
+  }
+
+  /**
+   * 取得登入用token
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return token (string)
+   */
+  public function getLoginToken($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'method' => 'LoginUser',
+      'key' => $this->_getApiKey(),
+      'time' => $this->_getTime(),
+      'name' => trim($_user_name),
+    );
+
+    $url = $this->cfg_base_url;
+    $result = $this->_sendRequest($url,$arrData);
+    if ($result!==false) {
+      if (
+        $result &&
+        (isset($result['token'])) &&
+        (strlen($result['token'])) &&
+        (!isset($result['errorid'])) &&
+        (!isset($result['errormsg']))
+        ) {  //成功
+          return $result['token'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['errorid']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 取得會員資訊
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 會員資訊 (array)
+   */
+  public function getMemberInfo($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrData = array(
+      'method' => 'UserIsOnline',
+      'key' => $this->_getApiKey(),
+      'time' => $this->_getTime(),
+      'name' => trim($_user_name),
+    );
+
+    $url = $this->cfg_base_url;
+    $result = $this->_sendRequest($url,$arrData);
+    if ($result!==false) {
+      if ($result && (!isset($result['errorid'])) && (!isset($result['errormsg']))) {  //成功
+        if ( ($argKey !== null) && array_key_exists($argKey, $result) ) {
+          return $result[$argKey];
+        } else {
+          return $result;
+        }
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['errorid']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+   */
+  public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrMemInfo = $this->getMemberInfo($arrDatas, $argErr);
+    return $arrMemInfo['point'];
+  }
+
+  /**
+   * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+   */
+  public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $transType = self::BJ_TRANS_WITHDRAW_SIGN;
+    $amount = abs($_amount);
+    $transId = $this->_getTid($_user_name, $transType);
+    return $this->_transfer($transType, $_user_name, $amount, $transId, $argErr);
+  }
+
+  /**
+   * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+   */
+  public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $transType = self::BJ_TRANS_DEPOSIT_SIGN;
+    $amount = abs($_amount);
+    $transId = $this->_getTid($_user_name, $transType);
+    return $this->_transfer($transType, $_user_name, $amount, $transId, $argErr);
+  }
+
+  /**
+   * 抓取注單報表
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['offset'] 位移 (非必須)
+   * @param $data['user_name'] 特定會員名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+   */
+  public function getGameRecord($arrDatas, &$argErr = null, &$argHasMore = false){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'offset' => array('required'=>0,'default'=>0),
+      'user_name' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $offset = intVal($_offset);
+    //$beginDatetime = str_replace(' ', '%20', trim($argBeginDatetime));
+    //$endDatetime = str_replace(' ', '%20', trim($argEndDatetime));
+    $beginDatetime = trim($_begin_datetime);
+    $endDatetime = trim($_end_datetime);
+    $arrData = array(
+      'method' => 'UserGameLog',
+      'key' => self::_getApiKey(),
+      'time' => self::_getTime(),
+      'fromtime' => $beginDatetime,
+      'totime' => $endDatetime,
+      'offset' => $offset,
+    );
+
+    if (isset($_user_name) && strlen($_user_name)) {
+      $arrData['name'] = trim($_user_name);
+    }
+
+    $url = $this->cfg_base_url;
+    $result = $this->_sendRequest($url,$arrData);
+    //Dbgr::preout($arrData);
+    if ($result!==false) {
+      //Dbgr::preout($result);
+      if ($result && (isset($result['gamelog'])) && (!isset($result['errorid'])) && (!isset($result['errormsg']))) {  //成功
+        //$argOffset = $result['offset'];
+        $argHasMore = $result['more'];
+        return $result['gamelog'];
+      } else {  //失敗
+        $errCode = $result['errorid'];
+        $errMsg = $result['errormsg'];
+        $argErr = $this->_produceError($errCode);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + no                期號
+   * + game_name         遊戲名稱
+   * + mode              玩法
+   * + bet_numbers       投注號碼
+   * + odds              賠率字串
+   * + is_checkout       結算情形
+   * + sb_html           有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+
+        //Dbgr::preout($bet);
+
+        $bet_id = $bet['detail_id'];
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        $no = $arrBetContents['no'];
+        //$time = $arrBetContents['time'];
+        $game = $arrBetContents['game'];
+        $mode = $arrBetContents['mode'];
+        $bet_numbers = $arrBetContents['number'];
+        $odds = $arrBetContents['odds'];
+        $count = $arrBetContents['count'];
+        $win = $arrBetContents['win'];
+        $bonus = $arrBetContents['bonus'];
+        $checkout = $arrBetContents['checkout'];
+        $bet['game_name'] = $this->_getGameNameById($game, 1);  //0=正常名稱, 1=短名稱
+        $bet['bet_numbers'] = str_replace( '|', '', $this->_getBetNumbersByStr($mode, $bet_numbers, $odds) );
+        $modeStr = $this->_getModeStrById($mode);
+        if (mb_strlen($modeStr) > 4) {
+          $len = mb_strlen($modeStr);
+          $lenP1 = intVal($len/2);
+          $lenP2 = $len - $lenP1;
+          $modeStr = mb_substr($modeStr, 0, $lenP1) . '<br/>' . mb_substr($modeStr, $lenP1, $lenP2);
+        }
+        if (mb_strlen($bet_id) > 10) {
+          $len = mb_strlen($bet_id);
+          $lenP1 = intVal($len/2)-2;
+          $lenP2 = $len - $lenP1;
+          $bet_id = '<span title="'.$bet_id.'">'.
+            '<span style="font-weight:bold;">' . mb_substr($bet_id, 0, 2) . '</span>' .
+            mb_substr($bet_id, 2, $lenP1) . '<br/>' .
+            mb_substr($bet_id, $lenP1+2, $lenP2) .
+            '</span>';
+        }
+        $bet['no'] = $no;
+        $bet['mode'] = $modeStr;
+        $bet['odds'] = $this->_getOddsByStr($mode, $odds, $bet_numbers);
+        //$bet['bet_id'] = $bet_id;
+        //$is_checkout = ($bet['is_checkout'] == true);
+        $is_checkout = $checkout;
+        if ($is_checkout == 0) {
+          $bet['is_checkout'] = '未結';
+        } elseif ($is_checkout == 1) {
+          $bet['is_checkout'] = '已結算';
+        } elseif ($is_checkout == 2) {  //註銷
+          $bet['is_checkout'] = '註銷';
+        }
+        //$arrTime = explode(' ', $bet['bet_datetime']);
+        //$bet['bet_datetime'] = $time;
+        $bet['sb_html'] = null;
+        $arrBets[] = $bet;
+      }
+      return $arrBets;
+    } else {
+      return false;
+    }
+  }
+
+  //--------------------非通用函數--------------------
+
+  /* transfer: 上下點 */
+  protected function _transfer(
+    $argTransType, //IN=存款, OUT=提款
+    $argUserName,  //會員帳號
+    $argAmount,  //額度
+    $argTransId,  //交易號
+    &$argErr = null
+    ) {
+    $userName = trim($argUserName);
+    $amount = intVal($argAmount);
+    if ( $argTransType === self::BJ_TRANS_DEPOSIT_SIGN) {
+      $amount = abs($amount);
+    } else {
+      $amount = (-1) * abs($amount);
+    }
+    $arrData = array(
+      'method' => 'UserDivertPoint',
+      'key' => $this->_getApiKey(),
+      'time' => $this->_getTime(),
+      'name' => $userName,
+      'orderid' => trim($argTransId),
+      'divert' => $amount,
+      //'clear' => 1,  //optional. when 1 empty out the member's balance
+    );
+
+    $url = $this->cfg_base_url;
+    $result = $this->_sendRequest($url,$arrData);
+    if ($result!==false) {
+      if ($result && (!isset($result['errorid'])) && (!isset($result['errormsg']))) {  //成功
+        return $result['point'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['errorid']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /* produce error */
+  protected function _produceError($argErrCode,$argErrMsg=null) {
+    if ($argErrMsg) {
+      return "{$argErrMsg} (code {$argErrCode})";
+    } else {
+      if (array_key_exists($argErrCode,self::BJ_API_ERRORS)) {
+        $errorMsg = self::BJ_API_ERRORS[$argErrCode];
+        return "{$errorMsg} (code {$argErrCode})";
+      } else {
+        $errorMsg = '錯誤說明未定義';
+        return "{$errorMsg} (code {$argErrCode})";
+      }
+    }
+  }
+
+  /* 傳回目前 iv */
+  protected function _getCheckIv() {
+    return $this->cfg_check_iv;
+  }
+
+  /* 傳回目前apiKey */
+  protected function _getApiKey() {
+    return $this->cfg_api_key;
+  }
+
+  /* get transaction id */
+  protected function _getTid($argAccount, $argTransactionType='IN') {
+    $transactionType = strtoupper($argTransactionType);
+    $tidTime = $this->_getTidTime();
+    $rnd = rand(1,9999);
+    $tid = "BJ-{$tidTime}-{$rnd}";
+    return $tid;
+  }
+
+  /* get formatted time for transaction id */
+  protected function _getTidTime() {
+    $time = date('ymdHis');
+    return $time;
+  }
+
+  /* get formatted time for each action */
+  protected function _getTime() {
+    $time = date('YmdHis');
+    return $time;
+  }
+
+  /* get check for eavery action */
+  protected function _getCheck($argData) {
+    if (is_array($argData)) {
+      //$str = http_build_query($argData);
+      $str = '';
+      foreach ($argData as $aKey => $aVal) {
+        if (strlen($str)) {$str .= '&';}
+        $str .= "{$aKey}={$aVal}";
+      }
+    } else {
+      $str = $argData;
+    }
+    $iv = $this->_getCheckIv();
+    $str = "{$iv}{$str}";
+    $check = hash('md5', $str);
+    return $check;
+  }
+
+  /* send http request via curl and return its response in assoc array */
+  protected function _sendRequest($argUrl,$argArrData,$argMethod=self::BJ_DEFAULT_REQUEST_METHOD) {
+    $arrData = $argArrData;
+    ksort($arrData);
+    $check = $this->_getCheck($arrData);
+    $arrData['check'] = $check;
+    //var_dump($arrData);
+    $method = strtoupper($argMethod);
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,
+      //CURLOPT_POSTFIELDS => $argArrData,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::BJ_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::BJ_CURL_TIMEOUT_MS,
+      //CURLOPT_HTTPHEADER => array('Content-Type: application/json',)
+    );
+    
+    if ( $method == 'GET') {  //GET
+      //$queryStr = http_build_query($arrData); //dont use this shit
+      $queryStr = '';
+      foreach ($arrData as $key => $val) {
+        if (strlen($queryStr)) {$queryStr .= '&';}
+        //$val = urlencode($val);
+        $val = ($val);
+        $queryStr .= "{$key}={$val}";
+      }
+      $url = "{$argUrl}?{$queryStr}";
+    } else {  //POST
+      $url = $argUrl;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $arrData;
+    }
+    //var_dump($argUrl,$argMethod,$arrCurlDatas,$argArrData,$url);exit();
+    //var_dump($url);
+    //var_dump($arrCurlDatas);
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    //curl_setopt_array($ch,$arrCurlDatas);
+    $result = curl_exec($ch);
+    //Dbgr::preout($result);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+
+    //echo "\$result={$result} <br/>";
+    //Dbgr::preout($result);
+
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //echo "sendRequest::curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+
+  protected function _getTwoFaceStrById($argId, $argMode) {
+    $arrModes = array(
+      0 => array('大', '單'),
+      1 => array('小', '雙'),
+    );
+    $id = intVal(trim($argId));
+    if (array_key_exists($id, $arrModes)) {
+      if ($argMode='bigsmall') {
+        return $arrModes[$id][0];
+      } else {
+        return $arrModes[$id][1];
+      }
+    } else {
+      return "未定義的雙面id ({$id})";
+    }
+  }
+
+
+
+  protected function _getTwoFaceStrByStr($argStr, $argMode) {
+    $str = '';
+    if ($argMode=='bigsmall') {
+      if ($argStr == '1') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-big inline\">大</div>";
+      } elseif ($argStr == '0') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-small inline\">小</div>";
+      } elseif (($argStr == '0,1') || ($argStr == '1,0')) {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-big-plus-small inline\">大+小</div>";
+      } elseif ($argStr == '0,0') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-none inline\">無</div>";
+      }
+    } elseif ($argMode=='oddeven') {
+      if ($argStr == '1') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-odd inline\">單</div>";
+      } elseif ($argStr == '0') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-even inline\">雙</div>";
+      } elseif (($argStr == '0,1') || ($argStr == '1,0')) {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-odd-plus-even inline\">大+小</div>";
+      } elseif ($argStr == '0,0') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-none inline\">無</div>";
+      }
+    } else {  //tiger-dragon
+      if ($argStr == '1') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-dragon inline\">龍</div>";
+      } elseif ($argStr == '0') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-tiger inline\">虎</div>";
+      } elseif (($argStr == '0,1') || ($argStr == '1,0')) {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-dragon-plus-tiger inline\">龍+虎</div>";
+      } elseif ($argStr == '0,0') {
+        $str = "<div class=\"bj-bet-num mode-two-face two-face-none inline\">無</div>";
+      }
+    }
+    return $str;
+  }
+
+  protected function _getCkTwoFaceStrByStr($argStr, $argMode='normal') {
+    $str = '';
+    if ($argMode=='normal') {
+      $arrNums = explode(',', $argStr);
+      $arr = array(
+        0 => "<div class=\"bj-bet-num mode-two-face two-face-small inline\">大</div>",
+        1 => "<div class=\"bj-bet-num mode-two-face two-face-big inline\">小</div>",
+        2 => "<div class=\"bj-bet-num mode-two-face two-face-even inline\">單</div>",
+        3 => "<div class=\"bj-bet-num mode-two-face two-face-odd inline\">雙</div>",
+        4 => "<div class=\"bj-bet-num mode-two-face two-face-prime inline\">質</div>",
+        5 => "<div class=\"bj-bet-num mode-two-face two-face-composite inline\">合</div>",
+      );
+      foreach ($arrNums as $nk => $nv) {
+        if ($nv=='1') {
+          if (strlen($str)) {$str .= ', ';}
+          $str .= $arr[$nk];
+        }
+      }
+    } elseif ($argMode=='tigerdragon') {
+      $arrNums = explode(',', $argStr);
+      $arr = array(
+        0 => "<div class=\"bj-bet-num mode-two-face two-face-dragon inline\">龍</div>",
+        1 => "<div class=\"bj-bet-num mode-two-face two-face-tiger inline\">虎</div>",
+        2 => "<div class=\"bj-bet-num mode-two-face two-face-peace inline\">和</div>",
+      );
+      foreach ($arrNums as $nk => $nv) {
+        if ($nv=='1') {
+          if (strlen($str)) {$str .= ', ';}
+          $str .= $arr[$nk];
+        }
+      }
+    }
+    return $str;
+  }
+
+  protected function _getGameNameById($argGameId,$argNameIndex=0) {
+    $arrGames = array(
+      1 => array('北京賽車','北京'),
+      2 => array('重慶時時彩','重慶'),
+      3 => array('極速賽車','極速'),
+      4 => array('幸運飛艇','飛艇'),
+    );
+    $id = intVal(trim($argGameId));
+    if (array_key_exists($id, $arrGames)) {
+      return $arrGames[$id][$argNameIndex];
+    } else {
+      return "未定義的遊戲id ({$argGameId})";
+    }
+  }
+
+  protected function _getModeStrById($argModeId) {
+    $arrModes = array(
+       0 => 'mod_id 0',
+       1 => '猜名次',
+       2 => '猜冠亞軍',
+       3 => '猜前三名',
+       4 => '猜前四名(未開放)',
+       5 => '猜前五名(未開放)',
+       6 => '單雙大小',
+       7 => '冠亞和單雙大小',
+       8 => '冠亞和指定數(未開放)',
+       9 => '龍虎',
+      10 => '一星定位',
+      11 => '雙面盤',
+      12 => '串關',
+      13 => '五球總和',
+      14 => '五球總和',
+      15 => '五球總和',
+      16 => '牛牛',
+      17 => '牛牛',
+      //18 => '',
+      //19 => '',
+      //20 => '',
+      //21 => '',
+      //22 => '',
+      //23 => '',
+      24 => '三星總和',
+      25 => '三星總和',
+      26 => '三星總和',
+      27 => '三星總和',
+      //28 => '',
+      //29 => '',
+      30 => '三星一碼',
+      31 => '三星二碼',
+      32 => '三星直選',
+      33 => '三星組選',
+      34 => '三星組選',
+      35 => '四星一碼',
+      36 => '四星二碼',
+      37 => '四星直選',
+      38 => '四星組選',
+      39 => '四星組選',
+      40 => '四星組選',
+      41 => '四星組選',
+      42 => '二星直選',
+      43 => '二星直選',
+      //44 => '',
+      45 => '五星二碼',
+      46 => '五星三碼',
+      47 => '五星直選',
+      48 => '五星組選',
+      49 => '五星組選',
+      50 => '五星組選',
+      51 => '五星組選',
+      52 => '五星組選',
+      53 => '五星組選',
+    );
+    $mode = intVal(trim($argModeId));
+    if (array_key_exists($mode, $arrModes)) {
+      return $arrModes[$mode];
+    } else {
+      return "未定義的mode_id ({$mode})";
+    }
+  }
+
+ 
+  protected function _getOddsByStr($argModeId, $argOddStr, $argBetNumStr = null) {
+    $mode = intVal(trim($argModeId));
+    $str = '';
+    $isThatKind = false;
+    $isMeetBet = false;
+    $skipTrim = false;
+
+    if ($mode==0) {
+
+    } elseif ($mode==1) { //猜名次, 9.7
+      $str = "{$argOddStr}";
+    } elseif ($mode==2) {  //猜冠亞軍, 87.2
+      $str = "{$argOddStr}";
+    } elseif ($mode==3) {  //猜前三名, 655.2
+      $str = "{$argOddStr}";
+    } elseif ($mode==4) {  //猜前四名(未開放
+    } elseif ($mode==5) {  //猜前五名(未開放
+    } elseif ($mode==6) {  //大小單雙, 1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97
+      $arr = array('冠軍大','冠軍小','冠軍單','冠軍雙','亞軍大','亞軍小','亞軍單','亞軍雙','季軍大','季軍小','季軍單','季軍雙');
+      $isThatKind = true;
+      $isMeetBet = false;
+    } elseif ($mode==7) {  //冠亞和大小單雙, 1.97,1.97,1.97,1.97
+      $arr = array(0=>'和大',1=>'和小',2=>'和單',3=>'和雙');
+      $isThatKind = true;
+      $isMeetBet = false;
+    } elseif ($mode==8) {  //冠亞和指定數(未開放)
+    } elseif ($mode==9) {  //龍虎, 1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97,1.97
+      $arr = array('1vs10 龍','1vs10 虎','2vs9 龍','2vs9 虎','3vs8 龍','3vs8 虎','4vs7 龍','4vs7 虎','5vs6 龍','5vs6 虎');
+      $isThatKind = true;
+      $isMeetBet = false;
+    } elseif ($mode==10) {  //一星定位 一星賠率 如:9.9
+      $str = $argOddStr;
+    } elseif ($mode==11) {  //雙面盤  大賠率,小賠率,單賠率,雙賠率,合賠率,質賠率 如:1.97,1.97,1.97,1.97,1.97,1.97
+      $arr = array('大','小','單','雙','合','質',);
+      $isThatKind = true;
+    } elseif ($mode==12) {  //串關 過兩關賠率,過三關賠率,過四關賠率,過五關賠率 如: 3.8,7.6,14.5,20
+      $arrTitles = array('過兩關','過三關','過四關','過五關',);
+      $arrOdds = explode(',', $argOddStr);
+      $arr = explode('|', $argBetNumStr);
+      $betSecCount = 0;
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal) && (strpos($aVal, '1') !== false ) ) {
+          ++$betSecCount;
+        }
+      }
+      $offsetIndex = $betSecCount - 2;
+      $str = "{$arrTitles[$offsetIndex]}: {$arrOdds[$offsetIndex]}";
+      //$isThatKind = true;
+    } elseif ($mode==13) {  //五球總和 大賠率,小賠率,單賠率,雙賠率 如: 1.97,1.97,1.97,1.97
+      $arr = array('大','小','單','雙',);
+      $isThatKind = true;
+      $isMeetBet = true;
+    } elseif ($mode==14) {  //五球總和 五條賠率,四條賠率,葫蘆賠率,順子賠率,三條賠率,兩對賠率,一對賠率,散號賠率 如:3500,142.2,71.11,60,11.11,8.05,1.88,2.85
+      $arr = array('五條','四條','葫蘆','順子','三條','兩對','一對','散號',);
+      $isThatKind = true;
+      $isMeetBet = true;
+    } elseif ($mode==15) {  //五球總和 龍賠率,虎賠率,和賠率 如: 2,2,9.6
+      $arr = array('龍','虎','和',);
+      $isThatKind = true;
+      $isMeetBet = true;
+    } elseif ($mode==16) {  //牛牛 牛牛賠率,牛 1 賠率,牛 2賠率,牛 3 賠率,牛 4 賠率,牛 5 賠率,牛 6 賠率,牛 7 賠率,牛 8 賠率,牛 9賠率 如:13.32,13.32,13.32,13.32,13.32,13.32,13.32,13.32,13.32,13.32
+      $arr = array('牛牛','牛1','牛2','牛3','牛4','牛5','牛6','牛7','牛8','牛9',);
+      $isThatKind = true;
+      $isMeetBet = true;
+    } elseif ($mode==17) {  //牛牛 牛大賠率,牛小賠率,牛單賠率,牛雙賠率,無牛賠率 如:2.69,2.69,2.69,2.69,2.5
+      $arr = array('牛大','牛小','牛單','牛雙','無牛',);
+      $isThatKind = true;
+      $isMeetBet = true;
+    } elseif ($mode==24) {  //三星總和 主賠率如:960賠率分母(固定)$array=[1, 3, 6, 10, 15,21, 28, 36, 45, 55, 63, 69,73, 75, 75, 73, 69, 63, 55,45, 36, 28, 21, 15, 10, 6,3, 1]取至小數後兩未無條件捨去 如 9 號賠率 =960/$array[9]
+      $arrMode24Odds = array(1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 63, 69, 73, 75, 75, 73, 69, 63, 55, 45, 36, 28, 21, 15, 10, 6, 3, 1);
+      $mainOdd = floatval($argOddStr);
+      $arrBetNumGroups = explode('|', $argBetNumStr);
+      $arrPlacedNums = array();
+      foreach ($arrBetNumGroups as $gk => $gv) {
+        $arrBetNums = explode(',', $gv);
+        foreach ($arrBetNums as $bk => $bv) {
+          $arrPlacedNums[$bv] = $bv;
+        }
+      }
+      $x = 0;
+      foreach ($arrMode24Odds as $mk => $mv) {
+        if (array_key_exists($mk, $arrPlacedNums)) {
+          if (strlen($str)) {$str .= ', ';}
+          if ($x>=2) {
+            $x = 0;
+            $str .= '</br>';
+          }
+          $odd = floatval(bcdiv($mainOdd, $mv, self::BJ_REPORT_ODD_SCALE_SIZE))+0;
+          $str .= "【{$mk}】:{$odd}";
+          ++$x;
+        }
+      }
+    } elseif ($mode==25) {  //三星總和 大賠率,小賠率,單賠率,雙賠率 如: 1.97,1.97,1.97,1.97
+      $arr = array('大','小','單','雙',);
+      $isThatKind = true;
+    } elseif ($mode==26) {  //三星總和 紅賠率,橙賠率,黃賠率,綠賠率,藍賠率,靛賠率,紫賠率 如: 45,9,3.8,3,3.8,9,45
+      $arr = array('紅','橙','黃','綠','藍','靛','紫',);
+      $arrBetNumGroups = explode('|', $argBetNumStr);
+      $arrPlacedNums = array();
+      $arrOdds = explode(',', $argOddStr);
+      //$str .= "【{$argOddStr}】<br/>";
+      foreach ($arrBetNumGroups as $gk => $gv) {
+        $arrBetNums = explode(',', $gv);
+        foreach ($arrBetNums as $bk => $bv) {
+          if ($bv == '1') {
+            $arrPlacedNums[$bk] = $bk;
+          }
+        }
+      }
+      $x = 0;
+      foreach ($arr as $mk => $mv) {
+        if (array_key_exists($mk, $arrPlacedNums)) {
+          if (strlen($str)) {$str .= ', ';}
+          if ($x>=2) {
+            $x = 0;
+            $str .= '</br>';
+          }
+          $str .= "【{$mv}】:{$arrOdds[$mk]}";
+          ++$x;
+        }
+      }
+    } elseif ($mode==27) {  //三星總和 豹子賠率,順子賠率,對子賠率,半順賠率,雜六賠率 如:90,15.33,3.48,2.5,2.66
+      $arr = array('豹','順','對','半順','雜六',);
+      $arrBetNumGroups = explode('|', $argBetNumStr);
+      $arrPlacedNums = array();
+      $arrOdds = explode(',', $argOddStr);
+      //$str .= "【{$argOddStr}】<br/>";
+      foreach ($arrBetNumGroups as $gk => $gv) {
+        $arrBetNums = explode(',', $gv);
+        foreach ($arrBetNums as $bk => $bv) {
+          if ($bv == '1') {
+            $arrPlacedNums[$bk] = $bk;
+          }
+        }
+      }
+      $x = 0;
+      foreach ($arr as $mk => $mv) {
+        if (array_key_exists($mk, $arrPlacedNums)) {
+          if (strlen($str)) {$str .= ', ';}
+          if ($x>=2) {
+            $x = 0;
+            $str .= '</br>';
+          }
+          $str .= "【{$mv}】:{$arrOdds[$mk]}";
+          ++$x;
+        }
+      }
+    } elseif ($mode==30) {  //三星一碼 三星一碼賠率 如:3.20
+      $str = $argOddStr;
+    } elseif ($mode==31) {  //三星二碼 三星二碼賠率 如:15.00
+      $str = $argOddStr;
+    } elseif ($mode==32) {  //三星直選 三星直選賠率 如:940.00
+      $str = $argOddStr;
+    } elseif ($mode==33) {  //三星組選 三星組三賠率 如:310.00
+      $str = $argOddStr;
+    } elseif ($mode==34) {  //三星組選 三星組六賠率 如:158.00
+      $str = $argOddStr;
+    } elseif ($mode==35) {  //四星一碼 四星一碼賠率 如:2.50
+      $str = $argOddStr;
+    } elseif ($mode==36) {  //四星二碼 四星二碼賠率 如:9.50
+      $str = $argOddStr;
+    } elseif ($mode==37) {  //四星直選 四星直選賠率 如:9000.00
+      $str = $argOddStr;
+    } elseif ($mode==38) {  //四星組選 四星組選 24 賠率 如 404.17
+      $str = $argOddStr;
+    } elseif ($mode==39) {  //四星組選 四星組選 12 賠率 如:808.33
+      $str = $argOddStr;
+    } elseif ($mode==40) {  //四星組選 四星組選 6 賠率 如:1616.67
+      $str = $argOddStr;
+    } elseif ($mode==41) {  //四星組選 四星組選 4 賠率 如:2425.00
+      $str = $argOddStr;
+    } elseif ($mode==42) {  //二星直選 二星直選賠率 如:97.00
+      $str = $argOddStr;
+    } elseif ($mode==43) {  //二星組選 二星組選賠率 如:48.5
+      $str = $argOddStr;
+    } elseif ($mode==45) {  //五星二碼 五星二碼賠率 如:6.20
+      $str = $argOddStr;
+    } elseif ($mode==46) {  //五星三碼 五星三碼賠率 如:20.00
+      $str = $argOddStr;
+    } elseif ($mode==47) {  //五星直選 五星直選賠率 如:90000.00
+      $str = $argOddStr;
+    } elseif ($mode==48) {  //五星組選 五星組選 120 賠率 如:750.00
+      $str = $argOddStr;
+    } elseif ($mode==49) {  //五星組選 五星組選 60 賠率 如:1500.00
+      $str = $argOddStr;
+    } elseif ($mode==50) {  //五星組選 五星組選 30 賠率 如:3000.00
+      $str = $argOddStr;
+    } elseif ($mode==51) {  //五星組選 五星組選 20 賠率 如:4500.00
+      $str = $argOddStr;
+    } elseif ($mode==52) {  //五星組選 五星組選 10 賠率 如:9000.00
+      $str = $argOddStr;
+    } elseif ($mode==53) {  //五星組選 五星組選 5 賠率 如:18000.00
+      $str = $argOddStr;
+    }
+    else {
+      $str = "mode={$argModeId}, odd_str={$argOddStr}";
+    }
+
+    //$str .= "mode={$argModeId}, odd_str={$argOddStr}<br/><br/>";
+
+    if (($isThatKind === true) && isset($arr)) {
+      //$str = "isThatKind == true<br/>!{$argOddStr}!" . '<br/><br/>';
+      $max = 0;
+      $maxTitle = null;
+      $arrOdds = explode(',', $argOddStr);
+      $arrBetNums = explode(',', $argBetNumStr);
+
+      if (sizeof($arrBetNums)===1) {
+        $arrBetNums2 = explode('|', $argBetNumStr);
+        if (sizeof($arrBetNums2)>1) {
+          $arrBetNums = $arrBetNums2;
+        }
+      }
+      //去除不需要出現的賠率(未投注項目)
+      $oddCountOffset = 0;
+      if (($isMeetBet === true) && sizeof($arrBetNums)) {
+        //Dbgr::preout($arrOdds);
+        //Dbgr::preout($arrBetNums);
+        foreach ($arrOdds as $oKey => $odd) {
+          if ($arrBetNums[$oKey]  != '1') {
+            unset($arrOdds[$oKey]);
+            ++$oddCountOffset;
+          }
+        }
+      }
+      $arrOddCounts = array_count_values($arrOdds);
+      
+      //找出最多賠率出現次數
+      foreach ($arrOddCounts as $cKey => $count) {
+        if ($count > $max) {
+          $max = $count;  //最多出現次數
+          $maxTitle = $cKey;  //出現最多的賠率
+        }
+      }
+      $n = sizeof($arr) - $oddCountOffset;
+      if ($max == $n) {  //各玩法均為該賠率
+        if ($isMeetBet === true) {
+          if ($n==1) {
+            $str .= "{$maxTitle}";
+          } else {
+            $str .= "各為 {$maxTitle}"; 
+          }
+        } else {
+          $str .= "均為 {$maxTitle}";
+        }
+      } else {
+        $str2 = '';
+        //找出不同於最多次數的賠率並詳列玩法名稱及賠率
+        if ($max == 1) {  //全部玩法賠率都不同
+          $x = 0;
+          foreach ($arrOdds as $oKey => $odd) {
+            if (strlen($str2)) {$str2 .= ', ';}
+            if ($x>=2) {
+              $x = 0;
+              $str2 .= '</br>';
+            }
+            $str2 .= "{$arr[$oKey]}: {$odd}";
+            ++$x;
+          }
+        } else {  //有些玩法賠率相同
+          $x = 0;
+          foreach ($arrOdds as $oKey => $odd) {
+            if ($odd != $maxTitle) {
+              if (strlen($str2)) {$str2 .= ', ';}
+              if ($x>=2) {
+                $x = 0;
+                $str2 .= '</br>';
+              }
+              $str2 .= "{$arr[$oKey]}: {$odd}";
+              ++$x;
+            }
+          }
+          if (strlen($str2)) {$str2 .= ', ';}
+          $str2 .= "其餘為: {$maxTitle}";
+        }
+        $str .= $str2;
+      }
+    }
+
+    $str = "<div title=\"mode={$argModeId}, odd_str={$argOddStr}\">{$str}</div>";
+
+    return $str;
+  }
+
+  function _getBetNumbersByStr($argModeId, $argBetNumStr, $argOddStr) {
+    $mode = intVal(trim($argModeId));
+    $str = '';
+    if ($mode==0) {
+      //...
+    } elseif ($mode==1) {
+      /*
+        猜冠軍, 01~10
+      $arr = explode(',', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        $str .= "<div class=\"bj-bet-num mode-1-num inline\">{$aVal}</div>";
+      }*/
+      //猜名次,
+      //  冠軍  亞軍  季軍  殿軍  第5   第6   第7   第8   第9   第10
+      //  01~10|01~10|01~10|01~10|01~10|01~10|01~10|01~10|01~10|01~10
+      $arrTitles = array(
+        0=>array('冠軍', 'title-no-1'),
+        1=>array('亞軍', 'title-no-2'),
+        2=>array('季軍', 'title-no-3'),
+        3=>array('殿軍', 'title-no-4'),
+        4=>array('第 5', 'title-no-5'),
+        5=>array('第 6', 'title-no-6'),
+        6=>array('第 7', 'title-no-7'),
+        7=>array('第 8', 'title-no-8'),
+        8=>array('第 9', 'title-no-9'),
+        9=>array('第 10', 'title-no-10'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $arr2 = explode(',', $aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-1 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+          foreach ($arr2 as $aKey2 => $aVal2) {
+            $str .= "<div class=\"bj-bet-num mode-1-num inline\">{$aVal2}</div>";
+          }
+        }
+      }
+
+    } elseif ($mode==2) {  //猜冠亞軍, 01~10|01~10
+      $arrTitles = array(
+        0=>array('冠軍', 'title-no-1'),
+        1=>array('亞軍', 'title-no-2'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $arr2 = explode(',', $aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-2 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+          foreach ($arr2 as $aKey2 => $aVal2) {
+            $str .= "<div class=\"bj-bet-num mode-2-num inline\">{$aVal2}</div>";
+          }
+        }
+      }
+
+    } elseif ($mode==3) {  //猜前三名, 01~10|01~10|01~10
+      $arrTitles = array(
+        0=>array('冠軍', 'title-no-1'),
+        1=>array('亞軍', 'title-no-2'),
+        2=>array('季軍', 'title-no-3'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $arr2 = explode(',', $aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-3 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+          foreach ($arr2 as $aKey2 => $aVal2) {
+            $str .= "<div class=\"bj-bet-num mode-3-num inline\">{$aVal2}</div>";
+          }
+        }
+      }
+
+    } elseif ($mode==4) {  //猜前四名(未開放
+      $arrTitles = array(
+        0=>array('冠軍', 'title-no-1'),
+        1=>array('亞軍', 'title-no-2'),
+        2=>array('季軍', 'title-no-3'),
+        3=>array('殿軍', 'title-no-4'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $arr2 = explode(',', $aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-4 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+          foreach ($arr2 as $aKey2 => $aVal2) {
+            $str .= "<div class=\"bj-bet-num mode-4-num inline\">{$aVal}</div>";
+          }
+        }
+      }
+
+    } elseif ($mode==5) {  //猜前五名(未開放
+      $arrTitles = array(
+        0=>array('冠軍', 'title-no-1'),
+        1=>array('亞軍', 'title-no-2'),
+        2=>array('季軍', 'title-no-3'),
+        3=>array('殿軍', 'title-no-4'),
+        4=>array('第5名', 'title-no-5'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $arr2 = explode(',', $aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-5 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+          foreach ($arr2 as $aKey2 => $aVal2) {
+            $str .= "<div class=\"bj-bet-num mode-5-num inline\">{$aVal}</div>";
+          }
+        }
+      }
+
+    } elseif ($mode==6) {  //大小單雙, 0,1|0,1|0,1|0,1|0,1|0,1
+      $arrTitles = array(
+        0=>array('冠軍大小', 'title-no-1', 'bigsmall'),
+        1=>array('冠軍單雙', 'title-no-1', 'oddeven'),
+        2=>array('亞軍大小', 'title-no-2', 'bigsmall'),
+        3=>array('亞軍單雙', 'title-no-2', 'oddeven'),
+        4=>array('季軍大小', 'title-no-3', 'bigsmall'),
+        5=>array('季軍單雙', 'title-no-3', 'oddeven'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $twoFaceStr = $this->_getTwoFaceStrByStr($aVal, $arrTitles[$aKey][2]);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-6 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>:{$twoFaceStr}";
+        }
+      }
+
+    } elseif ($mode==7) {  //冠亞和大小單雙, 0,1|0,1
+      $arrTitles = array(
+        0=>array('冠亞和大小', 'title-no-1', 'bigsmall'),
+        1=>array('冠亞和單雙', 'title-no-1', 'oddeven'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $twoFaceStr = $this->_getTwoFaceStrByStr($aVal, $arrTitles[$aKey][2]);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-7 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>:{$twoFaceStr}";
+        }
+      }
+
+    } elseif ($mode==8) {  //冠亞和指定數(未開放)
+
+    } elseif ($mode==9) {  //龍虎, 0,1|0,1|0,1|0,1|0,1
+      $arr = explode('|', $argBetNumStr);
+      for ($i=0; $i<5; ++$i) {
+        if (strlen($arr[$i])) {
+          $twoFaceStr = $this->_getTwoFaceStrByStr($arr[$i], 'dragontiger');
+          $h = $i+1;
+          $t = 10-$i;
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-9 inline\">{$h}vs{$t}</div>:{$twoFaceStr}";
+        }
+      }
+    } elseif ($mode==10) {  //一星定位
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1', ''),
+        1=>array('千位', 'title-no-2', ''),
+        2=>array('百位', 'title-no-3', ''),
+        3=>array('十位', 'title-no-4', ''),
+        4=>array('個位', 'title-no-5', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          //$twoFaceStr = $this->_getTwoFaceStrByStr($aVal, $arrTitles[$aKey][2]);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-10 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+
+    } elseif ($mode==11) {  //雙面盤
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1', ''),
+        1=>array('千位', 'title-no-2', ''),
+        2=>array('百位', 'title-no-3', ''),
+        3=>array('十位', 'title-no-4', ''),
+        4=>array('個位', 'title-no-5', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $twoFaceStr = $this->_getCkTwoFaceStrByStr($aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-11 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$twoFaceStr}";
+        }
+      }
+
+    } elseif ($mode==12) {  //串關
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1', ''),
+        1=>array('千位', 'title-no-2', ''),
+        2=>array('百位', 'title-no-3', ''),
+        3=>array('十位', 'title-no-4', ''),
+        4=>array('個位', 'title-no-5', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $twoFaceStr = $this->_getCkTwoFaceStrByStr($aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-12 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$twoFaceStr}";
+        }
+      }
+    } elseif ($mode==13) {  //五球總和
+      $arrTitles = array(
+        0=>array('大', 'title-no-1'),
+        1=>array('小', 'title-no-2'),
+        2=>array('單', 'title-no-3'),
+        3=>array('雙', 'title-no-4'),
+      );
+      $arr2 = explode(',', $argBetNumStr);
+      //if (strlen($str)) {$str .= '<br/>';}
+      //$str .= "<div class=\"bj-bet-num-title mode-14 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+      foreach ($arr2 as $aKey2 => $aVal2) {
+        if ($aVal2=='1') {
+          $str .= "<div class=\"bj-bet-num mode-13-num inline\">{$arrTitles[$aKey2][0]}</div>";
+        }
+      }
+    } elseif ($mode==14) {  //五球總和
+      $arrTitles = array(
+        0=>array('五條', 'title-no-1'),
+        1=>array('四條', 'title-no-2'),
+        2=>array('葫蘆', 'title-no-3'),
+        3=>array('順子', 'title-no-4'),
+        4=>array('三條', 'title-no-5'),
+        5=>array('兩對', 'title-no-6'),
+        6=>array('一對', 'title-no-7'),
+        7=>array('散號', 'title-no-8'),
+      );
+      $arr2 = explode(',', $argBetNumStr);
+      //if (strlen($str)) {$str .= '<br/>';}
+      //$str .= "<div class=\"bj-bet-num-title mode-14 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+      foreach ($arr2 as $aKey2 => $aVal2) {
+        if ($aVal2=='1') {
+          $str .= "<div class=\"bj-bet-num mode-14-num inline\">{$arrTitles[$aKey2][0]}</div>";
+        }
+      }
+    } elseif ($mode==15) {  //五球總和
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $twoFaceStr = $this->_getCkTwoFaceStrByStr($aVal, 'tigerdragon');
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "{$twoFaceStr}";
+        }
+      }
+    } elseif ($mode==16) {  //牛牛
+      $arrTitles = array(
+        0=>array('牛牛', 'title-no-1'),
+        1=>array('牛1', 'title-no-2'),
+        2=>array('牛2', 'title-no-3'),
+        3=>array('牛3', 'title-no-4'),
+        4=>array('牛4', 'title-no-5'),
+        5=>array('牛5', 'title-no-6'),
+        6=>array('牛6', 'title-no-7'),
+        7=>array('牛7', 'title-no-8'),
+        8=>array('牛8', 'title-no-9'),
+        9=>array('牛9', 'title-no-10'),
+      );
+      $arr2 = explode(',', $argBetNumStr);
+      //if (strlen($str)) {$str .= '<br/>';}
+      //$str .= "<div class=\"bj-bet-num-title mode-14 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+      foreach ($arr2 as $aKey2 => $aVal2) {
+        if ($aVal2=='1') {
+          $str .= "<div class=\"bj-bet-num mode-16-num inline\">{$arrTitles[$aKey2][0]}</div>";
+        }
+      }
+    } elseif ($mode==17) {  //牛牛
+      $arrTitles = array(
+        0=>array('牛大', 'title-no-1'),
+        1=>array('牛小', 'title-no-2'),
+        2=>array('牛單', 'title-no-3'),
+        3=>array('牛雙', 'title-no-4'),
+        4=>array('無牛', 'title-no-5'),
+      );
+      $arr2 = explode(',', $argBetNumStr);
+      //if (strlen($str)) {$str .= '<br/>';}
+      //$str .= "<div class=\"bj-bet-num-title mode-14 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>";
+      foreach ($arr2 as $aKey2 => $aVal2) {
+        if ($aVal2=='1') {
+          $str .= "<div class=\"bj-bet-num mode-17-num inline\">{$arrTitles[$aKey2][0]}</div>";
+        }
+      }
+    } elseif ($mode==24) {  //三星總和
+      $arrTitles = array(
+        0=>array('前三', 'title-no-1', ''),
+        1=>array('中三', 'title-no-2', ''),
+        2=>array('後三', 'title-no-3', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          //$twoFaceStr = $this->_getCkTwoFaceStrByStr($aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-24 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==25) {  //三星總和
+      $arrTitles = array(
+        0=>array('前三', 'title-no-1', ''),
+        1=>array('中三', 'title-no-2', ''),
+        2=>array('後三', 'title-no-3', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          $twoFaceStr = $this->_getCkTwoFaceStrByStr($aVal);
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-25 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$twoFaceStr}";
+        }
+      }
+    } elseif ($mode==26) {  //三星總和
+      $arrGroupTitles = array(
+        0=>array('前三七彩', 'title-group-1'),
+        1=>array('中三七彩', 'title-group-2'),
+        2=>array('後三七彩', 'title-group-3'),
+      );
+      $arrTitles = array(
+        0=>array('紅', 'title-no-1'),
+        1=>array('橙', 'title-no-2'),
+        2=>array('黃', 'title-no-3'),
+        3=>array('綠', 'title-no-4'),
+        4=>array('藍', 'title-no-5'),
+        5=>array('靛', 'title-no-6'),
+        6=>array('紫', 'title-no-7'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode(',', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        //$str .= "<div class=\"bj-bet-num-title mode-26 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          if ($av2=='1') {
+            if (strlen($tempStr)) {$tempStr .= ', ';}
+            $tempStr .= "<div class=\"bj-bet-num mode-26-num inline {$arrTitles[$ak2][1]}\">{$arrTitles[$ak2][0]}</div>";
+          }
+        }
+        if (strlen($tempStr)) {
+          $str .= "<div class=\"bj-bet-num-title mode-26 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+          $str .= $tempStr;
+        }
+      }
+    } elseif ($mode==27) {  //三星總和
+      $arrGroupTitles = array(
+        0=>array('前三三連', 'title-group-1'),
+        1=>array('中三三連', 'title-group-2'),
+        2=>array('後三三連', 'title-group-3'),
+      );
+      $arrTitles = array(
+        0=>array('豹子', 'title-no-1'),
+        1=>array('順子', 'title-no-2'),
+        2=>array('對子', 'title-no-3'),
+        3=>array('半順', 'title-no-4'),
+        4=>array('雜六', 'title-no-5'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode(',', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        //$str .= "<div class=\"bj-bet-num-title mode-26 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          if ($av2=='1') {
+            if (strlen($tempStr)) {$tempStr .= ', ';}
+            $tempStr .= "<div class=\"bj-bet-num mode-27-num inline {$arrTitles[$ak2][1]}\">{$arrTitles[$ak2][0]}</div>";
+          }
+        }
+        if (strlen($tempStr)) {
+          $str .= "<div class=\"bj-bet-num-title mode-27 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+          $str .= $tempStr;
+        }
+      }
+    } elseif ($mode==30) {  //三星一碼
+      $arrTitles = array(
+        0=>array('前三', 'title-no-1', ''),
+        1=>array('中三', 'title-no-2', ''),
+        2=>array('後三', 'title-no-3', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-30 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==31) {  //三星二碼
+      $arrTitles = array(
+        0=>array('前三', 'title-no-1', ''),
+        1=>array('中三', 'title-no-2', ''),
+        2=>array('後三', 'title-no-3', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-31 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==32) {  //三星直選
+      $arrGroupTitles = array(
+        0=>array('前三', 'title-group-1'),
+        1=>array('中三', 'title-group-2'),
+        2=>array('後三', 'title-group-3'),
+      );
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1'),
+        1=>array('千位', 'title-no-2'),
+        2=>array('百位', 'title-no-3'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode('*', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        $str .= "<div class=\"bj-bet-num-title mode-32 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          //if ($av2=='1') {
+            if (strlen($tempStr)) {$tempStr .= ', ';}
+            $tempStr .= "<div class=\"bj-bet-num mode-32-num inline {$arrTitles[$ak2][1]}\"><b>{$arrTitles[$ak2][0]}</b>: {$av2}</div>";
+          //}
+        }
+        $str .= $tempStr;
+      }
+    } elseif ($mode==33) {  //三星組選
+      $arrTitles = array(
+        0=>array('前三組三', 'title-no-1', ''),
+        1=>array('中三組三', 'title-no-2', ''),
+        2=>array('後三組三', 'title-no-3', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-33 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==34) {  //三星組選
+      $arrTitles = array(
+        0=>array('前三組六', 'title-no-1', ''),
+        1=>array('中三組六', 'title-no-2', ''),
+        2=>array('後三組六', 'title-no-3', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-34 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==35) {  //四星一碼
+      $arrTitles = array(
+        0=>array('前四', 'title-no-1', ''),
+        1=>array('後四', 'title-no-2', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-35 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==36) {  //四星二碼
+      $arrTitles = array(
+        0=>array('前四', 'title-no-1', ''),
+        1=>array('後四', 'title-no-2', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-36 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==37) {  //四星直選
+      $arrGroupTitles = array(
+        0=>array('前四', 'title-group-1'),
+        1=>array('後四', 'title-group-2'),
+      );
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1'),
+        1=>array('千位', 'title-no-2'),
+        2=>array('百位', 'title-no-3'),
+        3=>array('十位', 'title-no-4'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode('*', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        $str .= "<div class=\"bj-bet-num-title mode-37 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          //if ($av2=='1') {
+            if (strlen($tempStr)) {$tempStr .= ', ';}
+            $tempStr .= "<div class=\"bj-bet-num mode-37-num inline {$arrTitles[$ak2][1]}\"><b>{$arrTitles[$ak2][0]}</b>: {$av2}</div>";
+          //}
+        }
+        $str .= $tempStr;
+      }
+    } elseif ($mode==38) {  //四星組選
+      $arrTitles = array(
+        0=>array('前四組選24', 'title-no-1', ''),
+        1=>array('後四組選24', 'title-no-2', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-38 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==39) {  //四星組選
+      $arrGroupTitles = array(
+        0=>array('前四組選12', 'title-group-1'),
+        1=>array('後四組選12', 'title-group-2'),
+      );
+      $arrTitles = array(
+        0=>array('二重號', 'title-no-1'),
+        1=>array('單號', 'title-no-2'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode('*', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        $str .= "<div class=\"bj-bet-num-title mode-39 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          //if ($av2=='1') {
+            if (strlen($tempStr)) {$tempStr .= ', ';}
+            $tempStr .= "<div class=\"bj-bet-num mode-39-num inline {$arrTitles[$ak2][1]}\"><b>{$arrTitles[$ak2][0]}</b>: {$av2}</div>";
+          //}
+        }
+        $str .= $tempStr;
+      }
+    } elseif ($mode==40) {  //四星組選
+      $arrTitles = array(
+        0=>array('前四組選6', 'title-no-1', ''),
+        1=>array('後四組選6', 'title-no-2', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-40 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==41) {  //四星組選
+      $arrGroupTitles = array(
+        0=>array('前四組選4', 'title-group-1'),
+        1=>array('後四組選4', 'title-group-2'),
+      );
+      $arrTitles = array(
+        0=>array('三重號', 'title-no-1'),
+        1=>array('單號', 'title-no-2'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode('*', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        $str .= "<div class=\"bj-bet-num-title mode-41 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          if (strlen($tempStr)) {$tempStr .= ', ';}
+          $tempStr .= "<div class=\"bj-bet-num mode-41-num inline {$arrTitles[$ak2][1]}\"><b>{$arrTitles[$ak2][0]}</b>: {$av2}</div>";
+        }
+        $str .= $tempStr;
+      }
+    } elseif ($mode==42) {  //二星直選
+      $arrGroupTitles = array(
+        0=>array('前二', 'title-group-1'),
+        1=>array('後二', 'title-group-2'),
+      );
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1'),
+        1=>array('千位', 'title-no-2'),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $ak => $av) {
+        $arr2 = explode('*', $av);
+        if (strlen($str)) {$str .= '<br/>';}
+        $str .= "<div class=\"bj-bet-num-title mode-42 {$arrGroupTitles[$ak][1]} inline\">{$arrGroupTitles[$ak][0]}</div>: ";
+        $tempStr = '';
+        foreach ($arr2 as $ak2 => $av2) {
+          if (strlen($tempStr)) {$tempStr .= ', ';}
+          $tempStr .= "<div class=\"bj-bet-num mode-42-num inline {$arrTitles[$ak2][1]}\"><b>{$arrTitles[$ak2][0]}</b>: {$av2}</div>";
+        }
+        $str .= $tempStr;
+      }
+    } elseif ($mode==43) {  //二星組選
+      $arrTitles = array(
+        0=>array('前二', 'title-no-1', ''),
+        1=>array('後二', 'title-no-2', ''),
+      );
+      $arr = explode('|', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-43 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==45) {  //五星二碼
+      $arr = explode(',', $argBetNumStr);
+      $tempStr = '';
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($tempStr)) {$tempStr .= ', ';}
+          $tempStr .= "<div class=\"bj-bet-num-title mode-45 inline\">{$aVal}</div>";
+        }
+      }
+      $str .= $tempStr;
+    } elseif ($mode==46) {  //五星三碼
+      $arr = explode(',', $argBetNumStr);
+      $tempStr = '';
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($tempStr)) {$tempStr .= ', ';}
+          $tempStr .= "<div class=\"bj-bet-num-title mode-46 inline\">{$aVal}</div>";
+        }
+      }
+      $str .= $tempStr;
+    } elseif ($mode==47) {  //五星直選
+      $arrTitles = array(
+        0=>array('萬位', 'title-no-1'),
+        1=>array('千位', 'title-no-2'),
+        2=>array('百位', 'title-no-3'),
+        3=>array('十位', 'title-no-4'),
+        4=>array('個位', 'title-no-5'),
+      );
+      $arr = explode('*', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-47 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==48) {  //五星組選
+      $arr = explode(',', $argBetNumStr);
+      $tempStr = '';
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($tempStr)) {$tempStr .= ', ';}
+          $tempStr .= "<div class=\"bj-bet-num-title mode-48 inline\">{$aVal}</div>";
+        }
+      }
+      $str .= $tempStr;
+    } elseif ($mode==49) {  //五星組選
+      $arrTitles = array(
+        0=>array('二重號', 'title-no-1'),
+        1=>array('單號', 'title-no-2'),
+      );
+      $arr = explode('*', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-49 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==50) {  //五星組選
+      $arrTitles = array(
+        0=>array('二重號', 'title-no-1'),
+        1=>array('單號', 'title-no-2'),
+      );
+      $arr = explode('*', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-50 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==51) {  //五星組選
+      $arrTitles = array(
+        0=>array('三重號', 'title-no-1'),
+        1=>array('單號', 'title-no-2'),
+      );
+      $arr = explode('*', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-51 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==52) {  //五星組選
+      $arrTitles = array(
+        0=>array('三重號', 'title-no-1'),
+        1=>array('二重號', 'title-no-2'),
+      );
+      $arr = explode('*', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-52 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } elseif ($mode==53) {  //五星組選
+      $arrTitles = array(
+        0=>array('四重號', 'title-no-1'),
+        1=>array('單號', 'title-no-2'),
+      );
+      $arr = explode('*', $argBetNumStr);
+      foreach ($arr as $aKey => $aVal) {
+        if (strlen($aVal)) {
+          if (strlen($str)) {$str .= '<br/>';}
+          $str .= "<div class=\"bj-bet-num-title mode-53 {$arrTitles[$aKey][1]} inline\">{$arrTitles[$aKey][0]}</div>: {$aVal}";
+        }
+      }
+    } else {
+      $str = "未知的投注<br/>mode={$argModeId}, bet_num_str={$argBetNumStr}";
+    }
+    $str = "<div title=\"mode_id={$argModeId} 【{$argBetNumStr}】\">{$str}</div>";
+    return $str;
+  }
+
+}

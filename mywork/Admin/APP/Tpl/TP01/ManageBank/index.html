@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{$Think.MODULE_NAME}首頁</title>
+</head>
+<body>
+<span> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME} </span>
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		會員帳號:<input type="text" name="memberAccount" value="{$memberAccount}">
+		<input type="submit" value="搜尋">
+	</form>
+	<span>總頁數:{$totalPage}，目前頁數:{$pageNumber}</span>
+	<table>
+		<tr>
+			<th>序</th><th>會員帳號</th><th>銀行代碼</th><th>銀行帳號</th><th>銀行戶名</th>
+			<th>銀行分行</th><th>建立時間</th><th>修改時間</th><th>備註</th><th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.code}</td>
+				<td>{$vo.account}</td>
+				<td>{$vo.name}</td>
+				<td>{$vo.branch}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.modifyTime}</td>
+				<td>{$vo.remark}</td>
+				<td>
+					修改資料BUTTON
+					刪除BUTTON
+					<form method="post" action='__APP__/{$Think.MODULE_NAME}/formDelMemberBank'>
+						<input type="hidden" value="{$vo.id}" name="delId">
+						<button type="submit" class="btn btn-primary">刪除</button>
+					</form>
+				</td>
+			</tr>
+			<tr>
+			<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetMemberBank'>
+				<td></td>
+				<td>帳號:{$vo.memberAccount}
+				<input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td>銀行代碼:<input type="text" name="setCode"  value="{$vo.code}" ></td>
+				<td>銀行帳號:<input type="text" name="setAccount"  value="{$vo.account}" ></td>
+				<td>銀行戶名:<input type="text" name="setName"  value="{$vo.name}" ></td>
+				<td>銀行分行:<input type="text" name="setBranch"  value="{$vo.branch}" ></td>
+				<td>備註:<input type="text" name="setRemark"  value="{$vo.remark}" ></td>
+				<td></td>
+				<td></td>
+				<td><button type="submit" class="btn btn-primary">確認修改</button></td>
+			</form>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>

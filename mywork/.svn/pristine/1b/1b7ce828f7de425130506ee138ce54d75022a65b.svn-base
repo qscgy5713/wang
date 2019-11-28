@@ -1,0 +1,159 @@
+<?php
+/*
+ * 會員帳號
+ */
+class CommonMemberWalletLogModel extends AdminModel {
+    protected $tableName = "common_member_wallet_log";
+    protected $tableId = "walletLog_id";
+    /**
+     * 新增 帳變紀錄 資料
+     * @param $data //$data['member_id']
+     * @param $err //錯誤訊息
+     * @return boolean
+     */
+    public function addWalletLogData($data,&$err = ""){
+        
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['walletLog_operating']) && $data['walletLog_operating'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['walletLog_type']) && $data['walletLog_type'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        if(empty($data['walletLog_item_id']) && $data['walletLog_item_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if(empty($data['walletLog_money']) && $data['walletLog_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        if(empty($data['walletLog_before']) && $data['walletLog_before'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+            return false;
+        }
+        if(empty($data['walletLog_after']) && $data['walletLog_after'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08'));
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_09"));
+            return $return;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        if($insertId === false) {
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_10"));
+            return false;
+        }
+        return $insertId;
+    }
+    /*
+     * 取得 帳變 資料
+     */
+    public function getWalletLogDataByMemberAccount($data,&$err = ""){
+        if(empty($data["member_account"]) && $data["member_account"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["startTime"]) && $data["startTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["endTime"]) && $data["endTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a JOIN `common_member` b ON (a.member_id = b.member_id)
+                WHERE `member_account` = '{$data["member_account"]}'
+                AND (`walletLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}') 
+                ORDER BY `walletLog_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    public function getOperating($data){
+        $return = "";
+        switch($data){
+            case 1:
+                $return = "點數增加";
+                break;
+            case 2:
+                $return = "點數減少";
+                break;
+            default:
+                $return = $data;
+                break;
+        }
+        return $return;
+    }
+    public function getMoneyStatus($data,$money){
+        $return = "";
+        switch($data){
+            case 1:
+                $return = '+'.$money;
+                break;
+            case 2:
+                $return = '-'.$money;
+                break;
+            default:
+                $return = $money;
+                break;
+        }
+        return $return;
+    }
+    public function getType($data){
+        $return = "";
+        //1儲值單 2託售單 3轉移單 4退水單
+        switch($data){
+            case 1:
+                $return = "儲值單";
+                break;
+            case 2:
+                $return = "託售單";
+                break;
+            case 3:
+                $return = "轉移單";
+                break;
+            case 4:
+                $return = "四星彩";
+                break;
+            case 4:
+                $return = "退水單";
+                break;
+            default:
+                $return = $data;
+                break;
+        }
+        return $return;
+    }    
+}

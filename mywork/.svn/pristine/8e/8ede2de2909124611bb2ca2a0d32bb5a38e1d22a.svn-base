@@ -1,0 +1,192 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="PointCenterSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<div class="row">
+					<div class="col-md-3 col-sm-3">
+						<div class="box-static box-transparent box-bordered p-20 relative">
+							<div class="container pointCenter-logo">
+								<a class="logo float-left pointCenter-a">
+									<img class="pointCenter-img" src="Public/TP03/images/index_logo_red.png">
+								</a>
+							</div>
+							<div class="box-title mb-20">
+								<h2 class="fs-20 mb-20">總和</h2>
+							</div>
+							<p class="mb-10">餘額:<span id="allMoney">0</span></p>
+							<button class="btn btn-secondary btn-shadow-1 btn-sm" id="memberWallet" onClick="getAllGameBalance(true)">重新整理</button>
+						</div>
+					</div>
+					<div class="col-md-3 col-sm-3">
+						<div class="box-static box-transparent box-bordered p-20 relative">
+							<div class="container pointCenter-logo">
+								<a class="logo float-left pointCenter-a">
+									<img class="pointCenter-img" src="Public/TP03/images/index_logo_red.png">
+								</a>
+							</div>
+
+							<div class="box-title mb-20">
+								<h2 class="fs-20 mb-20">電子錢包</h2>
+							</div>
+							<p class="mb-10">餘額:<span id="memberWallet">{$memberWallet}</span></p>
+							<p class="mb-0">&nbsp;</p>
+						</div>
+					</div>
+
+			    </div>
+
+				<foreach name="gameArray" item="classArray">
+		        	<h4 class="mt-10 mb-0">{$key}</h4>
+			        <div class="row">
+			        	<foreach name="classArray" item="nameArray">
+			        		<div class="col-md-3 col-sm-3 mt-10">
+			        			<div class="box-static box-transparent box-bordered p-20 relative">
+									<div class="container pointCenter-logo">
+										<a class="logo float-left pointCenter-game-a">
+											<img class="pointCenter-img" src="Public/TP03/images/PointCenterLogo/{$nameArray.gameCode}.png">
+										</a>
+									</div>
+									<div class="box-title mb-20">
+										<h2 class="fs-20 mb-20">{$nameArray.gameName}</h2>
+									</div>
+
+									<if condition='$nameArray.gameEnabled eq "0"'>
+										<p class="mb-10">遊戲維護中</p>
+										<p class="mb-8">&nbsp;</p>
+									<else/>
+										<if condition='$nameArray.accountBool eq "true"'>
+											<p class="mb-10">餘額:<span id="{$key}Balance"></span></p>
+					                    	<form class="mb-0" method="post" action='__APP__/PointCenter/setGameBalanceTransferWallet'>
+		                            			<input type='hidden' name='setGameName' value='{$key}'>
+		                            			<input class="btn btn-secondary btn-shadow-1 btn-sm" type="submit" id="{$key}TransferWallet" disabled="disabled"  value="轉回"><!-- onClick="ajaxTransferWallet('{$key}')" -->
+		                            		</form>
+										<else/>
+											<p class="mb-10">&nbsp;</p>
+					                    	<form class="mb-0" method="post" action='__APP__/PointCenter/addMemberGameAccount'>
+			                            		<input type='hidden' name='addGameName' value='{$key}'>
+												<input class="btn btn-secondary btn-shadow-1 btn-sm" type='submit' value='開通遊戲帳號'>
+											</form>
+										</if>
+									</if>
+								</div>
+			        		</div>
+			        	</foreach>
+			        </div>
+            	</foreach>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#PointCenterSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#PointCenterSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+var allMoney = "{$memberWallet}";
+jQuery(document).ready(function(){
+	jQuery("#allMoney").html(allMoney);
+	getAllGameBalance(false);
+});
+function getAllGameBalance(getWalletBool){
+	var gameArray = <?=$jsonGameArray?>;
+	if(getWalletBool){
+		jQuery("#allMoney").html('0');
+		getMembertWallet();
+	}
+
+	for(var key1 in gameArray){
+		for(var key2 in gameArray[key1]){
+			for(var key3 in gameArray[key1][key2]){
+				if(key3 === "accountBool"){
+					if(gameArray[key1][key2][key3]){
+						//console.log(key2);
+						getMembertBalance(key2,gameArray[key1][key2]["gameName"]);
+					}
+				}
+			}
+		}
+	}
+}
+function getMembertBalance(gameName,gameChinese){
+	/*if($("#"+gameName+"TransferWallet").prop("disabled") == true){
+		return;
+	}*/
+	jQuery("#"+gameName+"TransferWallet").attr("disabled",true);
+	jQuery("#"+gameName+"Balance").html("讀取中");
+	jQuery.ajax({
+		type:"POST",
+        url:"__URL__/ajaxMemberGameBalance",
+        data:{gameName:gameName},
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		//alert(dataObject.err);
+        		console.log(dataObject);
+        	} else {
+        		jQuery("#"+gameName+"Balance").html(dataObject.memberBalance);
+        		if(parseInt(dataObject.memberBalance) != 0){
+        			jQuery("#"+gameName+"TransferWallet").attr("disabled",false);
+        			var totalMoney = jQuery("#allMoney").html();
+            		totalMoney = parseInt(totalMoney) + parseInt(dataObject.memberBalance);
+            		jQuery("#allMoney").html(totalMoney);
+        		}
+        	}
+        },
+		error:function(){
+			//alert("網路連線錯誤，請檢查您的網路狀況。");
+			jQuery("#"+gameName+"Balance").html("取得點數失敗");
+		}
+	});
+}
+function getMembertWallet(){
+	jQuery("#memberWallet").attr("disabled",true);
+	jQuery("#memberWallet").html("讀取中");
+	jQuery.ajax({
+		type:"POST",
+        url:"__URL__/ajaxMemberWallet",
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		//alert(dataObject.err);
+        		console.log(dataObject);
+        	} else {
+        		jQuery("#memberWallet").html("重新整理");
+        		var totalMoney = jQuery("#allMoney").html();
+        		totalMoney = parseInt(totalMoney) + parseInt(dataObject.memberWallet);
+        		jQuery("#allMoney").html(totalMoney);
+        	}
+        	jQuery("#memberWallet").attr("disabled",false);
+        },
+		error:function(){
+			//alert("網路連線錯誤，請檢查您的網路狀況。");
+			jQuery("#memberWallet").attr("disabled",false);
+			jQuery("#memberWallet").html("取得點數失敗");
+		}
+	});
+}
+function ajaxTransferWallet(gameName){
+	alert('testAjax'+gameName);
+}
+
+</script>
+
+

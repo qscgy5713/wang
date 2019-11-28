@@ -1,0 +1,324 @@
+<?php
+//會員統計腳本
+class ScriptMemberStatisticsAction extends ScriptAction {
+    /*
+       common_member_statistics 會員統計資料
+    	statistics_year int 4 年
+    	statistics_month int 2 月
+    	statistics_day int 2 日
+    	statistics_hour int 2 時
+
+    	statistics_onlineNumber int 11 總線上人數
+    	statistics_pcUseNumber int 11 電腦使用人數
+    	statistics_phoneUseNumber int 11 手機使用人數
+    	statistics_allUseNumber int 11 電腦手機都使用人數
+    	statistics_appleNumber int 11 蘋果系統人數
+    	statistics_androidNumber int 11 安卓系統人數
+    	statistics_allSystemNumber int 11 手機系統都使用人數
+
+    	statistics_totalRechargeMoney int 11 總儲值金額
+    	statistics_totalRechargeNumber int 11 總儲值數量
+    	statistics_totalWithdrawMoney int 11 總託售金額
+    	statistics_totalWithdrawNumber int 11 總託售數量
+    	statistics_totalRegisteredNumber int 11 總註冊人數
+     */
+    
+    //總線上人數
+    //抓取  common_member_online    online_modifyTime 在一個小時內的
+    //加上 common_member_login_log  loginLog_createTime 在一個小時內的  loginLog_status 等於 1
+    //同樣的會員   人數算一個   但OS 不同的話 要統計
+    
+    
+    //statistics_totalRechargeMoney int 11 總儲值金額  statistics_totalRechargeNumber int 11 總儲值數量
+    //讀取 cashflow_recharge    recharge_modifyTime  在一個小時內的  recharge_status 等於  1
+    
+    //statistics_totalWithdrawMoney int 11 總託售金額  statistics_totalWithdrawNumber int 11 總託售數量
+    //讀取 cashflow_withdraw   withdraw_modifyTime  在一個小時內的  withdraw_status 等於  1
+    
+    //statistics_totalRegisteredNumber int 11 總註冊人數   讀取 common_member   member_createTime  在一個小時內的
+    
+    
+    //統計好資料  做沒有此資料新增  有此資料 就執行更新
+    protected $startTime = '';
+    protected $endTime = '';
+    
+    protected $onlineArray = array();
+    
+    protected $onlineNumber = 0;//上線總人數
+    protected $pcUseNumber = 0;//電腦使用者
+    protected $phoneUseNumber = 0;//手機使用者
+    protected $allUseNumber = 0;//兩者皆用
+    protected $appleNumber = 0;//蘋果
+    protected $androidNumber = 0;//安卓
+    protected $allSystemNumber = 0;//兩種系統
+    
+    protected $totalRechargeMoney = 0;//儲值總金額
+    protected $totalRechargeNumber = 0;//儲值總數量
+    protected $totalWithdrawMoney = 0;//託售總金額
+    protected $totalWithdrawNumber = 0;//託售總數量
+    protected $totalRegisteredNumber = 0;//總註冊人數
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    
+    public function index(){
+        
+        $CommonMember = D('CommonMember');
+        $CommonMemberStatistics = D('CommonMemberStatistics');
+        $data = array(
+            'statistics_year' => date('Y', time()),
+            'statistics_month' => date('m', time()),
+            'statistics_day' => date('d', time()),
+            'statistics_hour1' => date('H', time())-1,
+            'statistics_hour2' => date('H', time()),
+        );
+        $return = $CommonMemberStatistics->getStatisticsDataByHour($data);
+        if($return === false){
+            var_dump('資料庫失敗 err6');
+        }
+        //判斷是否要更新 上個小時的時間  開始
+        switch(count($return)){
+            case 0:
+                $this->startTime = strtotime(date('Y-m-d H:00:00', time() - 3600));
+                $this->endTime = strtotime(date('Y-m-d H:00:00', time()));
+                $this->getStatisticsData();
+                $this->saveStatisticsData(1);
+                break;
+            case 1:
+                if($return[0]['statistics_hour'] == date('H', time())){
+                    $this->startTime = strtotime(date('Y-m-d H:00:00', time() - 3600));
+                    $this->endTime = strtotime(date('Y-m-d H:00:00', time()));
+                    $this->getStatisticsData();
+                    $this->saveStatisticsData(1);
+                }
+                break;
+            case 2://升序 所以hour一定是小到大
+                if($return[0]['statistics_latestUpdata'] == 0){
+                    $this->startTime = strtotime(date('Y-m-d H:00:00', time() - 3600));
+                    $this->endTime = strtotime(date('Y-m-d H:00:00', time()));
+                    $this->getStatisticsData();
+                    $this->saveStatisticsData(1);
+                }
+                break;
+        }
+        //判斷是否要更新 上個小時的時間  結束
+        
+        //統計現在時間  開始
+        $this->startTime = strtotime(date('Y-m-d H:00:00', time()));
+        $this->endTime = strtotime(date('Y-m-d H:00:00', time() + 3600));
+        $this->getStatisticsData();
+        $this->saveStatisticsData(0);
+        //統計現在時間  結束
+        
+        $this->display();
+    }
+    protected function saveStatisticsData($lastUp){
+        $CommonMemberStatistics = D('CommonMemberStatistics');
+        $data = array(
+            'statistics_year' => date('Y', $this->startTime),
+            'statistics_month' => date('m', $this->startTime),
+            'statistics_day' => date('d', $this->startTime),
+            'statistics_hour' => date('H', $this->startTime),
+            'statistics_totalRechargeMoney' => $this->totalRechargeMoney,
+            'statistics_totalRechargeNumber' => $this->totalRechargeNumber,
+            'statistics_totalWithdrawMoney' => $this->totalWithdrawMoney,
+            'statistics_totalWithdrawNumber' => $this->totalWithdrawNumber,
+            'statistics_totalRegisteredNumber' => $this->totalRegisteredNumber,
+            'statistics_onlineNumber' => $this->onlineNumber, //上線總人數
+            'statistics_pcUseNumber' => $this->pcUseNumber, //電腦使用者
+            'statistics_phoneUseNumber' => $this->phoneUseNumber, //手機使用者
+            'statistics_allUseNumber' => $this->allUseNumber, //兩者皆用
+            'statistics_appleNumber' => $this->appleNumber, //蘋果
+            'statistics_androidNumber' => $this->androidNumber, //安卓
+            'statistics_allSystemNumber' => $this->allSystemNumber, //兩種系統
+            'statistics_latestUpdata' => $lastUp
+        );
+        $return = $CommonMemberStatistics->upStatisticsData($data);
+        if($return === false){
+            echo '<BR>'.date('Y-m-d H:i:s',$this->startTime).'  ~  '.date('Y-m-d H:i:s',$this->endTime).' <span style=\'color:red;\'>儲存失敗 err5 </span>';
+        }
+        echo '<BR>'.date('Y-m-d H:i:s',$this->startTime).'  ~  '.date('Y-m-d H:i:s',$this->endTime).' <span style=\'color:blue;\'>儲存成功 </span>';
+    }
+    
+    
+    protected function isMobileByData($data){
+        $clientkeywords = array (
+            'nokia','sony','eriCSSon','mot','samsung','htc','sgh','lg','sharp','sie-','philips',
+            'panasonic','alcatel','lenovo','iphone','ipod','blackberry','meizu','android','netfront','symbian','ucweb',
+            'windowsce','palm','operamini','operamobi','openwave','nexusone','cldc','midp','wap','mobile'
+        );
+        // 从HTTP_USER_AGENT中查找手机浏览器的关键字
+        if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($data))){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    protected function isAppleByData($data){
+        //判斷不適蘋果 就歸類的 安卓
+        if(strpos($data, 'iPhone')||strpos($data, 'iPad')){
+            return true;
+        } else if(strpos($data, 'Android')){
+            return false;
+        } else {
+            return false;
+        }
+    }
+    protected function clearInitial(){
+        $this->onlineArray = array();
+        $this->onlineNumber = 0;//上線總人數
+        $this->pcUseNumber = 0;//電腦使用者
+        $this->phoneUseNumber = 0;//手機使用者
+        $this->allUseNumber = 0;//兩者皆用
+        $this->appleNumber = 0;//蘋果
+        $this->androidNumber = 0;//安卓
+        $this->allSystemNumber = 0;//兩種系統
+        
+        $this->totalRechargeMoney = 0;//儲值總金額
+        $this->totalRechargeNumber = 0;//儲值總數量
+        $this->totalWithdrawMoney = 0;//託售總金額
+        $this->totalWithdrawNumber = 0;//託售總數量
+        $this->totalRegisteredNumber = 0;//總註冊人數
+    }
+    
+    protected function getStatisticsData(){
+        
+        $this->clearInitial();//清空預設值
+        
+        $CommonMemberOnline = D('CommonMemberOnline');
+        $data = array(
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+        );
+        $return = $CommonMemberOnline->getMemberOnlineData($data,$err);
+        if($return === false){
+            var_dump($err.'資料庫錯誤 err1');
+        }
+        foreach ($return as $key => $value){
+            if($this->isMobileByData($value['online_os'])){
+                $value['os'] = 'phone';
+                $this->phoneUseNumber++;
+                if($this->isAppleByData($value['online_os'])){
+                    $value['phone_type'] = 'apple';
+                    $this->appleNumber++;
+                } else {
+                    $value['phone_type'] = 'android';
+                    $this->androidNumber++;
+                }
+            } else {
+                $value['os'] = 'pc';
+                $value['phone_type'] = 'pc';
+                $this->pcUseNumber++;
+            }
+            $value['number'] = 1;//線上名單 只會有一筆紀錄
+            $this->onlineArray[$value['member_id']] = $value;
+        }
+        $CommonMemberLoginLog = D('CommonMemberLoginLog');
+        $data = array(
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+        );
+        $return = $CommonMemberLoginLog->getMemberLoginLogUseStatistics($data,$err);
+        if($return === false){
+            var_dump($err.'資料庫錯誤 err1');
+        }
+        foreach ($return as $key => $value){
+            if($this->isMobileByData($value['loginLog_os'])){
+                $value['os'] = 'phone';
+                if($this->isAppleByData($value['loginLog_os'])){
+                    $value['phone_type'] = 'apple';
+                } else {
+                    $value['phone_type'] = 'android';
+                }
+            } else {
+                $value['os'] = 'pc';
+                $value['phone_type'] = 'pc';
+            }
+            
+            if(isset($this->onlineArray[$value['member_id']])){
+                if($this->onlineArray[$value['member_id']]['number'] > 2){
+                    //如果已增加過兩次 就跳過  預防此時間區段 多次登入
+                    continue;
+                }
+                $this->onlineArray[$value['member_id']]['number']++;//增加一次次數
+                if($this->onlineArray[$value['member_id']]['os'] != $value['os']){
+                    $this->allUseNumber++;
+                    if($this->onlineArray[$value['member_id']]['os'] == 'pc'){
+                        $this->pcUseNumber--;
+                    } else {
+                        $this->phoneUseNumber--;
+                    }
+                }
+                if($this->onlineArray[$value['member_id']]['os'] != 'phone'){
+                    if($this->onlineArray[$value['member_id']]['phone_type'] != $value['phone_type']){
+                        $this->allSystemNumber++;
+                        if($this->onlineArray[$value['member_id']]['phone_type'] == 'apple'){
+                            $this->appleNumber--;
+                        } else {
+                            $this->androidNumber--;
+                        }
+                    }
+                }
+            } else {
+                $value['number'] = 1;
+                $this->onlineArray[$value['member_id']] = $value;
+            }
+        }
+        $this->onlineNumber = count($this->onlineArray);
+        
+        //取得 儲值資料 開始
+        $CashflowRecharge = D('CashflowRecharge');
+        $data = array(
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+        );
+        $return = $CashflowRecharge->getHourTotalMoneyMember($data);
+        if($return === false){
+            var_dump('資料庫錯誤 err2');
+        }
+        if(empty($return['totalMoney'])){
+            $this->totalRechargeMoney = 0;
+        } else {
+            $this->totalRechargeMoney = $return['totalMoney'];
+        }
+        $this->totalRechargeNumber = $return['totalMember'];
+        //取得 儲值資料 結束
+        
+        //取得 託售資料 開始
+        $CashflowWithdraw = D('CashflowWithdraw');
+        $data = array(
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+        );
+        $return = $CashflowWithdraw->getHourTotalMoneyMember($data);
+        if($return === false){
+            var_dump('資料庫錯誤 err3');
+        }
+        if(empty($return['totalMoney'])){
+            $this->totalWithdrawMoney = 0;
+        } else {
+            $this->totalWithdrawMoney = $return['totalMoney'];
+        }
+        $this->totalWithdrawNumber = $return['totalMember'];
+        //取得 託售資料 結束
+        
+        //取得 註冊資料 開始
+        $CommonMember = D('CommonMember');
+        $data = array(
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+        );
+        $return = $CommonMember->getHourNewMemberData($data);
+        if($return === false){
+            var_dump('資料庫錯誤 err4');
+        }
+        $this->totalRegisteredNumber = $return['totalMember'];
+        //取得 註冊資料 結束
+    }
+    
+    
+}

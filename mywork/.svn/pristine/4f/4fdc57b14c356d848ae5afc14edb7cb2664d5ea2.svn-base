@@ -1,0 +1,359 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+
+	<div id="content" class="content">
+		<p><button id="add_btn" class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                       新增網域
+                </button></p>
+        <div class="modal fade" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 新增網域</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/DomainManage/formAddDomain'>
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">網域:</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control form-control-AgentPageClassManage" type="text" name="addSite">
+								</div>
+							 </div>
+							 <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">標題名稱 :</label>
+								<div class="col-md-8 col-sm-8">
+									<span class="text-green-darker">繁體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(49, 214, 26, 0.59);" type="text" id="addTitleTw" name="addTitleTw" value="">
+
+									<span class="text-red">簡體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(244, 67, 54, 0.59);" type="text" id="addTitleCn" name="addTitleCn" value="">
+
+									<span class="text-blue-darker">English</span>
+									<input class="form-control" style="border: 1px solid rgba(25, 118, 210, 0.59);" type="text" id="addTitleUs" name="addTitleUs" value="">
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">關鍵字 :</label>
+								<div class="col-md-8 col-sm-8">
+									<span class="text-green-darker">繁體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(49, 214, 26, 0.59);" type="text" id="addKeywordsTw" name="addKeywordsTw" value="">
+
+									<span class="text-red">簡體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(244, 67, 54, 0.59);" type="text" id="addKeywordsCn" name="addKeywordsCn" value="">
+
+									<span class="text-blue-darker">English</span>
+									<input class="form-control" style="border: 1px solid rgba(25, 118, 210, 0.59);" type="text" id="addKeywordsUs" name="addKeywordsUs" value="">
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">關於網站 :</label>
+								<div class="col-md-8 col-sm-8">
+									<span class="text-green-darker">繁體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(49, 214, 26, 0.59);" type="text" id="addDescriptionTw" name="addDescriptionTw" value="">
+
+									<span class="text-red">簡體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(244, 67, 54, 0.59);" type="text" id="addDescriptionCn" name="addDescriptionCn" value="">
+
+									<span class="text-blue-darker">English</span>
+									<input class="form-control" style="border: 1px solid rgba(25, 118, 210, 0.59);" type="text" id="addDescriptionUs" name="addDescriptionUs" value="">
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+        <div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">網域名稱</h4>
+					</div>
+
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>編號</th>
+										<th>網域名稱</th>
+										<th>是否啟用</th>
+										<th>建立時間</th>
+										<th>修改時間</th>
+										<th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+				                        	<td>{$vo.domainId}</td>
+											<td>{$vo.domainSite}</td>
+											<td id="{$vo.domainId}domainEnable">{$vo.domainEnable}</td>
+											<td>{$vo.domainCreateTime}</td>
+											<td>{$vo.domainModifyTime}</td>
+											<td>
+												<a onclick="openmodal('setModal','{$vo.domainId}','{$vo.domainSite}','{$vo.titleTw}','{$vo.titleCn}','{$vo.titleUs}','{$vo.keywordsTw}','{$vo.keywordsCn}','{$vo.keywordsUs}','{$vo.descriptionTw}','{$vo.descriptionCn}','{$vo.descriptionUs}')"><i class="fas fa-wrench fa-fw icon-size"></i></a>
+
+												<if condition="$vo.domainEnable eq '啟用中'">
+					                                <form id="Tostop{$vo.domainId}" method="post" action="__APP__/DomainManage/formSetDomainEnabled" class="div-style form-vertical-align" >
+														<input type="hidden" value="{$vo.domainId}" name="setDomainId">
+														<input type="hidden" value="{$vo.domainEnable}" name="setEnabled">
+														<div class="switcher">
+														  <input type="checkbox" id="switcher_checkbox_{$vo.domainId}" checked onclick="submitAjax('formInquireTostop','{$vo.domainId}','stopId')">
+														  <label for="switcher_checkbox_{$vo.domainId}" class="switchbtn"></label>
+														</div>
+													</form>
+												<else/>
+													<form id="Tostart{$vo.domainId}" method="post" action="__APP__/DomainManage/formSetDomainEnabled" class="div-style form-vertical-align" >
+														<input type="hidden" value="{$vo.domainId}" name="setDomainId">
+														<input type="hidden" value="{$vo.domainEnable}" name="setEnabled">
+														<div class="switcher">
+														  <input type="checkbox" id="switcher_checkbox_{$vo.domainId}" onclick="submitAjax('formInquireTostart','{$vo.domainId}','startId')">
+														  <label for="switcher_checkbox_{$vo.domainId}" class="switchbtn"></label>
+														</div>
+													</form>
+												</if>
+
+				                                <form id="delform{$vo.domainId}" class="div-style" method="post" action='__APP__/DomainManage/formDelDomain'>
+				                                	<input type="hidden" value="{$vo.domainId}" name="delDomainId">
+				                                	<a onclick="submit('delform{$vo.domainId}')"><i class="fas fa-trash fa-fw icon-size"></i></a>
+				                                </form>
+			                                </td>
+										</tr>
+			                        </VOLIST>
+								</tbody>
+							</table>
+						</div>
+						<if condition="$pageNumber neq ''">
+		                  <div class="row">
+			                  <div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+
+						                <if condition="$pageNumber-1 neq 0">
+						                  <li id="" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber=1">第一頁</a></li>
+						                  <li class="page-item">
+						                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber-1}" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  </li>
+						                 </if>
+
+						                  <volist name="pageArray" id="vo" >
+			                                <IF condition="$pageNumber eq $vo" >
+			                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+			                                <else/>
+			                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+			                                </IF>
+			                              </volist>
+
+						                  <if condition="$pageNumber+1 elt $totalPage ">
+							                  <li class="page-item">
+							                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber+1}" aria-label="Next">
+							                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+							                      <span class="sr-only">Next</span>
+							                    </a>
+							                  </li>
+							                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$totalPage}">最末頁</a></li>
+						                  </if>
+						                </ul>
+						            </nav>
+			                  </div>
+		                  </div>
+	                  </if>
+					</div>
+				</div>
+				<!-- end panel -->
+			</div>
+        </div>
+        
+        <div class="modal fade" id="setTitleModal" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title">公告標題</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+					<div class="modal-body">
+						 <div class="form-group row m-b-15">
+							<label class="col-md-4 col-sm-4 col-form-label">序 :</label>
+							<div class="col-md-8 col-sm-8">
+								<input class="form-control" type="text" id="setId1" value="" readonly>
+							</div>
+						 </div>
+						 <div class="form-group row m-b-15">
+							<label class="col-md-4 col-sm-4 col-form-label">繁體 :</label>
+							<div class="col-md-8 col-sm-8">
+								<input class="form-control" type="text" id="setTitleTw1" value="" readonly>
+							</div>
+						 </div>
+						 <div class="form-group row m-b-15">
+							<label class="col-md-4 col-sm-4 col-form-label">簡體 :</label>
+							<div class="col-md-8 col-sm-8">
+								<input class="form-control" type="text" id="setTitleCn1" value="" readonly>
+							</div>
+						 </div>
+						 <div class="form-group row m-b-15">
+							<label class="col-md-4 col-sm-4 col-form-label">English :</label>
+							<div class="col-md-8 col-sm-8">
+								<input class="form-control" type="text" id="setTitleUs1" value="" readonly>
+							</div>
+						 </div>
+					</div>
+					<div class="modal-footer">
+						<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">關閉</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+        <div class="modal fade" id="setModal" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 修改網域名稱</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/DomainManage/formSetDomain'>
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">網域名稱</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" value="" name="setSite" id="setSite">
+									<input type="hidden" value="" name="setDomainId" id="setDomainId">
+								</div>
+ 							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">標題名稱 :</label>
+								<div class="col-md-8 col-sm-8">
+									<span class="text-green-darker">繁體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(49, 214, 26, 0.59);" type="text" id="setTitleTw" name="setTitleTw" value="">
+
+									<span class="text-red">簡體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(244, 67, 54, 0.59);" type="text" id="setTitleCn" name="setTitleCn" value="">
+
+									<span class="text-blue-darker">English</span>
+									<input class="form-control" style="border: 1px solid rgba(25, 118, 210, 0.59);" type="text" id="setTitleUs" name="setTitleUs" value="">
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">關鍵字 :</label>
+								<div class="col-md-8 col-sm-8">
+									<span class="text-green-darker">繁體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(49, 214, 26, 0.59);" type="text" id="setKeywordsTw" name="setKeywordsTw" value="">
+
+									<span class="text-red">簡體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(244, 67, 54, 0.59);" type="text" id="setKeywordsCn" name="setKeywordsCn" value="">
+
+									<span class="text-blue-darker">English</span>
+									<input class="form-control" style="border: 1px solid rgba(25, 118, 210, 0.59);" type="text" id="setKeywordsUs" name="setKeywordsUs" value="">
+								</div>
+							</div>
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">關於網站 :</label>
+								<div class="col-md-8 col-sm-8">
+									<span class="text-green-darker">繁體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(49, 214, 26, 0.59);" type="text" id="setDescriptionTw" name="setDescriptionTw" value="">
+
+									<span class="text-red">簡體</span>
+									<input class="form-control m-b-10" style="border: 1px solid rgba(244, 67, 54, 0.59);" type="text" id="setDescriptionCn" name="setDescriptionCn" value="">
+
+									<span class="text-blue-darker">English</span>
+									<input class="form-control" style="border: 1px solid rgba(25, 118, 210, 0.59);" type="text" id="setDescriptionUs" name="setDescriptionUs" value="">
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" name="okbtn" class="btn btn-info f-s-15">確認修改</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+
+
+<script>
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+
+});
+function openmodal(modalId, domainId, domainSite, ){
+	//alert(id);
+	$('#setDomainId').val(domainId);
+	$('#setSite').val(domainSite);
+	$('#setDescriptionTw').val(descriptionArray['zh-tw']);
+	$('#setDescriptionCn').val(descriptionArray['zh-cn']);
+	$('#setDescriptionUs').val(descriptionArray['en-us']);
+	$('#'+modalId).modal('show');
+}
+function openShowModal(modal_id, vo1_Tw, vo1_Cn, vo1_Us, key){
+	$("#setId1").val(key);
+	$("#setTitleTw1").val(vo1_titleTw);
+	$("#setTitleCn1").val(vo1_titleCn);
+	$("#setTitleUs1").val(vo1_titleUs);
+	$('#'+modal_id).modal('show');
+}
+function submit(formId){
+	 $("#"+formId).submit();
+}
+function submitAjax(mod_id,vo_id,mode_id){
+	$("#switcher_checkbox_"+vo_id).attr("disabled",true);
+	if(mod_id == 'formInquireTostop'){
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{stopId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+		    	$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+     			$("#"+vo_id+"domainEnable").html('停用中');
+     			$("#switcher_checkbox_"+vo_id).attr('onclick','submitAjax("formInquireTostart","'+vo_id+'","startId")');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	} else if(mod_id == 'formInquireTostart'){
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{startId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+		    	$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+				$("#"+vo_id+"domainEnable").html('啟用中');
+				$("#switcher_checkbox_"+vo_id).attr('onclick','submitAjax("formInquireTostop","'+vo_id+'","stopId")');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	}
+}
+</script>

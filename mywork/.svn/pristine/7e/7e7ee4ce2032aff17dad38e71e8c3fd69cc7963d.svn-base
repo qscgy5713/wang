@@ -1,0 +1,11 @@
+<include file="Common:header"/>
+<title>功能說明首頁</title>
+<body style="background-image: url(__CSS__/images/10.jpg);">
+<include file="Common:menu"/>
+<include file="Common:menu2"/>
+  <div class="content admin-div">
+	<img src="__CSS__/images/agent.jpg" >
+  </div>
+<include file="Common:footer"/> 
+
+

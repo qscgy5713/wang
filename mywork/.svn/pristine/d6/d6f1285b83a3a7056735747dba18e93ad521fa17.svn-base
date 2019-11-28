@@ -1,0 +1,93 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">註冊悟空娛樂賬戶</h2>
+				<h6 class="text-white">
+					註冊悟空娛樂賬戶，您將領略到前所未有的博彩體驗。如果您已擁有悟空娛樂賬戶，則可以在此登錄
+				</h6>
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link " href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 驗證手機</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link active show" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>輸入驗證碼</a>
+					               </li>
+					               <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-3" id="pill-pr-3-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>完成註冊</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                
+			                  <div class="tab-pane " id="pill-pr-1">
+	                  			 <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">驗證手機已完成，<br>請繼續輸入驗證碼</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger loading" onclick="$('#pill-pr-2-a').click();" >繼續</button>
+					             </div>
+			                  </div>
+			                  
+			                  <div class="tab-pane active" id="pill-pr-2">
+			                  		<form method="post" action='__APP__/RegistPage/formRegistCheck'>
+						                <fieldset>
+						                
+						                  <div class="form-group">
+							                  <label for="inputDanger1">手機號碼</label>
+							                  <input type="text" readonly="readonly" name="addPhone" value="{$addPhone}" class="form-control" id="inputDanger1">
+							                 
+							              </div>
+							              
+						                  <div class="form-group">
+						                    <label for="disabledTextInput">輸入驗證碼</label>
+						                    <input type="text" name="addVerificationCode" id="disabledTextInput" class="form-control" placeholder="請輸入驗證碼">
+						                  	<div class="warning-feedback" style="display: block;">請於10分鐘內輸入驗證碼</div>
+						                  </div>
+						                  
+						                  
+						                  <button type="button" id="am-s1-confirm" onclick="location.href='index.php';" class="btn btn-outline-danger loading">取消</button>
+							              <button type="submit" id="am-s1-cancel" name="btnok" class="btn btn-outline-danger loading">確認註冊</button>
+							              
+							              <div class="separator-2"></div>
+								              <div class="form-group">
+							              		<p>
+							              			驗證碼已傳送至您的手機，請等待接收驗證碼並輸入
+							              		</p>
+								              </div>
+						                </fieldset>
+						              </form>
+			                  </div>
+			                  
+			                  <div class="tab-pane" id="pill-pr-3">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">尚未輸入手機驗證碼，<br>請至步驟2輸入驗證碼後按下『確認註冊』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-2-a').click();" >返回</button>
+					                </div>
+			                  </div>
+			                  
+			                  
+			                </div>
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>

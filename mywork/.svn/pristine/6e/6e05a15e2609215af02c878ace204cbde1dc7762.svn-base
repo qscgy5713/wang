@@ -1,0 +1,119 @@
+<?php
+/*
+ * 代理操作LOG
+ */
+class CommonAgentOperateLogModel extends AgentModel {
+    protected $tableName = "common_agent_operate_log";
+    protected $tableId = "operateLog_id";
+    
+    /*
+     * 取得 代理 頁面 
+     */
+    public function getAgentOperateLogData($data, &$err = ""){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return fasle;
+        }
+
+        $sql ="SELECT * FROM `{$this->tableName}` WHERE ( `operateLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')  AND `agent_id` = '{$data['agent_id']}'
+                ORDER BY `operateLog_createTime` DESC;";
+
+        $return = $this->query($sql);
+
+        return $return;
+    }
+
+    /*
+     * 新增 代理操作 紀錄
+     */
+    public function addAgentOperateLogData($data){
+        
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 傳入 class 和 對象帳號 組合文字
+     */
+    public function getOperateLogClassStr($class,$objectAccount){
+        $str = "";
+        switch ($class){
+            case '1':
+                $str = "修改密碼";
+                break;
+            case '2':
+                $str = "停權代理".$objectAccount;
+                break;
+            case '3':
+                $str = "啟用代理".$objectAccount;
+                break;
+            case '4':
+                $str = "停權子帳號".$objectAccount;
+                break;
+            case '5':
+                $str = "啟用子帳號".$objectAccount;
+                break;
+            default:
+                $str = "錯誤";
+                break;
+        }
+        return $str;
+    }
+    /*
+     * 傳入 class 和 $main json格式 組合文字
+     */
+    public function getOperateLogMainStr($class,$main){
+        $str = "";
+        $mainArray = json_decode($main, true);
+        switch ($class){
+            case '1':
+                $str = "舊密碼:".$mainArray['oldPassword']."新密碼:".$mainArray['newPassword'];
+                break;
+            case '2':
+                break;
+            case '3':
+                break;
+            case '4':
+                break;
+            case '5':
+                break;
+            default:
+                $str = "錯誤";
+                break;
+        }
+        return $str;
+    }
+
+    /*
+     * 取得資料筆數 
+     */
+    public function getAgentOperateLogNumberData($data, &$err = ""){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE ( `operateLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}') AND `agent_id` = '{$data['agent_id']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+}

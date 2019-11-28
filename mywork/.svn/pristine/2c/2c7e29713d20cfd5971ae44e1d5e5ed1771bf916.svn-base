@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		video_limit_id: <input type="text" name="video_limit_id" value="{$video_limit_id}" /> 只能一個<br/>
+		roulette_limit_id: <input type="text" name="roulette_limit_id" value="{$roulette_limit_id}" /> 只能一個<br/>
+
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="is_array($op_result)">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+		</div>
+	<ELSE/>
+		<if condition="!empty($op_result)">
+			設定預設注額上限 失敗!
+			<php>
+				var_dump($op_result);
+			</php>
+		<else/>
+			<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+		</if>
+	</IF>
+</body>
+</html>

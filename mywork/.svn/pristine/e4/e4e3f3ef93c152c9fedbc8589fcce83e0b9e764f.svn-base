@@ -1,0 +1,119 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+			
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">技術支援</h2>
+					
+					<div class="responsibility_title"><i class="fa fa-gavel responsibility-icon-style"></i></div>	
+				</header>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<p class="mb-5 fw-700">如果您使用的瀏覽器或瀏覽中的網頁發生問題，請試著清除瀏覽器的快取。</p>
+						<p class="mb-5 fw-700">如果仍無法解決問題，建議您接著清除瀏覽器的Cookie。</p>
+						<p class="fw-700">各種瀏覽器及各版本的快取和Cookie清除步驟都不盡相同，如果這裡未列出您所用的瀏覽器或版本，請參閱瀏覽器的說明選單。</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h3>常見的瀏覽器</h3>
+					</div>	
+					<div class="col-md-6 col-sm-6 pl-35">
+						<h4>Google Chrome</h4>
+						<h4>刪除快取和其他瀏覽器資料</h4>
+						<p class="">您可以完全掌控瀏覽資料。這些資料包括瀏覽及下載紀錄，快取，Cookie，密碼，以及已儲存表單資料。使用[清除瀏覽資料]對話方塊可刪除所有資料，或是選擇刪除指定期限內的部分資料。</p>
+						<h4>刪除所有資料</h4>
+						<ul class="responsibility_list">
+	                        <li>依序單擊右上角的「更多」圖示。</li>
+	                        <li>選取[設定]。</li>
+	                        <li>按一下底部的[進階]。</li>
+	                        <li>選取[清除瀏覽資料]。</li>
+	                        <li>在顯示的對話方塊中，找到要移除的資訊類型，然後選取旁邊的核取方塊。</li>
+	                        <li>從頂端的選單中選取要刪除的資料範圍。選取[不限時間]可刪除所有資料。</li>
+	                    </ul>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+					<div class="col-md-6 col-sm-6">
+						<h4>Microsoft Internet Explorer</h4>
+						<h4>查看 Internet Explorer 版本</h4>
+						<p class="">如要查看　Internet Explorer　的版本，請按一下[說明]，然後選取[關於Internet Explorer]。如果沒看到[說明]選單，請按下Alt鍵，即可顯示選單列。</p>
+						<h4>清除快取及Cookie</h4>
+						<h5>Internet Explorer 11.x</h5>
+						<ul class="responsibility_list" style="line-height: 40px;">
+	                        <li>在Internet Explorer中，按一下[工具]。如果未看到這個選單，請按一下鍵盤上的Alt鍵，即可顯示選單列。</li>
+	                        <li>選取[刪除瀏覽歷程記錄]。</li>
+	                        <li>選取[Temporary Internet Files]及Cookie旁的核取方塊。</li>
+	                        <li>按一下[刪除]。</li>
+	                        <li>電腦可能需要幾分鐘的時間才能完全刪除記錄。刪除檔桉後，按一下[確定]。</li>
+	                        
+	                    </ul>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>Mozilla Firefox</h4>
+						<h4>查看 firefox 版本</h4>
+						<p class="mb-5">如何查看Firefox的版本：</p>
+						<p class="mb-5">如果您是Windows的使用者，請按一下[說明]，然後按一下[關於Mozilla Firefox]。</p>
+						<p class="mb-5">如果您是Mac OS X的使用者，請按一下[Firefox]，然後按一下[關於Mozilla Firefox]。</p>
+						<h4>清除快取及Cookie</h4>
+						<h5>Mozilla Firefox 61.x</h5>
+						<ul class="responsibility_list">
+	                        <li>在Mozilla Firefox中，按一下[工具]。如果未看到這個選單，請按一下鍵盤上的Alt鍵，即可顯示選單列。</li>
+	                        <li>選取[選項]。</li>
+	                        <li>選取左側的[隱私與安全]。</li>
+	                        <li>點選右側的[清除歷史紀錄]及[清除數據]。</li>
+	                        
+	                    </ul>
+					</div>	
+				</div>
+			</div>
+			
+			
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 } 
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+
+			

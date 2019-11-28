@@ -1,0 +1,11 @@
+<?php
+return array(
+
+		//Game
+		
+		'ERROR_GAMEDGACTION_INDEX_01' => 'G001 DGTEST 錯誤訊息。',
+    
+    "ERROR_GAMEDGMODEL_CREATEMEMBER_01" => "",
+    "ERROR_GAMEDGMODEL_CREATEMEMBER_03" => "錯誤，請聯繫客服",
+    
+);

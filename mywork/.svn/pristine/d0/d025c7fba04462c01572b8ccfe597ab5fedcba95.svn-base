@@ -1,0 +1,13 @@
+<?php
+/**
+ * 真人返水頁面
+ */
+class EventBackWaterRealityPageAction extends EventAction{
+	//TODO:真人返水頁面
+  public function index(){
+    if($this->formEnabled){
+        $this->getMemberWaterPageData('2');
+    }
+    $this->display();
+  }
+}

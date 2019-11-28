@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html>
+<head>
+<title>訊息提示</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!-- <meta http-equiv='Refresh' content='{$waitSecond};URL={$APP_URL}'> -->
+<include file="Common:head"/>
+<link rel='stylesheet' type='text/css' href='__PUBLIC__/css/common.css'>
+</head>
+<body>
+
+<div class="modal fade" id="myModal" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <!-- 遮罩內容 -->
+    <div class="modal-content">
+      <div class="modal-header">
+      
+        
+        <h4 class="modal-title">{$msgTitle}</h4>
+      </div>
+      <div class="modal-body">
+      	<present name="error" >
+      		<p style="color:red">{$error}</p>
+      	</present>
+      	<present name="message" >
+      		<p style="color:blue">{$message}</p>
+      	</present>
+      </div>
+      <div class="modal-footer">
+      	<if condition="$jumpUrl eq ''">
+      		<button type="button" class="btn btn-default" data-dismiss="modal" onclick="javascript:location.href='{$APP_URL}'">關閉</button>
+		<else />
+			<button type="button" class="btn btn-default" data-dismiss="modal" onclick="javascript:location.href='{$jumpUrl}'">關閉</button>
+		</if>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+<script>
+$(function(){
+	$('#myModal').modal('show');
+});
+</script>

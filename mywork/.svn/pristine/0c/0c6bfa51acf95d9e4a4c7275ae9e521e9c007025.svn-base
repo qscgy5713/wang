@@ -1,0 +1,837 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menu"/>
+		<include file="Common:menuRwd"/>
+
+
+<if condition='$isMobile eq "true"'>
+	<!-- 手機板輪播 -->
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners">
+			<!--
+				Navigation Styles:
+
+					data-navigationStyle="" theme default navigation
+
+					data-navigationStyle="preview1"
+					data-navigationStyle="preview2"
+					data-navigationStyle="preview3"
+					data-navigationStyle="preview4"
+
+				Bottom Shadows
+					data-shadow="1"
+					data-shadow="2"
+					data-shadow="3"
+
+				Slider Height (do not use on fullscreen mode)
+					data-height="300"
+					data-height="350"
+					data-height="400"
+					data-height="450"
+					data-height="500"
+					data-height="550"
+					data-height="600"
+					data-height="650"
+					data-height="700"
+					data-height="750"
+					data-height="800"
+			-->
+			<div class="fullwidthbanner" data-height="550" data-navigationStyle="">
+				<ul class="hide">
+					<!-- SLIDE  -->
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off"  data-title="Slide">
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/cowRWD.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+					</li>
+
+					<!-- SLIDE -->
+					<li data-transition="fade" data-slotamount="14" data-masterspeed="300" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/experiencePage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/experiencePageRWD.jpg"
+							 alt="" data-bgfit="cover" data-bgfit="left top" data-bgrepeat="no-repeat">
+					</li>
+					<!-- SLIDE  -->
+
+					<!-- SLIDE -->
+					<li data-transition="fade" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/baccaratWinningPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/baccaratWinningPageRWD.jpg"
+						 data-bgposition="center center" data-bgfit="cover" data-bgrepeat="no-repeat">
+					</li>
+					<!-- SLIDE  -->
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/backWaterElectronicPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/backWaterElectronicPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/backWaterRealityPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/backWaterRealityPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/backWaterSportsPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/backWaterSportsPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/lottoFourPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/lottoFourPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/reversalPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/reversalPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/storeGiftPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/storeGiftPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>
+<else/>
+	<!-- 電腦版輪播 -->
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners">
+			<div class="fullscreenbanner" data-navigationStyle="preview1">
+				<ul class="hide ">
+					<!-- SLIDE1  -->
+					<li class=""data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 1" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/index_banner02-bg.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+
+						<div class="tp-caption customin ltl tp-resizeme small_light_white font-lato fs-20"
+							 data-x="560"
+							 data-y="160"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800" data-start="1400" data-easing="easeOutQuad" data-splitin="none" data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn"
+							 style="z-index: 10; width:750px; white-space: normal; text-align:center;">
+							<img class="" style="width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/index_banner02_logo.png">
+						</div>
+
+					</li><!-- SLIDE1  -->
+
+					<!-- SLIDE9 -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg9.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="450"
+							 data-y="140"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1.2;scaleY:1.2;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:715px;">
+							<a href="__APP__/RebateEvent/reversalPage">
+								<img class="" style="z-index:10; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title9.png">
+							</a>
+						</div>
+
+
+					</li><!-- SLIDE9  -->
+
+					<!-- SLIDE2 -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg1.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="-150"
+							 data-y="150"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:1920px;">
+
+							<img class="" style="z-index: 10; width:100%; white-space: normal; text-align:center;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title1.png">
+						</div>
+
+						<div class="tp-caption customin ltl tp-resizeme"
+							 data-x="480"
+							 data-y="460"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1550"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:300px">
+							<a href="__APP__/RebateEvent/baccaratWinningPage">
+								<img class="" style="z-index: 3; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_btn1.png">
+							</a>
+						</div>
+					</li><!-- SLIDE2 -->
+
+					<!-- SLIDE3 -->
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg2.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="100"
+							 data-y="130"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:770px;">
+							<img  style="z-index: 10; width:100%; white-space: normal; text-align:center;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title2.png">
+						</div>
+						<div class="tp-caption customin ltl tp-resizeme"
+							 data-x="300"
+							 data-y="530"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1550"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:300px;">
+							<a href="__APP__/RebateEvent/lottoFourPage">
+								<img class="" style="z-index: 10; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_btn2.png">
+							</a>
+						</div>
+					</li><!-- SLIDE3 -->
+
+					<!-- SLIDE4  -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 2" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg3.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+
+						<div class="tp-caption very_large_text lfb ltt tp-resizeme"
+							 data-x="100" data-hoffset="-100"
+							 data-y="100" data-voffset="-100"
+							 data-speed="800"
+							 data-start="1400"
+							 data-easing="Power4.easeOut"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="500"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:700px;">
+							<img class="" style="z-index: 10; width:100%; white-space: normal; text-align:center;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title3.png">
+						</div>
+
+						<div class="tp-caption customin ltl tp-resizeme"
+							 data-x="320"
+							 data-y="560"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1550"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn"  style="z-index: 3; width:250px;">
+							<a href="__APP__/RebateEvent/storeGiftPage">
+								<img class="" style="z-index: 11; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_btn3.png">
+							</a>
+						</div>
+
+					</li><!-- SLIDE4  -->
+
+					<!-- SLIDE5  -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg4.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="360"
+							 data-y="120"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1.2;scaleY:1.2;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:980px;">
+							<a href="__APP__/RebateEvent/backWaterElectronicPage">
+								<img class="" style="z-index: 10; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title4.png">
+							</a>
+						</div>
+					</li><!-- SLIDE5  -->
+
+					<!-- SLIDE6  -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg5.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="420"
+							 data-y="125"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1.2;scaleY:1.2;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:850px;">
+							<a href="__APP__/RebateEvent/backWaterSportsPage">
+								<img class="" style="z-index:10; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title5.png">
+							</a>
+						</div>
+					</li><!-- SLIDE6  -->
+
+					<!-- SLIDE7  -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg6.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="80"
+							 data-y="150"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1.2;scaleY:1.2;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:820px;">
+							<a href="__APP__/RebateEvent/backWaterRealityPage">
+								<img style="z-index:10; width:85%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title6.png">
+							</a>
+						</div>
+					</li><!-- SLIDE7  -->
+
+					<!-- SLIDE8 -->
+					<li class="" data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off" data-title="Slide title 3" data-thumb="">
+
+						<img src="" data-lazyload="__CSS__/images/bg-img/offer_bg7.jpg" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat">
+
+						<div class="tp-caption customin ltl tp-resizeme large_bold_white"
+							 data-x="360"
+							 data-y="195"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1.2;scaleY:1.2;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1200"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:900px;">
+							<a href="__APP__/RebateEvent/reversalPage">
+								<img class="" style="z-index:10; width:80%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_title7.png">
+							</a>
+						</div>
+
+						<div class="tp-caption customin ltl tp-resizeme"
+							 data-x="590"
+							 data-y="550"
+							 data-customin="x:0;y:150;z:0;rotationZ:0;scaleX:1;scaleY:1;skewX:0;skewY:0;opacity:0;transformPerspective:200;transformOrigin:50% 0%;"
+							 data-speed="800"
+							 data-start="1550"
+							 data-easing="easeOutQuad"
+							 data-splitin="none"
+							 data-splitout="none"
+							 data-elementdelay="0.01"
+							 data-endelementdelay="0.1"
+							 data-endspeed="1000"
+							 data-endeasing="Power4.easeIn" style="z-index: 3; width:300px;">
+							<a href="__APP__/RebateEvent/reversalPage">
+								<img class="" style="z-index: 3; width:100%;" src="__CSS__/images/{$langStr}/bg-img/bg-text/offer_btn1.png">
+							</a>
+						</div>
+					</li><!-- SLIDE8  -->
+
+
+
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>
+</if>
+
+
+		<!-- rwd跑馬燈 -->
+		<include file="Common:marquee"/>
+		<!-- rwd跑馬燈 -->
+
+			<div class=" m-0 p-0 hidden-sm-down">
+
+				<div class="row">
+
+					<div class="col-lg-6 pr-0 Login-movie" style="background-image: url(__CSS__/images/movies.jpg);background-size: cover;"><!-- left text -->
+						<div class="move-div text-center">
+							<div class="row" style="cursor: pointer;" >
+								<div class="col-md-3 m-auto"><p class="fs-30 mb-0 txt-white">{$Think.lang.MemberIndex1}</p></div>
+								<div class="col-md-1 m-auto"><div class="separateline"></div></div>
+								<div class="col-md-7 m-auto text-left"><p class="fs-20 mb-0 txt-white">
+									{$Think.lang.MemberIndex2}<br>
+									{$Think.lang.MemberIndex3}
+								</p></div>
+							</div>
+						</div>
+					</div>
+
+
+
+					<div onclick="self.location.href='__APP__/MemberIndex/downloadIndex'" class="col-lg-6 text-right pl-0" style="background-image: url(__CSS__/images/app_download.jpg);background-size: cover;"><!-- right btn -->
+						<div class="move-div text-center" style="cursor: pointer;">
+							<div class="row">
+								<div class="col-md-2 m-auto"><i class="icomoon icon-app-phone-2 movie_app_icon_size"></i></div>
+								<div class="col-md-3 m-auto"><p class="fs-30 mb-0 txt-white">{$Think.lang.MemberIndex4}</p></div>
+								<div class="col-md-1 m-auto"><div class="separateline"></div></div>
+								<div class="col-md-5 m-auto text-left"><p class="fs-20 mb-0 txt-white">
+									{$Think.lang.MemberIndex5}<br>
+									{$Think.lang.MemberIndex6}<br>
+									{$Think.lang.MemberIndex7}
+								</p></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<section class="pt-30 pb-30 hidden-sm-down" style="background-color:#fff ;">
+				<div class="container">
+					<div class="row">
+						<div style="margin:0 auto;" class="mb-20 fs-20 fw-500">合作伙伴</div>
+						<div>
+							<img style="max-width:100%;" class="lazyload" data-original="__CSS__/images/partner.jpg" >
+						</div>
+					</div>
+				</div>
+			</section>
+			<section class="aboutMe-bg hidden-sm-down">
+				<div class="container">
+
+					<div class="row">
+						<div class="col-md-3" style="margin-left: auto;">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large mt-10">
+								<a class="box-icon-title" style="text-align: left !important;">
+									<img class="lazyload" data-original="__CSS__/images/{$langStr}/index_logo_w.png">
+									<h2 class="txt-white mt-5 mb-10"> {$Think.lang.MemberIndex8}</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-left">
+									<li> {$Think.lang.MemberIndex9}:&nbsp;&nbsp;service@x591.net</li>
+									<li> {$Think.lang.MemberIndex10}:&nbsp;&nbsp;+85363666168</li>
+									<li> {$Think.lang.MemberIndex11}&nbsp;ID:&nbsp;&nbsp;</li>
+									<li> {$Think.lang.MemberIndex12}:&nbsp;&nbsp;</li>
+									<li> {$Think.lang.MemberIndex13}:&nbsp;&nbsp;</li>
+									<li>LINE&nbsp;ID:&nbsp;&nbsp;@dde3654w</li>
+									<li><a class="txt-white" href="__APP__/AgentJoin/index"> {$Think.lang.AgentJoin}</a></li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="col-md-2" style="margin-left: auto;">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large">
+								<a class="box-icon-title" style="text-align: left !important;">
+									<h2 class="txt-white">{$Think.lang.MemberIndex14}</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-left">
+									<li><a class="txt-white">{$Think.lang.MemberIndex15}</a></li>
+									<li><a class="txt-white" href="__APP__/PointRecharge/index">{$Think.lang.MemberIndex16}</a></li>
+									<li><a class="txt-white">{$Think.lang.MemberIndex17}</a></li>
+									<li><a class="txt-white" href="__APP__/MemberIndex/technicalSupport">{$Think.lang.MemberIndex18}</a></li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="col-md-2" style="margin-left: auto;">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large">
+								<a class="box-icon-title" style="text-align: left !important;">
+									<h2 class="txt-white">{$Think.lang.MemberIndex19}</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-left">
+									<li><a class="txt-white" href="__APP__/MemberIndex/aboutUs">{$Think.lang.MemberIndex20}</a></li>
+									<li><a class="txt-white" >{$Think.lang.MemberIndex21}</a></li>
+									<li><a class="txt-white" href="__APP__/MemberIndex/responsibleBetting">{$Think.lang.MemberIndex22}</a></li>
+									<li><a class="txt-white" href="__APP__/MemberIndex/privacyPolicy">{$Think.lang.MemberIndex23}</a></li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="col-md-2" style="margin-left: auto;">
+							<div class="box-icon box-icon-center box-icon-transparent box-icon-large text-center">
+								<a class="box-icon-title" style="text-align: left !important;">
+									<h2 class="txt-white">@{$Think.lang.MemberIndex24}</h2>
+								</a>
+								<ul class="list-unstyled mb-0 txt-white text-left">
+									<li><i class="fa fa-weibo"></i><a class="txt-white" target="_blank" href="http://weibo.com/xn599">{$Think.lang.MemberIndex25}</a></li>
+									<li><i class="fa fa-facebook-square"></i><a class="txt-white" target="_blank" href="https://www.facebook.com/xn5999">{$Think.lang.MemberIndex26}</a></li>
+									<li><i class="fa fa-youtube-square"></i><a class="txt-white" target="_blank" href="https://www.youtube.com/channel/UCI-rpZhX2wtLDKaN4bbLVeg">Youtube</a></li>
+									<li><i class="fa fa-comment"></i><a class="txt-white">LINE</a></li>
+								</ul>
+
+							</div>
+							<img style="width: 57%;" class="lazyload" data-original="__CSS__/images/file-read-38.jpg">
+						</div>
+
+					</div>
+
+				</div>
+			</section>
+			<!-- rwd首頁 -->
+			<section id="md-login-bg" class="pt-10 pb-0 d-sm-none">
+				<if condition='$isLogin eq "false"'>
+					<!-- 登入 -->
+					<div id="login-container" class="container">
+						<div class="row">
+							<!-- LOGIN -->
+							<div class="col-md-4">
+								<ul class="nav nav-tabs nav-justified">
+									<li class="nav-item"><a class="nav-link bookmark_type active" href="#loginRwd" data-toggle="tab">{$Think.lang.MemberIndex27}</a></li>
+									<li class="nav-item"><a class="nav-link bookmark_type" href="#profileRwd" data-toggle="tab">{$Think.lang.MemberIndex28}</a></li>
+
+								</ul>
+
+								<div class="tab-content pt-20 pb-0">
+									<div class="tab-pane active" id="loginRwd">
+										<div class="row">
+											<div class="col-11 m-auto">
+												<!-- login form -->
+												<form class="mb-0" id="loginFormRwd" name="loginFormRwd" method="post" action='__APP__/MemberIndex/formLogin' onsubmit="return loginFunctionRwd()">
+													<div class="clearfix">
+														<!-- Email -->
+														<div class="form-group">
+															<div class="fancy-form">
+																<i class="fa fa-user txt-white"></i>
+																<input type="text" name='account' id="loginFormAccountRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex29}">
+															</div>
+														</div>
+
+														<!-- Password -->
+														<div class="form-group">
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="password" name='password' id="loginFormPasswordRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex30}">
+															</div>
+														</div>
+
+													</div>
+
+													<div class="row">
+														<div class="col-12 d-flex mb-20">
+															<button type="button" onclick="registBtn()" class="btn btn-danger btn-shadow-1 btn-login-md btn-left">{$Think.lang.MemberIndex31}</button>
+															<button id="loginBtnRwd" type="submit" class="btn btn-danger btn-shadow-1 btn-login-md btn-right">{$Think.lang.MemberIndex32}</button>
+														</div>
+													</div>
+
+												</form>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-11 m-auto modal-footer-m mb-15">
+												<label class="checkbox ">
+													<input type="checkbox" id="checkbox1_rwd" value="1" checked="checked">
+													<i></i>
+												</label>
+												<span class="pr-10" onclick="openMemberConditionModal('MemberConditionModal')" >{$Think.lang.MemberIndex33}</span>
+
+												<span>|</span>
+												<a class="txt-white" href="__APP__/OnlineService/index">{$Think.lang.MemberIndex34}</a>
+												<span>|</span>
+												<a class="txt-white" href="__APP__/ForgetPage/index.html">{$Think.lang.MemberIndex35}</a>
+											</div>
+										</div>
+									</div>
+									<div class="tab-pane fade" id="profileRwd">
+										<div class="row">
+											<div class="col-8 col-sm-8 mb-0 m-auto text-center pb-30">
+												<a href="__APP__/MemberIndex/downloadIndex">
+													<img src="__CSS__/images/{$langStr}/promotions/btn.png" style="width: 100%; height: auto;" >
+												</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- 註冊 -->
+					<div id="regist-container" class="container" style="display:none;">
+						<div class="row">
+							<!-- LOGIN -->
+							<div class="col-md-4">
+								<ul class="nav nav-tabs nav-justified">
+									<li class="nav-item"><a class="nav-link bookmark_type active" href="#registRwd" data-toggle="tab">{$Think.lang.MemberIndex36}</a></li>
+								</ul>
+
+								<div class="tab-content pt-10 pb-0">
+									<div class="tab-pane active" id="registRwd">
+										<div class="row">
+											<div class="col-11 m-auto">
+												<!-- login form -->
+												<form class="mb-0">
+													<div class="clearfix">
+														<!-- Phone -->
+														<div class="form-group">
+															<label class="txt-white" id="addPhoneLabelRwd" style="display:none;">{$Think.lang.MemberIndex37}</label>
+															<div class="fancy-form">
+																<i id="phoneIconRwd" class="fa fa-mobile txt-white regist-icon"></i>
+																<input type="text" id="addPhoneRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex38}">
+																<span id="checkPhoneRwd" class="invalid-feedback">{$Think.lang.MemberIndex39}</span>
+																<span class="valid-feedback">{$Think.lang.MemberIndex40}</span>
+															</div>
+														</div>
+
+
+														<!-- 帳號 -->
+														<div id="addAccountDivRwd" class="form-group" style="display:none;">
+															<label class="txt-white" id="addAccountLabelRwd">{$Think.lang.Account}</label>
+															<div class="fancy-form">
+																<i class="fa fa-mobile txt-white regist-icon"></i>
+																<input type="text" id="addAccountRwd" name="account" class="form-control login-input" >
+															</div>
+														</div>
+
+
+														<!-- Password -->
+														<div id="addPasswordDivRwd" class="form-group">
+															<label class="txt-white" id="addPasswordLabelRwd"></label>
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="password" id="addPasswordRwd" name="password" class="form-control login-input" placeholder="{$Think.lang.MemberIndex30}">
+															</div>
+														</div>
+
+														<!-- Password -->
+														<div id="addCheckPasswordDivRwd" class="form-group">
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="password" id="addCheckPasswordRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex41}">
+															</div>
+														</div>
+
+														<!-- 驗證碼 -->
+														<div id="addVerificationCodeDivRwd" class="form-group" style="display:none;">
+															<div class="fancy-form">
+																<i class="fa fa-lock txt-white"></i>
+																<input type="text" id="addVerificationCodeRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex42}">
+															</div>
+														</div>
+													</div>
+												</form>
+											</div>
+										</div>
+										<div class="col-md-12 mb-10">
+											<button id="registBtnRwd" type="button" onclick="registRwd();"class="btn btn-primary login-btn">{$Think.lang.MemberIndex31}</button>
+											<button id="sendOutBtnRwd" type="button" onclick="sendOutRwd();"class="btn btn-primary login-btn" style="display:none;">{$Think.lang.MemberIndex43}</button>
+											<button id="finishBtnRwd" type="button" onclick="self.location.href='__APP__/RebateEvent/experiencePage'" class="btn btn-primary login-btn" style="display:none;">{$Think.lang.MemberIndex44}</button>
+										</div>
+										<div class="row">
+											<div class="col-11 m-auto modal-footer-m mb-15">
+												<label class="checkbox">
+													<input type="checkbox" id="checkbox2_rwd" value="1" checked="checked" >
+													<i></i>
+												</label>
+												<span class="pr-10" onclick="openMemberConditionModal('MemberConditionModal')">{$Think.lang.MemberIndex33}</span>
+
+												<span>|</span>
+												<a class="txt-white" href="__APP__/OnlineService/index">{$Think.lang.ContactService}</a>
+												<span>|</span>
+												<a class="txt-white" href="__APP__/ForgetPage/index.html">{$Think.lang.MemberIndex45}</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				<else/>
+					<!-- <div class="row game-row"><h5 class="txt-white mb-5">最近遊戲</h5></div> -->
+
+					 <if condition='$showGameArrayCount neq "0"'>
+						<div class="row game-row mb-2">
+							<VOLIST name="showGameArray" id="vo">
+								<if condition='$vo.href neq "0"'>
+									<div class="col-3 col-sm-3 game-div mb-0 rwd-icon-hover">
+										<if condition='$vo.enabled eq "1"'>
+											<if condition='$vo.popUp eq "yes"'>
+												<if condition='$isApp eq "yes"'>
+													<a onClick="goGameEnter('__APP__/{$vo.href}')" class="loading">
+												<else/>
+													<a onClick="goGameEnter('__APP__/{$vo.href}')">
+												</if>
+											<else/>
+												<a href="__APP__/{$vo.href}" class="loading">
+											</if>
+												<i class="icomoon icon-{$vo.gameCode} txt-feda29cf"></i>
+											</a>
+											<p class="txt-feda29cf">{$vo.cnName}</p>
+										<else/>
+											<a  href="#" onClick="gameMaintain('{$vo.gameDefendMessage}')">
+												<i class="icomoon icon-{$vo.gameCode} txt-feda29cf"></i>
+											</a>
+											<p class="txt-feda29cf">{$vo.cnName}</p>
+										</if>
+									</div>
+								<else/>
+									<div style='visibility: hidden;' class="col-3 col-sm-3 game-div mb-0 rwd-icon-hover">
+										<i class="fa fa-smile-o text-white"></i>
+									</div>
+								</if>
+							</Volist>
+						</div>
+					</if>
+
+					<div class="row game-row">
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/realityHall">
+									<i class="icomoon icon-clive game-div-small-icon"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex48}</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/lotteryHall">
+									<i class="icomoon icon-clottery game-div-small-icon"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex49}</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/sportsHall">
+									<i class="icomoon icon-cphysical-education game-div-small-icon"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex50}</label>
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="row game-row mt-5">
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberIndex/electronicHall">
+									<i class="icomoon icon-celectronic-games game-div-small-icon"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex51}</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberDetail/index">
+									<i class="fa fa-bar-chart game-div-small-icon game-div-small-fa"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex56}</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-4 col-sm-4 game-div game-div-small mb-0 rwd-icon-hover">
+							<div class="loading">
+								<a href="__APP__/MemberCenter/lottoRecords">
+									<i class="fa fa-user game-div-small-icon game-div-small-fa"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex52}</label>
+								</a>
+							</div>
+						</div>
+
+					</div>
+					<div class="row game-row mt-5">
+						<div class="col-6 col-sm-6 game-div game-div-big mb-0 rwd-icon-hover">
+							<div class="icon-bg-style">
+								<a class="Login-movie" href="#">
+									<i class="icomoon icon-smallcow icon-app-phone-2-style"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex46}</label>
+								</a>
+							</div>
+						</div>
+						<div class="col-6 col-sm-6 game-div game-div-big mb-0 rwd-icon-hover">
+							<div class="icon-bg-style">
+								<a href="__APP__/MemberIndex/downloadIndex">
+									<i class="icomoon icon-app-phone-2 icon-app-phone-2-style"></i>
+									<label class="icon_label">{$Think.lang.MemberIndex47}</label>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</if>
+			</section>
+	    <!-- 系統公告 -->
+		<a id="systemMsgBtn" href="#" onclick="openmodal('systemMsgModal')" class="show_msg-left hidden-sm-down">
+			<img style="z-index: 10; width:95px;" src="__CSS__/images/{$langStr}/News-girl.png">
+		</a>
+		<div id="systemMsgModal" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="systemMsgModal" style="display: none; padding-right: 17px;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+
+					<!-- Modal Header -->
+					<div class="modal-header modal-bg pr-30">
+						<button type="button" class="close-style" data-dismiss="modal" ><span aria-hidden="true">×</span></button>
+
+						<h4 class="modal-title tex-black" id="">{$Think.lang.MemberIndex54}</h4>
+					</div>
+
+					<!-- Modal Body -->
+					<div class="modal-body modal-body-bg">
+						<VOLIST name="announcementArray" id="announcement">
+				            <h4 class="">
+				                {$announcement.announcement_title}
+				            </h4>
+				            <p>
+				                {$announcement.announcement_text}
+				            </p>
+			            </VOLIST>
+					</div>
+					<!-- Modal Footer -->
+					<div class="modal-footer modal-bg">
+						<!-- <div class="form-check">
+			                 <input type="checkbox" name="noshow" id="noshow" class="form-check-input">
+			                 <label class="form-check-label text-white">不再顯示</label>
+			             </div> -->
+						<button type="button" class="btn btn-warning btn-warning-style" onclick="noshowagain()">{$Think.lang.MemberIndex55}</button>
+		             	<button type="button" style="display:none;" class="btn btn-sm btn-dark closeBtn" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+<include file="Common:memberIndex_footer"/>

@@ -1,0 +1,115 @@
+<?php
+/*
+ * ApiModel
+ */
+class ApiModel
+{
+    /**
+     * 必要參數 
+     * apiUrl 請求網址
+     * apiMethod 請求方式
+     * apiCurlDatas 請求標頭
+     * apiArrData 請求資料
+     * err 錯誤訊息(curl_error)
+     */
+    protected function sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,&$err="") {
+        
+        $apiMethod = strtoupper($apiMethod);
+        switch($apiMethod){
+            case 'GET':
+                $queryStr = http_build_query($apiArrData);
+                $apiUrl = "{$apiUrl}?{$queryStr}";
+                break;
+            case 'POST':
+                $apiCurlDatas[CURLOPT_POSTFIELDS] = $apiArrData;
+                break;
+            case 'PUT':
+                $apiCurlDatas[CURLOPT_POSTFIELDS] = $apiArrData;
+                break;
+            default:
+                return false;
+                break;
+        }
+        $ch = curl_init($apiUrl);
+        foreach ($apiCurlDatas as $key => $value ) {
+            curl_setopt($ch, $key, $value);
+        }
+        
+        $result = curl_exec($ch);//取得回傳
+        $errno = curl_errno($ch);
+        $info  = curl_getinfo($ch);
+        
+        $isFail = 0;
+        if($errno){
+            $isFail = 1;
+            $err = curl_error($ch);
+        }
+        $httpCode = (string)$info['http_code'];
+        if($httpCode[0] != 2){
+            $isFail = 1;
+            $err = $info['http_code'].'錯誤';
+        }
+        curl_close($ch);
+        
+        //紀錄API LOG 開始
+        $CommonCurlLog = D("CommonCurlLog");
+        if(method_exists($CommonCurlLog,'addCurlLogData')){
+            $needNoteArray = array(//需要紀錄的陣列
+                'CREATEMEMBER',//創帳號
+                'LOGINMEMBER',//登入
+                'GETMEMBERBALANCE',//取得餘額
+                'WITHDRAWMEMBERBALANCE',//下點
+                'RECHARGEMEMBERBALANCE',//上點
+            );
+            if(in_array($_SESSION['Api']['functionName'], $needNoteArray)){
+                $data = array(
+                    'log_gameCode' => $_SESSION['Api']['gameCode'],
+                    'log_function' => $_SESSION['Api']['functionName'],
+                    'log_isFail' => $isFail,
+                    'log_createTime' => time(),
+                    'log_method' => $apiMethod,
+                    'log_curlData' => $this->array_to_json($apiCurlDatas),
+                    'log_data' => $this->array_to_json($apiArrData),
+                    'log_getinfo' => $this->array_to_json($info),
+                    'log_errno' => $errno,
+                    'log_result' => $result,
+                    'log_error' => $err,
+                    'log_httpCode' => $info['http_code'],
+                    'log_totalTime' => $info['total_time'],
+                    'log_ip' => get_ip_inet_pton(getIp()),
+                );
+                
+                if(isset($_SESSION['Admin']['id'])){
+                    $data['admin_id'] = $_SESSION['Admin']['id'];
+                    $data['member_id'] = $_SESSION['Api']['memberId'];
+                } else {
+                    $data['admin_id'] = 0;//0代表系統
+                    $data['member_id'] = $_SESSION['Member']['id'];
+                }
+                $CommonCurlLog->addCurlLogData($data);
+            }
+        }
+        //紀錄API LOG 結束
+        
+        if($isFail){
+            return false;
+        } else {
+            return $result;
+        }
+    }
+    /**
+     * 陣列轉json格式
+     * @param  $array
+     * @return string
+     */
+    private function array_to_json($array){
+        foreach($array as $key => $value){
+            if(is_string($key) || is_string($value)) {
+                $new_array[urlencode($key)] = urlencode($value);
+            } else {
+                $new_array[$key] = $value;
+            }
+        }
+        return urldecode(json_encode($new_array));
+    }
+}

@@ -1,0 +1,99 @@
+<include file="Common:header"/>
+<title>帳變查詢</title>
+<body style="background-image: url(__CSS__/images/1.jpg);">
+<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+		  <div class="content admin-div">
+		  	<input type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+			<input type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+			<input type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+			<input type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+			<input type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+			<input type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+		  	<form method="post" id="formInquire" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+              	<div class="form-group form-group-m">
+					<input id="startTime" name="startTime" type="text" value="{$startTime}"/> 至
+					<input id="endTime"   name="endTime"   type="text" value="{$endTime}"/>
+                    <label class=" col-form-label text-white">會員帳號</label>
+                    <div class="div-style">
+                        <input class="form-control form-control-AgentPageClassManage" type="text" name="memberAccount" value="{$memberAccount}">
+                    </div>
+                    
+                    <button type="submit" name="addbtn" class="btn btn-info btn-style ml10">會員搜尋</button>
+              	 </div>
+              </form>
+              
+              <IF condition='$walletLogBool eq "true"'>
+              		<div class="row">
+		         			<table class="table table-striped">
+		                        <thead>
+		                        	<tr>
+			                        	<th>序</th>
+			                        	<th>帳號</th>
+			                        	<th>帳變操作</th>
+			                        	<th>帳變類型</th>
+			                        	<th>帳變前</th>
+			                        	<th>帳變金額</th>
+			                        	<th>帳變後金額</th>
+			                        	<th>建立時間</th>
+										<th>操作內容</th>
+										<th>IP</th>
+									</tr>
+		                    </thead>
+	                        <tbody>
+	                        <VOLIST name="showArray" id="vo" empty="$empty">
+	                        	<tr>
+		                        	<td>{$key+1}</td>
+									<td>{$vo.account}</td>
+									<td>{$vo.operating}</td>
+									<td>{$vo.type}</td>
+									<td>{$vo.before}</td>
+									<td>{$vo.money}</td>
+									<td>{$vo.after}</td>
+									<td>{$vo.createTime}</td>
+									<td>{$vo.main}</td>
+									<td>{$vo.ip}</td>
+								</tr>
+	                        </VOLIST>
+	                        </tbody>
+	                    </table>
+	         		</div>
+              </IF>
+		  </div>
+<include file="Common:footer"/>
+<script type="text/javascript">
+/*
+$(document).ready(function(){
+	
+});*/
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+</script>
+<!-- <form method="post" action='__APP__/MemberWalletlog/index'>
+		會員帳號:<input type="text" name="memberAccount" value="{$memberAccount}">
+		<button type="submit" class="btn btn-primary">會員搜尋</button>
+	</form> 
+	<IF condition='$walletLogBool eq "true"'>
+		<table>
+			<tr><th>序</th><th>帳號</th><th>帳變操作</th><th>帳變類型</th><th>帳變前</th><th>帳變金額</th><th>帳變後金額</th><th>建立時間</th>
+				<th>操作內容</th><th>IP</th></tr>
+			<VOLIST name="showArray" id="vo">
+				<tr>
+					<td>{$key+1}</td>
+					<td>{$vo.account}</td>
+					<td>{$vo.operating}</td>
+					<td>{$vo.type}</td>
+					<td>{$vo.before}</td>
+					<td>{$vo.money}</td>
+					<td>{$vo.after}</td>
+					<td>{$vo.createTime}</td>
+					<td>{$vo.main}</td>
+					<td>{$vo.ip}</td>
+					<td></td>
+				</tr>
+			</VOLIST>
+		</table>
+	</IF>-->

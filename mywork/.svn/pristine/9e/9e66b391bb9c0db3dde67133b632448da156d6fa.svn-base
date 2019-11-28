@@ -1,0 +1,392 @@
+<?php
+class GameRTGAction extends MemberAction {
+    const API_NAME = 'RTG電子';
+    protected $power = false;
+    protected $gameName = "Rtg";
+    /*
+     * 如果有初始化 可以設定在初始化中
+     */
+    protected function _initialize() {
+        parent::_initialize();
+        $request = $this->getRequest();
+        //測試API
+        if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+            cookie('MIS','@@aaa123','expire=3600');
+        }
+        $MIS = cookie('MIS');
+        if($MIS === "@@aaa123"){
+            $this->power = true;
+            $function_links = '';
+            $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+            $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+            $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+            $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+            $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+            $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a>";
+            $this->assign('function_links', $function_links);
+            
+            $this->assign('api_name', self::API_NAME);
+            $this->assign('op_desc', '輸入參數按下送出');
+        }
+    }
+    //RTG 遊戲菜單
+    public function gameMenu(){
+        $GameRtgMenu = D("GameRtgMenu");
+        
+        //從 GameRTGMenuModel getGameRtgMenuData() 取得RTG菜單資訊
+        $return = $GameRtgMenu->getGameRtgMenuData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $arrGamesByDisplayCat = array(
+            '桌遊' => array(),
+            '特製' => array(),
+            '撲克' => array(),
+            '三輪斯洛' => array(),
+            '五輪斯洛' => array(),
+            '六輪斯洛' => array(),
+            '刮刮卡' => array(),
+        );
+        
+        $arrGamesCountData = array(
+            '桌遊' => '',
+            '特製' => '',
+            '撲克' => '',
+            '三輪斯洛' => '',
+            '五輪斯洛' => '',
+            '六輪斯洛' => '',
+            '刮刮卡' => '',
+        );
+        
+        $arrDisplayGames = array();
+        $gameNum = 0;
+        foreach($return as $value){
+            $game_type = $value['game_type'];
+            //echo $game_type.'<BR>';
+            foreach ($arrGamesByDisplayCat as $cat => &$arrDisplayGames) {
+                if (strpos($game_type, $cat) !== false) {
+                    $arrDisplayGames[] = $value;
+                }
+            }
+        }
+        //var_dump($arrGamesByDisplayCat);exit();
+        foreach($arrGamesByDisplayCat as $key => $value){
+            $arrGamesCountData[$key] = count($value);
+        }
+        
+        
+        foreach ($arrGamesByDisplayCat as $key1 => $value1){
+            foreach ($value1 as $key2 => $value2){
+                $game_id = $value2['game_id'];
+                $mach_id = $value2['mach_id'];
+                $game_type = $value2['game_type'];
+                $title_zhtw = trim($value2['title_zhtw']);
+                $title_enus = trim($value2['title_enus']);
+                $picNameStr = $title_enus;  //圖片名稱. 為英文遊戲名稱轉為每字開頭大寫, 去除空白, 並去除單引號(')及特殊符號, 最後加上附檔名.
+                $picNameStr = ucwords($picNameStr);
+                $picNameStr = str_replace(' ', '', $picNameStr);
+                $picNameStr = str_replace("'", '', $picNameStr);
+                $picNameStr = str_replace("!", '', $picNameStr);
+                $picNameStr = str_replace(",", '', $picNameStr);
+                $picNameStr = str_replace("@", '', $picNameStr);
+                $picNameStr = str_replace("[", '', $picNameStr);
+                $picNameStr = str_replace("]", '', $picNameStr);
+                $picNameStr = str_replace("(", '', $picNameStr);
+                $picNameStr = str_replace(")", '', $picNameStr);
+                $picNameStr = str_replace("&", 'And', $picNameStr);
+                $picNameStr = str_replace("-", '', $picNameStr);
+                $picNameStr = str_replace("?", '', $picNameStr);
+                $picNameStr = str_replace("™", '', $picNameStr);
+                
+                $arrGamesByDisplayCat[$key1][$key2]['image_src'] = "{$picNameStr}";
+                $arrGamesByDisplayCat[$key1][$key2]['game_name_ch'] = $title_zhtw;
+            }
+        }
+        //var_dump($arrGamesByDisplayCat);
+        $this->assign('GameRtgMenu', $arrGamesByDisplayCat);
+        $this->assign("GameRtgMenuCount", $arrGamesCountData );
+        $this->display();
+    }
+    //TODO:RTG遊戲頁面
+    public function gameEnter(){
+        $this->display();
+    }
+    public function getGameLink(){
+        $request = $this->getRequest();
+        if(!isset($request['machId']) || (!empty($request['machId']) && $request['machId'] !== 0)){
+            exit();
+        }
+        if(!isset($request['gameId']) || (!empty($request['gameId']) && $request['gameId'] !== 0)){
+            exit();
+        }
+        
+        //取得 遊戲連結 開始
+        $data = array(
+            "game_name" => $this->gameName,
+            "mach_id" => $request["machId"],
+            "game_id" => $request["gameId"]
+        );
+        $return = $this->loginMember($data,$err);
+        if($return === false){
+            echo $err;
+            //$this->error($err);
+            exit();
+        }
+        $gameLink = $return;
+        //取得 遊戲連結 結束
+        echo $gameLink;
+    }
+
+    //1. 創新帳號
+    public function index(){
+        if(!$this->power){exit();}
+    }
+    //2. 取得遊戲連結
+    public function game_link(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        
+        $request = $this->getRequest();
+        $rtgGames = D('RtgGames');
+        
+        $requireMobile = false;  //只要支援手機板的
+        $arrRtgGames = $rtgGames->getGames($requireMobile);
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 uniq_id 傳入 並且不為空
+            if (!isset($request['uniq_id']) || empty($request['uniq_id'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//uniq_id 為空，請重新輸入
+            }
+            $uniq_id = $request['uniq_id'];
+            
+            $rtg = D('GameRtg');
+            
+            $chosenGame = $rtgGames->getGameByUniqId($uniq_id);
+            
+            if ($chosenGame !== false) {
+                $mach_id = $chosenGame[4];
+                $game_id = $chosenGame[5];
+            } else {
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')).': '.$uniq_id);//找不到 uniq_id 的相關遊戲參數
+            }
+            
+            $err = null;
+            $res = $rtg->loginMember(array(
+                'user_name' => $user_name,
+                'mach_id' => $mach_id,
+                'game_id' => $game_id,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $rtg->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        $this->assign('array_rtg_games', $arrRtgGames);
+        
+        $this->assign('method_name', 'loginMember');
+        $this->assign('method_desc', '用現存遊戲帳號+遊戲代號進入遊戲');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    //3. 取得會員餘額
+    public function balance(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $password = 'abcd1234';
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+            }
+            $user_name = $request['user_name'];
+            
+            $rtg = D('GameRtg');
+            
+            $err = null;
+            $res = $rtg->getMemberBalance(array(
+                'user_name' => $user_name,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $rtg->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('user_name', $user_name);
+        
+        $this->assign('method_name', 'getMemberBalance');
+        $this->assign('method_desc', '取得會員的當前餘額');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    //4. 上點
+    public function deposit(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $amount = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 amount 傳入 並且不為空
+            if (!isset($request['amount']) || empty($request['amount'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+            }
+            $amount = $request['amount'];
+            
+            $err = null;
+            $rtg = D('GameRtg');
+            
+            $res = $rtg->rechargeMemberBalance(array(
+                'user_name' => $user_name,
+                'amount' => $amount,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $rtg->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('method_name', 'rechargeMemberBalance');
+        $this->assign('method_desc', '增加會員的點數餘額');
+        $this->assign('user_name', $user_name);
+        $this->assign('amount', $amount);
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    //5. 下點
+    public function withdraw(){
+        if(!$this->power){exit();}
+        $user_name = 'test';
+        $amount = 1;
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 user_name 傳入 並且不為空
+            if (!isset($request['user_name']) || empty($request['user_name'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+            }
+            $user_name = $request['user_name'];
+            
+            //檢查是否有 amount 傳入 並且不為空
+            if (!isset($request['amount']) || empty($request['amount'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+            }
+            $amount = $request['amount'];
+            
+            $err = null;
+            $rtg = D('GameRtg');
+            
+            $res = $rtg->withdrawMemberBalance(array(
+                'user_name' => $user_name,
+                'amount' => $amount,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $rtg->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('method_name', 'withdrawMemberBalance');
+        $this->assign('method_desc', '減少會員的點數餘額');
+        $this->assign('user_name', $user_name);
+        $this->assign('amount', $amount);
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+    //6. 抓報表明細
+    public function report(){
+        if(!$this->power){exit();}
+        $begin_date = date('Y-m-d', time()-60*60*24*1);
+        $end_date = date('Y-m-d', time());
+        
+        $request = $this->getRequest();
+        
+        if (isset($request['go']) && (($request['go'])==1)){
+            
+            //檢查是否有 begin_date 傳入 並且不為空
+            if (!isset($request['begin_date']) || empty($request['begin_date'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//開始時間為空，請重新輸入帳號
+            }
+            $begin_date = $request['begin_date'];
+            
+            //檢查是否有 end_date 傳入 並且不為空
+            if (!isset($request['end_date']) || empty($request['end_date'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//結束時間為空，請重新輸入帳號
+            }
+            $end_date = $request['end_date'];
+            
+            //處理 user_name
+            if (isset($request['user_name'])&&strlen($request['user_name'])) {
+                $user_name = $request['user_name'];
+            }
+            
+            $rtg = D('GameRtg');
+            
+            $err = null;
+            $res = $rtg->getGameRecord(array(
+                'begin_date' => $begin_date,
+                'end_date' => $end_date,
+            ), $err);
+            
+            if ($res === false) {
+                $op_result = $err;
+                $op_result2 = $rtg->curlError;
+                $this->assign('op_result2', $op_result2);
+            } else {
+                $op_result = $res;
+            }
+        }
+        
+        $this->assign('begin_date', $begin_date);
+        $this->assign('end_date', $end_date);
+        
+        $this->assign('method_name', 'getGameRecord');
+        $this->assign('method_desc', '抓取注單明細。');
+        $this->assign('op_result', $op_result);
+        $this->assign('form_action', __FUNCTION__);
+        $this->display();
+    }
+}

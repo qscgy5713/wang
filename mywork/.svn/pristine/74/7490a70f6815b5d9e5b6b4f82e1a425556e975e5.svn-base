@@ -1,0 +1,124 @@
+<?php
+/**
+ * 金流方式
+ */
+class CashflowInfoAction extends AdminAction {
+	//TODO: 首頁
+	public function index(){
+		$CashflowInfo = D('CashflowInfo');
+		//取得 金流方式 資料
+		$return = $CashflowInfo->getFormCashflowInfoData();
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' , __FUNCTION__ . '_01')));
+		}
+		// var_dump($return);die;
+		$showArray = array();
+		//使用欄位轉換 資料庫欄位=>輸出名稱
+		$FieldChange = array(
+			'cashflow_id' => 'cashflowId',
+	      	'cashflow_type' => 'cashflowType',
+	      	'cashflow_code' => 'cashflowCode',
+	     	'cashflow_name' => 'cashflowName',
+	      	'cashflow_showName' => 'cashflowShowName',
+	      	'cashflow_enabled' => 'cashflowEnabled',
+	      	'cashflow_limitNumber' => 'limitNumber',
+		);
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FieldChange as $key1 => $value1) {
+			    if($value['cashflow_type'] != 1){
+			        continue;
+			    }
+				switch ($key1){
+					case 'cashflow_enabled':
+						if($value[$key1] == 1){
+							$showStr = '啟用中';
+							break;
+						}
+						$showStr = '停用中';
+						break;
+					default :
+					$showStr = $value[$key1];
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		// var_dump($showArray);die;
+		$this->assign('showArray', $showArray);
+		$this->display();
+	}
+	//TODO: 新增金流方式資料
+	public function addFormCashflowInfoData(){
+		$request = $this->getRequest();
+		if(empty($request['addCode']) && $request['addCode'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))); //代號為空，請重新輸入
+		}
+		if(empty($request['addName']) && $request['addName'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))); //金流名稱為空，請重新輸入
+		}
+		if(empty($request['addShowName']) && $request['addShowName'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'))); //顯示名稱為空，請重新輸入
+		}
+		$CashflowInfo = D('CashflowInfo');
+		$data = array(
+			'cashflow_type' => 1,
+			'cashflow_code' => $request['addCode'],
+			'cashflow_name' => $request['addName'],
+			'cashflow_showName' => $request['addShowName'],
+			'cashflow_handlingFee' => 35,
+			'cashflow_limitNumber' => $request['addLimitNumber'],
+			'cashflow_enabled' => '0',
+		);
+		$return = $CashflowInfo->addFormCashflowInfoDAta($data);
+		if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//資料庫錯誤。
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+	//TODO: 修改金流方式資料
+	public function setFormCashflowInfoData(){
+		$request = $this->getRequest();
+		if(empty($request['setId']) && $request['setId'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+		}
+		if(empty($request['setShowName']) && $request['setShowName'] !== '0'){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))); //顯示名稱為空，請重新輸入
+		}
+		$CashflowInfo = D('CashflowInfo');
+		$data = array(
+			'cashflow_id' => $request['setId'],
+			'cashflow_showName' => $request['setShowName'],
+			'cashflow_limitNumber' => $request['setLimitNumber'],
+		);
+		$return = $CashflowInfo->setFormCashflowInfoDataById($data);
+		if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//資料庫錯誤。
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+	}
+	//TODO: 金流開關
+	public function ajaxSwitch(){
+		$request = $this->getRequest();
+		$CashflowInfo = D('CashflowInfo');
+		switch ($request['mode_id']) {
+			case 'stop':
+				$data = array(
+					'cashflow_id' => $request['stopId'],
+					'cashflow_enabled' => 0,
+				);
+				break;
+			case 'start':
+				$data = array(
+					'cashflow_id' => $request['startId'],
+					'cashflow_enabled' => 1,
+				);
+				break;
+			default:
+				$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//資料庫錯誤。
+				break;
+		}
+		$return = $CashflowInfo->setFormCashflowInfoDataById($data);
+	}
+}

@@ -1,0 +1,82 @@
+<?php
+/*
+ * 網域
+ */
+class CommonAgentDomainModel extends CommonModel {
+    /*
+     * 取得網域資料
+     * 新增 推廣網址 使用
+     */
+    public function getDomainDateUse(){
+        $sql = "SELECT * FROM `common_agent_domain`
+                WHERE `domain_enabled` = '1';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得網域資料
+     * 網域管理 使用
+     */
+    public function getDomainDate(){
+        $sql = "SELECT * FROM `common_agent_domain`;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 新增網域
+     */
+    public function addDomainData($data){
+        $sql = "INSERT INTO `common_agent_domain` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改 網域 資料
+     * 使用網域ID
+     */
+    public function setDomainDataById($data){
+        if(empty($data['domain_id']) && $data['domain_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'domain_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_agent_domain` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `domain_id` = '{$data['domain_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 刪除網域 資料
+     * 使用網域ID
+     */
+    public function delDomainById($data){
+        if(empty($data['domain_id']) && $data['domain_id'] !== '0'){
+            return false;
+        }
+        $sql = "DELETE `common_agent_domain`
+                WHERE `domain_id` = '".$data['domain_id']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

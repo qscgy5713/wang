@@ -1,0 +1,436 @@
+<?php
+/**
+ * 會員資料
+ */
+class MemberProfileAction extends AdminAction
+{
+	public function index(){
+		$request = $this->getRequest();
+		if(!isset($request['memberAccount']) || empty($request['memberAccount'])){
+		    $this->assign("memberEmpty","<tr><td colspan='10' align='center'>無會員基本資料</td></tr>");
+		    $this->assign("withdrawEmpty","<tr><td colspan='8' align='center'>無託售紀錄</td></tr>");
+		    $this->assign("rechargeEmpty","<tr><td colspan='9' align='center'>無儲值紀錄</td></tr>");
+		    $this->assign("loginEmpty","<tr><td colspan='6' align='center'>無登入紀錄</td></tr>");
+		    $this->assign("eventEmpty","<tr><td colspan='10' align='center'>無活動紀錄</td></tr>");
+        	$this->assign("mailEmpty","<tr><td colspan='6' align='center'>無未回覆信件</td></tr>");
+            $this->display();
+            exit();
+        }
+
+		//讀取會員基本資料 開始
+        $CommonMember = D("CommonMember");
+
+        $data = array(
+            "member_account"=> $request['memberAccount'],
+        );
+        $return = $CommonMember->getMemberDataUseProcessWithdrawAccount($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $memberId = $return['member_id'];
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonMember->getMemberDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $memberArray = array();
+        $FieldChange = array(
+            "member_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "member_createTime"=>"createTime",
+            "member_ip"=>"ip",
+            "member_url"=>"url",
+            "member_lastLoginTime"=>"lastLoginTime",
+            "member_lastLoginIp"=>"lastLoginIp",
+            "wallet_money"=>"money",
+            "wallet_gift"=>"gift",
+            "wallet_totalRecharge"=>"totalRecharge",
+            "wallet_totalWithdraw"=>"totalWithdraw",
+            "bankdata_code"=>"bankCode",
+            "bankdata_account"=>"bankAccount",
+            "bankdata_name"=>"bankName",
+            "bankdata_branch"=>"bankBranch",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_id'://用會員ID 查詢最後儲值
+                        $memberArray[$key]["lastRechargeTime"] = $lastRechargeTime;
+                        $memberArray[$key]["lastWithdrawTime"] = $lastWithdrawTime;
+                        $memberArray[$key]["total"] = $return[0]["wallet_totalRecharge"] - $return[0]["wallet_totalWithdraw"];
+                        $showStr = $value[$key1];
+                        break;
+                    case 'member_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'member_lastLoginTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後登入時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $memberArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取會員基本資料 結束
+
+        //讀取儲值紀錄 開始
+        $CashflowRecharge = D("CashflowRecharge");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CashflowRecharge->getMemberRechargeDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $rechargeArray = array();
+        $lastRechargeTime = "";//最後儲值時間
+        $FieldChange = array(
+            "recharge_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "recharge_createTime"=>"createTime",
+            "recharge_ip"=>"ip",
+            "cashflow_name"=>"cashflowName",
+            "cashflow_showName"=>"cashflowShowName",
+            "recharge_paymentCode"=>"paymentCode",
+            "recharge_money"=>"money",
+        );
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'recharge_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        if(empty($lastRechargeTime)){
+                            $lastRechargeTime = $showStr;
+                        }
+                        break;
+                    case 'recharge_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $rechargeArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取儲值紀錄 結束
+
+        //讀取託售紀錄 開始
+        $CashflowWithdraw = D("CashflowWithdraw");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CashflowWithdraw->getMemberWithdrawDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $withdrawArray = array();
+        $lastWithdrawTime = "";//最後託售時間
+        $FieldChange = array(
+            "withdraw_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "withdraw_createTime"=>"createTime",
+            "withdraw_memberIp"=>"memberIp",
+            "withdraw_money"=>"money",
+            "admin_account"=>"adminAccount",
+            "withdraw_adminIp"=>"adminIp",
+        );
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        if(empty($lastWithdrawTime)){
+                            $lastWithdrawTime = $showStr;
+                        }
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    case 'withdraw_adminIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $withdrawArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取託售紀錄 結束
+
+
+        //讀取會員活動資料 開始
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonEvent->getMemberEventData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $eventArray = array();
+        $FieldChange = array(
+            "event_name"=> "eventName",
+            "info_id"=> "id",
+            "member_account"=>"memberAccount",
+            "event_money"=>"money",
+            "event_createTime"=>"createTime",
+            "event_modifyTime"=>"modifyTime",
+            "event_ip"=>"ip",
+            "event_status"=>"status",
+            "admin_account"=>"adminAccount"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'event_status':
+                        $showStr = $CommonEvent->getEventStatusStr($value[$key1]);
+                        break;
+                    case 'event_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'event_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'event_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    case 'admin_account':
+                        $showStr = $value[$key1];
+                        if(empty($value[$key1])){
+                            $showStr = "無操作帳號";
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $eventArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取會員活動資料 結束
+
+        //讀取會員基本資料 開始
+        $CommonMember = D("CommonMember");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonMember->getMemberDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $memberArray = array();
+        $FieldChange = array(
+            "member_id"=>"id",
+            "member_account"=>"account",
+            "agent_account"=>"agentAccount",
+            "member_createTime"=>"createTime",
+            "member_ip"=>"ip",
+            "member_url"=>"url",
+            "member_lastLoginTime"=>"lastLoginTime",
+            "member_lastLoginIp"=>"lastLoginIp",
+            "wallet_money"=>"money",
+            "wallet_gift"=>"gift",
+            "wallet_totalRecharge"=>"totalRecharge",
+            "wallet_totalWithdraw"=>"totalWithdraw",
+            "bankdata_code"=>"bankCode",
+            "bankdata_account"=>"bankAccount",
+            "bankdata_name"=>"bankName",
+            "bankdata_branch"=>"bankBranch",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'member_id'://用會員ID 查詢最後儲值
+                        $memberArray[$key]["lastRechargeTime"] = $lastRechargeTime;
+                        $memberArray[$key]["lastWithdrawTime"] = $lastWithdrawTime;
+                        $memberArray[$key]["total"] = $return[0]["wallet_totalRecharge"] - $return[0]["wallet_totalWithdraw"];
+                        $showStr = $value[$key1];
+                        break;
+                    case 'member_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'member_lastLoginTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後登入時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'withdraw_memberIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $memberArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取會員基本資料 結束
+
+        //讀取登入紀錄 開始
+        $CommonMemberLoginLog = D("CommonMemberLoginLog");
+        $data = array(
+            "member_id"=>$memberId
+        );
+        $return = $CommonMemberLoginLog->getMemberLoginDataUseProcessWithdraw($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $loginArray = array();
+        $FieldChange = array(
+            "member_id"=>"id",
+            "member_account"=>"account",
+            "loginLog_createTime"=>"createTime",
+            "loginLog_ip"=>"ip",
+            "loginLog_os"=>"os",
+            "loginLog_url"=>"url",
+        );
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'loginLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'loginLog_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $loginArray[$key][$value1] = $showStr;
+            }
+        }
+        //讀取登入紀錄 結束
+
+        //讀取信件紀錄 開始
+        $CommonMemberMail = D("CommonMemberMail");
+		$data = array(
+            "member_id"=>$memberId
+        );
+        //CommonMemberMail getCommonMemberMailData取得頁面類別資料
+        $return = $CommonMemberMail->getCommonMemberMailDataMemberId($data);
+        if($return === false){
+            $this->error($err);
+        }
+        $mailArray = array();
+		//使用欄位轉換 資料庫欄位
+		$FieldChange = array(
+			'mail_id' => 'id',
+			'member_id' => 'memberId',
+		    'member_account' => 'memberAccount',
+			'mail_createTime' => 'createTime',
+			'mail_status' => 'status',
+			'mail_title' => 'title',
+			'mail_main' => 'main',
+			'mail_ip' => 'ip',
+			'admin_id' => 'adminId',
+			'mail_modifyTime' => 'modifyTime',
+			'mail_reply' => 'reply',
+		);
+		foreach($return as $key => $value){
+			foreach ($FieldChange as $key1 => $value1) {
+				//欄位特別處理
+				switch ($key1) {
+					case 'mail_ip': //IP轉換
+						$showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+						break;
+
+					case 'mail_createTime'://頁面建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+
+                    case 'mail_modifyTime'://頁面建立時間 時間戳 轉換 日期
+                        $showStr = "無修改時間";
+                        if(!empty($value[$key1])){
+                            $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        }
+                        break;
+                    case 'admin_id': //無客服ID
+                    	$showStr = $value[$key1];
+                    	if($value[$key1] == null){
+                    		$showStr = "無客服ID";
+                    	}
+						break;
+					case 'mail_status':
+						if ($value[$key1] == 2) {
+                    		$showStr = "會員發問";
+                    		break;
+                    	}
+                    	$showStr = $value[$key1];
+						break;
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+
+				$mailArray[$key][$value1] = $showStr;
+			}
+		}
+        $this->assign("memberArray",$memberArray);//會員基本資料
+        $this->assign("memberEmpty","<tr><td colspan='10' align='center'>無會員基本資料</td></tr>");
+        $this->assign("mailArray",$mailArray);//會員基本資料
+        $this->assign("mailEmpty","<tr><td colspan='6' align='center'>無未回覆信件</td></tr>");
+        $this->assign("withdrawArray",$withdrawArray);//會員託售紀錄
+        $this->assign("withdrawEmpty","<tr><td colspan='8' align='center'>無託售紀錄</td></tr>");
+        $this->assign("rechargeArray",$rechargeArray);//會員儲值紀錄
+        $this->assign("rechargeEmpty","<tr><td colspan='9' align='center'>無儲值紀錄</td></tr>");
+        $this->assign("loginArray",$loginArray);//會員登入紀錄
+        $this->assign("loginEmpty","<tr><td colspan='6' align='center'>無登入紀錄</td></tr>");
+        $this->assign("eventArray",$eventArray);//會員登入紀錄
+        $this->assign("eventEmpty","<tr><td colspan='10' align='center'>無活動紀錄</td></tr>");
+		$this->display();
+	}
+    //TODO: 搜索帳號
+    public function searchMemberName(){
+        $request = $this->getRequest();
+        //判斷有無輸入
+        if(empty($request["query"])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $CommonMember = D("CommonMember");
+        $limit = 7;
+        $data = array(
+            'member_acount' => $request['query'],
+            'limit' => $limit,
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if($member_child_arr === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child['member_account'];
+        }
+        echo json_encode($can_send_name);
+    }
+}

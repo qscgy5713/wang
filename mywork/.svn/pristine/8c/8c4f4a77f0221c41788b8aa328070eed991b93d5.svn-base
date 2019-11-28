@@ -1,0 +1,566 @@
+<?php
+
+class GameSbModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+  /*
+  protected  $cfg_base_url = 'http://okm.sxb168.win/api';
+  protected  $cfg_client_url = 'http://okm.sxb168.win/app/m_index.php';  //180304 因進入遊戲不穩定變更.
+  protected  $cfg_client_url_mobile = 'http://okm.sxb168.win/m/spt_index.php';
+  protected  $cfg_api_key = 'ok|CS';
+  
+  protected  $cfg_boss_name = 'VQ6252';
+  */
+  protected  $cfg_base_url = 'http://okm.sxb168.win/api';
+  protected  $cfg_client_url = 'http://okm.sxb168.win/app/m_index.php';  //180304 因進入遊戲不穩定變更.
+  protected  $cfg_client_url_mobile = 'http://okm.sxb168.win/m/spt_index.php';
+  protected  $cfg_api_key = 'ok|CT';
+  
+  protected  $cfg_boss_name = 'VR6689';
+
+  const SB_RESPONSE_SUCCESS_CODE = '001';
+  const SB_DEFAULT_REQUEST_METHOD = 'POST';
+  const SB_REPORT_TICKS_ALL =  0;  //getTix時所有注單
+  const SB_REPORT_TICKS_CHECKED_ONLY =  1;  //getTix時有結果的注單
+  const SB_REPORT_MAX_TICKS_FETCH_NUM =  200;  //getTix時一次最多傳回注單筆數
+  const SB_REPORT_TICKS_LINKED_BETS_ID =  1;  //['pr']為1時代表為過關類型的注單
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 平博創出的會員ID (string)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'nickname' => array('required'=>1,),
+      'agent' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if (!$_agent) {
+      $bossName = $this->cfg_boss_name;
+    } else {
+      $bossName = $_agent;
+    }
+    $act = 'createMem';
+    $argErr = null;
+    $url = $this->_getActUrl($act);
+    $data = array(
+      "username" => $_user_name,
+      "pwd" => $this->_getHashedPass($_password),
+      "alias" => $_nickname,
+      "top" => $bossName,
+    );
+
+    //Dbgr::preout($url);
+    //Dbgr::preout($data);
+
+    $result = $this->_sendRequest($url,$data);
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SB_RESPONSE_SUCCESS_CODE)) {
+        return true;
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($act, $result['code']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'is_mobile' => array('required'=>0,'default'=>false),
+      'token' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ((!isset($_token)) || (!strlen($_token))) {
+      $token = $this->getLoginToken(array(
+        'user_name' => $_user_name,
+        'password' => $_password,
+      ),$argErr);
+      if ($token !== false) {
+        if ($_is_mobile) {
+          $gameLink = $this->cfg_client_url_mobile . "?lid={$token}";
+        } else {
+          $gameLink = $this->cfg_client_url . "?lid={$token}";
+        }
+        return $gameLink;
+      } else {
+        //$argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //取得 token 失敗
+        return false;
+      }
+    } else {
+      if ($_is_mobile) {
+        $gameLink = $this->cfg_client_url_mobile . "?lid={$_token}";
+      } else {
+        $gameLink = $this->cfg_client_url . "?lid={$_token}";
+      }
+      return $gameLink;
+    }
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'memGetMoney';
+    $argErr = null;
+    $url = $this->_getActUrl($act);
+    $data = array(
+      "username" => $_user_name,
+    );
+
+    $result = $this->_sendRequest($url,$data);
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SB_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['money'])) {
+          return $result['money'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($act, $result['code']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $pointToWithdraw = (-1) * abs($_amount);  //轉為負數
+    $act = 'memTransfer';
+    $argErr = null;
+    $url = $this->_getActUrl($act);
+    $data = array(
+      "username" => $_user_name,
+      "money" => $pointToWithdraw,
+    );
+
+    $result = $this->_sendRequest($url,$data);
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SB_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['money'])) {  //withdraw後的額度
+          return $result['money'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($act, $result['code']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $pointToDeposit = abs($_amount);  //轉為正數
+    $act = 'memTransfer';
+    $argErr = null;
+    $url = $this->_getActUrl($act);
+    $data = array(
+      "username" => $_user_name,
+      "money" => $pointToDeposit,
+    );
+
+    $result = $this->_sendRequest($url,$data);
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SB_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['money'])) {  //deposit後的額度
+          return $result['money'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($act, $result['code']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['user_name'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['user_name'] 查詢的用戶名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'max_mod_id' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'getTix';
+    $argErr = null;
+    $url = $this->_getActUrl($act);
+
+    $data = array(
+      "checked" => self::SB_REPORT_TICKS_ALL,
+    );
+
+    if ($_max_mod_id !== null) {
+      $data['maxModId'] = $_max_mod_id;
+    }
+
+    $result = $this->_sendRequest($url,$data);
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SB_RESPONSE_SUCCESS_CODE)) {
+        return $result;
+      } else {
+        $errCode = $result['code'];
+        $argErr = $this->produceError($act, $errCode);
+      }
+    }
+    return false;
+	}
+
+  /* get token (lid) for member login */
+  public function getLoginToken($arrDatas, &$argErr = null){
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'memLogin';
+    $argErr = null;
+    $url = $this->_getActUrl($act);
+    $data = array(
+      "username" => $_user_name,
+      "pwd" => $this->_getHashedPass($_password),
+    );
+
+    $result = $this->_sendRequest($url,$data);
+
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SB_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['lid'])) {
+          return $result['lid'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($act, $result['code']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+	//--------------------非通用函數--------------------
+
+  /* get api action url */
+  protected function _getActUrl($argAct,$argErrMsg=null) {
+    $baseUrl = $this->cfg_base_url;
+    return "{$baseUrl}/{$argAct}.php";
+  }
+
+  /* get key for request header authorization */
+  protected function _getHeaderKey($argErrMsg=null) {
+    $y = date('Y');
+    $m = date('m');
+    $apiKey = $this->cfg_api_key;
+    return md5(md5("{$y}{$m}{$apiKey}"));
+  }
+
+  /* produce error */
+  protected function _produceError($argAct, $argErrCode) {
+    $arrErrorMsgs = array(
+      'createMem' => array(
+        '002' => '帳號重複',
+      ),
+      'memLogin' => array(
+      ),
+      'memEdit' => array(
+        '002' => '無此帳號',
+        '003' => '未傳入修改資料',
+      ),
+      'memGetMoney' => array(
+        '002' => '無此帳號',
+      ),
+      'memTransfer' => array(
+        '002' => '無此帳號',
+        '003' => '額度不足',
+      ),
+      'getTix' => array(
+        '002' => '沒有紀錄',
+      ),
+    );
+    $errMsg = '';
+    if (isset($arrErrorMsgs[$argAct])) {
+      if (isset($arrErrorMsgs[$argAct][$argErrCode])) {
+        $errMsg = $arrErrorMsgs[$argAct][$argErrCode];
+      } else {
+        $errMsg = '其他錯誤 (代碼不明)';
+      }
+    } else {
+      $errMsg = '其他錯誤 (動作不明)';
+    }
+
+    return "{$errMsg} (code {$argErrCode})";
+  }
+
+  protected function _getHashedPass($argMemberPass) {
+    return md5($argMemberPass);
+  }
+
+
+  /* send http request via curl and return its response in assoc array */
+  protected function _sendRequest($argUrl, $argArrData, $argReturnOrgResp=false, $argMethod=self::SB_DEFAULT_REQUEST_METHOD) {
+    $apiKey = $this->_getHeaderKey();
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $argMethod,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_HTTPHEADER => array(
+        //'Content-Type: text/html; charset=utf-8',
+        'api_key: '.$apiKey,
+      )
+    );
+    $queryStr = http_build_query($argArrData);
+    $url = "{$argUrl}?{$queryStr}";
+    if (strtoupper($argMethod) == 'POST') {
+      $url = $argUrl;
+      $arrCurlDatas[CURLOPT_SSL_VERIFYPEER] = false;
+      $arrCurlDatas[CURLOPT_SSL_VERIFYHOST] = false;
+      $arrCurlDatas[CURLOPT_POST] = true;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $argArrData;
+      $arrCurlDatas[CURLOPT_CUSTOMREQUEST] = 'POST';
+      $arrCurlDatas[CURLOPT_CONNECTTIMEOUT] = 5;
+      $arrCurlDatas[CURLOPT_TIMEOUT] = 15;
+    } else {
+      $queryStr = http_build_query($argArrData);
+      $url = "{$argUrl}?{$queryStr}";
+    }
+    //echo "\$url={$url} <br/>";
+    //Dbgr::preout($argArrData);
+    //Dbgr::preout($arrCurlDatas);
+    $ch = curl_init($url);
+    curl_setopt_array(
+      $ch,
+      $arrCurlDatas
+    );
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+
+    //echo "\$result={$result} <br/>";
+    curl_close($ch);
+    if ($result !== false) {
+      if ($argReturnOrgResp === false) {
+        $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+        $this->responseArr = $resultInAssoc;
+        return $resultInAssoc;
+      } else {
+        return $result;
+      }
+    } else {
+      $this->responseArr = null;
+      //echo "\$curlError={$curlError} ({$curlErrorNo}) <br/>";
+      //$curlError=Recv failure: Connection was reset (56)
+      return false;
+    }
+  }
+
+}

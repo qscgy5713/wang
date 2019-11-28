@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		遊戲帳號: <input type="text" name="user_name" value="{$user_name}" /><br/>
+		email: <input type="text" name="email" value="{$email}" /><br/>
+		country: <input type="text" name="country" value="{$country}" /><br/>
+		language: <input type="text" name="language" value="{$language}" /><br/>
+		birthdate: <input type="text" name="birthdate" value="{$birthdate}" /><br/>
+
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="$op_result">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+			<IF condition="strlen($op_result2)"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+	<ELSE/>
+		<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+	</IF>
+</body>
+</html>

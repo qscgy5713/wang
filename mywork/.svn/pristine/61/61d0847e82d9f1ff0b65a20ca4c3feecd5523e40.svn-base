@@ -1,0 +1,154 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div class="form-group row m-b-15">
+			<label class="col-md-2 col-sm-2 col-form-label" for="fullname">會員名稱/電話/各館帳號:</label>
+			<div class="col-md-8 col-sm-8">
+				<form class="div-style-inline-flex" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+					<input class="form-control m-r-5" type="search" id="member_account" name="memberAccount" value="{$memberAccount}">
+					<input class="btn btn-pink m-r-5 m-b-5" type="submit" value="查詢">
+				</form>
+			</div>
+		</div>
+		
+		<IF condition='$MemberPointBool eq "true"'>
+			<div class="row">
+				<div class="col-lg-12 ui-sortable">
+					<!-- begin panel -->
+					<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+						<!-- begin panel-heading -->
+						<div class="panel-heading ui-sortable-handle">
+							<div class="panel-heading-btn">
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+							</div>
+							<h4 class="panel-title f-s-15">會員點數</h4>
+						</div>
+						<!-- end panel-heading -->
+						
+						<!-- begin panel-body -->
+						<div class="panel-body container m-auto">
+							<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table class="table table-striped m-b-0">
+								   <thead>
+				                      <tr>
+										<th class="text-center">總金額:</th>
+										<th id="totalPoint"></th>
+									  </tr>
+									 
+									  <tr>
+										<th class="text-center">電子錢包:</th>
+										<th>{$walletMoney}</th>
+									  </tr>
+					                </thead>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<VOLIST name="gameArray" id="classArray">
+				<div class="row">
+					<div class="col-lg-12 ui-sortable">
+						<!-- begin panel -->
+						<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+							<!-- begin panel-heading -->
+							<div class="panel-heading ui-sortable-handle">
+								<div class="panel-heading-btn">
+									<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+									<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+									<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+									<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+								</div>
+								<h4 class="panel-title f-s-15">{$key}</h4>
+							</div>
+							<!-- end panel-heading -->
+							
+							<!-- begin panel-body -->
+							<div class="panel-body">
+								<!-- begin table-responsive -->
+								<div class="table-responsive">
+									<table class="table table-striped m-b-0">
+									   <thead>
+					                      <tr>
+					                       <th>遊戲名稱</th>
+										   <th>遊戲帳號</th>
+										   <th>餘額</th>
+					                      </tr>
+						                </thead>
+										<tbody>
+											<VOLIST name="classArray" id="vo">
+												<tr>
+													<td>{$vo.gameName}</td>
+													<IF condition="$vo.gameAccount eq ''">
+														<td>無</td>
+														<td id="{$key}point">無</td>
+													<ELSE />
+														<td>{$vo.gameAccount}</td>
+														<td id="{$key}point"></td>
+													</IF>
+												</tr>
+											</VOLIST>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</VOLIST>
+		</IF>
+		
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+
+var searchArray = {$searchJson};
+var totalPoint = {$walletMoney};
+$(function(){
+	$("#totalPoint").html(totalPoint);
+	for(var i=0;i<searchArray.length;i++){
+		getMemberPoint(searchArray[i]);
+	}
+	$("#"+"系統部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+function getMemberPoint(gameCode){
+	
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxGetMemberPoint",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	//var dataObject = JSON.parse(data);
+        	if(data.indexOf("false")!=-1){
+        		var dataArray = data.split(";");
+        		$("#"+gameCode+"point").html("查詢點數失敗");
+        		console.log(dataArray[1]);
+        	} else {
+        		totalPoint = Number(totalPoint) + Number(data);
+        		$("#totalPoint").html(totalPoint);
+        		$("#"+gameCode+"point").html(data);
+        	}
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+</script>

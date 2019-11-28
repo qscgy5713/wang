@@ -1,0 +1,33 @@
+<BR>開始時間：<sapn>{$startTime}</sapn>
+結束時間<sapn>{$endTime}</sapn>
+
+<table>
+	<thead>
+		<tr>
+			<th>序</th>
+			<th>會員帳號</th>
+			<th>代理帳號</th>
+			<th>贈點時間</th>
+			<th>贈點內容</th>
+			<th>贈點金額</th>
+		</tr>
+	</thead>
+	<tbody>
+		<VOLIST name="showArray" id="vo" empty="$showEmpty">
+			<tr>
+				<td>{$i}</td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.agentAccount}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.main}</td>
+				<td>{$vo.money}</td>
+			</tr>
+		</VOLIST>
+	</tbody>
+	<tr>
+		<th colspan='2'>總筆數</th>
+		<th>{$totalNumber}</th>
+		<th colspan='2'>總贈點</th>
+		<th>{$totalMoney}</th>
+	</tr>
+</table>

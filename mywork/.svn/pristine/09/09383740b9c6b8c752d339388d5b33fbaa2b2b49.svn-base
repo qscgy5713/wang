@@ -1,0 +1,188 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+			
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">責任博彩</h2>
+					
+					<div class="responsibility_title"><i class="fa fa-street-view responsibility-icon-style"></i></div>	
+				</header>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<p class="mb-45 fw-700" style="line-height: 30px;">小牛遊戲致力於提供有趣，公平的博彩體驗，但是也認識到，在某些情況下，博彩可能會導致上癮。
+						小牛遊戲通過了GamCare的認證，這是為預防和處理博彩問題提供支持和。諮詢的領先提供商他們的服務是保密的，並且免費;若您需要時，小牛遊戲也會提供翻譯諮詢。</p>
+					</div>
+				</div>
+				
+				<div class="row mb-20">
+					<div class="col-md-6 col-sm-6 pl-35">
+						<h4>沉溺測評</h4>
+						
+						<p style="line-height: 30px;">對客戶來說，控制自己的博彩習慣非常重要。如果您認為有可能出現博彩上癮的風險，可點擊進行<a class="text-danger" href="https://gamtest.se/v3/gamcare" target="_blank">GamCare自評測試。</a></p>
+						
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+					<div class="col-md-6 col-sm-6">
+						<h4>自我隔離</h4>
+						
+						<p style="line-height: 30px;">如您需要控制自己遠離某些遊戲，歡迎您告知線上客服提出遊戲限制，您可以申請六個月至五年賬戶關閉的權力，歡迎您至線上客服提出協助。</p>
+						
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>求更多幫助</h4>
+						<p class="mb-45">以下組織針對博彩沉溺用戶提供專業免費服務：</p>
+					</div>
+					
+					<div class="container">
+						<div class="masonry-gallery columns-5 clearfix row col-12">
+							
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://gamtest.se/v3/gamcare" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/gam.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>GamCare</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.gamblingtherapy.org/en?ReferrerID=315" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/Gambling-Therapy.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Gambling Therapy</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.gordonmoody.org.uk/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/gordon-house-association.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Gorden House Association</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="http://www.gamblersanonymous.org.uk/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/Gamblers-Anonymous.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Gamblers Anonymous</h5>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row mb-30">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>年齡限制及家長控制</h4>
+						<p class="mb-15" style="line-height: 30px;">18歲以下人群禁止賭博，小牛遊戲會嚴格執行這一規定。對於選擇某種支付方式（如未滿18歲人士也可使用）的客戶，我們會進行年齡驗證。
+						此外，我們也會隨機抽取客戶進行年齡驗證，不管他們使用何種支付方式。一旦發現使用該網站的客戶未滿18歲，所有贏取的彩金將被沒收並交由相關部門處理。</p>
+						<p class="mb-45">父母或監護人可使用以下第三方軟件來對互聯網風險信息進行過濾：</p>
+					</div>
+					
+					<div class="container">
+						<div class="masonry-gallery columns-5 clearfix row col-12">
+							
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.cyberpatrol.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/cyberpatrol.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Cyberpatrol</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.contentwatch.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/contentwatch.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Contentwatch</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="https://www.netnanny.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/netnanny.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Netnanny</h5>
+							</div>
+							<div class="col-xl-3 col-3 text-center">
+								<a class="image-hover lightbox mb-10" href="http://www.netmom.com/" target="_blank" data-plugin-options="{&quot;type&quot;:&quot;image&quot;}" style="width: 100%;">
+									<span class="image-hover-icon image-hover-dark"></span>
+									<img src="__CSS__/images/netmom.jpg" class="responsibleBetting-img wow rubberBand animation-visible animated" style="border-radius: 10px !important;">
+								</a>
+								<h5>Netmom</h5>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h4>個人信息保護</h4>
+						<p class="mb-15">小牛遊戲採用特殊加密技術處理保障您的個人賬戶信息，避免洩露，也請您請勿向任何人透漏您的個人資料。</p>
+						<div class="callout alert alert-default b-0 mt-60 mb-60 pt-50 pb-50">
+							<div class="text-center">
+								<h3>小牛遊戲經營理念</h3>
+								<p class="font-lato mt-10">
+									小牛遊戲嚴格遵守博彩監管機構設定的所有職業準則及道德規範。讓我們的客戶了解到這一點十分重要。我們將其稱為我們的“經營理念”。
+								</p>
+							</div>
+						</div>
+						<h4>合規性：</h4>
+						<p class="mb-30">小牛遊戲遵守菲律賓卡卡揚經濟特區的法律法規。小牛遊戲擁有營業許可證，將始終在營業許可證准許的授權範圍內運營。</p>
+						<h4>全平台誠信：</h4>
+						<p class="mb-30" style="line-height: 30px;">小牛遊戲以誠信立足發展，並努力為客戶提供公平公正的遊戲環境。我們有完善的機制來檢測不正常投注行為，
+						一旦這些機制被觸發，小牛遊戲將按照網站規定採取行動，保護我們的客戶。如有需要，我們將配合監管部門進行信息共享。</p>
+						<h4>客戶隱私和數據保護：</h4>
+						<p class="mb-30" style="line-height: 30px;">尊重您的私隱權並保證您數據的安全，是小牛遊戲的頭等重任。我們擁有先進完善的隱私保護制度，
+						所有數據的內部出入都受到嚴格限制及嚴密監控。小牛遊戲堅決抵制所有形式的詐騙（包括信用卡詐騙）及黑客攻擊，一經發現將立即上報執法部門。</p>
+						<h4>限制未成年人訪問：</h4>
+						<p class="mb-30">小牛遊戲嚴格遵守規定，禁止未成年人參與博彩。我們默認會員註冊信息中所填寫的年齡為真實法定年齡，並會進行資料抽查及驗證。</p>
+						<h4>控制沉迷博彩：</h4>
+						<p class="mb-30">小牛遊戲不提倡玩家過度沉迷遊戲，並將配合玩家採取一系列有效的控制沉迷措施。</p>
+						<h4>銀行和交易處理：</h4>
+						<p class="mb-30">小牛遊戲遵循中國境內銀行機構的相關規定進行銀行和財務事務。</p>
+					</div>
+				</div>
+					
+					
+			</div>
+		</div>
+			
+			
+	</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 } 
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+
+			

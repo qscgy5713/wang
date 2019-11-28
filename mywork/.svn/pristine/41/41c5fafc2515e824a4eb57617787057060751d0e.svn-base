@@ -1,0 +1,170 @@
+<?php
+class MemberWaterlevelAction extends AdminAction {
+    protected $pageNumber = 10; //分頁筆數
+    protected $pageMoreNumber = 5;//一頁最多幾頁
+    //TODO: 會員階層 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+
+        $GameClass = D("GameClass");
+        $gameClassIdArray = array();
+        $return = $GameClass->getGameClassData();
+        if($return === false){
+            //資料庫錯誤 讀取遊戲類別錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $gameClassIdArray = $return;
+
+        $gameClassId = $gameClassIdArray[0]['gameClass_id'];
+        if(isset($request['gameClassId'])){
+            $gameClassId = $request['gameClassId'];
+        }
+
+        $year = date('Y');
+        $yearArray = array(
+            $year-1 => ($year-1).'年',
+            $year => $year.'年',
+            $year+1 => ($year+1).'年',
+        );
+        if(isset($request['year'])){
+            $year = $request['year'];
+        }
+        $month = date('m');
+        $month--;
+        $monthArray = array(
+            1 => '一月',2 => '二月',3 => '三月',4 => '四月',5 => '五月',6 => '六月',
+            7 => '七月',8 => '八月',9 => '九月',10 => '十月',11 => '十一月',12 => '十二月',
+        );
+        if(isset($request['month'])){
+            $month = $request['month'];
+        }
+        //製作分頁
+        if(empty($request['pageNumber'])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request['pageNumber'];
+        }
+
+        $CommonMemberWaterrankLevel = D("CommonMemberWaterrankLevel");
+        $data = array(
+            "level_year"=>$year,
+            "level_month"=>$month,
+            "member_account" => $memberAccount,
+            "gameClass_id" => $gameClassId
+        );
+        //製作分頁
+        $return = $CommonMemberWaterrankLevel->getTotalNumberMemberWaterRankData($data);
+        if($return === false){
+            //讀取總頁，失敗
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+
+        $totalNumber = $return[0]['totalNumber']; //總筆數
+        $totalPage = ceil($totalNumber / $this->pageNumber); //總頁數
+        $pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得頁數陣列
+        $data = array(
+            "level_year"=>$year,
+            "level_month"=>$month,
+            "gameClass_id" => $gameClassId,
+            'member_account' => $memberAccount,
+            'page' => array(
+                'number' => $this->pageNumber,
+                'pageNumber' => $pageNumber,
+            ),
+        );
+
+        $return = $CommonMemberWaterrankLevel->getMemberWaterRankDataUseWaterLevel($data, $err);
+
+        if($return === false){
+            //取得資料失敗
+            $this->error($err);
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "memberAccount"=>"memberAccount",
+            "gameClassShowName"=>"classShowName",
+            "level_year"=>"year",
+            "level_month"=>"month",
+            "waterRank_serial"=>"serial",
+            "waterRank_waterRate"=>"waterRate",
+            "level_modifyTime"=>"modifyTime",
+            "totalEffective"=>"totalEffective"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'level_modifyTime'://更新時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'waterRank_waterRate'://返水率
+                        $showStr = ($value[$key1]*100).'%';
+                        break;
+                    case 'totalEffective'://總洗碼
+                        $showStr = number_format($value[$key1]);
+                        break;
+                    case 'level_year':
+                        $showStr = $value[$key1].'年';
+                        break;
+                    case 'level_month':
+                        $showStr = $value[$key1].'月';
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);exit();
+        $this->assign("year",$year);//年
+        $this->assign("month",$month);//月
+        $this->assign("gameClassId",$gameClassId);//遊戲類別
+        $this->assign("gameClassIdArray",$gameClassIdArray);//遊戲類別陣列
+        $this->assign("gameClassIdEmpty","讀取類別選單失敗");
+        $this->assign("yearArray",$yearArray);//年陣列
+        $this->assign("yearEmpty","讀取日期失敗");
+        $this->assign("monthArray",$monthArray);//月陣列
+        $this->assign("monthEmpty","讀取日期失敗");
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='9' style='text-align:center;'>無會員階層</td></tr>");
+        $this->assign("memberAccount", $memberAccount);
+        $this->assign("totalPage", $totalPage); //總頁數
+        $this->assign("pageNumber", $pageNumber); //目前頁數
+        $this->assign("pageArray", $pageArray); //頁數陣列
+        $this->display();
+    }
+    /*
+     * 搜索 會員帳號
+     */
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+
+        $CommonMember = D("CommonMember");
+        if (empty($request["query"])) {
+            exit();
+        }
+
+        $limit = 7;
+        $data = array(
+            "member_account" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

@@ -1,0 +1,266 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<form class="div-style" id="formInquire" method="POST" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			
+			<div class="form-group row m-b-5">
+				<div class="col-md-12 col-sm-12 m-b-2">
+					<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-b-5" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+				</div>
+			</div>
+			<div class="form-group row m-b-2">
+				<div class="col-md-3 col-sm-3 m-b-2">
+					<input id="startTime" name="startTime" type="text" autocomplete="off" class="form-control div-style m-b-5" style="width: 149px;" value="{$startTime}"/> 至
+					<input id="endTime"   name="endTime"   type="text" autocomplete="off" class="form-control div-style m-b-5" style="width: 149px;" value="{$endTime}"/>
+				</div>
+				<div class="col-md-4">
+					<label class="col-form-label div-style m-b-5">搜索帳號</label>
+					<input type='hidden' id='agentTree' name='agentTree' value=''>
+					<input type='hidden' id='agentAccount' name='agentAccount' value=''>
+					<input type='hidden' id='agentId' name='agentId' value=''>
+					<input class="form-control div-style width-auto m-b-5" type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+					<button type="submit" name="addbtn" class="btn btn-info m-l-5 m-b-5 ">搜尋</button>
+				</div>
+			</div>
+		</form>
+		
+		<div class="form-group row m-b-15">
+			<div class=" col-md-12">
+				<ol class="breadcrumb pull-left">
+					<VOLIST name="loginArray" id="vo">
+						<li class="breadcrumb-item sight">
+							<IF condition="$i eq count($vo)">
+								<input type="button" class="btn btn-danger f-s-13 m-b-2 p-5" onclick="formAccount('{$vo.agentTree}','{$vo.agentAccount}','{$vo.agentId}')" value="{$vo.agentAccount}">
+							<ELSE/>
+								<input type="button" class="btn btn-primary f-s-13 m-b-2 p-5" onclick="formAccount('{$vo.agentTree}','{$vo.agentAccount}','{$vo.agentId}')" value="{$vo.agentAccount}">
+							</IF>
+						</li>
+					</VOLIST>
+				</ol>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">類別贈點</h4>
+					</div>
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table1" class="table table-striped m-b-0">
+				               <thead>
+				                	<th colspan='2'></th>
+				                    <th>總點數和:{$typesTotalMoney}</th>
+				                    <th>總筆數:{$typesTotalNumber}</th>
+				               </thead>
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>類別</th>
+				                      <th>點數和</th>
+				                      <th>筆數</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="typesArray" id="vo" empty="$typesEmpty">
+										<tr>
+											<td>{$key+1}</td>
+											<td>{$vo.givenName}</td>
+											<td>{$vo.allMoney}</td>
+											<td>{$vo.allNumber}</td>
+										</tr>
+									</VOLIST>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">代理贈點</h4>
+					</div>
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table2" class="table table-striped m-b-0">
+								<thead>
+			                      <tr>
+				                      <th colspan='2'></th>
+				                      <th>總點數和</th>
+				                      <th>總筆數</th>
+			                      </tr>
+				               </thead>
+				               <tbody>
+				                	<td colspan='2'></td>
+				                    <td>{$agentTotalMoney}</td>
+				                    <td>{$agentTotalNumber}</td>
+				                </tbody>
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>代理帳號</th>
+				                      <th>點數和</th>
+				                      <th>筆數</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="agentArray" id="vo" empty="$agentEmpty">
+										<tr>
+											<td>{$key+1}</td>
+											<td>
+												<input class="btn btn-info f-s-13  m-r-5 m-b-5" type='button' value='{$vo.agent_account}' onClick="formAccount('{$vo.agent_tree}','{$vo.agent_account}','{$vo.agent_id}');">
+											</td>
+											<td>{$vo.allMoney}</td>
+											<td>{$vo.allNumber}</td>
+										</tr>
+									</VOLIST>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">會員贈點</h4>
+					</div>
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table3" class="table table-striped m-b-0">
+								<thead>
+			                      <tr>
+				                      <th colspan='2'></th>
+				                      <th>總點數和</th>
+				                      <th>總筆數</th>
+			                      </tr>
+				               </thead>
+				                <tbody>
+				                	<td colspan='2'></td>
+				                    <td>{$memberTotalMoney}</td>
+				                    <td>{$memberTotalNumber}</td>
+				                </tbody>
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>代理帳號</th>
+				                      <th>點數和</th>
+				                      <th>筆數</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="memberArray" id="vo" empty="$memberEmpty">
+										<tr>
+											<td>{$key+1}</td>
+											<td><input type='button' value="{$vo.member_account}" class="btn btn-success" onClick="openmodal('{$vo.member_id}')">
+											</td>
+											<td>{$vo.allMoney}</td>
+											<td>{$vo.allNumber}</td>
+										</tr>
+									</VOLIST>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="memberDetailDiv" style="display: none;">
+		<div class="modal-dialog"style="max-width: 1300px;">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">會員資料</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				</div>
+				<div class="modal-body">
+					<iframe id="memberDetailIframe" style="width: 100%;min-height: 676px;" src="" frameborder="0" scrolling="auto"></iframe>
+				</div>
+				<div class="modal-footer">
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/>
+
+<script>
+function openmodal(memberId){
+	$('#memberDetailDiv').modal('show');
+	$("#memberDetailIframe").attr("src", "__APP__/{$Think.MODULE_NAME}/memberDetail&startTime={$startTime}&endTime={$endTime}&memberId="+memberId);
+}
+$(function(){
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+    
+	$('#member_account').typeahead({
+	    ajax: {
+	      url: '__URL__/searchMemberName',
+	      timeout: 200
+	    }
+	  });
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function formAccount(tree,account,id){
+	$("#agentTree").val(tree);
+	$("#agentAccount").val(account);
+	$("#agentId").val(id);
+	$("#formInquire").submit();
+}
+</script>

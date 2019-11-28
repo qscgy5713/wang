@@ -1,0 +1,217 @@
+<?php
+/*
+加密流程说明：
+最近更新时间：2018-04-25
+
+Step1. 使用mode：AES-256-CBC 产生长度32的金钥 AES key。
+
+Step2. 将传输内容用 AES key 加密成为 data。
+
+Step3. 将 AES key 用 RSA公钥 加密成为 authorization。
+
+Step4. 将 data 与 authorization 作为参数並转成JSON格式后传送。
+
+
+解密流程说明：
+最近更新时间：2018-04-25
+
+Step1. 将 authorization 用 RSA私钥解密得到 AES key。
+
+Step2. 将 data 用 AES key 解密得到传输内容。
+
+
+*/
+class AsCipher {
+
+    /* AES参数 */
+    private $key = false;
+    private $cipher_mode = false;
+    private $iv = false;
+
+    /* RSA公钥参数 */
+    private $public_key = false;
+    private $private_key = false;
+
+    /**
+     * 随机从 (a~z A~Z 0~9) 产生32字的字串作为AES的加密金钥
+     * @return  string  AES的加密金钥
+     */
+    public function randAesKey()
+    {
+        $key_len = 32; // 字串长度
+        $key = '';
+        $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // 乱数内容
+        $len = strlen($word);
+        for ($i = 0; $i < $key_len; $i++) {
+            $key .= $word[rand() % $len];
+        }
+        return $key;
+    }
+
+    /**
+     * 设置 AES 加解密的参数
+     * @param   string   $cipher_mode   加解密的模式
+     * @param   string   $key           加解密的金钥
+     * @return  string   回传加解密的钥匙
+     */
+    public function setAesParam($cipher_mode, $key = null)
+    {
+        if (!in_array($cipher_mode, openssl_get_cipher_methods())) {
+            throw new Exception('AES Param is err!!');
+        } else {
+            $this->cipher_mode = $cipher_mode;
+            $aesKey = $key == null ? $this->randAesKey() : $key;
+            $this->key = hash("sha256", $aesKey, true);
+            $this->iv = md5($aesKey, true);
+        }
+        return $aesKey;
+    }
+
+    /**
+     * AES 字串加密
+     * @param   string   $plain_text   要加密的字串
+     * @return  string   AES加密后的内容
+     */
+    public function aesEncrypt($plain_text)
+    {
+        if (empty($plain_text)) {
+            throw new Exception('plain text is empty');
+        } else {
+            $cipher_text = openssl_encrypt($plain_text, $this->cipher_mode, $this->key, 0, $this->iv);
+        }
+        return $cipher_text;
+    }
+
+    /**
+     * AES 字串解密
+     * @param   string   $cipher_text   要解密的字串
+     * @return  string   AES解密后的内容
+     */
+    public function aesDecrypt($cipher_text)
+    {
+        if (empty($cipher_text)) {
+            throw new Exception('cipher text is empty');
+        } else {
+            $plain_text = openssl_decrypt($cipher_text, $this->cipher_mode, $this->key, 0, $this->iv);
+        }
+        return $plain_text;
+    }
+
+    /**
+     * 设定RSA公钥
+     * @param    string   $public_key   公钥文件内容
+     * @return   bool     是否成功
+     */
+    public function setRsaPublicKey($public_key)
+    {
+        $this->public_key = openssl_get_publickey($public_key);
+        if (!$this->public_key) {
+            throw new Exception('public key Invalid!!');
+        }
+        return true;
+    }
+
+    /**
+     * 设定RSA私钥
+     * @param    string   $private_key   私钥文件内容
+     * @return   bool     是否成功
+     */
+    public function setRsaPrivateKey($private_key)
+    {
+        $this->private_key = openssl_get_privatekey($private_key);
+        if (!$this->private_key) {
+            throw new Exception('private key Invalid!!');
+        }
+        return true;
+    }
+
+    /**
+     * RSA公钥加密函数(需定义公钥)
+     * @param    string   $plain_text   要加密的内容
+     * @return   string   加密后的字串
+     */
+    public function rsaPublicEncrypt($plain_text)
+    {
+        if (!$this->public_key || $plain_text === '') {
+            throw new Exception('public Key or plain text invalid');
+        }
+        openssl_public_encrypt($plain_text, $crypt_text, $this->public_key);
+        openssl_free_key($this->public_key);
+        return base64_encode($crypt_text); // 加密后的内容为 binary 透过 base64_encode() 转换为 string 方便传输
+    }
+
+    /**
+     * RSA私钥解密函数(需定义私钥)
+     * @param    string   $cipher_text   要解密的字串
+     * @return   string   解密后的内容
+     */
+    public function rsaPrivateDecrypt($cipher_text)
+    {
+        if (!$this->private_key || $cipher_text === '') {
+            throw new Exception('private Key or encrypted text invalid');
+        }
+        // 先将密文用 base64_decode() 解译
+        openssl_private_decrypt(base64_decode($cipher_text), $decrypted, $this->private_key);
+        openssl_free_key($this->private_key);
+        return $decrypted;
+    }
+}
+
+/**
+ * 范例一
+ * 将授权密文使用RSA私钥解密后取的AES金钥
+ * 再使用AES金钥解开密文取的文本讯息
+ *
+ * 使用场景：厂商接受到平台发送的密文解密用
+ * @param   string   company         厂商代号
+ * @param   string   authorization   授权金钥
+ * @param   string   data            加密内容
+ **/
+/*
+// 设定AES加密模式固定使用 AES-256-CBC
+const AES_CIPHER_MODE = 'AES-256-CBC';
+
+// 设定私钥档案位置
+$RSA_PRIVATE_KEY = 'AsiaGaming_company.key';
+
+// 设定接收密文资料
+$Data = '密文资料';
+
+// 设定授权密文
+$Authorization = '授权密文';
+
+$Decrypt = new Cipher();
+$Decrypt->setRsaPrivateKey(file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $RSA_PRIVATE_KEY));
+$AES_KEY = $Decrypt->rsaPrivateDecrypt($Authorization);
+$Decrypt->setAesParam(AES_CIPHER_MODE, $AES_KEY);
+$plainText = $Decrypt->aesDecrypt($Data); // 取得解密文本讯息
+*/
+/**
+ * 范例二
+ * 将文本讯息使用AES加密后取得传送密文
+ * 再将AES金钥使用RSA公钥加密取得传送授权密文
+ *
+ * 使用场景：厂商发送讯息给平台时加密用
+ **/
+/*
+// 设定AES加密模式固定使用 AES-256-CBC
+const AES_CIPHER_MODE = 'AES-256-CBC';
+
+// 设定公钥档案位置
+$RSA_PUBLIC_KEY = 'AsiaGaming_company.pub';
+
+// 传输加密资料内容
+$plain_text_arr = [
+    "userAccount" => "7777",
+    "timestamp" => time(),
+];
+$plain_text = json_encode($plain_text_arr);
+
+$Encrypt = new Cipher();
+$AES_KEY = $Encrypt->setAesParam(AES_CIPHER_MODE);
+$Encrypt->setRsaPublicKey(file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $RSA_PUBLIC_KEY));
+
+$Authorization = $Encrypt->rsaPublicEncrypt($AES_KEY); // 取得授权密文
+$Data = $Encrypt->aesEncrypt($plain_text); // 取得加密密文
+*/
+?>

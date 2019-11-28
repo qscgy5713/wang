@@ -1,0 +1,120 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+      	<div class="container pt20 pb50 bg-min-height" >
+            <div class="row">
+                <div class="col-md-12 mb40">
+                
+	                    <h2 class="text-center">註冊財神娛樂賬戶</h2> 
+	                    <p class="text-center">
+	                        	註冊財神娛樂賬戶，您將領略到前所未有的博彩體驗。如果您已擁有財神娛樂賬戶，則可以在此登錄
+	                    </p>
+	                    <hr>
+	                 <ul class="nav  tabs-circle-icon justify-content-center" role="tablist">
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t7" id="am-s1-link" aria-controls="home" role="tab" data-toggle="tab" aria-selected="true"> 
+				         		<i class="ti-mobile"></i>
+				         		<h4 class="mt5 font15">驗證手機</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t8" id="am-s2-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-lock"></i>
+				         		<h4 class="mt5 font15">輸入驗證碼</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link active show" href="#t9" id="am-slast-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-check"></i>
+				         		<h4 class="mt5 font15">完成註冊</h4>
+				         </a>
+				        </li>
+				    </ul> 
+			        <div class="tab-content mt10">
+			        <!-- 驗證手機 -->
+                        <div role="tabpanel" class="tab-pane fade " id="t7">
+                        	<div class="col-md-6 mr-auto ml-auto">
+                        		
+                        		<div id="am-s2-divNotComeplete" class="wow  fadeInUp animated text-center RegistPage_border" data-wow-duration="1.5s" data-wow-delay=".2s" 
+                            		 style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	 已完成驗證手機，<br>請繼續完成註冊
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-slast-link').click();">繼續</button>
+		                        </div>
+                        		
+                        		
+                        	</div>
+                        </div>
+                        <!-- /驗證手機 -->
+                        
+                        <!-- 輸入驗證碼 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t8">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            
+                            	<div id="am-s2-divNotComeplete" class="wow  fadeInUp animated text-center RegistPage_border" data-wow-duration="1.5s" data-wow-delay=".2s" 
+                            		 style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	 已完成輸入驗證碼，<br>請繼續完成註冊
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-slast-link').click();">繼續</button>
+		                        </div>
+                            
+                        		
+                        	</div>
+                        </div>
+                        <!-- /輸入驗證碼 -->
+                        
+                        <!-- 註冊完成 -->
+                        <div role="tabpanel" class="tab-pane fade active show" id="t9">
+                            <div class="col-md-6 mr-auto ml-auto">
+                        		<div id="am-s3-divComeplete" class=" smart-wrap">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action="smart-form/contact/php/smartprocess.php" id="smart-form" novalidate="novalidate">
+						                    <div class="form-body">
+						                    
+						                        <div class="section">
+						                        	<h6>手機號碼:{$addPhone}</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" id="am-s3-phone" readonly="readonly" name="sendername" class="gui-input" placeholder="" value="{$addPhone}">
+						                            	<span class="field-icon"><i class="ti-mobile"></i></span>
+						                            </label>
+						                            
+						                        </div><!-- end section -->
+						                        <div class="section">
+						                        	<h6>會員帳號:{$addAccount}</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" name="addPassword" id="am-s3-memberId" readonly="readonly" class="gui-input" placeholder="" value="{$addAccount}">
+						                            	<span class="field-icon"><i class="ti-user"></i></span>
+						                            </label>
+						                        </div><!-- end section -->
+						                        
+						                        <div class="section">
+						                        	<h6>會員密碼:{$addPassword}</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" name="addPassword" id="am-s3-pass" readonly="readonly" class="gui-input" placeholder="" value="{$addPassword}">
+						                            	<span class="field-icon"><i class="ti-lock"></i></span>
+						                            </label>
+						                        </div><!-- end section -->
+						                      
+						                       <div class="result"></div><!-- end .result  section --> 
+						                                                                                                                    
+						                    </div><!-- end .form-body section -->
+						                    <div class="form-footer text-center">
+						                        <button type="button" onclick="self.location.href='__APP__/MemberIndex/index'" class="btn btn-outline-primary mb5">完成</button>
+						                    </div><!-- end .form-footer section -->
+						                    
+						                </form>
+						            </div><!-- end .smart-forms section -->
+			        			</div><!-- end .smart-wrap section -->
+                        	</div>
+                        </div>  
+                        <!--/註冊完成 -->                       
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+ <include file="Common:footer"/>

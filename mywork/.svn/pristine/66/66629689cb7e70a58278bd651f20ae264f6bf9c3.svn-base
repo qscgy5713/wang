@@ -1,0 +1,7 @@
+<?php
+class FunctionDescriptionAction extends AgentAction {
+    //TODO: 功能說明
+    public function index(){
+        $this->display();
+    }
+}

@@ -1,0 +1,1123 @@
+<?php
+
+class GameAbModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+	protected $cfg_base_url = 'https://api3.abgapi.net';
+	protected $cfg_agent = '555u1yn';  //'z8ndlyn';
+	protected $cfg_property_id = '5828193';
+  protected $cfg_des = 'gucR2EmaX5+jR9STdnQNFtu2K5gic6IM';
+  protected $cfg_md5 = 'm9c2fmZOJi46Aet+im5+Q9nni54nezylMWWg230kheM=';
+  protected $cfg_iv = 'AAAAAAAAAAA=';
+  protected $cfg_app_suffix = 'zl8';
+
+  const AB_RESPONSE_SUCCESS_CODE = 'OK';
+  const AB_DEFAULT_REQUEST_METHOD = 'POST';
+  const AB_CURL_CONNECTTIMEOUT_MS = 8000;
+  const AB_CURL_TIMEOUT_MS = 28000;
+  const AB_DEFAULT_LANG_CODE = 'zh_TW';
+  const AB_HANDICAP_MAX_WIN_LIMIT = 60000;
+  const AB_HANDICAP_MAX_LOSE_LIMIT = 0;  //0=no limit
+
+  const AB_REPORT_DATETIME_FORMAT = 'Y-m-d H:i:s';
+  const AB_REPORT_DATE_FORMAT = 'Y-m-d';
+  const AB_REPORT_TIMEZONE_OFFSET = '+8';
+  const AB_REPORT_POKER_INVALID_FACE = -1;
+
+  const AB_API_ERRORS = array(
+    'INTERNAL_ERROR' => '服務端錯誤','ILLEGAL_ARGUMENT' => '參數錯誤','SYSTEM_MATAINING' => '系統維護狀態','AGENT_NOT_EXIST' => '代理商不存在','CLIENT_EXIST' => '客戶已存在','CLIENT_PASSWORD_INCORRECT' => '密碼錯誤','TOO_FREQUENT_REQUEST' => '請求過於頻繁','CLIENT_NOT_EXIST' => '客戶不存在','TRANS_EXISTED:' => '轉帳記錄已存在','LACK_OF_MONEY' => '額度轉出的代理商或者客戶額度不足','DUPLICATE_CONFIRM' => '重複確認轉帳','TRANS_NOT_EXIST' => '轉帳記錄不存在','DECRYPTION_FAILURE' => '解密失敗','FORBIDDEN' => '禁止操作, 請求IP未在白名單中','INCONSISTENT_WITH_PRE_TRANS' => '確認轉帳信息與預轉帳提交信息不一致','INVALID_PROPERTYID' => '無效的PropertyId','INVALID_SIGN' => '無效簽名','TRANS_FAILURE' => '轉帳失敗',
+  );
+
+  private $__arrBetStatus = array(
+    0 => '正常',1 => '無效',
+  );
+
+  private $__arrCommissionTypes = array(
+    100 => '非免佣',101 => '免佣',
+  );
+
+  private $__arrHandicapTypes = array(
+    0 => '普通盤口',1 => 'VIP盤口',
+  );
+
+  private $__arrAppTypes = array(
+    0 => 'Flash',1 => 'Android',2 => 'iPhone',3 => 'HTML5',4 => 'Android tablet',5 => 'iPad',
+  );
+
+  private $__arrGameTypes = array(
+    101 => '普通百家樂',102 => 'VIP百家樂',103 => '快速百家樂',104 => '竟咪百家樂',201 => '骰寶',301 => '龍虎',401 => '輪盤',501 => '歐洲廳百家樂',601 => '歐洲廳輪盤',701 => '歐洲廳21點',106 => '聚寶百家樂',801 => '牛牛',901 => '炸金花',
+  );
+
+  private $__arrBullBullBetTypes = array( //牛牛投注
+    8001=>'莊1平倍',8011=>'莊1翻倍',8101=>'閒1平倍',8111=>'閒1翻倍',8002=>'莊2平倍',8012=>'莊2翻倍',8102=>'閒2平倍',8112=>'閒2翻倍',8003=>'莊3平倍',8013=>'莊3翻倍',8103=>'閒3平倍',8113=>'閒3翻倍',
+  );
+
+  private $__arrGoldFlowerBetTypes = array( //炸金花投注
+    9001=>'龍',9002=>'鳳',9003=>'對8以上',9004=>'順子',9005=>'同花',9006=>'同花順',9007=>'豹子',
+  );
+
+  private $__arrBaccaratBetTypes = array(  //百家投注
+    1001 => '莊',1002 => '閒',1003 => '和',1004 => '大',1005 => '小',1006 => '莊對',1007 => '閒對',5001 => '超級6',  //歐洲廳特有
+  );
+
+  private $__arrDragonBetTypes = array(  //龍虎投注
+    2001 => '龍',2002 => '虎',2003 => '和',
+  );
+
+  private $__arrSicboBetTypes = array(  //骰寶投注
+    3001 => '小',3002 => '單',3003 => '雙',3004 => '大',3011 => '全團',
+
+    3005 => '團一',3006 => '團二',3007 => '團三',3008 => '團四',3009 => '團五',3010 => '團六',
+
+    3012 => '對1',3013 => '對2',3014 => '對3',3015 => '對4',3016 => '對5',3017 => '對6',
+
+
+    3018 => '和值:4',3019 => '和值:5',3020 => '和值:6',3021 => '和值:7',3022 => '和值:8',3023 => '和值:9',3024 => '和值:10',3025 => '和值:11',3026 => '和值:12',3027 => '和值:13',3028 => '和值:14',3029 => '和值:15',3030 => '和值:16',3031 => '和值:17',3032 => '和值:放空???',
+
+    3033 => '牌九式:12',3034 => '牌九式:13',3035 => '牌九式:14',3036 => '牌九式:15',3037 => '牌九式:16',
+
+
+    3038 => '牌九式:23',3039 => '牌九式:24',3040 => '牌九式:25',3041 => '牌九式:26',
+
+    3042 => '牌九式:34',3043 => '牌九式:35',3044 => '牌九式:36',
+
+    3045 => '牌九式:45',3046 => '牌九式:46',
+
+    3047 => '牌九式:56',
+
+    3048 => '單骰:1',3049 => '單骰:2',3050 => '單骰:3',3051 => '單骰:4',3052 => '單骰:5',3053 => '單骰:6',
+  );
+
+  private $__arrRouletteBetTypes = array( //輪盤投注
+    4001 => '小',4002 => '雙',4003 => '紅',4004 => '黑',4005 => '單',4006 => '大',4007 => '第一打',4008 => '第二打',4009 => '第三打',4010 => '第一列',4011 => '第二列',4012 => '第三列',4013 => '直接注:0',4014 => '直接注:1',4015 => '直接注:2',4016 => '直接注:3',4017 => '直接注:4',4018 => '直接注:5',4019 => '直接注:6',4020 => '直接注:7',4021 => '直接注:8',4022 => '直接注:9',4023 => '直接注:0',4024 => '直接注:11',4025 => '直接注:12',4026 => '直接注:13',4027 => '直接注:14',4028 => '直接注:15',4029 => '直接注:16',4030 => '直接注:17',4031 => '直接注:18',4032 => '直接注:19',4033 => '直接注:20',4034 => '直接注:21',4035 => '直接注:22',4036 => '直接注:23',4037 => '直接注:24',4038 => '直接注:25',4039 => '直接注:26',4040 => '直接注:27',4041 => '直接注:28',4042 => '直接注:29',4043 => '直接注:30',4044 => '直接注:31',4045 => '直接注:32',4046 => '直接注:33',4047 => '直接注:34',4048 => '直接注:35',4049 => '直接注:36',4050 => '三數:(0/1/2)',4051 => '三數:(0/2/3)',4052 => '四數：(0/1/2/3)',4053 => '分注:(0/1)',4054 => '分注:(0/2)',4055 => '分注:(0/3)',4056 => '分注:(1/2)',4057 => '分注:(2/3)',4058 => '分注:(4/5)',4059 => '分注:(5/6)',4060 => '分注:(7/8)',4061 => '分注:(8/9)',4062 => '分注:(10/11)',4063 => '分注:(11/12)',4064 => '分注:(13/14)',4065 => '分注:(14/15)',4066 => '分注:(16/17)',4067 => '分注:(17/18)',4068 => '分注:(19/20)',4069 => '分注:(20/21)',4070 => '分注:(22/23)',4071 => '分注:(23/24)',4072 => '分注:(25/26)',4073 => '分注:(26/27)',4074 => '分注:(28/29)',4075 => '分注:(29/30)',4076 => '分注:(31/32)',4077 => '分注:(32/33)',4078 => '分注:(34/35)',4079 => '分注:(35/36)',4080 => '分注:(1/4)',4081 => '分注:(4/7)',4082 => '分注:(7/10)',4083 => '分注:(10/13)',4084 => '分注:(13/16)',4085 => '分注:(16/19)',4086 => '分注:(19/22)',4087 => '分注:(22/25)',4088 => '分注:(25/28)',4089 => '分注:(28/31)',4090 => '分注:(31/34)',4091 => '分注:(2/5)',4092 => '分注:(5/8)',4093 => '分注:(8/11)',4094 => '分注:(11/14)',4095 => '分注:(14/17)',4096 => '分注:(17/20)',4097 => '分注:(20/23)',4098 => '分注:(23/26)',4099 => '分注:(26/29)',4100 => '分注:(29/32)',4101 => '分注:(32/35)',4102 => '分注:(3/6)',4103 => '分注:(6/9)',4104 => '分注:(9/12)',4105 => '分注:(12/15)',4106 => '分注:(15/18)',4107 => '分注:(18/21)',4108 => '分注:(21/24)',4109 => '分注:(24/27)',4110 => '分注:(27/30)',4111 => '分注:(30/33)',4112 => '分注:(33/36)',4113 => '角注:(1/5)',4114 => '角注:(2/6)',4115 => '角注:(4/8)',4116 => '角注:(5/9)',4117 => '角注:(7/11)',4118 => '角注:(8/12)',4119 => '角注:(10/14)',4120 => '角注:(11/15)',4121 => '角注:(13/17)',4122 => '角注:(14/18)',4123 => '角注:(16/20)',4124 => '角注:(17/21)',4125 => '角注:(19/23)',4126 => '角注:(20/24)',4127 => '角注:(22/26)',4128 => '角注:(23/27)',4129 => '角注:(25/29)',4130 => '角注:(26/30)',4131 => '角注:(28/32)',4132 => '角注:(29/33)',4133 => '角注:(31/35)',4134 => '角注:(32/36)',4135 => '街注:(1~3)',4136 => '街注:(4~6)',4137 => '街注:(7~9)',4138 => '街注:(10~12)',4139 => '街注:(13~15)',4140 => '街注:(16~18)',4141 => '街注:(19~21)',4142 => '街注:(22~24)',4143 => '街注:(25~27)',4144 => '街注:(28~30)',4145 => '街注:(31~33)',4146 => '街注:(34~36)',4147 => '線注:(1~6)',4148 => '線注:(4~9)',4149 => '線注:(7~12)',4150 => '線注:(10~15)',4151 => '線注:(13~18)',4152 => '線注:(16~21)',4153 => '線注:(19~24)',4154 => '線注:(22~27)',4155 => '線注:(28~33)',4156 => '線注:(31~36)',4157 => '線注:(25~30)',6001 => '好運注(1) 80x',6002 => '好運注(2) 18x',6003 => '好運注(3) 3x',6004 => '好運注(4) 1x',6005 => '好運注(5) 3x',6006 => '好運注(6) 18x',6007 => '好運注(7) 80x',
+  );
+
+  private $__arrBlackjackBetTypes = array( //輪盤投注
+    7000 => '座位1-普通',7001 => '座位1-保險',7002 => '座位1-雙倍',7003 => '座位1-分牌',7004 => '座位1-21+3',7005 => '座位1-完美對子',7010 => '座位2-普通',7011 => '座位2-保險',7012 => '座位2-雙倍',7013 => '座位2-分牌',7014 => '座位2-21+3',7015 => '座位2-完美對子',7020 => '座位3-普通',7021 => '座位3-保險',7022 => '座位3-雙倍',7023 => '座位3-分牌',7024 => '座位3-21+3',7025 => '座位3-完美對子',7030 => '座位4-普通',7031 => '座位4-保險',7032 => '座位4-雙倍',7033 => '座位4-分牌',7034 => '座位4-21+3',7035 => '座位4-完美對子',7040 => '座位5-普通',7041 => '座位5-保險',7042 => '座位5-雙倍',7043 => '座位5-分牌',7044 => '座位5-21+3',7045 => '座位5-完美對子',7050 => '座位6-普通',7051 => '座位6-保險',7052 => '座位6-雙倍',7053 => '座位6-分牌',7054 => '座位6-21+3',7055 => '座位6-完美對子',7060 => '座位7-普通',7061 => '座位7-保險',7062 => '座位7-雙倍',7063 => '座位7-分牌',7064 => '座位7-21+3',7065 => '座位7-完美對子',7100 => '搭注-座位1-普通',7101 => '搭注-座位1-保險',7102 => '搭注-座位1-雙倍',7103 => '搭注-座位1-分牌',7110 => '搭注-座位2-普通',7111 => '搭注-座位2-保險',7112 => '搭注-座位2-雙倍',7113 => '搭注-座位2-分牌',7120 => '搭注-座位3-普通',7121 => '搭注-座位3-保險',7122 => '搭注-座位3-雙倍',7123 => '搭注-座位3-分牌',7130 => '搭注-座位4-普通',7131 => '搭注-座位4-保險',7132 => '搭注-座位4-雙倍',7133 => '搭注-座位4-分牌',7140 => '搭注-座位5-普通',7141 => '搭注-座位5-保險',7142 => '搭注-座位5-雙倍',7143 => '搭注-座位5-分牌',7150 => '搭注-座位6-普通',7151 => '搭注-座位6-保險',7152 => '搭注-座位6-雙倍',7153 => '搭注-座位6-分牌',7160 => '搭注-座位7-普通',7161 => '搭注-座位7-保險',7162 => '搭注-座位7-雙倍',7163 => '搭注-座位7-分牌',
+  );
+
+  //$__arrPokerPoint = array('A' => 1,'2' => 2,'3' => 3,'4' => 4,'5' => 5,'6' => 6,'7' => 7,'8' => 8,'9' => 9,'10' => 10,'K' => 11,'Q' => 12,'J' => 13,);
+
+  //[1-13]黑桃A-K, [14-26]红桃A-K, [27-39]梅花A-K, [39-52]方块A-K
+  private $__arrPokers = array(
+      101=>'黑桃A', 102=>'黑桃2', 103=>'黑桃3', 104=>'黑桃4', 105=>'黑桃5', 106=>'黑桃6', 107=>'黑桃7', 108=>'黑桃8', 109=>'黑桃9',110=>'黑桃10',111=>'黑桃K',112=>'黑桃Q',113=>'黑桃J', 201=>'紅心A',202=>'紅心2',203=>'紅心3',204=>'紅心4',205=>'紅心5',206=>'紅心6',207=>'紅心7',208=>'紅心8',209=>'紅心9',210=>'紅心10',211=>'紅心K',212=>'紅心Q',213=>'紅心J', 301=>'梅花A',302=>'梅花2',303=>'梅花3',304=>'梅花4',305=>'梅花5',306=>'梅花6',307=>'梅花7',308=>'梅花8',309=>'梅花9',310=>'梅花10',311=>'梅花K',312=>'梅花Q',313=>'梅花J', 401=>'方塊A',402=>'方塊2',403=>'方塊3',404=>'方塊4',405=>'方塊5',406=>'方塊6',407=>'方塊7',408=>'方塊8',409=>'方塊9',410=>'方塊10',411=>'方塊K',412=>'方塊Q',413=>'方塊J'
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------通用函數--------------------
+
+	/**
+	 * getApiCallError
+	 * 取得最後一次API的呼叫錯誤。若最後一次呼叫結果成功，則將只有param (api呼叫參數)。
+	 * @return 最後一次API的呼叫錯誤(array/null)
+   *    status: 狀態 {pre_error, success, error, curl_error}。 
+   *				pre_error: 在送出請求前即發生錯誤; 
+   *				success: 操作成功 (取得符合預期的回應); 
+   *				error: 取得了預期之外的回應; 
+   *				curl_error: 嘗試了送出請求但是發生了curl 通訊錯誤。
+	 *    code: 解析過的回應代碼 (通常是官方)。
+	 *    msg: 解析過的回應訊息 (通常是官方)。
+	 *    param: ARRAY 呼叫的參數。
+	 *        url: 呼叫的目標網址。
+	 *        method: 呼叫方法 (POST, GET, PUT, DELETE...)。
+	 *        header: header欄位。可能不存在 (未使用時)。
+	 *        postfield: post欄位。可能不存在 (未使用時)。
+	 *        raw_response: 原始、未作任何解析處理的回應結果。
+	 */
+	public function getApiCallError(){
+		return $this->err;
+	}
+
+	/**
+	 * getApiCallCurlError
+	 * 取得最後一次呼叫API的Curl錯誤。若最後一次呼叫結果成功，則將得到null。
+	 * @return CURL錯誤(array/null)
+	 *    curl_errno: curl錯誤代碼(官方)
+	 *    curl_error: curl錯誤訊息(官方)
+	 */
+	public function getApiCallCurlError(){
+		return $this->curlError;
+	}
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['password'] 會員密碼
+   * @param $data['normal_handicap'] 一般盤口
+   * @param $data['vip_handicap'] VIP 盤口
+   * @param $data['daily_max_win_limit'] 每日最高贏額
+   * @param $data['daily_max_lose_limit'] 每日最高輸額
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),  'password' => array('required'=>1,),  'normal_handicap' => array('required'=>1,),  'vip_handicap' => array('required'=>1,),  'daily_max_win_limit' => array('required'=>1,),  'daily_max_lose_limit' => array('required'=>1,),);
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrParam = array();
+    $arrParam['client'] = $_user_name;
+    $arrParam['password'] = $_password;
+    $arrParam['maxWin'] = intVal($_daily_max_win_limit);
+    $arrParam['maxLost'] = intVal($_daily_max_lose_limit);
+    $arrParam['vipHandicaps'] = $_vip_handicap;
+    $arrParam['orHandicaps'] = $_normal_handicap;
+    $arrParam['orHallRebate'] = 0;  //洗碼比
+    //var_dump($arrParam);exit();
+
+    $url = $this->cfg_base_url."/check_or_create";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && empty($result['apiError']) && ($result['error_code']===self::AB_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['error_code'];
+        $this->err['msg'] = $result['message'];
+
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')) . ': ' . $this->_produceError($result['error_code'], $result['message']);  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['error_code'])) {
+        	$this->err['code'] = $result['error_code'];
+        	if (isset($result['message'])) {
+        		$this->err['msg'] = $result['message'];
+        	}
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['language'] 語系代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),  'password' => array('required'=>1,),  'language' => array('required'=>0,'default'=>self::AB_DEFAULT_LANG_CODE),);
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrParam = array();
+    $arrParam['client'] = $_user_name;
+    $arrParam['password'] = $_password;
+    $arrParam['language'] = $_language;
+
+    $url = $this->cfg_base_url."/forward_game";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && empty($result['apiError']) && ($result['error_code']===self::AB_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['error_code'];
+        $this->err['msg'] = $result['message'];
+        return $result['gameLoginUrl'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')) . ': ' . $this->_produceError($result['error_code'], $result['message']);  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['error_code'])) {
+        	$this->err['code'] = $result['error_code'];
+        	if (isset($result['message'])) {
+        		$this->err['msg'] = $result['message'];
+        	}
+        }
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),  'password' => array('required'=>1,),);
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $arrParam = array();
+    $arrParam['client'] = $_user_name;
+    $arrParam['password'] = $_password;
+
+    $url = $this->cfg_base_url."/get_balance";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && empty($result['apiError']) && ($result['error_code']===self::AB_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['error_code'];
+        $this->err['msg'] = $result['message'];
+        return $result['balance'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')) . ': ' . $this->_produceError($result['error_code'], $result['message']);  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['error_code'])) {
+        	$this->err['code'] = $result['error_code'];
+        	if (isset($result['message'])) {
+        		$this->err['msg'] = $result['message'];
+        	}
+        }
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+                
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $transType = 'OUT';
+
+    return $this->_transfer(
+      $transType,  $arrDatas,  $argErr
+    );
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $transType = 'IN';
+
+    return $this->_transfer(
+      $transType,  $arrDatas,  $argErr
+    );
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * 用于查询 30 天内任意时间段(最多 60 分钟)的客户的投注记录.
+   * 调用次数限制: 8 次/10 分钟 (以每个 propertyId 计算)
+   * 调用次数限制用以控制调用这个 API 的频率，客户调用这个 API 的频率不能大过限制
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),  'end_datetime' => array('required'=>1,),  'agent' => array('required'=>0),  //, 'default'=>$this->cfg_agent
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $beginDatetime = strtotime($_begin_datetime);
+    $endDatetime = strtotime($_end_datetime);
+    if ( ($endDatetime-$beginDatetime) > (60*60) ) {
+      $endDatetime = $beginDatetime + (60*60);
+    }
+    $arrParam = array();
+    $arrParam['startTime'] = date(self::AB_REPORT_DATETIME_FORMAT, $beginDatetime);
+    $arrParam['endTime'] = date(self::AB_REPORT_DATETIME_FORMAT, $endDatetime);
+    if (isset($_agent)) {
+      $arrParam['agent'] = trim($_agent);
+    }
+
+    //Dbgr::preout($arrParam);
+
+    $url = $this->cfg_base_url."/betlog_pieceof_histories_in30days";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    //Dbgr::preout($result);
+    if ($result!==false) {
+      if ($result && empty($result['apiError']) && ($result['error_code']===self::AB_RESPONSE_SUCCESS_CODE)) {  //成功
+        if (isset($result['histories'])) {
+          $argErr = null;
+
+          //錯誤處理
+          $this->err['status'] = 'success';
+          $this->err['code'] = $result['error_code'];
+          $this->err['msg'] = $result['message'];
+          return $result['histories'];
+        } else {
+          $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02');  //必需索引不存在或為空: histories
+
+          //錯誤處理
+          $this->err['status'] = 'error';
+          $this->err['code'] = 'response_key_not_exist';
+          $this->err['msg'] = "Response lacks an essential key: {$dk}";
+          return false;
+        }
+      } else {  //失敗
+        $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03') . ': ' . $this->_produceError($result['error_code'], $result['message']);  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['error_code'])) {
+        	$this->err['code'] = $result['error_code'];
+        	if (isset($result['message'])) {
+        		$this->err['msg'] = $result['message'];
+        	}
+        }
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04');  //CURL 結果為不成功
+    return false;
+	}
+
+  /**
+   * 取得盤口資料
+   * @param $arrBetIds 要標記的注單ID 陣列(array)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 執行結果(bool)
+   */
+  public function queryHandicap(&$argErr=null, &$arrHandicaps=null) {
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrParam = array();
+
+    $url = $this->cfg_base_url."/query_handicap";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && empty($result['apiError']) && ($result['error_code']===self::AB_RESPONSE_SUCCESS_CODE)) {  //成功
+        $ary = $result['handicaps'];
+        $a = array();
+        $b = array();
+        for ($i=0; $i<sizeof($ary); ++$i) {
+          $arrTemp = $ary[$i];
+          if ($arrTemp['handicapType']==0) {  //一般盤口
+            $arrHandicaps['normal'][] = $arrTemp;
+            if (sizeof($b)<3) {
+              $b[] = $arrTemp['id'];
+            }
+          }
+          if ($arrTemp['handicapType']==1) {  //VIP盤手
+            $arrHandicaps['vip'][] = $arrTemp;
+            if (sizeof($a)<1) {
+              $a[] = $arrTemp['id'];
+            }
+          }
+        }
+        $vipHandicap = implode(',',$a);
+        $normalHandicap = implode(',',$b);
+        var_dump($ary);
+        var_dump($normalHandicap);
+        var_dump($vipHandicap);
+        //$arrHandicaps['normal'] = $this->_vipHandicap;
+        //$arrHandicaps['vip'] = $this->_normalHandicap;
+        //Dbgr::preout($this->_vipHandicap);
+        //Dbgr::preout($this->_normalHandicap);
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['error_code'];
+        $this->err['msg'] = $result['message'];
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['error_code'])) {
+        	$this->err['code'] = $result['error_code'];
+        	if (isset($result['message'])) {
+        		$this->err['msg'] = $result['message'];
+        	}
+        }
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL結果為不成功
+    return false;
+  }
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   * @param detail_gameType     遊戲代號 *****
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + gameTypeStr       遊戲名稱
+   * + gameRoundId       局號
+   * + tableName         桌號
+   * + bet_numbers       投注
+   * + bet_result        遊戲結果
+   * + sb_html           有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+
+    $arrBets = array();
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $detail_id = $bet['detail_id'];
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        $gameRoundId = $arrBetContents['gameRoundId'];
+        $gameType = $bet['detail_gameType'];
+        //$betTime = $arrBetContents['betTime'];
+        $state = $arrBetContents['state'];
+        $currency = $arrBetContents['currency'];
+        $exchangeRate = $arrBetContents['exchangeRate'];
+        $betType = $arrBetContents['betType'];
+        $gameResult = $arrBetContents['gameResult'];
+        $tableName = $arrBetContents['tableName'];
+        $commission = $arrBetContents['commission'];
+        $appType = $arrBetContents['appType'];
+
+        $bet['gameRoundId'] = $gameRoundId;
+        $bet['tableName'] = $tableName;
+
+        $gameTypeStr = $this->__getStr($this->__arrGameTypes, $gameType);
+
+        $bet['gameTypeStr'] = $gameTypeStr;
+        //$stateStr = __getStr($arrBetStatus, $bet['state']);
+        //$commissionStr  = __getStr($arrCommissionTypes, $bet['commission']);
+        //$appTypeStr = __getStr($arrAppTypes, $bet['appType']);
+
+        $bet['bet_result'] = $this->__getAb2GameResultStr($gameType, $gameResult);
+
+        //著色投注
+        if (strpos($gameTypeStr,'百家樂')!==false) {  //只針對百家樂類做著色
+          $bettingStr = $this->__getAb2BetDetailStr($gameType, $betType);
+          if (strpos($bettingStr,'閒')!==false) {$bettingStr = "<div class=\"ab-betting-bac-player\">{$bettingStr}</div>";}
+          elseif (strpos($bettingStr,'庄')!==false) {$bettingStr = "<div class=\"ab-betting-bac-banker\">{$bettingStr}</div>";}
+          elseif (strpos($bettingStr,'和')!==false) {$bettingStr = "<div class=\"ab-betting-bac-none\">{$bettingStr}</div>";}
+          $bet['bet_numbers'] = $bettingStr;
+        }
+
+        $bet['sb_html'] = null;
+        $arrBets[] = $bet;
+      }
+      return $arrBets;
+    } else {
+      return false;
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  /* _getDgHash: */
+  protected function _getDgHash($argStr) {
+    return hash(self::AB_HASH_METHOD, $argStr);
+  }
+
+  /* _transfer: 上下點 */
+  protected function _transfer(
+    $argTransType, //IN=存款, OUT=提款
+    $argDatas,&$argErr = null
+    ) {
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),  'amount' => array('required'=>1,),  'trans_id' => array('required'=>0,),);
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $argDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $argDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( array_key_exists('trans_id', $argDatas) ) {
+      $transId = $argDatas['trans_id'];
+    } else {
+      $transId = $this->_getTid($_user_name, $argTransType);
+    }
+
+    $transType = strtoupper($argTransType);
+    if ($transType == 'IN') {
+      $operFlag = 1;
+    } else {
+      $transType = 'OUT';
+      $operFlag = 0;
+    }
+    $arrParam = array();
+    $arrParam['client'] = $_user_name;
+    $arrParam['credit'] = abs(intVal($_amount));
+    $arrParam['operFlag'] = $operFlag;  //0=withdraw, 1=deposit
+    $arrParam['sn'] = $transId;  //$this->_getTid($argMemberName, $transType);
+
+    $url = $this->cfg_base_url."/agent_client_transfer";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && empty($result['apiError']) && ($result['error_code']===self::AB_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')) . ': ' . $this->_produceError($result['codeId']);  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['error_code'])) {
+        	$this->err['code'] = $result['error_code'];
+        	if (isset($result['message'])) {
+        		$this->err['msg'] = $result['message'];
+        	}
+        }
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL結果為不成功
+    return false;
+  }
+
+  /* produce error */
+  protected function _produceError($argErrCode,$argErrMsg=null) {
+    if ($argErrMsg !== null) {
+      /*return array(
+        'errorCode' => $argErrCode,    'errorMsg' => $argErrMsg,  );*/
+      return "{$argErrMsg} (code {$argErrCode})";
+    } else {
+      if ( self::AB_API_ERRORS === null) {
+        /*return array(
+          'errorCode' => -1,      'errorMsg' => 'DG errors definition is not found',    );*/
+        return 'AB errors definition is not found';
+      }
+      $arrErrorMsgs = self::AB_API_ERRORS;
+      if (array_key_exists($argErrCode,$arrErrorMsgs)) {
+        /*return array(
+          'errorCode' => $argErrCode,      'errorMsg' => $arrErrorMsgs[$argErrCode],    );*/
+        return "{$arrErrorMsgs[$argErrCode]} (code {$argErrCode})";
+      } else {
+        /*return array(
+          'errorCode' => $argErrCode,      'errorMsg' => '錯誤說明未定義, 錯誤代碼: '.$argErrCode,    );*/
+        return '錯誤說明未定義, 錯誤代碼: '.$argErrCode;
+      }
+    }
+  }
+
+  /* send request */
+  protected function _sendRequest($argUrl, $argArrData, &$argParams, $argMethod=self::AB_DEFAULT_REQUEST_METHOD) {
+    $key = $this->_getKey();
+    $arrData = $argArrData;
+
+    $arrData['random'] = mt_rand();
+    if (!isset($arrData['agent'])) {
+      $arrData['agent'] = $this->cfg_agent;
+    }
+    $queryStr = http_build_query($arrData);
+
+    $arr = [];
+    $arr['data'] = $this->_3DESEncrypt( $queryStr );
+    //$arr['data'] = $this->_encrypt3DES( $queryStr );
+    $arr['sign'] = $this->_getSign($arr['data']);
+    $arr['propertyId'] = $this->cfg_property_id;
+
+    //錯誤處理
+    $argParams = array();
+
+    $method = strtoupper($argMethod);
+    $arrHeader = array();
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,  
+      CURLOPT_RETURNTRANSFER => true,  
+      CURLOPT_SSL_VERIFYHOST => false,  
+      CURLOPT_SSL_VERIFYPEER => false,  
+      CURLOPT_CONNECTTIMEOUT_MS => self::AB_CURL_CONNECTTIMEOUT_MS,  
+      CURLOPT_TIMEOUT_MS => self::AB_CURL_TIMEOUT_MS,  
+      CURLOPT_HTTPHEADER => $arrHeader
+    );
+    if ( $method == 'GET') {  //GET
+      $dataStr = http_build_query($arr);
+      $url = "{$argUrl}?{$dataStr}";
+    } else {  //POST
+      $url = $argUrl;
+      $dataStr = http_build_query($arr);
+      $arrCurlDatas[CURLOPT_POST] = true;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStr;
+
+      //錯誤處理
+    	$argParams['postfield'] = $dataStr;
+    }
+ 
+    //錯誤處理
+    $argParams['url'] = $url;
+    $argParams['method'] = $method;
+    $argParams['header'] = $arrHeader;
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+
+    //錯誤處理
+    $argParams['raw_response'] = $result;
+
+    //Dbgr::preout($queryStr);
+    //Dbgr::preout($arr);
+    //Dbgr::preout($url);
+    //Dbgr::preout($arrCurlDatas);
+    //Dbgr::preout($result);
+
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),    
+        'curl_errno' => curl_errno($ch),  );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+
+    //var_dump($url);
+    //var_dump($arrCurlDatas);
+    //Dbgr::preout($result);
+    //var_dump($curlError);
+
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result,true, 512, JSON_BIGINT_AS_STRING);  //decoded as assoc. array
+      //Dbgr::preout($resultInAssoc);
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //echo "sendRequest::curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+  /* get transaction id */
+  protected function _getTid($argAccount, $argTransactionType='IN') {
+    $t = $this->_getTidTime();
+    return substr( $this->cfg_property_id . $t . md5(microtime().$argAccount), 0, 20 );
+  }
+
+  /* get formatted time for transaction id */
+  protected function _getTidTime() {
+    return date('ymdHis');
+  }
+
+  /* get key for eavery action */
+  protected function _getKey($argAgName=null,$argApiKey=null) {
+    if ($argAgName===null) {
+      $argAgName = $this->cfg_agent;
+    }
+    if ($argApiKey===null) {
+      //$argApiKey = $this->apiKey;
+    }
+    //$key = hash('md5',"{$argAgName}{$argApiKey}");
+    //$key = self::_getDgHash("{$argAgName}{$argApiKey}");
+    $key = '';
+    return $key;
+  }
+
+  /* _getSign: 認證用 */
+  protected function _getSign($argStr) {
+    return base64_encode( md5($argStr.$this->cfg_md5, true) );
+  }
+
+  /*3des encryption*/
+  protected function _3DESEncrypt($str){
+    $pz = mcrypt_get_block_size(MCRYPT_TRIPLEDES,MCRYPT_MODE_CBC);
+    $pad = $pz-( strlen( $str ) % $pz );
+    return base64_encode(
+      mcrypt_encrypt(
+        MCRYPT_TRIPLEDES,    base64_decode( $this->cfg_des ),    $str . str_repeat( chr($pad), $pad ),    MCRYPT_MODE_CBC,    base64_decode( $this->cfg_iv )
+      )
+    );
+  }
+
+  //--------------------PRIVATE--------------------
+
+  private function __getStr($argArr, $argIndex) {
+    if (isset($argArr[$argIndex])) {
+      return $argArr[$argIndex];
+    } else {
+      return "不明項目({$argIndex})";
+    }
+  }
+
+  //將投注項目陣列轉為可讀字串
+  private function __getAb2BetDetailStr($argGameType, $argBet, $argParam=null) {
+
+    $betStr = '';
+
+    $arrTargetGame = array();
+    if (($argGameType == 101) || ($argGameType == 102) || ($argGameType == 103) || ($argGameType == 104) || ($argGameType == 106)) {  //百家樂
+      $arrTargetGame = $this->__arrBaccaratBetTypes;
+    } elseif ($argGameType == 201) {  //骰寶
+      $arrTargetGame = $this->__arrSicboBetTypes;
+    } elseif ($argGameType == 301) {  //龍虎
+      $arrTargetGame = $this->__arrDragonBetTypes;
+    } elseif ($argGameType == 401) {  //輪盤
+      $arrTargetGame = $this->__arrRouletteBetTypes;
+    } elseif ($argGameType == 501) {  //歐洲廳百家樂
+      $arrTargetGame = $this->__arrBaccaratBetTypes;
+    } elseif ($argGameType == 601) {  //歐洲廳輪盤
+      $arrTargetGame = $this->__arrouletteBetTypes;
+    } elseif ($argGameType == 701) {  //歐洲廳21點
+      $arrTargetGame = $this->__arrBlackjackBetTypes;
+    } elseif ($argGameType == 801) {  //牛牛
+      $arrTargetGame = $this->__arrBullBullBetTypes;
+    } elseif ($argGameType == 901) {  //炸金花
+      $arrTargetGame = $this->__arrGoldFlowerBetTypes;
+    } else {  //不明的gameType
+      $betStr = "<不明的遊戲({$argGameType})>";
+      return $betStr;
+    }
+
+    $betStr = $this->__getStr($arrTargetGame, $argBet);
+    return $betStr;
+  }
+
+  //將結果項目陣列轉為可讀字串
+  private function __getAb2GameResultStr($argGameType, $argGameResStr, $argParam=null) {
+
+    $resStr = '';
+    preg_match_all('/{(.*?)}/', $argGameResStr, $matches);
+    if (($argGameType == 101) || ($argGameType == 102) || ($argGameType == 103) || ($argGameType == 104) || ($argGameType == 106) || ($argGameType == 501) || ($argGameType == 801) || ($argGameType == 901) //百家樂,501=歐洲廳百家樂,801=牛牛,901=炸金花
+      ) {
+      $hostStr = $this->__getAb2PokerStr($matches[1][1], $hostPoint);
+      $playerStr = $this->__getAb2PokerStr($matches[1][0], $playerPoint);
+      $winnerStr = '<div class="ab-res-winner-banker">庄</div>';
+      if ($playerPoint == $hostPoint) {
+        $winnerStr = '<div class="ab-res-winner-none">和</div>';
+      } elseif ($playerPoint > $hostPoint) {
+        $winnerStr = '<div class="ab-res-winner-player">閒</div>';
+      }
+      $resStr = <<<END
+      {$winnerStr}
+      (<div class="ab-res-points-banker">閒</div><b>{$playerPoint}點!</b>:{$hostStr};
+      <div class="ab-res-points-player">庄</div><b>{$hostPoint}點!</b>:{$playerStr})
+END;
+    }
+    elseif ($argGameType == 201) {  //骰寶
+      $point = 0;
+      foreach ($matches[1] as $mk => $mv) {
+        $arr2 = explode(',', $mv);
+        foreach ($arr2 as $ak => $av) {
+          $point += intVal($av);
+        }
+      }
+      $ss = implode(',', $matches[1]);
+      $resStr = "【{$point} 點】 ({$ss})";
+    }
+    elseif ($argGameType == 301) {  //龍虎
+      $hostStr = $this->__getAb2PokerStr($matches[1][0], $hostPoint);
+      $playerStr = $this->__getAb2PokerStr($matches[1][1], $playerPoint);
+      $winnerStr = '龍';
+      if ($playerPoint == $hostPoint) {
+        $winnerStr = '和';
+      } elseif ($playerPoint > $hostPoint) {
+        $winnerStr = '虎';
+      }
+      $resStr = "【{$winnerStr}】 (龍:{$hostStr}; 虎:{$playerStr})";
+    }
+    elseif (($argGameType == 401) || ($argGameType == 601)  //輪盤, 歐洲廳輪盤
+      ) {
+      $ss = implode(',', $matches[1]);
+      $resStr = "【{$ss}】";
+    }
+    elseif ($argGameType == 701) {  //歐洲廳21點
+      $hostStr = $this->__getAb2PokerStr($matches[1][0], $hostPoint);
+      $playerStr = $this->__getAb2PokerStr($matches[1][1], $playerPoint);
+      $winnerStr = '<div class="ab-res-winner-banker">庄</div>';
+      if ($playerPoint == $hostPoint) {
+        $winnerStr = '<div class="ab-res-winner-none">和</div>';
+      } elseif ($playerPoint > $hostPoint) {
+        $winnerStr = '<div class="ab-res-winner-player">閒</div>';
+      }
+      $resStr = <<<END
+      {$winnerStr}
+      (<div class="ab-res-points-banker">庄</div>:{$hostStr};
+      <div class="ab-res-points-player">閒</div>:{$playerStr})
+END;
+    }
+    else {  //不明的gameType
+      $resStr = "<不明的遊戲({$argGameType})>";
+    }
+    //$ss = '';foreach ($matches[1] as $mk => $mv) {$ss .= $mv . '|';}$resStr = "{$resStr} [{$ss}]";
+    return $resStr;
+  }
+
+  //
+  private function __getAb2PokerStr($argCodeStr, &$argPoint) {
+
+    $codeStr = str_replace(' ', '', trim($argCodeStr));
+    $arr = explode(',', $codeStr);
+    $ret = '';
+    $point = 0;
+    foreach ($arr as $ak => $av) {
+      if (intVal($av)  !== self::AB_REPORT_POKER_INVALID_FACE) {  //-1代表N/A
+        if (strlen($ret)) {$ret .= ',';}
+        if (array_key_exists($av, $this->__arrPokers) ) {
+          $ret .= $this->__arrPokers[$av];
+        } else {
+          $ret .= "不明牌面({$av})";
+        }
+        $right2 = intVal(substr($av, -2));
+        if ($right2 >= 10) {
+          $right2 = 0;
+        }
+        $point += $right2;
+      }
+    }
+    $ret = str_replace('黑桃','&spades;',$ret);
+    $ret = str_replace('紅心','&hearts;',$ret);
+    $ret = str_replace('梅花','&clubs;',$ret);
+    $ret = str_replace('方塊','&diams;',$ret);
+    $argPoint = $point % 10;
+    return $ret;
+  }
+
+}

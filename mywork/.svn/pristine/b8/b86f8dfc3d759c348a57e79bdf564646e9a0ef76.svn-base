@@ -1,0 +1,108 @@
+<?php
+class CommonMemberOnlineModel extends MemberModel {
+    protected $tableName = "common_member_online";
+    protected $tableId = "online_id";
+    
+    /*
+     * 取得 資料
+     */
+    public function getMemberOnlineData($data,&$err=""){
+        if(empty($data["upOnlineTime"]) && $data["upOnlineTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `online_modifyTime` > '{$data['upOnlineTime']}'";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+    
+    public function getMemberOnlineDataById($data,&$err=""){
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' LIMIT 1";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 新增  資料
+     */
+    public function addMemberOnlineData($data,&$err=""){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    /*
+     * 修改 資料
+     * 使用MemberId
+     */
+    public function setMemberOnlineDataById($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "member_id"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 刪除 資料
+     */
+    public function delMemberOnlineDataById($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /**
+     * 取得member_id
+     */
+    public function getMemberId($data){
+        $sql = "SELECT `member_id` FROM `{$this->tableName}` WHERE `online_id` = '{$data['online_id']}'";
+        $return = $this->query($sql);
+
+        return $return[0];
+
+    }
+}

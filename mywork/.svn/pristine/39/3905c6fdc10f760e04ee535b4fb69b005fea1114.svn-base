@@ -1,0 +1,9 @@
+<?php
+/**
+ * 人數圖表
+ */
+class MemberChartAction extends AdminAction{
+	public function index(){
+		$this->display();
+	}
+}

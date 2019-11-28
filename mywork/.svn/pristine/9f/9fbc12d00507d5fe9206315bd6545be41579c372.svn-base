@@ -1,0 +1,65 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">託售點數</h2>
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 確認託售內容</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link  active show" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>完成託售申請</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                
+			                  <div class="tab-pane" id="pill-pr-1">
+			                  		<div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">  
+					                  		已成功送出託售申請，<br>
+											請繼續完成託售<br>
+									  </h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-2-a').click();" >繼續</button>
+					                </div>
+	                  			 
+			                  </div>
+			                  
+			                  
+			                  <div class="tab-pane active" id="pill-pr-2">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">
+					                  	 已成功送出託售申請，<br>
+										此次託售紀錄請至<a class="a-color-acacac" href="__APP__/MemberCenter/withdrawRecords">會員中心--託售紀錄</a>查詢。<br>
+					                  </h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="self.location.href='__APP__/MemberIndex/index'" >完成</button>
+					                </div>
+			                  </div>
+			                  
+			                </div>
+		                		
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>

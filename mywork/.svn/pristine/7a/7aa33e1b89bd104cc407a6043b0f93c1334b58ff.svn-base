@@ -1,0 +1,154 @@
+.bghover:hover{
+	color: #fff;
+    background-color: rgba(0,0,0,0.5);
+    background-image: none;
+    border-color: #fff;
+}
+.aservise{
+	text-decoration:none!important;
+}
+.bservise{
+	color:#fff;
+}
+.bservise:hover{
+	background-color: #080808 !important;
+	cursor:pointer;
+}
+.white-bg {
+	
+	height:60px;
+    position: relative;
+    left: 0px;
+    top:-5px;
+    float: left;
+    width: 200px;
+    padding: 0px 0;
+    font-size: 20px;
+    line-height: 63px;
+    letter-spacing: 0px;
+    text-align: center;
+    background-color: #1a1a1a;
+    color: #fff;
+    -webkit-clip-path: polygon(0 0, 100% 0%, 84% 100%, 0% 100%);
+    clip-path: polygon(0 0, 100% 0%, 84% 100%, 0% 100%);
+}
+.white-bg2{
+	height:60px;
+	position: relative;
+    left: -28px;
+    top:-5px;
+    float: left;
+    margin:0;
+    padding:0;
+	width: 130px;
+	
+	background-color: #1a1a1a;
+    -webkit-clip-path: polygon(25% 0%, 31% 0, 7% 100%, 0% 100%);
+    clip-path: polygon(25% 0%, 31% 0, 7% 100%, 0% 100%);
+}
+
+.width-100{
+	width:100%!important;
+	margin:0;
+}
+.m-tb-0{
+    height:50px!important;
+}
+
+.container-fluid{
+	width: 100%;
+    padding-right: 300px!important;
+    padding-left: 0px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.ds-bl{
+	display:block;
+	line-height:22.5px;
+	font-size:14px;
+	
+}
+
+
+.p-t-11{
+	padding-top: 11px!important;
+	height:50px;
+}
+
+.mq-pos{
+	margin-left:210px;
+	overflow:hidden;
+	height:40px!important;
+}
+
+.font-size-15{
+	font-size:15px;
+}
+
+.ml-po{
+	margin-top:0px;
+	left:630px;
+	position: absolute;
+}
+
+.mq-style{
+	height:40px!important;
+}
+.pink-bg{
+	display:none;
+}
+
+@media (max-width: 767px) {
+	.pink-bg{
+	    background-color:#d9415a;
+	    z-index:0;
+	    display:inline-block;
+	}
+	
+	.mq-pos{
+	    left:-90px;
+	    top:3px;
+	}
+	.ds-bl{
+	margin-right:8px;
+	line-height:18px;
+	font-size:13px;
+    }
+    .mq-style{
+	height:36px!important;
+    }
+.white-bg {
+	
+	height:52px;
+    position: relative;
+    left: 0px;
+    top:-1px;
+    float: left;
+    width: 110px;
+    padding: 0px 0;
+    font-size: 14px;
+    line-height: 55px;
+    letter-spacing: 0px;
+    text-align: center;
+    background-color: #1a1a1a;
+    color: #fff;
+    -webkit-clip-path: polygon(0 0, 100% 0%, 82% 100%, 0% 100%);
+    clip-path: polygon(0 0, 100% 0%, 82% 100%, 0% 100%);
+}
+.white-bg2{
+	height:52px;
+	position: relative;
+    left: -16px;
+    top:-0px;
+    float: left;
+    margin:0;
+    padding:0;
+	width: 80px;
+	
+	background-color: #1a1a1a;
+    -webkit-clip-path: polygon(25% 0%, 31% 0, 7% 100%, 0% 100%);
+    clip-path: polygon(25% 0%, 31% 0, 7% 100%, 0% 100%);
+}
+	
+}

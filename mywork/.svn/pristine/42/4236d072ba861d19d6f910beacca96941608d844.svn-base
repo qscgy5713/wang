@@ -1,0 +1,69 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+<!-- owl-main-slide owl-carousel carousel-dark owl-theme 可以用手滑動頁面的效果 -->
+<div class=" fullscreen">
+
+    <div class="item bg-parallax fullscreen parallax-overlay" style='background-image: url("__CSS__/images/bg2.jpg")'>
+        <div class="d-flex align-items-center">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 ml-auto mr-auto text-center">
+                        <h3 class="text-white h1 font700 text-capitalize mb20">
+                          	SP體育
+                        </h3>
+                        <div class="form-group">
+                            <label class="text-white">電子錢包</label>
+                            <input type="text" class="form-control form-control-game ml10" id="exampleInputEmail1" aria-describedby="emailHelp" value="{$memberWallet}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="text-white">遊戲點數</label>
+                            <input type="text" class="form-control form-control-game ml10" id="exampleInputEmail2" aria-describedby="emailHelp" value="{$memberBalance}" readonly>
+                        </div>
+                        
+                        <button type="button" class="btn btn-white-outline mb5 ml10 btn-rounded" onclick="ajaxbutton('2')">GO</button>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<include file="Common:footer"/> 
+<script type="text/javascript">
+$(document).ready(function(){
+	//alert('test');
+});
+function ajaxf(TransferMoney){
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxTransfer",
+        data:{TransferMoney:TransferMoney},
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		alert(dataObject.err);
+        	} else {
+        		//alert("轉移成功");
+        	}
+            //console.log(dataObject);
+        },
+		error:function(){
+			alert("網路錯誤");
+		}
+	});
+}
+function ajaxbutton(num){
+	
+	// 進入遊戲
+	window.open("{$gameLink}", '_blank');
+}
+</script>
+
+
+
+

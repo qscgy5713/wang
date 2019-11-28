@@ -1,0 +1,67 @@
+<?php
+/*
+ * 代理子帳號權限
+ */
+class CommonAgentSubPagepowerModel extends AgentModel {
+    protected $tableName = "common_agent_sub_pagepower";
+    protected $tableId = "power_id";
+    /*
+     * 新增 子帳號 權限
+     */
+    public function addAgentSubPagepowerData($data){
+        if(empty($data["sub_id"]) && $data["sub_id"] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改 子帳號 權限
+     */
+    public function setAgentSubPagepowerDataBySubId($data){
+        if(empty($data["sub_id"]) && $data["sub_id"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "sub_id"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `sub_id` = '{$data['sub_id']}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 刪除 子帳號 權限
+     * 使用ID
+     */
+    public function delAgentSubPagepowerDataBySubId($data){
+        if(empty($data["sub_id"]) && $data["sub_id"] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `sub_id` = 'sub_id';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+}

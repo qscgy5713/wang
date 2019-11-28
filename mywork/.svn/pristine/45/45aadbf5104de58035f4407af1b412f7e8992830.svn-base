@@ -1,0 +1,126 @@
+<!-- 手機板輪播 -->
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners section_rwd">
+			<!--
+				Navigation Styles:
+
+					data-navigationStyle="" theme default navigation
+
+					data-navigationStyle="preview1"
+					data-navigationStyle="preview2"
+					data-navigationStyle="preview3"
+					data-navigationStyle="preview4"
+
+				Bottom Shadows
+					data-shadow="1"
+					data-shadow="2"
+					data-shadow="3"
+
+				Slider Height (do not use on fullscreen mode)
+					data-height="300"
+					data-height="350"
+					data-height="400"
+					data-height="450"
+					data-height="500"
+					data-height="550"
+					data-height="600"
+					data-height="650"
+					data-height="700"
+					data-height="750"
+					data-height="800"
+			-->
+			<div class="fullwidthbanner" data-height="550" data-navigationStyle="">
+				<ul class="hide">
+					<!-- SLIDE  -->
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off"  data-title="Slide">
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/cowRWD.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+					</li>
+
+					<!-- SLIDE9 -->
+					<!--<li data-transition="fade" data-slotamount="14" data-masterspeed="300" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/experiencePage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/experiencePageRWD.jpg"
+							 alt="" data-bgfit="cover" data-bgfit="left top" data-bgrepeat="no-repeat">
+					</li>-->
+					<!-- SLIDE9  -->
+
+					<!-- SLIDE11 -->
+					<li data-transition="fade" data-slotamount="14" data-masterspeed="300" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/dragonStorePlusPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/dragonStorePlusPageRWD.jpg"
+							 alt="" data-bgfit="cover" data-bgfit="left top" data-bgrepeat="no-repeat">
+					</li>
+					<!-- SLIDE11  -->
+
+					<!-- SLIDE10 -->
+					<li data-transition="fade" data-slotamount="14" data-masterspeed="300" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/storeGiftPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/storeGift2PageRWD.jpg"
+							 alt="" data-bgfit="cover" data-bgfit="left top" data-bgrepeat="no-repeat">
+					</li>
+					<!-- SLIDE10  -->
+
+
+					<!-- SLIDE11 
+					<li data-transition="fade" data-slotamount="14" data-masterspeed="300" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/storePlusPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/storePlusPageRWD.jpg"
+							 alt="" data-bgfit="cover" data-bgfit="left top" data-bgrepeat="no-repeat">
+					</li>-->
+					<!-- SLIDE11  -->
+
+
+					<!-- SLIDE -->
+					<li data-transition="fade" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off"  data-title="Slide"
+						onclick="self.location.href='__APP__/RebateEvent/baccaratWinningPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/baccaratWinningPageRWD.jpg"
+						 data-bgposition="center center" data-bgfit="cover" data-bgrepeat="no-repeat">
+					</li>
+					<!-- SLIDE  -->
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/backWaterElectronicPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/backWaterElectronicPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/backWaterRealityPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/backWaterRealityPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/backWaterSportsPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/backWaterSportsPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/lottoFourPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/lottoFourPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/reversalPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/reversalPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+					<li data-transition="fade" data-slotamount="14"  data-masterspeed="300" data-delay="10000"
+						onclick="self.location.href='__APP__/RebateEvent/storeGiftPage'">
+
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/promotions/storeGiftPageRWD.jpg"
+						alt="" data-bgfit="cover" data-bgposition="left top" data-bgrepeat="no-repeat" />
+					</li>
+
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>

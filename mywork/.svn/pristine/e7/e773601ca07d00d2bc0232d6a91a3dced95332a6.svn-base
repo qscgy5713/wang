@@ -1,0 +1,669 @@
+<?php
+class MemberCenterAction extends MemberAction {
+    protected $memberNumberNumber = 10;//會員四星彩 一頁幾筆
+    protected $memberPageMoreNumber = 5;//一頁最多幾頁
+    protected $memberNumberLimitDay = "-30";//會員四星彩 限制查詢七天內
+
+    protected $rechargeNumber = 10;//儲值紀錄 一頁幾筆
+    protected $rechargePageMoreNumber = 5;//一頁最多幾頁
+    protected $rechargeLimitDay = "-30";//儲值紀錄 限制查詢七天內
+
+    protected $backwaterNumber = 10;//返水紀錄 一頁幾筆
+    protected $backwaterPageMoreNumber = 5;//一頁最多幾頁
+    protected $backwaterLimitDay = "-30";//返水紀錄 限制查詢七天內
+
+    protected $transferNumber = 10;//轉移紀錄 一頁幾筆
+    protected $transferPageMoreNumber = 5;//一頁最多幾頁
+    protected $transferLimitDay = "-7";//轉移紀錄 限制查詢七天內
+
+    protected $withdrawNumber = 10;//託售紀錄 一頁幾筆
+    protected $withdrawPageMoreNumber = 5;//一頁最多幾頁
+    protected $withdrawLimitDay = "-30";//轉移紀錄 限制查詢七天內
+
+    protected $mailNumber = 10;//信件紀錄 一頁幾筆
+    protected $mailPageMoreNumber = 5;//一頁最多幾頁
+    protected $mailLimitDay = "-30";//信件紀錄 限制查詢三十天內
+
+    protected function _initialize() {
+        parent::_initialize();
+        $this->isMemberLoginShowErr();
+    }
+    //TODO:8 會員中心
+    public function index(){
+        //$this->display();
+        redirect(__APP__.'/MemberCenter/lottoRecords');
+    }
+    //TODO:8.1四星彩
+    public function lottoRecords(){
+        $request = $this->getRequest();
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $CommonEventLottofourMemberNumber = D("CommonEventLottofourMemberNumber");
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "event_createTime" => strtotime($this->memberNumberLimitDay." day")
+        );
+        $return = $CommonEventLottofourMemberNumber->getTotalNumberMemberNumberData($data,$err);
+        if($return === false){
+            $this->error($err);//讀取儲值單筆數，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        //var_dump($totalNumber);
+        $totalPage = ceil($totalNumber / $this->memberNumberNumber);//總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->memberPageMoreNumber); //取得分頁陣列
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],//會員ID
+            "event_createTime" => strtotime($this->memberNumberLimitDay." day"),
+            "page" => array(
+                "number" => $this->memberNumberNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CommonEventLottofourMemberNumber->getLottofourMemberNumberData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取儲值單紀錄，失敗。
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "memberNumber_id"=>"id",
+            "recharge_money"=>"rechargeMoney",
+            "memberNumber_number"=>"number",
+            "memberNumber_lottofour"=>"lottofour",
+            "event_createTime"=>"createTime",
+            "memberNumber_lotterTime"=>"lotterTime",
+            "memberNumber_result"=>"result",
+        );
+        $showStr = "";
+
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'recharge_status'://頁面開關  轉換 文字
+                        $showStr = $CashflowRecharge->getRechargeStatusStr($value[$key1]);
+                        break;
+                    case 'event_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'memberNumber_lotterTime'://開獎 時間戳 轉換 日期
+                        $showStr = date('Y-m-d', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("actionName","lottoRecords");
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("pageArray",$pageArray);//分頁陣列
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->assign("showEmpty","<tr><td id='showMessage' colspan='6' align='center'>無四星彩紀錄</td></tr>");
+        $this->display();
+    }
+    //TODO:8.2會員資料
+    public function memberInfo(){
+        $memberPhone = substr($_SESSION["Member"]["phone"],0,3)."****".substr($_SESSION["Member"]["phone"],6,3);
+        $this->assign("memberPhone",$memberPhone);
+        $this->assign("actionName","memberInfo");
+        $this->display();
+    }
+    /**
+     * 改密碼功能
+     */
+    public function formChangePassword(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+
+        $CommonMember = D("CommonMember");
+        if(!isset($request['oldPassword']) || empty($request['oldPassword'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//舊密碼為空，請重新輸入舊密碼。
+        }
+        if(!isset($request['newPassword']) || empty($request['newPassword'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//新密碼為空，請重新輸入新密碼。
+        }
+        if(!(strlen($request['newPassword']) >= 6 && strlen($request['newPassword']) <= 20)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_10')));//新密碼長度應介於6~20位之間!請重新輸入。
+        }
+        if(!isset($request['new2Password']) || empty($request['new2Password'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//確認密碼為空，請重新輸入確認密碼。
+        }
+        if($request['oldPassword'] === $request['newPassword']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//新密碼 不可與 舊密碼 相同。
+        }
+        //檢查 兩次新密碼 是否正確 。
+        if(!($request['newPassword'] === $request['new2Password'])){
+            //否，回傳顯示 確認密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//新密碼與確認密碼不符，請重新輸入。
+        }
+
+        //使用帳號 查詢 會員資料
+        $data = array(
+            "member_account" => $_SESSION['Member']['account'], //帳號
+        );
+        //從 CommonMemberModel getMemberData 取得會員資訊
+        $return = $CommonMember->getMemberDataByAccount($data);
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//資料庫錯誤。
+        }
+        //檢查 是否 有此帳號
+        if(!isset($return['member_id'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//無此帳號，請重新登入。
+        }
+        //從 CommonMemberModel getMd5Password($password) 傳入密碼 取得加密後的密碼 做比對
+        $oldPassword = $CommonMember->getMd5Password($request['oldPassword']);
+        //檢查 舊密碼 是否正確 。
+        if(!($return['member_password'] === $oldPassword)){
+            //否，回傳顯示 舊密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));//舊密碼錯誤。
+        }
+
+        //取得 新密碼 MD5加密
+        $newPassword = $CommonMember->getMd5Password($request['newPassword']);
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "member_password" => $newPassword
+        );
+        //修改會員密碼
+        $return = $CommonMember->setMemberById($data);
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_09')));//修改密碼失敗，請重新登入。
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改密碼成功，下次登入請使用新密碼登入。
+        $data = array(
+            'operateLog_class'=>1, //1為修改密碼
+            'agent_id'=>$_SESSION['Agent']['id'],
+            'member_id'=>$_SESSION['Member']['id'],
+            'agent_account'=>$_SESSION['Agent']['account'],
+            'operateLog_main'=> array(
+                'oldPassword'=>$request['oldPassword'],
+                'newPassword'=>$request['newPassword']
+            ),
+        );
+        $this->addMemberOperateLog($data);
+    }
+
+    //TODO:8.3返水紀錄
+    public function bounsRecords(){
+        $request = $this->getRequest();
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $CommonMemberBackwaterLog = D("CommonMemberBackwaterLog");
+        $data = array(
+            "member_id"=>$_SESSION['Member']['id'],
+            "backWaterLog_createTime" => strtotime($this->backwaterLimitDay." day")
+        );
+        $return = $CommonMemberBackwaterLog->getTotalNumberBackWaterLogData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取返水紀錄，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        $totalPage = ceil($totalNumber / $this->backwaterNumber);//總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->rechargePageMoreNumber);
+
+        $data = array(
+            "member_id"=>$_SESSION['Member']['id'],
+            "backWaterLog_createTime" => strtotime($this->backwaterLimitDay." day"),
+            "page" => array(
+                "number" => $this->backwaterNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CommonMemberBackwaterLog->getMemberBackWaterLogData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取返水紀錄，失敗。
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "backWaterLog_id"=>"id",
+            "game_name"=>"gameName",
+            "backWaterLog_createTime"=>"createTime",
+            "backWaterLog_money"=>"money",
+            "backWaterLog_betDetails"=>"betDetailsArray",
+            "backWaterLog_decimalPoint"=>"decimalPoint"
+        );
+        $showStr = "";
+
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'backWaterLog_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'backWaterLog_betDetails'://注單詳情
+                        $showStr = json_decode($value[$key1], true);
+                        $showStr['waterRate'] = ($showStr['waterRate']*100).'%';
+                        $showStr['allEffective'] = intval($showStr['allEffective']);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("actionName","bounsRecords");
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("pageArray",$pageArray);//目前的頁數
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->assign("showEmpty","<tr><td id='showMessage' colspan='8' align='center'>無返水紀錄</td></tr>");
+        $this->display();
+    }
+    //TODO:8.4儲值紀錄
+    public function rechargeRecords(){
+        $request = $this->getRequest();
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $CashflowRecharge = D("CashflowRecharge");
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "recharge_createTime" => strtotime($this->rechargeLimitDay." day")
+        );
+        $return = $CashflowRecharge->getTotalNumberRechargeData($data,$err);
+        if($return === false){
+            $this->error($err);//讀取儲值單筆數，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        //var_dump($totalNumber);
+        $totalPage = ceil($totalNumber / $this->rechargeNumber);//總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->rechargePageMoreNumber);
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],//會員ID
+            "recharge_createTime" => strtotime($this->rechargeLimitDay." day"),
+            "page" => array(
+                "number" => $this->rechargeNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CashflowRecharge->getMemberRechargeData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取儲值單紀錄，失敗。
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "recharge_id"=>"id",
+            "cashflow_handlingFee"=>"handlingFee",
+            "recharge_createTime"=>"createTime",
+            "recharge_money"=>"money",
+            "recharge_status"=>"status",
+            "recharge_paymentCode"=>"paymentCode",
+        );
+        $showStr = "";
+
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'recharge_status'://頁面開關  轉換 文字
+                        $showStr = $CashflowRecharge->getRechargeStatusStr($value[$key1]);
+                        break;
+                    case 'recharge_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'cashflow_handlingFee':
+                        $decodeArray = json_decode($value[$key1], true);
+                        $showStr = $decodeArray[1]."元";
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("actionName","rechargeRecords");
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("pageArray",$pageArray);//目前的頁數
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->assign("showEmpty","<tr><td id='showMessage' colspan='6' align='center'>無儲值紀錄</td></tr>");
+        $this->display();
+    }
+    //TODO:8.5贈點紀錄
+    public function givenRecord(){
+        $this->assign("actionName","givenRecord");
+        $this->display();
+    }
+    //TODO:8.6轉移紀錄
+    public function transferRecords(){
+        $request = $this->getRequest();
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $CashflowTransfer = D("CashflowTransfer");
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "transfer_createTime" => strtotime($this->transferLimitDay." day")
+        );
+        $return = $CashflowTransfer->getTotalNumberTransferData($data,$err);
+        if($return === false){
+            $this->error($err);//讀取轉移單筆數，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        $totalPage = ceil($totalNumber / $this->transferNumber);//總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->transferPageMoreNumber);
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "transfer_createTime" => strtotime($this->transferLimitDay." day"),
+            "page" => array(
+                "number" => $this->transferNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CashflowTransfer->getMemberTransferData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取轉移單紀錄，失敗。
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "transfer_id"=>"id",
+            "transfer_createTime"=>"createTime",
+            "transfer_money"=>"money",
+            "transfer_status"=>"status",
+            "transfer_from"=>"from",
+            "transfer_to"=>"to",
+            "transfer_remark"=>"remark",
+        );
+        $showStr = "";
+        $GameInfo = D("GameInfo");
+        $gameNameReturnArray = $GameInfo->getAllGameNameData();
+        if($gameNameReturnArray === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//讀取轉移單紀錄，失敗。
+        }
+        $gameNameArray = array();
+        foreach($gameNameReturnArray as $value){
+            $gameNameArray[$value["game_code"]] = $value["game_name"];
+        }
+        //var_dump($gameNameArray);
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'transfer_status'://頁面開關  轉換 文字
+                        if($value[$key1] == 1){
+                            $showStr = "成功";
+                            break;
+                        }
+                        $showStr = "失敗";
+                        break;
+                    case 'transfer_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'transfer_from':
+                        if($value[$key1] === "Wallet"){
+                            $showStr = "電子錢包";
+                        } else {
+                            $showStr = $gameNameArray[$value[$key1]];
+                        }
+                        break;
+                    case 'transfer_to'://建立時間 時間戳 轉換 日期
+                        if($value[$key1] === "Wallet"){
+                            $showStr = "電子錢包";
+                        } else {
+                            $showStr = $gameNameArray[$value[$key1]];
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+
+        //var_dump($showArray);
+        $this->assign("actionName","transferRecords");
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("pageArray",$pageArray);//目前的頁數
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->assign("showEmpty","<tr><td id='showMessage' colspan='6' align='center'>無轉移紀錄</td></tr>");
+        $this->display();
+    }
+    //TODO:8.7託售紀錄
+    public function withdrawRecords(){
+        $request = $this->getRequest();
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $CashflowWithdraw = D("CashflowWithdraw");
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "withdraw_createTime" => strtotime($this->withdrawLimitDay." day")
+        );
+        $return = $CashflowWithdraw->getTotalNumberWithdrawData($data,$err);
+        if($return === false){
+            $this->error($err);//讀取託售單筆數，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        //var_dump($totalNumber);
+        $totalPage = ceil($totalNumber / $this->withdrawNumber);//總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->withdrawPageMoreNumber);
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],//會員ID
+            "withdraw_createTime" => strtotime($this->withdrawLimitDay." day"),
+            "page" => array(
+                "number" => $this->withdrawNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CashflowWithdraw->getMemberWithdrawData($data,$err);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取轉移單紀錄，失敗。
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "withdraw_id"=>"id",
+            "withdraw_createTime"=>"createTime",
+            "withdraw_money"=>"money",
+            "withdraw_status"=>"status",
+            "withdraw_bankcode"=>"bankcode",
+            "withdraw_bankaccount"=>"bankaccount",
+            "cashflow_handlingFee"=>"handlingFee",
+        );
+        $showStr = "";
+
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'withdraw_status'://頁面開關  轉換 文字
+                        $showStr = $CashflowWithdraw->getWithdrawStatusStr($value[$key1]);
+                        break;
+                    case 'withdraw_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("actionName","withdrawRecords");
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->assign("showEmpty","<tr><td id='showMessage' colspan='7' align='center'>無託售紀錄</td></tr>");
+        $this->display();
+    }
+    //TODO:8.8聯絡客服
+    public function contactService(){
+        $CommonMemberMail = D("CommonMemberMail");
+        $i = 1;
+        $bool = true;
+        $showArray = array();
+        while($bool){
+            $return = $CommonMemberMail->getMailTypeStr($i);
+            if($return === false){
+                $bool = false;
+            } else {
+                $showArray[$i-1] = $return;
+            }
+            $i++;
+        }
+        //var_dump($showArray);
+        $this->assign("actionName","contactService");
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->display();
+    }
+    //新增客服訊息功能
+    public function formService(){
+        $request = $this->getRequest();
+        if (!isset($request['mailTitle']) || empty($request['mailTitle'])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        if (!isset($request['mailMain']) || empty($request['mailMain'])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $CommonMemberMail = D("CommonMemberMail");
+        $mail_createTime = time();//取得現在時間戳
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "mail_title" =>$request['mailTitle'],
+            "mail_main" =>$request['mailMain'],
+            "mail_createTime" => $mail_createTime,
+            "mail_status"=>2
+        );
+        $return = $CommonMemberMail->addMailData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $this->assign("jumpUrl","__APP__/MemberCenter/ServiceRecords");
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO:8.9客服訊息
+    public function ServiceRecords(){
+        $request = $this->getRequest();
+
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $CommonMemberMail = D("CommonMemberMail");
+
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "mail_createTime" => strtotime($this->mailLimitDay." day")
+        );
+        $return = $CommonMemberMail->getTotalNumberMailData($data,$err);
+        if($return === false){
+            $this->error($err);//讀取託售單筆數，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        //var_dump($totalNumber);
+        $totalPage = ceil($totalNumber / $this->withdrawNumber);//總頁數
+        $pageArray = getPageArray($pageNumber, $totalPage, $this->withdrawPageMoreNumber);
+
+        $data = array(
+            "member_id" => $_SESSION["Member"]["id"],
+            "mail_createTime" => strtotime($this->mailLimitDay." day"),
+            "page" => array(
+                "number" => $this->mailNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CommonMemberMail->getMemberMailData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "mail_id"=>"id",
+            "mail_createTime"=>"createTime",
+            "mail_title"=>"title",
+            "mail_main"=>"main",
+            "mail_status"=>"status",
+        );
+        $showStr = "";
+
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'mail_status'://頁面開關  轉換 文字
+                        $showStr = $CommonMemberMail->getMailStatusStr($value[$key1]);
+                        break;
+                    case 'mail_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        //var_dump($showArray);
+        $this->assign("actionName","ServiceRecords");
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("showArray",$showArray);//輸出的陣列
+        $this->assign("showEmpty","<tr><td id='showMessage' colspan='6' align='center'>無訊息紀錄</td></tr>");
+        $this->assign("pageArray",$pageArray);//目前的頁數
+        $this->display();
+    }
+    public function ajaxSetMailStatus(){
+        $request = $this->getRequest();
+
+        if (!isset($request['setId']) || empty($request['setId'])) {
+            return;
+        }
+        $CommonMemberMail = D("CommonMemberMail");
+        $data = array(
+            "mail_id"=>$request['setId'],
+            "mail_status"=>"1"
+        );
+        $return = $CommonMemberMail->setMailDataById($data);
+        if($return === false){
+            return;
+        }
+    }
+}

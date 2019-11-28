@@ -1,0 +1,117 @@
+<include file="Common:header"/>
+<style>
+	.down{
+		position:relative;
+		width:100%;
+		/*text-align: center;*/
+		/*height: 0.8rem;*/
+		vertical-align: middle;
+		border: 1px solid #ff407f;
+		border-radius:1rem;
+		/*line-height: 0.9rem;*/
+		margin:5px 0;
+		display: inline-block;
+
+	}
+
+	.down > div{
+		position:relative;
+		display:inline-block;
+		vertical-align:middle;
+		margin-right:-4px;/*消減掉預設的差, 這樣兩個百分比加起來就不會往下掉*/
+	}
+	.down > div:nth-child(1){
+		text-align:right;
+		line-height:3em;
+		font-size:0.9em;
+	}
+	.down > div:nth-child(1) > a > img{
+		width:100%;
+		height: auto;
+	}
+	.down > div:nth-child(2){
+		text-align:left;
+		font-size:1.6em;
+		line-height:3em;
+		color: #ff407f;
+	}
+	.down > div:nth-child(2) > a{
+		color: #ff407f;
+	}
+	.prompt{
+		left: 0;
+		top: 0;
+		width: 100%;
+		position: absolute;
+		height: 100%;
+		background-color: rgba(0,0,0,0.5);
+		z-index: 999;
+		display: none;
+	}
+	.prompt img{
+		width: 95%;
+	}
+</style>
+
+	<div id="wrapper" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		    <!--PC-->
+		    <div class="container d-none d-sm-block" style="margin:12% auto 15% auto;">
+				<div style="text-align:center;margin:0% 0 25px 0;">
+					<img src="__CSS__/downloadPage/logo_zh-tw.png">
+				</div>
+
+				<div class="text-center">
+					<img src="__CSS__/downloadPage/qr.jpg" alt="" />
+				</div>
+
+			</div>
+			<div class="mt-10 d-sm-none" style="width: 300px; margin:50% auto 20% auto;">
+
+				<div style="text-align:center;margin:40% 0 20px 0;">
+					<img src="__CSS__/downloadPage/logo_zh-tw.png">
+				</div>
+
+				<div class="row">
+					<div class="col-12 mb-10">
+						<div class="row down">
+							<div class="col-4"><a href="__APP__/MemberIndex/download"><img src="__CSS__/downloadPage/kissiphone.png" alt="" /></a></div>
+							<div class="col-8"><a href="__APP__/MemberIndex/download">{$Think.lang.DownLoadIndex1}</a></div>
+						</div>
+
+					</div>
+					<div class="col-12">
+						<div class="row down">
+							<div class="col-4"><a href="https://dl.x599.net/apk/Xn591.apk"><img src="__CSS__/downloadPage/kissandroid.png" alt="" /></a></div>
+							<div class="col-8"><a href="https://dl.x599.net/apk/Xn591.apk">{$Think.lang.DownLoadIndex2}</a></div>
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+
+			<div class="prompt" id="prompt">
+				<img src="./alert.png" alt="" />
+			</div>
+
+
+<include file="Common:footer"/>
+		<script>
+            is_weixn_qq();
+            function is_weixn_qq(){
+                var ua = navigator.userAgent.toLowerCase();
+                if(ua.match(/MicroMessenger/i)=="micromessenger") {
+                    document.getElementById('prompt').style.display = 'block';
+                } else if (ua.match(/QQ/i) == "qq") {
+                    return "QQ";
+                }else{
+                    document.getElementById('prompt').style.display = 'none';
+                }
+            }
+		</script>
+
+

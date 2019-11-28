@@ -1,0 +1,193 @@
+<?php
+//藍新接收
+class ReceiveNewebPayAction extends ReceiveAction {
+    protected $code = "KR294DQq";//藍新交易密碼
+    protected $merchantnumber = "461862";//商店編號int(6)
+    /*
+     * merchantnumber=461946
+     * &ordernumber=181026181240666
+     * &serialnumber=24024617
+     * &writeoffnumber=171A03395H4295
+     * &timepaid=20181028000442
+     * &paymenttype=FAMIPORT
+     * &amount=4500
+     * &tel=0900436306
+     * &hash=0b96b0ae028923fb40d8e9b6e84b3590
+     */
+    /*
+     * hash = md5(“merchantnumber=900001
+     * &ordernumber=90630002
+     * &serialnumber=32
+     * &writeoffnumber= 09063071000001
+     * &timepaid=20090630180121
+     * &paymenttype=IBON&amount=502&tel=” + code) 
+     * code 是商店申請服務時，藍新提供給商店的交易密碼。 驗証碼的計算請依上述範例的參數順序與名稱串接後進行 MD5 運算
+     */
+    //TODO: 接收藍新銷帳 首頁
+    public function index($request=""){
+        //使用 common.php filterStr($data) 公用函數  過濾取得 使用者輸入的Data
+        if(empty($request)){
+            $request = $this->getRequest();
+        }
+        
+        if(!isset($request['merchantnumber']) || empty($request['merchantnumber']) && $request['merchantnumber'] !== 0){
+            exit();
+        }
+        if($request['merchantnumber'] === "888"){
+            $this->code = "888";
+        } else {
+            $CashflowInfoNewebPayData = D("CashflowInfoNewebPayData");
+            $data = array(
+                "merchantnumber"=>$request['merchantnumber']
+            );
+            $return = $CashflowInfoNewebPayData->getNewebPayDataByMerchantnumber($data);
+            if($return === false){
+                $this->code = "";
+            } else {
+                $this->code = $return['newebPayData_code'];
+            }
+        }
+        
+        $receiveComer = 1;
+        $receiveComerData = "NP";
+        $receiveRemark = $request["paymenttype"].";".$request["writeoffnumber"];
+        if(isset($request['adminAccount']) && !empty($request['adminAccount']) && $request['adminAccount'] !== 0){
+            $receiveComer = 2;
+            $receiveComerData = $request['adminAccount'];
+            $receiveRemark = "後台;自動上點";
+        }
+        
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $receiveData = array(
+            "merchantnumber" => $request["merchantnumber"],//商店編號
+            "ordernumber" => $request["ordernumber"],//訂單編號
+            "serialnumber" => $request["serialnumber"],//交易序號 藍新金流系統產生
+            "writeoffnumber" => $request["writeoffnumber"],//銷帳編號 後端代收系統回覆的銷帳依據
+            "timepaid" => $request["timepaid"],//繳款時間 yyyyMMddHHmmss
+            "paymenttype" => $request["paymenttype"],//實際支付工具 IBON、FAMIPORT、LIFE_ET、OKGO
+            "amount" => $request["amount"],//實際繳款金額
+            "tel" => $request["tel"],//電話
+            "hash" => $request["hash"],//驗證碼 hash
+        );
+        
+        $verify = md5("merchantnumber=".$receiveData["merchantnumber"].
+                      "&ordernumber=".$receiveData["ordernumber"].
+                      "&serialnumber=".$receiveData["serialnumber"].
+                      "&writeoffnumber=".$receiveData["writeoffnumber"].
+                      "&timepaid=".$receiveData["timepaid"].
+                      "&paymenttype=".$receiveData["paymenttype"].
+                      "&amount=".$receiveData["amount"].
+                      "&tel=".$receiveData["tel"].
+                      $this->code);
+        
+        $mainStr = implode('&',$receiveData);
+        $CashflowRechargeReceive = D("CashflowRechargeReceive");
+        if(strtolower($receiveData['hash'])!=strtolower($verify)){
+            //-- 驗證碼錯誤，資料可能遭到竄改，或是資料不是由ezPay簡單付發送
+            $data = array(
+                "cashflow_id"=>0,
+                "recharge_id"=>0,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_errMessage"=>"驗證碼錯誤!",
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+            exit();
+        }
+        //驗證碼正確
+        $CashflowRecharge = D("CashflowRecharge");
+        $data = array(
+            "recharge_number"=>$receiveData['ordernumber'],
+            "recharge_money"=>$receiveData['amount']
+        );
+        $return = $CashflowRecharge->getRechargeDataByNumberAndMoney($data,$err);
+        if($return === false || empty($return['recharge_id'])){
+            $cashflowId = 0;
+            $rechargeId = 0;
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_errMessage"=>"找不到相符的儲值單!",
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+            exit();
+        }
+        $memberId = $return["member_id"];
+        $agentId = $return['agent_id'];
+        $agentTree = $return['agent_tree'];
+        $rechargeMoney = $return["recharge_money"];
+        $cashflowId = $return['cashflow_id'];
+        $rechargeId = $return['recharge_id'];
+        $rechargeStatus = $return['recharge_status'];
+        
+        if($rechargeStatus != "0"){
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_errMessage"=>"儲值單已經處理，不自動上點!",
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+            exit();
+        } else {
+            $data = array(
+                "cashflow_id"=>$cashflowId,
+                "recharge_id"=>$rechargeId,
+                "receive_main"=>$mainStr,
+                "receive_ip"=>$ip,
+                "receive_createTime"=>time(),
+                "receive_comer"=>$receiveComer,
+                "receive_comerData"=>$receiveComerData
+            );
+            $return = $CashflowRechargeReceive->addReceiveData($data,$err);
+            if($return === false){
+                $receiveId = 0;
+            }
+            $receiveId = $return;
+        }
+        
+        $data = array(
+            "recharge_id"=>$rechargeId,
+            "recharge_modifyTime"=>strtotime($receiveData["timepaid"]),
+            "receive_id"=>$receiveId,
+            "recharge_money"=>$rechargeMoney,
+            "member_id"=>$memberId,
+            "agent_id"=>$agentId,
+            "agent_tree"=>$agentTree,
+            "recharge_remark"=>$receiveRemark
+        );
+        $return = $CashflowRecharge->setRechargeDataAutoRechargeMoney($data,$err);
+        if($return === false){
+            $data = array(
+                "recharge_id"=>$rechargeId,
+                "receive_errMessage"=>$err
+            );
+            $CashflowRechargeReceive->setReceiveData($data,$err);
+        }
+    }
+}

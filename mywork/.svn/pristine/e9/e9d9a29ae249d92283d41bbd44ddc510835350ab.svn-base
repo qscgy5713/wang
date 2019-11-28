@@ -1,0 +1,403 @@
+<?php
+/*
+ * 儲值單
+ */
+class CashflowRechargeModel extends AdminModel {
+    protected $tableName = "cashflow_recharge";
+    protected $tableId = "recharge_id";
+    
+    protected $ip = "";
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $this->ip = $ip;
+    }
+    /*
+     * 取得儲值資料
+     * 註冊充託使用
+     */
+    public function getMemberRechargeDataByAgentTree($data,&$err=""){
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $memberIdSql = "";
+        if(isset($data['memberIdArray'])){
+            if(count($data['memberIdArray']) != 0){
+                foreach ($data['memberIdArray'] as $value){
+                    if(empty($memberIdSql)){
+                        $memberIdSql = "AND (`member_id` = '{$value}'";
+                    } else {
+                        $memberIdSql .= " or `member_id` = '{$value}'";
+                    }
+                }
+                $memberIdSql .= ")";
+            }
+        }
+        $sql = "SELECT *,sum(`recharge_money`) as sumMoney,count(*) as sumNumber,
+                   GROUP_CONCAT(`member_account`,';',`recharge_createTime`,';',`recharge_money`,';',`cashflow_showName`) AS allpLog
+                FROM `{$this->tableName}`
+                WHERE (`recharge_createTime` BETWEEN '{$data['recharge_createTime']['startTime']}' AND '{$data['recharge_createTime']['endTime']}')
+                AND (`recharge_status` = 2)
+                AND (`agent_tree` REGEXP '^{$data['agent_tree']}')
+                {$memberIdSql}
+                GROUP BY `member_id`,`agent_tree`;";//recharge_status 要改2
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                    return false;
+                }
+                return $return;
+    }
+    /*
+     * 取得 儲值單 資料
+     * 使用id查詢
+     */
+    public function getRechargeDataById($data,&$err=""){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a 
+                JOIN `cashflow_info` b ON (a.`cashflow_id` = b.`cashflow_id`)
+                JOIN `common_member` c ON (a.`member_id` = c.`member_id`)  
+                WHERE `{$this->tableId}` = '{$data[$this->tableId]}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($return[0]["{$this->tableId}"])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 儲值單 資料
+     * 儲值處理使用
+     */
+    public function getRechargeData($data,&$err = ""){
+        if($data['selectRechargeStarus'] == 1){
+            $starusSql = "AND (`recharge_status` = 0 OR `recharge_status` = 1)";
+        } elseif($data['selectRechargeStarus'] == 'all'){
+            $starusSql = "";
+        } else {
+            $starusSql = "AND (`recharge_status` = {$data['selectRechargeStarus']})";
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a JOIN `common_member` b ON (a.member_id = b.member_id)
+                WHERE (`recharge_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                {$starusSql}
+                ORDER BY `recharge_createTime` DESC;";
+                //var_dump($sql);
+                $return = $this->query($sql);
+                return $return;
+    }
+    /*
+     * 取得 儲值單 狀態 文字
+     */
+    public function getRechargeStatusStr($data){
+        $returnStr = "";
+        switch ($data){
+            case "0":
+                $returnStr = "等待繳款";
+                break;
+            case "1":
+                $returnStr = "處理中";
+                break;
+            case "2":
+                $returnStr = "已完成";
+                break;
+            case "3":
+                $returnStr = "已取消";
+                break;
+            default:
+                $returnStr = "狀態錯誤";
+                break;
+        }
+        return $returnStr;
+    }
+    /*
+     * 自動上點
+     * 對電子錢包上點
+     * 新增帳變紀錄
+     * 儲值單標記完成
+     */
+    public function setRechargeDataAutoRechargeMoney($data,&$err){
+        if(empty($data['recharge_id']) && $data['recharge_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['receive_id']) && $data['receive_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['recharge_money']) && $data['recharge_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        
+        $agentId = $data['agent_id'];
+        $agentTree = $data['agent_tree'];
+        $rechargeId = $data['recharge_id'];
+        $memberId = $data['member_id'];
+        $rechargeMoney = $data['recharge_money'];
+        $rechargeRemark = $data["recharge_remark"];
+        $rechargeModifyTime = $data["recharge_modifyTime"];
+        $walletLogTypeClass = $data["walletLog_type_class"];
+        
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        
+        //事務處理開始
+        $this->startTrans();
+        
+        //讀取 會員電子錢包    鎖表   開始
+        $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$memberId}'
+                FOR UPDATE;";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if(empty($return[0])){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        //讀取 會員電子錢包   鎖表   結束
+        $memberWalletDataArray = $return[0];//會員錢包資料
+        
+        $walletLogBefore = $memberWalletDataArray["wallet_money"];
+        $walletLogAfter = $walletLogBefore + $rechargeMoney;
+        
+        //對電子錢包 加款 開始
+        $data = array(
+            "member_id" => $memberId,
+            "wallet_money" => $rechargeMoney,
+            "wallet_totalRecharge" => $rechargeMoney
+        );
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_07"));
+            return false;
+        }
+        //對電子錢包 加款 結束
+        
+        //新增帳變紀錄 開始
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        $data = array(
+            "member_id" => $memberId,
+            "agent_id" => $agentId,
+            "walletLog_operating" => 1,//1點數增加 2點數減少
+            "walletLog_type" => 1,//帳變類型 1儲值表 2託售表 3.轉移表
+            "walletLog_type_class"=>$walletLogTypeClass,
+            "walletLog_item_id" => $rechargeId,//儲值單號
+            "walletLog_money" => (int)$rechargeMoney,
+            "walletLog_before" => (int)$walletLogBefore,
+            "walletLog_after" => (int)$walletLogAfter,
+            "walletLog_main" => "儲值單;自動上點;錢包;加款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $walletLogId = $return;
+        //新增帳變紀錄 結束
+        
+        //改儲值單狀態 開始
+        $data = array(
+            "recharge_id"=>$rechargeId,
+            "recharge_status"=>2,//0等待繳款 1處理中 2已完成 3已取消
+            "recharge_modifyTime"=>$rechargeModifyTime,
+            "recharge_remark"=>$rechargeRemark,
+            "receive_id"=>$receiveId,
+            "walletLog_id"=>$walletLogId
+        );
+        $return = $this->setRechargeDataById($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_08"));
+            return false;
+        }
+        
+        
+        $CommonEventLottofourMemberNumber = D("CommonEventLottofourMemberNumber");
+        $data = array(
+            "member_id"=>$memberId,
+            "recharge_id"=>$rechargeId,
+            "recharge_money"=>$rechargeMoney,
+            "agent_id"=>$agentId,
+            "agent_tree"=>$agentTree
+        );
+        $return = $CommonEventLottofourMemberNumber->addLottofourMemberNumberData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        
+        //改儲值單狀態 結束
+        $this->commit();//事務處理成功
+        return true;
+    }
+    /*
+     * 取得儲值單資料
+     * 使用交易編號，儲值金額查詢
+     */
+    public function getRechargeDataByNumberAndMoney($data,&$err){
+        if(empty($data['recharge_number']) && $data['recharge_number'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['recharge_money']) && $data['recharge_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `recharge_number` = '{$data['recharge_number']}' AND `recharge_money` = '{$data['recharge_money']}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        return $return[0];
+    }
+    
+    /*
+     * 取得儲值單資料筆數
+     */
+    public function getTotalNumberRechargeData($data,&$err = ""){
+        
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `recharge_createTime` > '{$data['recharge_createTime']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 會員 儲值單資料
+     */
+    public function getMemberRechargeData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `recharge_createTime` > '{$data['recharge_createTime']}'
+                {$pageSql};";
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+                    return false;
+                }
+                return $return;
+    }
+    
+        
+    /*
+     * 新增 儲值單
+     */
+    public function addRechargeData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['recharge_money']) && $data['recharge_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//
+            return false;
+        }
+        $data['recharge_ip'] = $this->ip;
+        //新增 儲值單
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return false;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        if($insertId) {
+            return $insertId;
+        }
+        return $return;
+    }
+    /*
+     * 修改儲值單資料
+     */
+    public function setRechargeDataById($data,&$err = ""){
+        if(empty($data['recharge_id']) && $data['recharge_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'recharge_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `recharge_id` = '{$data['recharge_id']}'";
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+}

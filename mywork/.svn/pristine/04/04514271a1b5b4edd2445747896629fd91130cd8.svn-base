@@ -1,0 +1,64 @@
+<?php
+/*
+ * 金流接收資料
+ */
+class CashflowRechargeReceiveModel extends CommonModel {
+    protected $tableName = "cashflow_recharge_receive";
+    protected $tableId = "receive_id";
+    /*
+     * 新增接收資料
+     */
+    public function addReceiveData($data,&$err = ""){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $insertId = $this->getLastInsertId();
+        if($insertId === false) {
+            return false;
+        }
+        return $insertId;
+    }
+    /*
+     * 修改接收資料
+     */
+    public function setReceiveData($data,&$err = ""){
+        if(empty($data['receive_id']) && $data['receive_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'receive_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `receive_id` = '{$data['receive_id']}'";
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+}

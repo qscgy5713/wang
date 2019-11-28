@@ -1,0 +1,32 @@
+<?php
+/*
+ * 會員返水紀錄
+ */
+class CommonMemberBackwaterLogModel extends AdminModel {
+    protected $tableName = "common_member_backWater_log";
+    protected $tableId = "backWaterLog_id";
+    
+    public function addBackWaterLogData($data){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

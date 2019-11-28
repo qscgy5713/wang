@@ -1,0 +1,140 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+
+				<div class="row">
+
+					<div class="col-md-7 col-sm-7 m-auto">
+					<!-- Useful Elements -->
+						<div class="card card-default">
+							<div class="card-heading card-heading-transparent">
+								<h2 class="card-title">會員資料</h2>
+								<hr>
+							</div>
+							<div class="card-block pt-0">
+								<div class="row mb-10">
+									<label class="col-md-3 col-sm-3 m-auto fw-600">會員帳號</label>
+									<input type="text" value="{$memberAccount}" readonly class="form-control col-md-7 col-sm-7 m-auto">
+								</div>
+								<div class="row mb-10">
+									<label class="col-md-3 col-sm-3 m-auto fw-600">電子錢包</label>
+									<input type="text" value="{$memberWallet}" readonly class="form-control col-md-7 col-sm-7 m-auto">
+								</div>
+								<div class="row mb-20">
+									<label class="col-md-3 col-sm-3 m-auto fw-600">會員電話</label>
+									<input type="text" value="{$memberPhone}" readonly class="form-control col-md-7 col-sm-7 m-auto">
+								</div>
+								
+								
+								<h2 class="card-title">變更會員密碼</h2>
+								<hr class="mb-30">
+								
+							
+								<form id="setForm" name="setForm" method="post" action='__APP__/MemberCenter/formChangePassword' onclick="return false">
+									
+									<div class="row mb-20">
+										<label class="col-md-3 col-sm-3 m-auto fw-600">原始密碼</label>
+										<input type="password"id="oldPassword" name="oldPassword" placeholder="請輸入舊密碼" class="form-control col-md-7 col-sm-7 m-auto">
+									</div>
+									<div class="row mb-20">
+										<label class="col-md-3 col-sm-3 m-auto fw-600">修改密碼</label>
+										<div class="col-md-7 col-sm-7 m-auto p-0">
+											<input type="password" id="newPassword" name="newPassword" placeholder="請輸入新密碼" class="form-control">
+											<span id="checkPhone" class="invalid-feedback">長度應介於6~20之間</span>
+										</div>
+										
+									</div>
+									<div class="row mb-30">
+										<label class="col-md-3 col-sm-3 m-auto fw-600">確認密碼</label>
+										<input type="password" id="new2Password" name="new2Password" placeholder="請再次輸入新密碼" class="form-control col-md-7 col-sm-7 m-auto">
+									</div>
+									<div class="row">
+										<div class="col-md-2 col-sm-2 m-auto">
+											<button type="submit" name="btnok" id="setBtn" class="btn btn-secondary btn-shadow-1">確定變更</button>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	
+	//算畫面高度
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+jQuery( "input[name='newPassword']" ).change(function() {
+	var newPassword = jQuery("input[name='newPassword']").val();
+	if(newPassword.length < 6 || newPassword.length > 20){
+		jQuery("#newPassword").removeClass().addClass("form-control phone-error");
+	}else{
+		jQuery("#newPassword").removeClass().addClass("form-control phone-ok");
+	}
+});
+jQuery(document).ready(function(){
+	//檢查會員變更密碼
+	jQuery( "#setBtn" ).click(function() {
+		var oldPassword = jQuery("input[name='oldPassword']").val();
+		var newPassword = jQuery("input[name='newPassword']").val();
+		var new2Password = jQuery("input[name='new2Password']").val();
+		
+		oldPassword = jQuery.trim(oldPassword);
+		newPassword = jQuery.trim(newPassword);
+		new2Password = jQuery.trim(new2Password);
+		
+		if(oldPassword == "" || newPassword == "" || new2Password == ""){
+			alert("變更資料輸入不完整!");
+			return;
+		}
+		if(newPassword.length < 6 || newPassword.length > 20){
+			alert("新密碼長度應介於6~20之間!");
+			return;
+		}
+		if(newPassword != new2Password){
+			alert("新密碼與確認密碼內容不一致!");
+			return;
+		}
+		jQuery("#loader-bg").show();
+		jQuery("#loader-text").show();
+		document.setForm.submit();
+		//jQuery("#setForm").submit();
+	});
+})
+
+</script>
+
+
+			

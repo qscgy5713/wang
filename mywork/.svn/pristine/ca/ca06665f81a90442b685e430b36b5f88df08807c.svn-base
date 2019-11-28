@@ -1,0 +1,28 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+<section class="page-header dark page-header-xs">
+	<div class="container">
+	
+		<h1 class="text-center text-color-fff">會員中心</h1>
+	
+		<!-- page tabs -->
+		<ul class="page-header-tabs list-inline mt20">
+			<li class="aaa active"><a href="__APP__/MemberCenter/lottoRecords">四星彩</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/memberInfo">會員資料</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/bounsRecords">返水紀錄</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/rechargeRecords">儲值紀錄</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/givenRecord">贈點紀錄</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/transferRecords">轉移紀錄</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/withdrawRecords">託售紀錄</a></li>
+		
+			<li class="aaa"><a href="__APP__/MemberCenter/contactService">聯絡客服</a></li>
+			<li class="aaa"><a href="__APP__/MemberCenter/ServiceRecords">客服訊息</a></li>
+			
+		</ul><!-- /page tabs -->
+	</div>
+</section>
+	 	
+<div class="container pt50 pb50 bg-min-height" >
+</div>
+<include file="Common:footer"/> 

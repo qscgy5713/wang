@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FirstDepositwithdraw首頁</title>
+</head>
+<body>
+<span> Test FirstDepositwithdraw Index </span>
+	<BR>
+	<form id="formInquire" method="post" action='__APP__/FirstDepositwithdraw/index'>
+		<input id="agentTree" type='hidden' name='agentTree' value='{$comeAgentTree}'>
+		<input id="agentAccount" type='hidden' name='agentAccount' value='{$comeAgentAccount}'>
+	<input type="button" value="本日" onClick="formTime('regist','{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('regist','{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('regist','{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('regist','{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('regist','{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('regist','{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+		<input id="registStartTime" name="registStartTime" type="text" value="{$registStartTime}"/> 至
+		<input id="registEndTime"   name="registEndTime"   type="text" value="{$registEndTime}"/>
+		<input type='button' value='清除' onClick="clearTime('regist');">
+	<BR>
+	<input type="button" value="本日" onClick="formTime('profit','{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('profit','{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('profit','{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('profit','{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('profit','{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('profit','{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+		<input id="profitStartTime" name="profitStartTime" type="text" value="{$profitStartTime}"/> 至
+		<input id="profitEndTime"   name="profitEndTime"   type="text" value="{$profitEndTime}"/>
+		<input type='button' value='清除' onClick="clearTime('profit');">
+		<input type='submit' value='查詢'>
+	</form>
+	<BR>
+	
+	<VOLIST name="loginArray" id="vo">
+		<input type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+	</VOLIST>
+	
+	<table>
+		<tr><th colspan="7">代理帳務</th></tr>
+		<tr><td colspan="6">合計</td><td>{$agentTotalMoney}</td></tr>
+		<tr><td colspan="6">總儲值</td><td>{$agentTotalRechargeMoney}</td></tr>
+		<tr><td colspan="6">總託售</td><td>{$agentTotalWithdrawMoney}</td></tr>
+		<tr><td colspan="6">筆數</td><td>{$agentTotalNumber}</td></tr>
+		<tr><td colspan="6">註冊總人數</td><td>{$agentTotalRegist}</td></tr>
+		<tr><th>序</th><th>代理</th><th>註冊人數</th><th>儲值</th><th>託售</th><th>筆數</th><th>點數</th></tr>
+		<VOLIST name="agentArray" id="vo" empty="">
+			<tr>
+				<td>{$i}</td>
+				<td>
+					<input type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+				</td>
+				<td>{$vo.registNumber}</td>
+				<td>{$vo.rechargeMoney}</td>
+				<td>{$vo.withdrawMoney}</td>
+				<td>{$vo.sumNumber}</td>
+				<td>{$vo.sumMoney}</td>
+			</tr>
+		</VOLIST>
+	</table>
+	<table>
+		<tr><th colspan="6">{$comeAgentAccount} 會員帳務</th></tr>
+		<tr><td colspan="5">合計</td><td>{$memberTotalMoney}</td></tr>
+		<tr><td colspan="5">總儲值</td><td>{$memberTotalRechargeMoney}</td></tr>
+		<tr><td colspan="5">總託售</td><td>{$memberTotalWithdrawMoney}</td></tr>
+		<tr><td colspan="5">筆數</td><td>{$memberTotalNumber}</td></tr>
+		<tr><td colspan="5">註冊總人數</td><td>{$memberTotalRegist}</td></tr>
+		<tr><th>序</th><th>會員帳號</th><th>儲值</th><th>託售</th><th>筆數</th><th>點數</th></tr>
+		<VOLIST name="memberArray" id="vo" empty="">
+			<tr>
+				<td>{$i}</td>
+				<td>{$key}</td>
+				<td>{$vo.rechargeMoney}</td>
+				<td>{$vo.withdrawMoney}</td>
+				<td>{$vo.sumNumber}</td>
+				<td>{$vo.sumMoney}</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html>
+
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	
+});
+function formTime(idName,startTime,endTime){
+	$("#"+idName+"StartTime").val(startTime);
+	$("#"+idName+"EndTime").val(endTime);
+	$("#formInquire").submit();
+}
+function formAgent(agentAccount,agentTree){
+	$("#agentAccount").val(agentAccount);
+	$("#agentTree").val(agentTree);
+	$("#formInquire").submit();
+}
+function clearTime(idName){
+	$("#"+idName+"StartTime").val('');
+	$("#"+idName+"EndTime").val('');
+}
+</script>

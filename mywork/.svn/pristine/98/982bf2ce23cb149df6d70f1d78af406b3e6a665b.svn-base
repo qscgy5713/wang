@@ -1,0 +1,198 @@
+<?php
+/*
+ * 儲值贈點
+ */
+class CommonEventStoregiftModel extends MemberModel {
+    protected $tableName = "common_event_storegift";
+    protected $tableId = "storegift_id";
+    
+    /*
+     * 新增 儲值贈點單 
+     */
+    public function addEventStoregiftData($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 儲值活動 單筆資料
+     * 查詢單筆儲值活動使用
+     */
+    public function getStoregiftDataById($data,&$err = ""){
+        if(empty($data['storegiftId']) && $data['storegiftId'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `storegiftId` = '{$data['storegiftId']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 對電子錢包上點
+     * 新增 儲值贈點 帳變紀錄
+     * 儲值贈點 給獎完成
+     */
+    public function setStoregiftDataByIdUseGiveMoney($data,&$err=""){
+        if(empty($data['storegift_id']) && $data['storegift_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['admin_id']) && $data['admin_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['event_money']) && $data['event_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        //var_dump($data);
+        $eventMoney = $data['event_money'];
+        $storegiftId = $data['storegift_id'];
+        $memberId = $data['member_id'];
+        $adminId = $data['admin_id'];
+        $agentId = $data['agent_id'];
+        $agentTree = $data['agent_tree'];
+        $storegiftModifyTime = $data['storegift_modifyTime'];
+        
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        //事務處理開始
+        $this->startTrans();
+        
+        //讀取 會員電子錢包    鎖表   開始
+        $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$memberId}'
+                FOR UPDATE;";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if(empty($return[0])){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        //讀取 會員電子錢包   鎖表   結束
+        $memberWalletDataArray = $return[0];//會員錢包資料
+        
+        $walletLogBefore = $memberWalletDataArray["wallet_money"];
+        $walletLogAfter = $walletLogBefore + $eventMoney;
+        
+        //對電子錢包 加款 開始
+        $data = array(
+            "member_id" => $memberId,
+            "wallet_money" => $eventMoney,
+            "wallet_totalRecharge" => 0
+        );
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_07"));
+            return false;
+        }
+        //對電子錢包 加款 結束
+        
+        //新增帳變紀錄 開始
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        $data = array(
+            "member_id" => $memberId,
+            "agent_id" => $agentId,
+            "walletLog_operating" => 1,//1點數增加 2點數減少
+            "walletLog_type" => 4,//帳變類型 1儲值表 2託售表 3.轉移表  4活動表 5退水表
+            "walletLog_item_id" => $storegiftId,//單號
+            "walletLog_money" => (int)$eventMoney,
+            "walletLog_before" => (int)$walletLogBefore,
+            "walletLog_after" => (int)$walletLogAfter,
+            "walletLog_main" => "儲值贈點;自動上點;錢包;加款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $walletLogId = $return;
+        //新增帳變紀錄 結束
+        
+        //修改 儲值送點 資料 開始
+        $data = array(
+            "storegift_id" => $storegiftId,
+            "admin_id"=> $adminId,
+            "storegift_modifyTime"=> $storegiftModifyTime,
+            "walletLog_id"=> $walletLogId
+        );
+        $return = $this->setStoregiftDataById($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_08"));
+            return false;
+        }
+        //修改 會員四星彩 資料 結束
+        $this->commit();//事務處理成功
+        return true;
+    }
+    public function setStoregiftDataById($data,&$err = ""){
+        if(empty($data['storegift_id']) && $data['storegift_id'] !== 0){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'storegift_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `storegift_id` = '{$data['storegift_id']}'";
+        
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+}

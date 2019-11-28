@@ -1,0 +1,130 @@
+<?php
+/*
+ * 體驗金送500
+ */
+class CommonEventExperienceModel extends MemberModel {
+    protected $tableName = "common_event_experience";
+    protected $tableId = "info_id";
+    /*
+     * 新增活動單 
+     * 不自動上點
+     * 後台審核
+     */
+    public function addEventData($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        $insertId = $this->getLastInsertId();
+        return $insertId;
+    }
+    /*
+     * 檢查是否有重複
+     * 事務處理
+     * 新增 活動單
+     * 會員上點功能
+     */
+    public function addEventExperienceDataAndSetWalletDataByAdditionMoney($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        
+        /*
+        
+        $data = array(
+            'event_id'=>$data['event_id'],
+            'member_id'=>$data['member_id'],
+            'agent_id'=>$data['agent_id'],
+            'agent_tree'=>$data['agent_tree'],
+            'ratio_tree'=>$data['ratio_tree'],
+            'admin_id'=>$data['admin_id'],
+            'event_money'=>$data['event_money'],
+            'event_modifyTime'=>time(),
+            'event_status'=>2 //改為2已贈點
+        );
+        $return = $CommonEvent->setEventDataByIdUseGiveMoney($data,$err);
+        */
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        return $return;
+    }
+    /**
+     * 確認 member_id 是否有重複
+     */
+    public function checkEventExperienceDataById($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT COUNT(*) AS memberCount FROM `{$this->tableName}` WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 取得活動  狀態
+     */
+    public function getEventExperienceDataById($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT `event_status` FROM `{$this->tableName}` WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /**
+     * 刪除已取消的活動訂單
+     */
+    public function delEventExperienceDataById($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}` WHERE `member_id` = '{$data['member_id']}' AND `event_status` = '1';";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    
+}

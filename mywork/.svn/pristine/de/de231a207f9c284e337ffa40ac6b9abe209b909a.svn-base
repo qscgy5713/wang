@@ -1,0 +1,51 @@
+<?php
+/*
+ * 會員四星彩
+ */
+class CommonEventLottofourMemberNumberModel extends MemberModel {
+    protected $tableName = "common_event_lottofour_memberNumber";
+    protected $tableId = "memberNumber_id";
+    
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    /*
+     * 取得 會員四星彩 資料筆數
+     */
+    public function getTotalNumberMemberNumberData($data,&$err = ""){
+        
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `memberNumber_createTime` > '{$data['memberNumber_createTime']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 會員四星彩 資料
+     */
+    public function getLottofourMemberNumberData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `memberNumber_createTime` > '{$data['memberNumber_createTime']}'
+                {$pageSql};";
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+                    return false;
+                }
+                return $return;
+    }
+}

@@ -1,0 +1,283 @@
+<div id="errorMsgDiv" style="display:none;">
+	<div id="errorMsg" class="swal-overlay " tabindex="-1">
+	  <div class="swal-modal" role="dialog" aria-modal="true"><div id="swal-icon" class="swal-icon">
+	    <div id="x-mark" class="">
+	      <span id="lineLeft" class=" "></span>
+	      <span id="lineRight" class=" "></span>
+	    </div>
+	  </div>
+	  <div class="swal-title" id="swal-title" style=""></div>
+		  <div class="swal-footer">
+			  <div class="swal-button-container">
+			    <button class="swal-button btn btn-default" onclick="errorMsgClose()">關閉</button>
+			    <div class="swal-button__loader">
+			      <div></div>
+			      <div></div>
+			      <div></div>
+			    </div>
+			  </div>
+		  </div>
+	  </div>
+	</div>
+</div>
+<div id="askMsgDiv" style="display:none;">
+	<div id="askMsg" class="swal-overlay " tabindex="-1">
+	  <div class="swal-modal" role="dialog" aria-modal="true">
+		  <div class="swal-icon swal-icon--info"></div>
+		  <div id="askMsgText" class="swal-title" style=""></div>
+		  
+		  <div class="swal-footer">
+			  <div class="swal-button-container">
+			
+			    <button class="swal-button swal-button--cancel btn btn-default" id="askMsgClose">取消</button>
+			
+			    <div class="swal-button__loader">
+			      <div></div>
+			      <div></div>
+			      <div></div>
+			    </div>
+			
+			  </div>
+			  <div class="swal-button-container">
+			    <button class="swal-button swal-button--confirm btn btn-primary" id="askMsgYes">確定</button>
+			
+			    <div class="swal-button__loader">
+			      <div></div>
+			      <div></div>
+			      <div></div>
+			    </div>
+			
+			  </div>
+		  </div>
+	  </div>
+	</div>
+</div>
+
+<div id="okMsgDiv" style="display:none;">
+	<div id="okMsg" class="swal-overlay" tabindex="-1">
+	  <div class="swal-modal" role="dialog" aria-modal="true">
+		  <div id="okDiv" class="swal-icon">
+		    <span id="okSpan1" class=""></span>
+		    <span id="okSpan2" class=""></span>
+		
+		    <div id="okSpan3" class=""></div>
+		    <div id="okSpan4" class=""></div>
+		  </div>
+		  
+		  <div id="okText" class="swal-title" style=""></div>
+		  
+		  <div class="swal-footer">
+			  <div class="swal-button-container">
+			    <button class="swal-button swal-button--cancel btn btn-default" onclick="okMsgClose()">關閉</button>
+			    <div class="swal-button__loader">
+			      <div></div>
+			      <div></div>
+			      <div></div>
+			    </div>
+			  </div>
+		  </div>
+	  </div>
+	</div>
+</div>
+<!-- ================== BEGIN BASE JS ================== -->
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery/jquery-3.3.1.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
+	
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/js-cookie/js.cookie.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/theme/material.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/apps.min.js"></script>
+	<!-- ================== END BASE JS ================== -->
+	
+	<!-- ================== BEGIN PAGE LEVEL JS ================== -->
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/d3/d3.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/nvd3/build/nv.d3.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery-jvectormap/jquery-jvectormap.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/jquery-jvectormap/jquery-jvectormap-world-merc-en.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/bootstrap-calendar/js/bootstrap_calendar.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/gritter/js/jquery.gritter.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/demo/dashboard-v2.min.js"></script>
+	<!-- ================== END PAGE LEVEL JS ================== -->
+	
+	<script src="__CSS__/color-admin-v4.2/admin/assets/plugins/bootstrap-sweetalert/sweetalert.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/demo/ui-modal-notification.demo.min.js"></script>
+	<script src="__CSS__/color-admin-v4.2/admin/assets/js/theme/default.min.js"></script>
+	
+	<!-- 時間選擇器 -->
+	<script src="__CSS__/timepicker/jquery-ui-timepicker-addon.js"></script>
+	<!-- 跑馬燈 -->
+    <script src="__CSS__/marquee/lib/jquery.marquee.js"></script>
+
+	<!-- typeahead -->
+     <script type="text/javascript" src="__CSS__/js/bootstrap-notify.min.js"></script>
+     <script type="text/javascript" src="__CSS__/js/bootstrap-typeahead.min.js"></script>
+    <!-- 多選拉霸 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="__CSS__/bootstrap-select/defaults-zh_TW.js"></script>
+        
+	
+<script>
+$(document).ready(function() {
+	App.init();
+	//DashboardV2.init();
+	//Notification.init();
+	$("#loader-bg").hide();
+	var isLogin = "{$isLogin}";
+	if(isLogin == "true"){
+		$("#"+"{$classShowName}").addClass("active");
+		$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	}
+});
+window.onpageshow=function(e){
+	if(e.persisted) {
+		$("#loader-bg").hide();
+		//window.location.reload();
+	}
+};
+//loading 框顯示
+$('.loading').click(function(){
+	$("#loader-bg").show();
+});
+
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-53034621-1', 'auto');
+ga('send', 'pageview');
+
+  var use_debug = false;
+  function debug(){
+  	if( use_debug && window.console && window.console.log ) console.log(arguments);
+  }
+  // on DOM ready
+  jQuery(document).ready(function (){
+  	jQuery(".marquee").marquee({
+  		loop: -1
+  		// this callback runs when the marquee is initialized
+  		, init: function ($marquee, options){
+  			debug("init", arguments);
+
+  			// shows how we can change the options at runtime
+  			if( $marquee.is("#marquee2") ) options.yScroll = "bottom";
+  		}
+  		// this callback runs before a marquee is shown
+  		, beforeshow: function ($marquee, $li){
+  			debug("beforeshow", arguments);
+
+  			// check to see if we have an author in the message (used in #marquee6)
+  			var $author = $li.find(".author");
+  			// move author from the item marquee-author layer and then fade it in
+  			if( $author.length ){
+  				$("#marquee-author").html("<span style='display:none;'>" + $author.html() + "</span>").find("> span").fadeIn(850);
+  			}
+  		}
+  		// this callback runs when a has fully scrolled into view (from either top or bottom)
+  		, show: function (){
+  			debug("show", arguments);
+  		}
+  		// this callback runs when a after message has being shown
+  		, aftershow: function ($marquee, $li){
+  			debug("aftershow", arguments);
+  			// find the author
+  			var $author = $li.find(".author");
+  			// hide the author
+  			if( $author.length ) $("#marquee-author").find("> span").fadeOut(250);
+  		}
+  	});
+  });
+
+function errorMsgShow(error){
+	$("#errorMsgDiv").show();
+	$("#swal-title").html(error);
+	$("#errorMsg").addClass("swal-overlay--show-modal");
+	$("#swal-icon").addClass("swal-icon--error");
+	$("#x-mark").addClass("swal-icon--error__x-mark");
+	$("#lineLeft").addClass("swal-icon--error__line swal-icon--error__line--left");
+	$("#lineRight").addClass("swal-icon--error__line swal-icon--error__line--right");
+}
+function errorMsgClose(){
+	$("#swal-title").html("");
+	$("#errorMsg").removeClass("swal-overlay--show-modal");
+	$("#swal-icon").removeClass("swal-icon--error");
+	$("#x-mark").removeClass("swal-icon--error__x-mark");
+	$("#lineLeft").removeClass("swal-icon--error__line swal-icon--error__line--left");
+	$("#lineRight").removeClass("swal-icon--error__line swal-icon--error__line--right");
+	$("#errorMsgDiv").hide();
+}
+
+function askMsgShow(msg){
+	$("#askMsgDiv").show();
+	$("#askMsg").addClass("swal-overlay--show-modal");
+	$("#askMsgText").html(msg);
+}
+function askMsgClose_f(){
+	$("#askMsg").removeClass("swal-overlay--show-modal");
+	$("#askMsgText").html("");
+	$("#askMsgDiv").hide();
+}
+
+function okMsgShow(msg){
+	$("#okMsgDiv").show();
+	$("#okMsg").addClass("swal-overlay--show-modal");
+	$("#okDiv").addClass("swal-icon--success");
+	$("#okSpan1").addClass("swal-icon--success__line swal-icon--success__line--long");
+	$("#okSpan2").addClass("swal-icon--success__line swal-icon--success__line--tip");
+	$("#okSpan3").addClass("swal-icon--success__ring");
+	$("#okSpan4").addClass("swal-icon--success__hide-corners");
+	$("#okText").html(msg);
+}
+function okMsgClose(){
+	$("#okMsgDiv").hide();
+	$("#okMsg").removeClass("swal-overlay--show-modal");
+	$("#okDiv").removeClass("swal-icon--success");
+	$("#okSpan1").removeClass("swal-icon--success__line swal-icon--success__line--long");
+	$("#okSpan2").removeClass("swal-icon--success__line swal-icon--success__line--tip");
+	$("#okSpan3").removeClass("swal-icon--success__ring");
+	$("#okSpan4").removeClass("swal-icon--success__hide-corners");
+	$("#okText").html("");
+}
+
+//設定中文語系
+$.datepicker.regional['zh-TW']={
+   dayNames:["星期日","星期一","星期二","星期三","星期四","星期五","星期六"],
+   dayNamesMin:["日","一","二","三","四","五","六"],
+   monthNames:["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"],
+   monthNamesShort:["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"],
+   prevText:"上月",
+   nextText:"次月",
+   weekHeader:"週"
+};
+//將預設語系設定為中文
+$.datepicker.setDefaults($.datepicker.regional["zh-TW"]);
+
+function datetimePicker(time1, onCloseTime1, time2, onCloseTime2){
+	$( "#"+time1 ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#"+onCloseTime1 ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#"+time2 ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#"+onCloseTime2 ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+}
+
+</script>
+</body>
+</html>

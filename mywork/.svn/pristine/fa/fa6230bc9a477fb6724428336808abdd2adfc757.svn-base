@@ -1,0 +1,383 @@
+<?php
+//BG 賓果
+class GameBgModel extends ApiModel{
+
+  const BG_BASE_URL = 'http://atm688.net/api.php';
+  const BG_AGENT_NAME = '2c94ade1d0e4f469';
+  const BG_AGENT_KEY = '137bf59dc9fb5d31';
+
+  const BG_DEFAULT_REQUEST_METHOD = 'GET';
+  const BG_CURL_CONNECTTIMEOUT_MS = 8000;
+  const BG_CURL_TIMEOUT_MS = 18000;
+
+  protected $BG_CURL_DATAS = array(
+      CURLOPT_CUSTOMREQUEST => self::BG_DEFAULT_REQUEST_METHOD,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::BG_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::BG_CURL_TIMEOUT_MS
+  );
+
+  protected $BG_ERR_MESSAGE = array( // 錯誤代碼訊息
+      -1 => "無此帳號",
+      -2 => "密碼錯誤",
+      -3 => "帳號停權",
+      -4 => "帳號異常",
+      -9 => "參數異常",
+      -101 => "此帳號已存在",
+      -102 => "並非所屬下層",
+      -103 => "無此上層帳號",
+      -104 => "點數大於上層限制",
+      -105 => "成數大於上層限制",
+      -106 => "無此帳號",
+      -107 => "限額傳入總數錯誤",
+      -108 => "限額傳入值大於上限",
+      -109 => "最低額度傳入值總數錯誤",
+      -110 => "最低額度傳入值低於上限",
+      -111 => "退水傳入值總數錯誤",
+      -112 => "退水傳入值低於上限",
+      -113 => "開關傳入值總數錯誤",
+      -113 => "上層未開卻傳入開值",
+      -601 => "帳號格式錯誤",
+      -602 => "密碼格式錯誤",
+      -603 => "上層帳號格式錯誤",
+      -604 => "傳入值並非數字",
+      -904 => "傳入值錯誤",
+      -905 => "無此代理",
+      -940 => "指令錯誤",
+      -950 => "驗證碼錯誤"
+    );
+
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+  }
+
+  //--------------------非通用函數--------------------
+
+  /**
+   * 註冊新會員
+   * @param $data['account'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['nickname'] 會員暱稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果 (bool)
+   */
+  public function createMember($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $cmnCode = 'A1';
+    $cmd = "{$cmnCode},{$account},{$password}";
+
+    $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    while (strpos($encCmd,"+") !== false) {
+      $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    }
+    // 改用sendRequest
+    // 開立帳號成功 回傳值為 1
+    // 開立帳號失敗 傳回錯誤代碼
+    $apiArrData = array(
+      'name' => self::BG_AGENT_NAME,
+      'inst' => $encCmd,
+    );
+
+    $apiUrl = self::BG_BASE_URL;
+    $apiMethod = self::BG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BG_CURL_DATAS;
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+    if($result === false) { // 發起API要求 網路傳輸錯誤
+      return false;
+    } else {
+      if($result === '1'){
+        return true;
+      } else {// 有錯誤碼傳回
+        $err = (isset($this->BG_ERR_MESSAGE[$result]))? $this->BG_ERR_MESSAGE[$result]: '網站API回傳錯誤碼,但錯誤訊息未定義';
+        return false;
+      }
+    }
+  }
+
+  /**
+   * 會員登入
+   * @param $data['account'] 會員帳號
+   * @param $data['token'] token (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+   */
+  public function loginMember($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ((!isset($token)) || (!strlen($token))) {
+      $cmnCode = 'P1';
+      $cmd = "{$cmnCode},{$account}";
+      $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+      while (strpos($encCmd,"+") !== false) {
+        $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+      }
+      // 改用sendRequest
+      // 帳號正常 回傳值為token字串值
+      // 帳號異常 傳回錯誤代碼
+      $apiArrData = array(
+        'name' => self::BG_AGENT_NAME,
+        'inst' => $encCmd,
+      );
+
+      $apiUrl = self::BG_BASE_URL;
+      $apiMethod = self::BG_DEFAULT_REQUEST_METHOD;
+      $apiCurlDatas = $this->BG_CURL_DATAS;
+      // 成功回傳 token 字串
+
+      $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+      if($result === false) { // 發起API要求 網路傳輸錯誤
+        return false;
+      } else {
+        if($result !== '-1' && !is_numeric($result)){
+          $token = $result;
+          $url = self::BG_BASE_URL.'?login='.$token;
+          return $url;
+        } else {
+          $err = (isset($this->BG_ERR_MESSAGE[$result]))? $this->BG_ERR_MESSAGE[$result]: '網站API回傳錯誤碼,但錯誤訊息未定義';
+          return false;
+        }
+      }
+    }
+  }
+  /**
+   * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+   */
+  public function getMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $cmnCode = 'R1';
+    $cmd = "{$cmnCode},{$account},0";
+
+    $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    while (strpos($encCmd,"+") !== false) {
+      $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    }
+    // 改用sendRequest
+    // 帳號正常 回傳字串 "1,0,1.00" 第三個數字為餘額
+    // 帳號異常 傳回錯誤代碼
+    $apiArrData = array(
+      'name' => self::BG_AGENT_NAME,
+      'inst' => $encCmd,
+    );
+
+    $apiUrl = self::BG_BASE_URL;
+    $apiMethod = self::BG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+    if($result === false) { // 發起API要求 網路傳輸錯誤
+      return false;
+    } else {
+      $rs_array = explode(',', $result);
+      if($rs_array[0] === "1" && $result !== "-1"){
+        return $rs_array[2];
+      } else {// 回傳錯誤代碼
+        $err = (isset($this->BG_ERR_MESSAGE[$result]))? $this->BG_ERR_MESSAGE[$result]: '網站API回傳錯誤碼,但錯誤訊息未定義';
+        return false;
+      }
+    }
+  }
+
+  /**
+   * 下點(提款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+   */
+  public function withdrawMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $cmnCode = 'R1';
+    $amount = -abs($amount);
+    $cmd = "{$cmnCode},{$account},{$amount}";
+
+    $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    while (strpos($encCmd,"+") !== false) {
+      $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    }
+    // 改用sendRequest
+    // 帳號正常 回傳字串 "1,0,1.00" 第三個數字為餘額
+    // 帳號異常 傳回錯誤代碼
+    $apiArrData = array(
+      'name' => self::BG_AGENT_NAME,
+      'inst' => $encCmd,
+    );
+
+    $apiUrl = self::BG_BASE_URL;
+    $apiMethod = self::BG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BG_CURL_DATAS;
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+    if($result === false) { // 發起API要求 網路傳輸錯誤
+      return false;
+    } else {
+      $rs_array = explode(',', $result);
+      if ($rs_array[0] === '1' && $result !== '-1') {
+        return $rs_array[2];
+      } else {// 回傳錯誤代碼
+        $err = (isset($this->BG_ERR_MESSAGE[$result]))? $this->BG_ERR_MESSAGE[$result]: '網站API回傳錯誤碼,但錯誤訊息未定義';
+        return false;
+      }
+    }
+  }
+
+  /**
+   * 上點(加款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+   */
+  public function rechargeMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $cmnCode = 'R1';
+    $amount = abs($amount);
+    $cmd = "{$cmnCode},{$account},{$amount}";
+
+    $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    while (strpos($encCmd,"+") !== false) {
+      $encCmd = @bingoEncode($cmd, self::BG_AGENT_KEY);
+    }
+    // 改用sendRequest
+    // 帳號正常 回傳字串 "1,0,1.00" 第三個數字為餘額
+    // 帳號異常 傳回錯誤代碼
+    $apiArrData = array(
+      'name' => self::BG_AGENT_NAME,
+      'inst' => $encCmd,
+    );
+
+    $apiUrl = self::BG_BASE_URL;
+    $apiMethod = self::BG_DEFAULT_REQUEST_METHOD;
+    $apiCurlDatas = $this->BG_CURL_DATAS;
+
+    $result = $this->sendRequest($apiUrl,$apiMethod,$apiCurlDatas,$apiArrData,$err);
+    if($result === false) { // 發起API要求 網路傳輸錯誤
+      return false;
+    } else {
+      $rs_array = explode(',', $result);
+      if ($rs_array[0] === '1' && $result !== '-1') {
+        return $rs_array[2];
+      } else {// 回傳錯誤代碼
+        $err = (isset($this->BG_ERR_MESSAGE[$result]))? $this->BG_ERR_MESSAGE[$result]: '網站API回傳錯誤碼,但錯誤訊息未定義';
+        return false;
+      }
+    }
+  }
+}

@@ -1,0 +1,451 @@
+<?php
+class AgentIndexAction extends AgentAction {
+    //TODO: 代理首頁
+    public function index(){
+        $this->getAgentAnnouncement();//全版公告
+        $this->display();
+    }
+    //TODO: 代理登入功能
+    public function formLogin(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+        //var_dump($request);exit();
+        $CommonAgent = D("CommonAgent");
+
+        $data = array(
+            "agent_account" => $request['account'] //傳入的帳號
+        );
+        //從 CommonMemberModel getMemberData 取得代理資訊
+        $return = $CommonAgent->getAgentDataByAccount($data);
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //檢查 是否 有此帳號
+        if(!isset($return['agent_id'])){
+            //檢查是否為子帳號
+            if(!$this->agentSubLogin($request['account'],$request['password'])){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            }
+            redirect(__APP__.'/AgentIndex/index');
+            return;//子帳號登入成功 直接轉跳
+        }
+        //從 CommonAgentModel getMd5Password($password) 傳入密碼 取得加密後的密碼 做比對
+        $request['password'] = strtolower($request['password']);
+        $password = $CommonAgent->getMd5Password($request['password']);
+        $CommonAgentLoginLog = D("CommonAgentLoginLog");
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $nowTime = time();//取得現在時間戳
+        //檢查 密碼 是否正確 。
+        if(!($return['agent_password'] === $password)){
+            //新增 密碼錯誤 登入LOG 開始
+            $data = array(
+                "agent_id" => $return['agent_id'],
+                "agent_account" => $return['agent_account'],
+                "agent_tree" => $return['agent_tree'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"密碼錯誤;輸入密碼;".$request['password'],
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonAgentLoginLog->addAgentLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            //否，回傳顯示 帳號、密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+            //新增 密碼錯誤 登入LOG 結束
+        }
+        //檢查是否被停權
+        if($return['agent_status'] == 1){
+            //新增 帳戶停權 登入LOG 開始
+            $data = array(
+                "agent_id" => $return['agent_id'],
+                "agent_account" => $return['agent_account'],
+                "agent_tree" => $return['agent_tree'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"代理停權;無法登入",
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonAgentLoginLog->addAgentLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//帳號已被停權
+            //新增 帳戶停權 登入LOG 結束
+        }
+
+        //檢查可以登入
+        //將代理資料 存入SESSION。
+        $_SESSION['Agent']['id'] = $return['agent_id'];
+        $_SESSION['Agent']['account'] = $return['agent_account'];
+        $_SESSION['Agent']['status'] = $return['agent_status'];
+        $_SESSION['Agent']['tree'] = $return["agent_tree"];//代理樹
+        $_SESSION['Agent']['mode'] = $return["agent_mode"];//代理模式
+        $_SESSION['Agent']['head'] = $return["agent_head"];//代理上級
+        $_SESSION['Agent']['identity'] = "1";//1代理   2子帳號
+
+        //新增 成功 登入LOG 開始
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'],
+            "agent_account" => $_SESSION['Agent']['account'],
+            "agent_tree" => $_SESSION['Agent']['tree'],
+            "loginLog_status"=>1,
+            "loginLog_createTime" => $nowTime,
+            "loginLog_ip" => $ip,
+            "loginLog_os" => get_os(),
+            "loginLog_url" => get_url()
+        );
+        $return = $CommonAgentLoginLog->addAgentLoginLogData($data,$err);
+        if ($return === false) {
+            $this->error($err);
+        }
+        //新增 成功 登入LOG 結束
+        
+        //修改 代理在線 名單 開始
+        $CommonAgentOnline = D("CommonAgentOnline");
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'],
+            "agent_account"=>$_SESSION['Agent']['account'],
+            "agent_identity" => $_SESSION['Agent']['identity'],
+            "online_createTime"=>$nowTime,
+            "online_modifyTime"=>$nowTime,
+            "online_ip"=>$ip,
+            "online_os"=>get_os(),
+            "online_url"=>get_url()
+        );
+        $return = $CommonAgentOnline->setAgentOnlineData($data,$err);
+        if ($return === false) {
+            //$this->error($err);
+        }
+        //修改 代理在線 名單 結束
+        cookie('upOnlineTime',$nowTime);//設定在線名單修改時間
+        
+        //修改會員登入UID 開始
+        $uid = $CommonAgent->getMd5Password($nowTime); //把時間戳 變成 Token
+        $_SESSION['Agent']['login_uid'] = $uid;
+        $_SESSION['Agent']['uid'] = $uid;
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'],
+            "agent_uid" => $_SESSION['Agent']['login_uid'],
+            "agent_lastLoginTime" => $nowTime,
+            "agent_lastLoginIp" => $ip
+        );
+        $return = $CommonAgent->setAgentDataById($data);
+        if ($return === false) {
+            unset($_SESSION['Agent']);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//登入錯誤，請重新登入。
+        }
+        //修改會員登入UID 開始
+        $_SESSION['Agent']['isFirstLogin'] = '1';// 是否第一次登入  0不是  1是
+        $_SESSION['Agent']['isRenewLoad'] = time();// 是否重新加載  紀錄時間
+        $_SESSION['Agent']['checkMemberTime'] = time();//重讀會員資料時間
+        $_SESSION['Agent']['loginTime'] = time();//代理登入時間
+        //轉跳頁面，登入後首頁。
+        redirect(__APP__.'/AgentIndex/index');
+    }
+    /*
+     * 代理首頁
+     * 子帳號登入
+     */
+    protected function agentSubLogin($account,$password){
+        $CommonAgentSub = D("CommonAgentSub");
+        $data = array(
+            "sub_account" => $account //傳入的帳號
+        );
+        $return = $CommonAgentSub->getAgentSubDataPageDataByAccount($data);
+        //var_dump($return);exit();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//資料庫錯誤
+        }
+        if(!isset($return['sub_id'])){
+            //無此子帳號 代表 無此帳號 登入 會傳false
+            return false;
+        }
+        $password = $CommonAgentSub->getMd5Password($password);
+
+        $CommonAgentLoginLog = D("CommonAgentLoginLog");
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $nowTime = time();//取得現在時間戳
+
+        //檢查 密碼 是否正確 。
+        if(!($return['sub_password'] === $password)){
+            //新增 子帳號 密碼錯誤 登入LOG 開始
+            $data = array(
+                "agent_id" => $return['agent_id'],
+                "agent_account" => $return['agent_account'],
+                "sub_id" => $return['sub_id'],
+                "sub_account" => $return['sub_account'],
+                "agent_tree" => $return['agent_tree'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"密碼錯誤;輸入密碼;".$request['password'],
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonAgentLoginLog->addAgentLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            //否，回傳顯示 帳號、密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼錯誤
+            //新增 子帳號 密碼錯誤 登入LOG 結束
+        }
+        if($return['sub_status'] == 1 || $return['agent_status'] == 1){
+            //新增 子帳戶停權 登入LOG 開始
+            $data = array(
+                "agent_id" => $return['agent_id'],
+                "agent_account" => $return['agent_account'],
+                "sub_id" => $return['sub_id'],
+                "sub_account" => $return['sub_account'],
+                "agent_tree" => $return['agent_tree'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"帳號停權;無法登入",
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonAgentLoginLog->addAgentLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//密碼錯誤
+            //新增 子帳戶停權 登入LOG 結束
+        }
+
+
+        //子帳號登入成功
+        //將 代理 和 子帳號 資料 存入SESSION。
+        $_SESSION['Agent']['id'] = $return['agent_id'];
+        $_SESSION['Agent']['account'] = $return['agent_account'];
+        $_SESSION['Agent']['status'] = $return['sub_status'];
+        $_SESSION['Agent']['tree'] = $return['agent_tree'];
+        $_SESSION['Agent']['mode'] = $return["agent_mode"];//代理模式
+        $_SESSION['Agent']['head'] = $return["agent_head"];//代理上級
+
+        $_SESSION['Agent']['identity'] = "2";//登入身分 1代理   2子帳號
+        $_SESSION['Agent']['subId'] = $return['sub_id'];
+        $_SESSION['Agent']['subAccount'] = $return['sub_account'];
+        ////subPageData子帳號頁面資料     substr() 去除最後一個字元
+        $_SESSION['Agent']['subPageData'] = substr($return['power_main'],0,-1);
+
+        //新增 成功 登入LOG 開始
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'],
+            "agent_account" => $_SESSION['Agent']['account'],
+            "sub_id" => $_SESSION['Agent']['subId'],
+            "sub_account" => $_SESSION['Agent']['subAccount'],
+            "agent_tree" => $_SESSION['Agent']['tree'],
+            "loginLog_status"=>1,
+            "loginLog_createTime" => $nowTime,
+            "loginLog_ip" => $ip,
+            "loginLog_os" => get_os(),
+            "loginLog_url" => get_url()
+        );
+        $return = $CommonAgentLoginLog->addAgentLoginLogData($data,$err);
+        if ($return === false) {
+            $this->error($err);
+        }
+        //新增 成功 登入LOG 結束
+        
+        //修改 代理在線 名單 開始
+        $CommonAgentOnline = D("CommonAgentOnline");
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id'],
+            "agent_account"=>$_SESSION['Agent']['account'],
+            "agent_identity" => $_SESSION['Agent']['identity'],
+            "sub_id"=> $_SESSION['Agent']['subId'],
+            "sub_account"=> $_SESSION['Agent']['subAccount'],
+            "online_createTime"=>$nowTime,
+            "online_modifyTime"=>$nowTime,
+            "online_ip"=>$ip,
+            "online_os"=>get_os(),
+            "online_url"=>get_url()
+        );
+        $return = $CommonAgentOnline->setAgentOnlineData($data,$err);
+        if ($return === false) {
+            //$this->error($err);
+        }
+        cookie('upOnlineTime',$nowTime);
+
+        //是
+        $return = $CommonAgentSub->getMd5Password($nowTime); //把時間戳 變成 Token
+        if ($return === false) {
+            unset($_SESSION['Agent']);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        $_SESSION['Agent']['login_uid'] = $return;
+        $_SESSION['Agent']['uid'] = $return;
+        $data = array(
+            "sub_id" => $_SESSION['Agent']['subId'],
+            "sub_uid" => $_SESSION['Agent']['login_uid']
+        );
+        $return = $CommonAgentSub->setAgentSubDataById($data);
+        if ($return === false) {
+            unset($_SESSION['Agent']);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+        }
+        $_SESSION['Agent']['isFirstLogin'] = '1';// 是否第一次登入  0不是  1是
+        $_SESSION['Agent']['isRenewLoad'] = time();// 是否重新加載  紀錄時間
+        $_SESSION['Agent']['checkMemberTime'] = time();//重讀會員資料時間
+        $_SESSION['Agent']['loginTime'] = time();//會員登入時間
+        return true;
+    }
+    
+    //TODO:全版公告
+    protected function getAgentAnnouncement(){
+        //從 CommonAnnouncementModel getAgentAnnouncementData() 取得前台跑馬燈資料
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $return = $CommonAnnouncement->getAgentAnnouncementData();
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        if(count($return) == 0){
+            $this->assign("announcementBool",false);
+        } else {
+            $this->assign("announcementBool",true);
+        }
+        $this->assign("announcementArray",$return);
+    }
+    function agentInfo(){
+        $this->display();
+    }
+    /*
+     * 修改代理密碼功能
+     */
+    function setAgentPassword(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+
+        if(!isset($request['oldPassword']) || empty($request['oldPassword'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//舊密碼為空，請重新輸入舊密碼。
+        }
+        if(!isset($request['newPassword']) || empty($request['newPassword'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//新密碼為空，請重新輸入新密碼。
+        }
+        if(!isset($request['new2Password']) || empty($request['new2Password'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//確認密碼為空，請重新輸入確認密碼。
+        }
+        if($request['oldPassword'] === $request['newPassword']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//新密碼 不可與 舊密碼 相同。
+        }
+        //檢查 兩次新密碼 是否正確 。
+        if(!($request['newPassword'] === $request['new2Password'])){
+            //否，回傳顯示 確認密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//確認密碼錯誤。
+        }
+        $identity = $_SESSION['Agent']['identity'];
+        switch ($identity) {
+            case '1':
+                $CommonAgent = D("CommonAgent");
+                //使用帳號 查詢 會員資料
+                $data = array(
+                    "agent_account" => $_SESSION['Agent']['account'], //帳號
+                );
+                //從 CommonAgentModel 取得代理資訊
+                $return = $CommonAgent->getAgentDataByAccount($data);
+                if ($return === false) {
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//資料庫錯誤。
+                }
+                //檢查 是否 有此帳號
+                if(!isset($return['agent_id'])){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//無此帳號，請重新登入。
+                }
+                //從 CommonMemberModel getMd5Password($password) 傳入密碼 取得加密後的密碼 做比對
+                $oldPassword = $CommonAgent->getMd5Password($request['oldPassword']);
+                //檢查 舊密碼 是否正確 。
+                if(!($return['agent_password'] === $oldPassword)){
+                    //否，回傳顯示 舊密碼錯誤。
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));//舊密碼錯誤。
+                }
+
+                //取得 新密碼 MD5加密
+                $newPassword = $CommonAgent->getMd5Password($request['newPassword']);
+                $data = array(
+                    "agent_id" => $_SESSION['Agent']['id'],
+                    "agent_password" => $newPassword
+                );
+                //修改代理密碼
+                $return = $CommonAgent->setAgentDataById($data);
+                if ($return === false) {
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_09')));//修改密碼失敗，請重新登入。
+                }
+
+                $data = array(
+                    'operateLog_class'=>1,
+                    'operateLog_objectId'=>$_SESSION['Agent']['id'],
+                    'operateLog_objectAccount'=>$_SESSION['Agent']['account'],
+                    'operateLog_main'=> array(
+                        'oldPassword'=>$request['oldPassword'],
+                        'newPassword'=>$request['newPassword']
+                    ),
+                );
+                $this->addAgentOperateLog($data);
+                //是，顯示成功訊息
+                $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改密碼成功，下次登入請使用新密碼登入。
+                break;
+            case '2':
+                $CommonAgentSub = D("CommonAgentSub");
+                //使用帳號 查詢 會員資料
+                $data = array(
+                    "sub_account" => $_SESSION['Agent']['subAccount'], //帳號
+                );
+                //從 CommonAgentModel 取得代理資訊
+                $return = $CommonAgentSub->getAgentSubDataByAccount($data);
+                if ($return === false) {
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_10')));//資料庫錯誤。
+                }
+                //檢查 是否 有此帳號
+                if(!isset($return['sub_id'])){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_11')));//無此帳號，請重新登入。
+                }
+                //從 CommonMemberModel getMd5Password($password) 傳入密碼 取得加密後的密碼 做比對
+                $oldPassword = $CommonAgentSub->getMd5Password($request['oldPassword']);
+                //檢查 舊密碼 是否正確 。
+                if(!($return['sub_password'] === $oldPassword)){
+                    //否，回傳顯示 舊密碼錯誤。
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_12')));//舊密碼錯誤。
+                }
+
+                //取得 新密碼 MD5加密
+                $newPassword = $CommonAgentSub->getMd5Password($request['newPassword']);
+                $data = array(
+                    "sub_id" => $_SESSION['Agent']['subId'],
+                    "sub_password" => $newPassword
+                );
+
+                //修改代理密碼
+                $return = $CommonAgentSub->setAgentSubDataPageDataById($data);
+                if ($return === false) {
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_13')));//修改密碼失敗，請重新登入。
+                }
+
+                $data = array(
+                    'operateLog_class'=>1,
+                    'operateLog_objectId'=>$_SESSION['Agent']['subId'],
+                    'operateLog_objectAccount'=>$_SESSION['Agent']['subAccount'],
+                    'operateLog_main'=> array(
+                        'oldPassword'=>$request['oldPassword'],
+                        'newPassword'=>$request['newPassword']
+                    ),
+                );
+
+                $this->addAgentOperateLog($data);
+                //是，顯示成功訊息
+                $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改密碼成功，下次登入請使用新密碼登入。
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_14')));
+                break;
+        }
+
+    }
+}

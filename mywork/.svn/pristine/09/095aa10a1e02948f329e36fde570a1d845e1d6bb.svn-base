@@ -1,0 +1,169 @@
+<include file="Common:header" />
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+    <include file="Common:menu" />
+    <include file="Common:menu2" />
+    <div id="content" class="content">
+        <div class="row">
+            <div class="col-lg-12 ui-sortable">
+                <div class="panel panel-inverse">
+                    <div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+                        <div class="panel-heading-btn">
+                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+                        </div>
+                        <h4 class="panel-title">遊戲控制選項</h4>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table id="table1" class="table table-striped m-b-0">
+                                <thead>
+                                    <tr>
+                                        <th>序</th>
+                                        <th>遊戲名稱</th>
+                                        <th>手機彈框開關</th>
+                                        <th>報表開關</th>
+                                        <th>佔成開關</th>
+                                        <th>風控開關</th>
+                                        <th>網頁彈框開關</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <VOLIST name="showArray" id="vo">
+                                        <tr>
+                                            <td>{$i}</td>
+                                            <td>{$vo.gameName}</td>
+                                            <td>
+                                                <if condition='$vo.popup eq "yes"'>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_pop_{$vo.code}" checked onclick="submitAjax('{$vo.code}','popStop','pop')">
+                                                      <label for="switcher_pop_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                <else/>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_pop_{$vo.code}" onclick="submitAjax('{$vo.code}','popStart','pop')">
+                                                      <label for="switcher_pop_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                </if>
+                                            </td>
+                                            <td>
+                                                <if condition='$vo.reportEnabled eq "1"'>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_rep_{$vo.code}" checked onclick="submitAjax('{$vo.code}','repStop','rep')">
+                                                      <label for="switcher_rep_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                <else/>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_rep_{$vo.code}" onclick="submitAjax('{$vo.code}','repStart','rep')">
+                                                      <label for="switcher_rep_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                </if>
+                                            </td>
+                                            <td>
+                                                <if condition='$vo.ratioException eq "1"'>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_rat_{$vo.code}" checked onclick="submitAjax('{$vo.code}','ratStop','rat')">
+                                                      <label for="switcher_rat_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                <else/>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_rat_{$vo.code}" onclick="submitAjax('{$vo.code}','ratStart','rat')">
+                                                      <label for="switcher_rat_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                </if>
+                                            </td>
+                                            <td>
+                                                <if condition='$vo.riskcontrolEnabled eq "1"'>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_risk_{$vo.code}" checked onclick="submitAjax('{$vo.code}','riskStop','risk')">
+                                                      <label for="switcher_risk_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                <else/>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_risk_{$vo.code}" onclick="submitAjax('{$vo.code}','riskStart','risk')">
+                                                      <label for="switcher_risk_{$vo.code}" class="switchbtn"></label>
+                                                    </div>  
+                                                </if>                                              
+                                            </td>
+                                            <td>
+                                                <if condition='$vo.htmlPopup eq "1"'>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_htmlPop_{$vo.code}" checked onclick="submitAjax('{$vo.code}','htmlPopStop','htmlPop')">
+                                                      <label for="switcher_htmlPop_{$vo.code}" class="switchbtn"></label>
+                                                    </div>
+                                                <else/>
+                                                    <div class="switcher">
+                                                      <input type="checkbox" id="switcher_htmlPop_{$vo.code}" onclick="submitAjax('{$vo.code}','htmlPopStart','htmlPop')">
+                                                      <label for="switcher_htmlPop_{$vo.code}" class="switchbtn"></label>
+                                                    </div>  
+                                                </if>   
+                                            </td>
+                                        </tr>
+                                    </VOLIST>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<include file="Common:footer" />
+<script>
+
+$(document).ready(function() {
+
+});
+submitAjax('{$vo.code}','ratStop','rat')
+function submitAjax(vo_code,mode_id,mod){
+    $("#switcher_"+mod+"_"+vo_code).attr("disabled",true);
+    var str = "";
+    switch(mode_id){
+        case 'popStop':
+            str = 'submitAjax("'+vo_code+'","popStart","'+mod+'")';
+            break;
+        case 'popStart':
+            str = 'submitAjax("'+vo_code+'","popStop","'+mod+'")';
+            break;
+        case 'repStop':
+            str = 'submitAjax("'+vo_code+'","repStart","'+mod+'")';
+            break;
+        case 'repStart':
+            str = 'submitAjax("'+vo_code+'","repStop","'+mod+'")';
+            break;
+        case 'ratStop':
+            str = 'submitAjax("'+vo_code+'","ratStart","'+mod+'")';
+            break;
+        case 'ratStart':
+            str = 'submitAjax("'+vo_code+'","ratStop","'+mod+'")';
+            break;
+        case 'riskStop':
+            str = 'submitAjax("'+vo_code+'","riskStart","'+mod+'")';
+            break;
+        case 'riskStart':
+            str = 'submitAjax("'+vo_code+'","riskStop","'+mod+'")';
+            break;
+        case 'htmlPopStop':
+            str = 'submitAjax("'+vo_code+'","htmlPopStart","'+mod+'")';
+            break;
+        case 'htmlPopStart':
+            str = 'submitAjax("'+vo_code+'","htmlPopStop","'+mod+'")';
+            break;
+        default:
+            break;
+    }
+    $.ajax({
+        type:"POST",
+        url:"__URL__/ajaxSwitch",
+        data:{code:vo_code,className:mode_id},
+        dataType: "text",
+        success:function(data){
+            $("#switcher_"+mod+"_"+vo_code).attr("disabled",false);
+            $("#switcher_"+mod+"_"+vo_code).attr('onclick',str);
+        },
+        error:function(){
+            alert("網路連線錯誤，請檢查您的網路狀況。");
+        }
+    });
+}
+</script>

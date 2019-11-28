@@ -1,0 +1,167 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+		<form class="form-inline m-b-10" method="post" id="formInquire" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<input class="btn btn-info f-s-13 p-5 m-r-5 time-btn-rwd" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+			<input class="btn btn-info f-s-13 p-5 m-r-10 time-btn-rwd" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+			<input class="btn btn-info f-s-13 p-5 m-r-5 time-btn-rwd" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+			<input class="btn btn-info f-s-13 p-5 m-r-10 time-btn-rwd" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+			<input class="btn btn-info f-s-13 p-5 m-r-5 time-btn-rwd" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+			<input class="btn btn-info f-s-13 p-5 m-r-20 time-btn-rwd" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+			<div class="form-group m-r-10 time-input-rwd">
+				<input id="startTime" name="startTime" type="text" autocomplete="off" class="form-control div-style" style="width: 149px;" value="{$startTime}"/>
+			</div>	
+			<div class="form-group m-r-10 time-input-rwd"><label class="m-b-0">至</label></div>
+			<div class="form-group m-r-10 time-input-rwd">
+				<input id="endTime" name="endTime" type="text" autocomplete="off" class="form-control div-style" style="width: 149px;" value="{$endTime}"/>
+			</div>
+			<div class="form-check m-r-10 p-l-0"><label>會員帳號 :</label></div>	
+			<div class="form-check m-r-10 width-auto p-l-0">
+				<input type="hidden" id="pageNumber" name="pageNumber" value="">
+				<input class="form-control div-style width-auto" type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+			</div>
+			<button type="submit" name="addbtn" class="btn btn-info m-r-5">搜尋</button>
+		</form>
+
+		<div class="row">
+		        <div class="col-lg-12 ui-sortable">
+					<!-- begin panel -->
+					<div class="panel panel-inverse">
+						<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+							<div class="panel-heading-btn">
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+							</div>
+							<h4 class="panel-title">帳變查詢</h4>
+						</div>
+						<div class="panel-body">
+							<div class="table-responsive">
+								<table id="table1" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+				                        	<th>帳號</th>
+				                        	<th>帳變操作</th>
+				                        	<th>帳變類型</th>
+				                        	<th>帳變前</th>
+				                        	<th>帳變金額</th>
+				                        	<th>帳變後金額</th>
+				                        	<th>建立時間</th>
+											<th>操作內容</th>
+											<th>IP</th>
+										</tr>
+									</thead>
+									<tbody>
+										<IF condition='$walletLogBool eq "true"'>
+											<VOLIST name="showArray" id="vo" empty="$memberEmpty">
+					                        	<tr>
+						                        	<td>{$key+1}</td>
+													<td>{$vo.account}</td>
+													<td>{$vo.operating}</td>
+													<td>{$vo.type}</td>
+													<td>{$vo.before}</td>
+													<td>{$vo.money}</td>
+													<td>{$vo.after}</td>
+													<td>{$vo.createTime}</td>
+													<td>{$vo.main}</td>
+													<td>{$vo.ip}</td>
+												</tr>
+					                        </VOLIST>
+										</IF>
+									</tbody>
+								</table>
+							</div>
+							<if condition="$pageNumber neq ''">
+			                  <div class="row">
+				                  <div class="main col-lg-12">
+				                  		<nav aria-label="Page navigation">
+							                <ul class="pagination justify-content-center">
+	
+							                <if condition="$pageNumber-1 neq 0">
+							                  <li id="" class="page-item"><a class="page-link" href="#" onClick="goPage('1')">第一頁</a></li>
+							                  <li class="page-item">
+							                    <a class="page-link" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+							                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+							                      <span class="sr-only">Previous</span>
+							                    </a>
+							                  </li>
+							                 </if>
+	
+							                  <volist name="pageArray" id="vo" >
+				                                <IF condition="$pageNumber eq $vo" >
+				                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+				                                <else/>
+				                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+				                                </IF>
+				                              </volist>
+	
+							                  <if condition="$pageNumber+1 elt $totalPage ">
+								                  <li class="page-item">
+								                    <a class="page-link" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+								                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+								                      <span class="sr-only">Next</span>
+								                    </a>
+								                  </li>
+								                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$totalPage}')">最末頁</a></li>
+							                  </if>
+							                </ul>
+							            </nav>
+				                  </div>
+			                  </div>
+			               </if>
+					   </div>
+					</div>
+				</div>
+		</div>
+
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+	<!-- end #content -->
+<include file="Common:footer"/>
+<script type="text/javascript">
+$(document).ready(function(){
+	$('#member_account').typeahead({
+        ajax: {
+            url: '__URL__/searchMemberName',
+            timeout: 200
+        }
+    });
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        // maxDate: "+0",
+        changeMonth: true,
+        changeYear: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>
+

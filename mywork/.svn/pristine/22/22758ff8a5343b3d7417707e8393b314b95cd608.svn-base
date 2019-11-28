@@ -1,0 +1,409 @@
+<include file="Common:header"/>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+<include file="Common:menu"/>
+<include file="Common:menu2"/>
+	<!-- begin #content -->
+	<div id="content" class="content">
+		<div class="row">
+			<div class="col-md-2">
+				<div><h6>重整倒數 &nbsp;<span id="ind"></span></h6></div>
+			</div>
+			<div class="col-md-2">
+				<if condition="$noRenew eq 1">
+					<div class="form-check p-t-0">
+						<input class="form-check-input is-valid" type="checkbox" checked name="noRenew">
+						<label class="form-check-label" for="validCheckbox">不重整</label>
+					</div>
+				<else />
+					<div class="form-check p-t-0">
+						<input class="form-check-input is-valid" type="checkbox" name="noRenew">
+						<label class="form-check-label" for="validCheckbox">不重整</label>
+					</div>
+				</if>
+			</div>
+			<div>
+				<div id="newMessageDIV" style="display:none"></div>
+			</div>
+		</div>
+		<input type="hidden" value="{$totalError}" id="totalError">
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">儲值未處理名單</h4>
+					</div>
+					<!-- end panel-heading -->
+						<div class="panel-body">
+								<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table id="showTable" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+											<th>單號</th>
+											<th>交易編號</th>
+											<th>帳號</th>
+											<th>狀態</th>
+											<th>儲值金額</th>
+											<th>建立時間</th>
+											<th>金流名稱</th>
+											<th>繳款商號</th>
+											<th>儲值IP</th>
+											<th>備註</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="showArrayError" id="vo">
+				                        	<tr>
+
+												<td>{$key+1}</td>
+												<td>{$vo.id}</td>
+												<td>{$vo.number}</td>
+												<td>{$vo.memberAccount}</td>
+												<td>{$vo.status}</td>
+												<td>{$vo.money}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.name}-{$vo.showName}</td>
+												<td>{$vo.paymentCode}</td>
+												<td>{$vo.ip}</td>
+												<td>{$vo.remark}</td>
+												<td>
+													<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetRechargeProcess'>
+														<input type="hidden" name="setId" value="{$vo.id}">
+														<button type="submit" name="processButton" value="2" class="btn btn-info m-r-5" >自動完成</button>
+													</form>
+												</td>
+											</tr>
+				                        </VOLIST>
+				                        <tr><td id="showMessage" colspan="12" align="center" style="display:none;">無資料</td></tr>
+									</tbody>
+								</table>
+							</div>
+							<!-- end table-responsive -->
+						</div>
+						<!-- end panel-body -->
+						<if condition="$pageNumberError neq ''">
+		                 	<div class="row">
+			                  	<div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+
+						                <if condition="$pageNumberError-1 neq 0">
+						                 	<li id="" class="page-item"><a class="page-link" href="#" onClick="goPageError('1')">第一頁</a></li>
+						                 	<li class="page-item">
+						                    <a class="page-link" href="#" onClick="goPageError('{$pageNumberError-1}')" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  	</li>
+						                </if>
+
+					                  	<volist name="pageArrayError" id="vo" >
+			                                <IF condition="$pageNumberError eq $vo" >
+			                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="#" onClick="goPageError('{$vo}')">{$vo}</a></li>
+			                                <else/>
+			                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="#" onClick="goPageError('{$vo}')">{$vo}</a></li>
+			                                </IF>
+		                            	</volist>
+
+					                  	<if condition="$pageNumberError+1 elt $totalPageError ">
+						                 	 <li class="page-item">
+						                    <a class="page-link" href="#" onClick="goPageError('{$pageNumberError+1}')" aria-label="Next">
+						                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+						                      <span class="sr-only">Next</span>
+						                    </a>
+						                 	 </li>
+						                  	<li id="{$totalPageError}Page" class="page-item"><a class="page-link" href="#" onClick="goPageError('{$totalPageError}')">最末頁</a></li>
+					                  	</if>
+						                </ul>
+						     	    </nav>
+			                  	</div>
+		                  	</div>
+		               	</if>
+				</div>
+				<!-- end panel -->
+			</div>
+		</div>
+		<form id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<input type="hidden" id="pageNumberError" name="pageNumberError" value="{$pageNumberError}">
+			<input type="hidden" id="pageNumber" name="pageNumber" value="{$pageNumber}">
+			<div class="row">
+				<div class="col-md-12">
+					<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" value="本日" onClick="formTime('{$today} 00:00:00','{$today} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" value="昨日" onClick="formTime('{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" value="本週" onClick="formTime('{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" value="上週" onClick="formTime('{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" value="本月" onClick="formTime('{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+					<input class="btn btn-info f-s-13 p-5 m-r-5 m-b-5" type="button" value="上月" onClick="formTime('{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+				</div>
+			</div>
+
+
+			<div class="row m-b-5">
+				<div class="col-md-4 m-b-5">
+					<div class="row row-space-10">
+						<div class="col-md-5">
+							<input type="text" class="form-control text-center" id="startTime" placeholder="開始日" name="startTime" value="{$startTime}">
+						</div>
+						<div class="col-md-1 m-t-10">
+						 	<h6 class="text-center">至</h6>
+						</div>
+
+						<div class="col-md-5">
+							<input type="text" class="form-control text-center" id="endTime" placeholder="結束日" name="endTime" value="{$endTime}">
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-3 m-b-5">
+					<select name="selectRechargeStarus" class="form-control div-style width-auto" data-size="10" data-live-search="true" data-style="btn-info">
+						<if condition="$selectRechargeStarus eq 2">
+							<option selected value="2">已完成</option>
+						<else />
+							<option value="2">已完成</option>
+						</if>
+						<if condition="$selectRechargeStarus eq 3">
+							<option selected value="3">已取消</option>
+						<else />
+							<option value="3">已取消</option>
+						</if>
+					</select>
+					<input class="btn btn-info m-l-10 m-b-5 div-style" type='submit' value='查詢'>
+				</div>
+			</div>
+			<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		</form>
+
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">儲值處理</h4>
+					</div>
+					<!-- end panel-heading -->
+						<div class="panel-body">
+								<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table id="showTable1" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+											<th>單號</th>
+											<th>交易編號</th>
+											<th>帳號</th>
+											<th>狀態</th>
+											<th>儲值金額</th>
+											<th>建立時間</th>
+											<th>金流名稱</th>
+											<th>繳款商號</th>
+											<th>儲值IP</th>
+											<th>備註</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="showArraySucc" id="vo1" empty="$showEmpty">
+				                        	<tr>
+
+												<td>{$key+1}</td>
+												<td>{$vo1.id}</td>
+												<td>{$vo1.number}</td>
+												<td>{$vo1.memberAccount}</td>
+												<td>{$vo1.status}</td>
+												<td>{$vo1.money}</td>
+												<td>{$vo1.createTime}</td>
+												<td>{$vo1.name}-{$vo1.showName}</td>
+												<td>{$vo1.paymentCode}</td>
+												<td>{$vo1.ip}</td>
+												<td>{$vo1.remark}</td>
+												<td></td>
+											</tr>
+				                        </VOLIST>
+				                        <tr><td id="showMessage" colspan="12" align="center" style="display:none;">無資料</td></tr>
+									</tbody>
+								</table>
+							</div>
+							<!-- end table-responsive -->
+						</div>
+						<!-- end panel-body -->
+
+						<if condition="$pageNumber neq ''">
+		                 	<div class="row">
+			                  	<div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+
+						                <if condition="$pageNumber-1 neq 0">
+						                 	<li id="" class="page-item"><a class="page-link" href="#" onClick="goPage('1')">第一頁</a></li>
+						                 	<li class="page-item">
+						                    <a class="page-link" href="#" onClick="goPage('{$pageNumber-1}')" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  	</li>
+						                </if>
+
+					                  	<volist name="pageArray" id="vo" >
+			                                <IF condition="$pageNumber eq $vo" >
+			                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+			                                <else/>
+			                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$vo}')">{$vo}</a></li>
+			                                </IF>
+		                            	</volist>
+
+					                  	<if condition="$pageNumber+1 elt $totalPage ">
+						                 	 <li class="page-item">
+						                    <a class="page-link" href="#" onClick="goPage('{$pageNumber+1}')" aria-label="Next">
+						                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+						                      <span class="sr-only">Next</span>
+						                    </a>
+						                 	 </li>
+						                  	<li id="{$totalPage}Page" class="page-item"><a class="page-link" href="#" onClick="goPage('{$totalPage}')">最末頁</a></li>
+					                  	</if>
+						                </ul>
+						     	    </nav>
+			                  	</div>
+		                  	</div>
+		               	</if>
+				</div>
+				<!-- end panel -->
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<include file="Common:footer"/>
+
+<script type="text/javascript">
+var t,n,count = 30;
+$(document).ready(function() {
+	function play(){
+		$('#newMessageDIV').html('<audio autoplay="autoplay"><source src="__CSS__/mp3/DoorBell.mp3"'
+		+ 'type="audio/wav"/><source src="__CSS__/mp3/DoorBell.mp3" type="audio/mpeg"/></audio>');
+	}
+	t = setInterval(showAuto, 1000);
+    function showAuto(){
+        $('#ind').html(--count);
+        if(count == 0){
+        	clearInterval(t);
+        	$('#ind').html(count);
+        	var noRenew=$('input:checkbox[name="noRenew"]:checked').val();
+        	if(noRenew != "on"){
+        		ajaxDataForm();
+        	}
+
+        }
+    }
+
+	$("#"+"風控部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+
+	$( "#startTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#endtime" ).datepicker( "option", "minDate", selectedDate );
+        }
+    });
+    $( "#endTime" ).datetimepicker({
+    	dateFormat: "yy-mm-dd",
+    	timeFormat: "HH:mm:ss",
+        maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        // showButtonPanel: true,
+        onClose: function( selectedDate ) {
+            $( "#begintime" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+
+    if($("#showTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#showMessage").show()
+	}
+
+    var maxOldId = "{$maxId}";
+    var pageNumberError = '{$pageNumberError}';
+	function ajaxDataForm(){
+		$('#showTable tbody').empty();
+		var ajaxData = "";
+		$.ajax({
+			type: "POST",
+			dataType: "text",
+			data: {pageNumberError:pageNumberError},
+			url:"__URL__/getAjaxRechargeErrorForm",
+			success:function(data){
+				var dataObject = JSON.parse(data);
+				for (var i = 0; i < dataObject['totalError']; i++) {
+					ajaxData += "<tr><td>"+(i+1)+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['id']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['number']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['memberAccount']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['status']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['money']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['createTime']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['name']+"-"+dataObject[i]['showName']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['paymentCode']+"</td>";
+					ajaxData +=	"<td>"+dataObject[i]['ip']+"</td>";
+					if(dataObject[i]['remark'] != null){
+						ajaxData +=	"<td>"+dataObject[i]['remark']+"</td>";
+					} else {
+						ajaxData += "<td></td>";
+					}
+					ajaxData +=	"<td><form method='post' action='__APP__/{$Think.MODULE_NAME}/formSetRechargeProcess'>";
+					ajaxData +=	"<input type='hidden' name='setId' value='"+dataObject[i]['id']+"'>";
+					ajaxData +=	"<button type='submit' name='processButton' value='2' class='btn btn-info m-r-5' >自動完成</button></form></td></tr>";
+				}
+				if(dataObject["maxId"] > maxOldId){
+					play();
+				}
+				maxOldId = dataObject["maxId"];
+
+				$('#showTable tbody').html(ajaxData);
+				t = setInterval(showAuto, 1000);
+				count = 30;
+			},
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	}
+
+});
+
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+function goPageError(pageNumber){
+	$("#pageNumberError").val(pageNumber);
+	$("#formInquire").submit();
+}
+
+</script>

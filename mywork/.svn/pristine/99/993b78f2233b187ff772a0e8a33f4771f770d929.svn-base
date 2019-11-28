@@ -1,0 +1,93 @@
+<?php
+/*
+ * 前後台跑馬燈
+ */
+class CommonMarqueeModel extends CommonModel {
+    /*
+     * 取得Client跑馬燈
+     */
+    public function getClientMarqueeData(){
+        $sql = "SELECT `marquee_text` FROM `common_marquee`
+                WHERE `marquee_belong` = '1' AND marquee_enabled = '1'
+                ORDER BY `marquee_order` ASC;";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 取得Agent跑馬燈
+     */
+    public function getAgentMarqueeData(){
+        $sql = "SELECT `marquee_text` FROM `common_marquee`
+                WHERE `marquee_belong` = '2' AND marquee_enabled = '1'
+                ORDER BY `marquee_order` ASC;";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 取得Admin跑馬燈
+     */
+    public function getAdminMarqueeData(){
+        $sql = "SELECT `marquee_text` FROM `common_marquee`
+                WHERE `marquee_belong` = '3' AND marquee_enabled = '1'
+                ORDER BY `marquee_order` ASC;";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 新增跑馬燈
+     */
+    public function addMarqueeData($data){
+        $sql = "INSERT INTO `CommonMarquee` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改 跑馬燈 資料
+     * 使用跑馬燈ID
+     */
+    public function setMarqueeDataById($data){
+        if(empty($data['marquee_id']) && $data['marquee_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'marquee_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_marquee` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `marquee_id` = '{$data['marquee_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 刪除跑馬燈 資料
+     * 使用跑馬燈ID
+     */
+    public function delMarqueeById($data){
+        if(empty($data['marquee_id']) && $data['marquee_id'] !== '0'){
+            return false;
+        }
+        $sql = "DELETE `common_marquee`
+                WHERE `marquee_id` = '".$data['marquee_id']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

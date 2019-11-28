@@ -1,0 +1,80 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+<include file="Common:MemberCenterMenu"/>
+	 		<div class="row">
+                <div class="col-lg-12 mb40">
+                    <h4 class="mb30">客服訊息</h4>  
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>時間</th>
+                                <th>內容(點擊查看)</th>
+                                <th>狀態</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                           <VOLIST name="showArray" id="vo">
+                            	<tr>
+                            		<td>{$vo.createTime}</td>
+									<td><a class="popup-content" href="#{$vo.id}">{$vo.title}</a></td>
+				                    <!-- form itself -->
+				                    <div id="{$vo.id}" class="popup-content-area-m mfp-hide">
+				                    	<div class="modal-content">
+			                                <div class="modal-header">
+			                                    <h5 class="modal-title" id="exampleModalLabel">{$vo.title}</h5>
+			                                    
+			                                </div>
+			                                <div class="modal-body">
+			                                    {$vo.main}
+			                                </div>
+			                                <div class="modal-footer">
+			                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>   
+			                                </div>
+			                            </div>
+				                    </div>
+					                <td>{$vo.status}</td>
+					                
+                            	</tr>
+                             </VOLIST>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <if condition="$pageNumber neq ''">
+              <div class="row">
+	            	<nav aria-label="Page navigation example" class="mb20 mr-auto ml-auto">
+	                     <ul class="pagination pagination-sm" id="mc-tblFourStar-selPage">
+	                     	<if condition="$pageNumber-1 neq 0"><!-- "$pageNumber-1 != 0" -->
+	                     		<li class="page-item">
+		                             <a class="page-link" href="__APP__/MemberCenter/transferRecords&pageNumber={$pageNumber-1}" aria-label="Previous">
+		                                 <span aria-hidden="true">«</span>
+		                                 <span class="sr-only">Previous</span>
+		                             </a>
+		                         </li>
+	                     	</if>
+	                        <for start="0" end="$totalPage">
+	                          	<if condition="$totalPage elt 5"><!-- "$totalPage < 5 " -->
+	                          		<li class="page-item"><a class="page-link" href="__APP__/MemberCenter/transferRecords&pageNumber={$i+1}">{$i+1}</a></li>
+	                          	</if>
+							</for>
+	                         <if condition="$pageNumber+1 elt $totalPage "><!-- "$pageNumber+1 <= $totalPage " -->
+	                         	<li class="page-item">
+		                             <a class="page-link" href="__APP__/MemberCenter/transferRecords&pageNumber={$pageNumber+1}" aria-label="Next">
+		                                 <span aria-hidden="true">»</span>
+		                                 <span class="sr-only">Next</span>
+		                             </a>
+	                         	</li> 
+	                         </if>
+	                     </ul>
+	                 </nav>
+	            </div>
+            </if>
+	 	</div>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	//alert("{$actionName}");
+	$("#"+"{$actionName}").addClass("active");
+})
+</script>

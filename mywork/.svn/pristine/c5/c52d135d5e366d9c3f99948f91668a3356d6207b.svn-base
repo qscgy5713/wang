@@ -1,0 +1,357 @@
+<?php
+class GameXbsAction extends MemberAction {
+  const API_NAME = 'XBS 六合彩';
+  protected $power = false;
+  protected $gameName = "Xbs";
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+    
+    $request = $this->getRequest();
+    //測試API
+    if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+        cookie('MIS','@@aaa123','expire=3600');
+    }
+    $MIS = cookie('MIS');
+    if($MIS === "@@aaa123"){
+        $this->power = true;
+        $function_links = '';
+        $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+        $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+        $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+        $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+        $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+        $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a>";
+        $this->assign('function_links', $function_links);
+        
+        $this->assign('api_name', self::API_NAME);
+        $this->assign('op_desc', '輸入參數按下送出');
+    }
+  }
+  
+  public function gameEnter(){
+      $this->isMemberLoginShowErr();
+      $this->assign('gameName','六合彩');
+      
+      
+      $memberWallet = $_SESSION['Member']['money'];
+      if($memberWallet != 0){
+          $data = array(
+              "transferMoney" => $memberWallet,
+              "gameName" => $this->gameName
+          );
+          $return = $this->walletTransferGameBalance($data,$err);
+          if($return === false){
+              $this->assign('gameLink', "false");
+              $this->assign('errMessage', $err);
+              $this->display();
+              return false;
+          }
+          $this->getMemberWalletMoney();//讀取電子錢包
+      } else {
+          cookie('member_newMember',null);//清除不讀轉移表的cookie
+      }
+      
+      //取得 遊戲連結 開始
+      $data = array(
+          "game_name" => $this->gameName
+      );
+      $return = $this->loginMember($data,$err);
+      if($return === false){
+          $this->assign('gameLink', "false");
+          $this->assign('errMessage', $err);
+          $this->display();
+          return false;
+      }
+      $gameLink = $return;
+      //取得 遊戲連結 結束
+      
+      $this->addLastGameData();//成功進入遊戲 加入最後一館陣列中
+      
+      $this->assign('gameLink', $gameLink);//遊戲連結參數
+      $this->display();
+  }
+
+  //1. 創新帳號
+  public function index(){
+      if(!$this->power){exit();}
+      $user_name = 'test001';
+      $password = 'abcd1234';
+      $nickname = 'the_nick_name';
+      
+      $request = $this->getRequest();
+      
+      if (isset($request['go']) && (($request['go'])==1)){
+          
+          //檢查是否有 user_name 傳入 並且不為空
+          if (!isset($request['user_name']) || !strlen($request['user_name'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+          }
+          $user_name = $request['user_name'];
+          
+          //檢查是否有 password 傳入 並且不為空
+          if (!isset($request['password']) || !strlen($request['password'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼為空，請重新輸入
+          }
+          $password = $request['password'];
+          
+          //檢查是否有 nickname 傳入 並且不為空
+          if (!isset($request['nickname']) || !strlen($request['nickname'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//暱稱為空，請重新輸入
+          }
+          $nickname = $request['nickname'];
+          
+          //處理 agent
+          if (isset($request['agent'])&&strlen($request['agent'])) {
+              $agent = $request['agent'];
+          }
+          
+          $xbs = D('GameXbs');
+          
+          $err = null;
+          $res = $xbs->createMember(array(
+              'user_name' => $user_name,
+              'password' => $password,
+              'nickname' => $nickname,
+          ), $err);
+          
+          if ($res === false) {
+              $op_result = $err;
+              $op_result2 = $xbs->curlError;
+              $this->assign('op_result2', $op_result2);
+          } else {
+              $op_result = $res;
+          }
+      }
+      
+      $this->assign('user_name', $user_name);
+      $this->assign('password', $password);
+      $this->assign('nickname', $nickname);
+      
+      $this->assign('method_name', 'createMember');
+      $this->assign('method_desc', '建立一個新的遊戲帳號。帳號只允許英數不包含符號 長度限制6~13');
+      $this->assign('op_result', $op_result);
+      $this->assign('form_action', __FUNCTION__);
+      $this->display();
+  }
+
+  //2. 取得遊戲連結
+  public function game_link(){
+      if(!$this->power){exit();}
+      $user_name = 'test001';
+      $password = 'abcd1234';
+      
+      $request = $this->getRequest();
+      
+      if (isset($request['go']) && (($request['go'])==1)){
+          
+          //檢查是否有 user_name 傳入 並且不為空
+          if (!isset($request['user_name']) || !strlen($request['user_name'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+          }
+          $user_name = $request['user_name'];
+          
+          //檢查是否有 password 傳入 並且不為空
+          if (!isset($request['password']) || !strlen($request['password'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼為空，請重新輸入
+          }
+          $password = $request['password'];
+          
+          $xbs = D('GameXbs');
+          
+          $err = null;
+          $res = $xbs->loginMember(array(
+              'user_name' => $user_name,
+              'password' => $password,
+          ), $err);
+          
+          if ($res === false) {
+              $op_result = $err;
+              $op_result2 = $xbs->curlError;
+              $this->assign('op_result2', $op_result2);
+          } else {
+              $op_result = $res;
+          }
+      }
+      
+      $this->assign('user_name', $user_name);
+      $this->assign('password', $password);
+      
+      $this->assign('method_name', 'loginMember');
+      $this->assign('method_desc', '用現存遊戲帳號取得遊戲的連結');
+      $this->assign('op_result', $op_result);
+      $this->assign('form_action', __FUNCTION__);
+      $this->display();
+  }
+
+  //3. 取得會員餘額
+  public function balance(){
+      if(!$this->power){exit();}
+      $user_name = 'test001';
+      
+      $request = $this->getRequest();
+      
+      if (isset($request['go']) && (($request['go'])==1)){
+          
+          //檢查是否有 user_name 傳入 並且不為空
+          if (!isset($request['user_name']) || empty($request['user_name'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+          }
+          $user_name = $request['user_name'];
+          
+          $xbs = D('GameXbs');
+          
+          $err = null;
+          $res = $xbs->getMemberBalance(array(
+              'user_name' => $user_name,
+          ), $err);
+          
+          if ($res === false) {
+              $op_result = $err;
+              $op_result2 = $xbs->curlError;
+              $this->assign('op_result2', $op_result2);
+          } else {
+              $op_result = $res;
+          }
+      }
+      
+      $this->assign('user_name', $user_name);
+      
+      $this->assign('method_name', 'getMemberBalance');
+      $this->assign('method_desc', '取得會員的當前餘額');
+      $this->assign('op_result', $op_result);
+      $this->assign('form_action', __FUNCTION__);
+      $this->display();
+  }
+
+  //4. 上點
+  public function deposit(){
+      if(!$this->power){exit();}
+      $user_name = 'test001';
+      $amount = 1;
+      
+      $request = $this->getRequest();
+      
+      if (isset($request['go']) && (($request['go'])==1)){
+          
+          //檢查是否有 user_name 傳入 並且不為空
+          if (!isset($request['user_name']) || empty($request['user_name'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+          }
+          $user_name = $request['user_name'];
+          
+          //檢查是否有 amount 傳入 並且不為空
+          if (!isset($request['amount']) || empty($request['amount'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+          }
+          $amount = $request['amount'];
+          
+          $err = null;
+          $xbs = D('GameXbs');
+          
+          $res = $xbs->rechargeMemberBalance(array(
+              'user_name' => $user_name,
+              'amount' => $amount,
+          ), $err);
+          
+          if ($res === false) {
+              $op_result = $err;
+              $op_result2 = $xbs->curlError;
+              $this->assign('op_result2', $op_result2);
+          } else {
+              $op_result = $res;
+          }
+      }
+      
+      $this->assign('user_name', $user_name);
+      $this->assign('amount', $amount);
+      
+      $this->assign('method_name', 'rechargeMemberBalance');
+      $this->assign('method_desc', '增加會員的點數餘額');
+      $this->assign('op_result', $op_result);
+      $this->assign('form_action', __FUNCTION__);
+      $this->display();
+  }
+
+  //5. 下點
+  public function withdraw(){
+      if(!$this->power){exit();}
+      $user_name = 'test001';
+      $amount = 1;
+      
+      $request = $this->getRequest();
+      
+      if (isset($request['go']) && (($request['go'])==1)){
+          
+          //檢查是否有 user_name 傳入 並且不為空
+          if (!isset($request['user_name']) || empty($request['user_name'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+          }
+          $user_name = $request['user_name'];
+          
+          //檢查是否有 amount 傳入 並且不為空
+          if (!isset($request['amount']) || empty($request['amount'])){
+              $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+          }
+          $amount = $request['amount'];
+          
+          $err = null;
+          $xbs = D('GameXbs');
+          
+          $res = $xbs->withdrawMemberBalance(array(
+              'user_name' => $user_name,
+              'amount' => $amount,
+          ), $err);
+          
+          if ($res === false) {
+              $op_result = $err;
+              $op_result2 = $xbs->curlError;
+              $this->assign('op_result2', $op_result2);
+          } else {
+              $op_result = $res;
+          }
+      }
+      
+      $this->assign('user_name', $user_name);
+      $this->assign('amount', $amount);
+      
+      $this->assign('method_name', 'withdrawMemberBalance');
+      $this->assign('method_desc', '減少會員的點數餘額');
+      $this->assign('op_result', $op_result);
+      $this->assign('form_action', __FUNCTION__);
+      $this->display();
+  }
+
+  //6. 抓報表明細
+  public function report(){
+      if(!$this->power){exit();}
+      $max_mod_id = '';
+      
+      $request = $this->getRequest();
+      
+      if (isset($request['go']) && (($request['go'])==1)){
+          
+          $xbs = D('GameXbs');
+          
+          $err = null;
+          $res = null;
+          
+          if ($res === false) {
+              $op_result = $err;
+              $op_result2 = $xbs->curlError;
+              $this->assign('op_result2', $op_result2);
+          } else {
+              $op_result = $res;
+          }
+      }
+      
+      $this->assign('method_name', 'getGameRecord');
+      $this->assign('method_desc', '六合彩API不提供抓取投注明細功能。');
+      $this->assign('op_result', '不會有結果的');
+      $this->assign('op_desc', '沒啥好操作的');
+      $this->assign('form_action', __FUNCTION__);
+      $this->display();
+  }
+}

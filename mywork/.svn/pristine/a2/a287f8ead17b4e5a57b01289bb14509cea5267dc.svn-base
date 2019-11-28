@@ -1,0 +1,154 @@
+<!-- 登入條 -->
+<if condition='$isLogin eq "true"'>
+<div id="topBar" class="homepage_marquee shadow-after-3 d-sm-none menu_RWD">
+	<div class="container">
+		<!-- right -->
+		
+		<ul class="top-links list-inline float-right txt-white mt-15">
+				<!-- 信件 -->
+				<li>
+					<a class="no-text-underline txt-white loading" href="__APP__/MemberCenter/ServiceRecords">
+						<i class="fa fa-envelope member-icon mr-5"></i>
+	                    <IF condition='$unreadNumber neq "0"'>
+	                    	<span class="cart-count cart-count-m  default-bg-m">{$unreadNumber}</span>
+	                    </IF>
+					</a>
+				</li>
+				<li>
+					<a class="dropdown-toggle no-text-underline txt-white" data-toggle="dropdown" href="#">
+					<i class="fa fa-user member-icon mr-5"></i>
+					<span>{$memberAccount}</span>
+					</a>
+					<ul class="dropdown-menu dropdown-menu-style menu-style pt-0 pb-0">
+						<div class="row grid-space-10">
+					                        
+	                      <div class="col-4 col-lg-4 pl-5 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-1">
+	                          	<a class=" loading Membermenu-a" href="__APP__/PointRecharge/index">
+					            	<i class="fa fa-credit-card md-Membermenu-i"></i>
+					            	<p class="md-footer-p mb-15">點數儲值</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pl-0 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-1">
+	                           <a class=" loading Membermenu-a" href="__APP__/PointWithdraw/index">
+					            	<i class="fa fa-money md-Membermenu-i"></i>
+					            	<p class="md-footer-p mb-15">線上託售</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pr-5px pl-0 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-2">
+	                           <a class=" loading Membermenu-a" href="__APP__/MemberCenter/lottoRecords">
+					            	<i class="fa fa-bar-chart md-Membermenu-i"></i>
+					            	<p class="md-footer-p mb-15">會員中心</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pl-5 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-3">
+	                            <a class=" loading Membermenu-a" href="__APP__/MemberCenter/ServiceRecords">
+					            	<i class="fa fa-envelope md-Membermenu-i"></i>
+					            	<p class="md-footer-p mb-15">系統消息</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pr-0 pl-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-3">
+	                           <div class="Membermenu-a">
+					            	<!-- <i class="fa fa-diamond md-Membermenu-i"></i> -->
+					            	<p class="md-footer-p mt-10 mb-10" style="color: #d9415a; line-height: 31px !important;">{$memberWallet}</p>
+					            	<p class="md-footer-p mb-15">小牛錢包</p>
+					            </div>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pr-5px pl-0 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-4">
+	                           <a class=" loading Membermenu-a" href="__APP__/MemberCenter/contactService">
+					            	<i class="md-Membermenu-i fa fa-comments"></i>
+					            	<p class="md-footer-p mb-15">留言客服</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pl-5 pr-0 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-3">
+	                           <a class="loading Membermenu-a" href="__APP__/MemberCenter/memberInfo">
+						        	<i class="fa fa-unlock-alt md-Membermenu-i"></i>
+						        	<p class="md-footer-p mb-15">修改密碼</p>
+						       </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pr-0 pl-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-3 Login-movie">
+	                           <a class="Membermenu-a">
+					            	<i class="icomoon icon-smallcow md-Membermenu-i fs-50"></i>
+					            	<p class="md-footer-p mb-15">小牛影城</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      <div class="col-4 col-lg-4 pr-5px pl-0 pr-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-4">
+	                           <a class=" loading Membermenu-a" href="__APP__/AgentJoin/index">
+					            	<i class="fa fa-handshake-o md-Membermenu-i"></i>
+					            	<p class="md-footer-p mb-15">代理加盟</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                      
+	                      <div class="col-12 col-lg-12 pr-0 pl-0">
+	                        <div class="overlay-container overlay-container-m overlay-container-border-4">
+	                           <a class=" loading Membermenu-a loading" href="__APP__/MemberIndex/logout">
+					            	<i class="fa fa-power-off md-Membermenu-i"></i>
+					            	<p class="md-footer-p mb-15">登出</p>
+					            </a>
+	                        </div>
+	                      </div>
+	                    </div>
+					</ul>
+				</li>
+				
+			<li>
+				<a class="dropdown-toggle no-text-underline txt-white" data-toggle="dropdown" href="#">
+				<span class="icomoon icon-hk language-icon mr-5">
+                <span class="path1 language-icon-shadow"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span>
+                </span>
+				
+				</a>
+				<ul class="dropdown-menu dropdown-menu-style">
+					<li>
+						<a href="#"><span class="icomoon icon-china language-icon mr-5">
+		                <span class="path1 language-icon-shadow"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span>
+		                </span>
+		                <span>简体中文</span></a>
+					</li>
+					<li>
+						<a href="#"><span class="icomoon icon-usa language-icon mr-5">
+		                <span class="path1 language-icon-shadow"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span>
+		                </span>
+		                <span>英文</span></a>
+					</li>
+					
+				</ul>
+			</li>
+			
+		</ul>
+		
+
+		<!-- left -->
+		<ul class="logo-left float-left p-0 m-0">
+			<a class="logo float-left loading" href="__APP__/MemberIndex/index">
+				<if condition='$sietData eq "test"'>
+					<img style="height: 60px;" src="__CSS__/images/index_logo_g_w.png" alt="" />
+				</if>
+				<if condition='$sietData eq "demo"'>
+					<img style="height: 60px;" src="__CSS__/images/index_logo_b_w.png" alt="" />
+				</if>
+				<if condition='$sietData eq "official"'>
+					<img style="height: 60px;" src="__CSS__/images/index_logo_w.png" alt="" />
+				</if>
+			</a>
+		</ul>
+	</div>
+</div>
+</if>

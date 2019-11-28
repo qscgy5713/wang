@@ -1,0 +1,62 @@
+<?php
+class CommonMemberOnlineModel extends AdminModel {
+    protected $tableName = "common_member_online";
+    protected $tableId = "online_id";
+
+    /*
+     * 取得 資料
+     */
+    public function getMemberOnlineData($data,&$err=""){
+        if(empty($data["startTime"]) && $data["startTime"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM  `{$this->tableName}`
+                WHERE `online_modifyTime` > '{$data["startTime"]}'
+                order by `online_createTime` desc";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 刪除 資料
+     */
+    public function delMemberOnlineDataById($data,&$err=""){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /**
+     * 取得1小時內的資料  ScriptMemberStatisticsAction
+     */
+    public function getMemberOnlineDataByHour($data){
+        $sql = "SELECT * FROM  `{$this->tableName}` a
+                JOIN `common_member_login_log` b ON (a.`member_id` = b.`member_id`)
+                WHERE (a.`online_modifyTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                AND (b.`loginLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                AND b.`loginLog_status` = '1' GROUP BY a.`member_account` ORDER BY a.`online_modifyTime` DESC";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /**
+     * 取得1小時前的資料  ScriptMemberStatisticsAction
+     */
+    public function getOldMemberOnlineDataByHour($data){
+        $sql = "SELECT * FROM  `{$this->tableName}` a
+                JOIN `common_member_login_log` b ON (a.`member_id` = b.`member_id`)
+                WHERE (a.`online_modifyTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                AND (b.`loginLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+                AND b.`loginLog_status` = '1' AND a.`member_account` = '{$data['member_account']}'
+                GROUP BY a.`member_account` ORDER BY a.`online_modifyTime` DESC";
+        $return = $this->query($sql);
+        return $return[0];
+    }
+}

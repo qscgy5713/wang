@@ -1,0 +1,38 @@
+<?php
+/*
+ * 會員階層
+ */
+class CommonMemberWaterrankLevelModel extends MemberModel {
+    protected $tableName = "common_member_waterrank_level";
+    protected $tableId = "member_id";
+    
+    /*
+     * 取得 會員洗碼 資料
+     */
+    public function getMemberLevelData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無會員ID
+            return false;
+        }
+        if(empty($data['level_year']) && $data['level_year'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//無年份
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//無月份
+            return false;
+        }
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                JOIN `common_game_waterrank` b
+                    ON (b.`waterRank_serial` = b.`waterRank_serial` AND a.`gameClass_id` = b.`gameClass_id`)
+                WHERE a.`member_id` = '{$data['member_id']}' AND (a.`level_year` = '{$data['level_year']}' AND a.`level_month` = '{$data['level_month']}')
+                ORDER BY a.`waterRank_serial` DESC";
+        $return = $this->cacheQuery($sql,15);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//資料庫錯誤
+            return false;
+        }
+        return $return[0];
+    }
+}

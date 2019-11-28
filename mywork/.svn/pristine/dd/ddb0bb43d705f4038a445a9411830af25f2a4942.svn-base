@@ -1,0 +1,26 @@
+<?php
+/*
+ * 會員專屬帳戶
+ */
+class CommonMemberPrivateatmModel extends MemberModel {
+    protected $tableName = "common_member_privateatm";
+    protected $tableId = "privateATM_id";
+    
+    /*
+     * 取得會員專屬帳戶
+     */
+    public function getMemberPrivateatmData($data){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `privateATM_enabled` = '1';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return[0];
+    }
+}

@@ -1,0 +1,87 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:menuRwd"/>
+			<section id="md-login-bg" class="pt-10 pb-0 hidden-lg-up" style="margin-top: 54px;">
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/experiencePage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/experiencePageRWD.jpg">
+					</a>
+				</div>
+				<!--1-->
+				<!--<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/storeGiftPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/storeGiftPageRWD.jpg">
+					</a>
+
+				</div>-->
+
+				<!--2-->
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/reversalPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/reversalPageRWD.jpg">
+					</a>
+
+				</div>
+
+				<!--3-->
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/lottoFourPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/lottoFourPageRWD.jpg">
+					</a>
+
+				</div>
+
+				<!--4-->
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/backWaterRealityPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/backWaterRealityPageRWD.jpg">
+					</a>
+
+				</div>
+
+				<!--5-->
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/backWaterSportsPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/backWaterSportsPageRWD.jpg">
+					</a>
+
+				</div>
+
+				<!--6-->
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/backWaterElectronicPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/backWaterElectronicPageRWD.jpg">
+					</a>
+
+				</div>
+
+				<!--7-->
+				<div class="row game-row-rwd">
+					<a href="__APP__/RebateEvent/baccaratWinningPage" class="loading game-a-rwd">
+						<img class="" style="width: 100%;" src="__CSS__/images/{$langStr}/promotions/baccaratWinningPageRWD.jpg">
+					</a>
+				</div>
+
+			</section>
+		<include file="Common:footer"/>
+<script>
+$(".gameNewHtml").click(function(){
+	var gamehtml = window.open('__APP__/Common/loading&xn', 'gamePage');
+});
+//RWD調整畫面高度
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();	
+	if(isLogin == "true"){
+		jQuery("#md-login-bg").css("min-height",h+"px").addClass("footer-rwd");
+	}else{
+		
+		jQuery("#md-login-bg").css({"min-height":h+"px","margin-top":"0px"}).addClass("footer-rwd");; 
+	}
+		   
+}
+</script>

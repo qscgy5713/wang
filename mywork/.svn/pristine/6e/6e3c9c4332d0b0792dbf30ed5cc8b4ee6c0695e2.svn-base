@@ -1,0 +1,7 @@
+<?php
+class AgreeTermsAction extends MemberAction {
+    //TODO:3.會員條款頁
+    public function index(){
+        $this->display();
+    }
+}

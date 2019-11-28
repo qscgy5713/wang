@@ -1,0 +1,42 @@
+<section class="page-header dark page-header-xs hidden-sm-down">
+	<div class="container">
+	
+		<h1 class="text-center text-color-fff">會員中心</h1>
+	
+		<!-- page tabs -->
+		<ul class="page-header-tabs list-inline mt20">
+			<li id="lottoRecords" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/lottoRecords">四星彩</a></li>
+			<li id="memberInfo" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/memberInfo">會員資料</a></li>
+			<li id="bounsRecords" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/bounsRecords">返水紀錄</a></li>
+			<li id="rechargeRecords" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/rechargeRecords">儲值紀錄</a></li>
+			<li id="givenRecord" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/givenRecord">贈點紀錄</a></li>
+			<li id="transferRecords" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/transferRecords">轉移紀錄</a></li>
+			<li id="withdrawRecords" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/withdrawRecords">託售紀錄</a></li>
+		
+			<li id="contactService" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/contactService">聯絡客服</a></li>
+			<li id="ServiceRecords" class="MC_menu"><a class="MC_a loading" href="__APP__/MemberCenter/ServiceRecords">客服訊息</a></li>
+		</ul><!-- /page tabs -->
+	</div>
+</section>
+<div class="container pt10 pb50 bg-min-height" >
+	 		<div class="row hidden-md-up">
+			    <div class="col-md-12 mb40">
+			        <form>
+			            <div class="form-group">
+			                <h2 class="text-center">會員中心</h2>
+			                <select class="form-control" id="exampleSelect1" onchange="javascript:location.href=this.value;">
+			                    <option class="loading" value="__APP__/MemberCenter/lottoRecords" selected="selected">四星彩</option>
+			                    <option class="loading" value="__APP__/MemberCenter/memberInfo">會員資料</option>
+			                    <option class="loading" value="__APP__/MemberCenter/bounsRecords">返水紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/rechargeRecords">儲值紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/givenRecord">贈點紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/transferRecords">轉移紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/withdrawRecords">託售紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/contactService">聯絡客服</option>
+			                    <option class="loading" value="__APP__/MemberCenter/ServiceRecords">客服訊息</option>
+			                </select>
+			            </div>
+			        </form>
+			    </div>
+			</div>
+	 	

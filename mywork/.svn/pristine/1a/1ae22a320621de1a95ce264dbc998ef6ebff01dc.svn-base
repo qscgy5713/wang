@@ -1,0 +1,41 @@
+<include file="Common:header"/>
+	<div id="content" class="content m-l-0">
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<IF condition='$sumBettimgMoney neq ""'>
+					<div class="text-center m-b-15">
+						<span class="m-r-15 f-w-600">總投注:{$sumBettimgMoney}</span>
+						<span class="m-r-15 f-w-600">總輸贏:{$sumSurplus}</span>
+						<span class="f-w-600">總洗碼:{$sumEffective}</span>
+					</div>
+					
+				</IF>
+				
+				<div class="table-responsive">
+					<table id="memberTable" class="table table-striped m-b-0">
+					    <thead>
+		                     <tr>
+		                        <th>序</th>
+		                        <VOLIST name="FieldChange" id="field">
+		                      	   <th>{$field.cnName}</th>
+		                        </VOLIST>
+		                     </tr>
+		                </thead>
+						<tbody>
+							<VOLIST name="showArray" id="vo" empty="$showEmpty" key="k">
+								<tr>
+									<td>{$k}</td>
+									<VOLIST name="FieldChange" id="field">
+										<td>{$vo[$field['newField']]}</td>
+									</VOLIST>
+								</tr>
+							</VOLIST>
+						</tbody>
+					</table>
+				</div>
+				
+				
+			</div>
+		</div>
+	</div>
+<include file="Common:footer"/>

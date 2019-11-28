@@ -1,0 +1,12 @@
+
+
+<ul class="nav nav-tabs nav-top-border">
+	<li class="nav-item"><a class="nav-link" id="lottoRecords" href="__APP__/MemberCenter/lottoRecords" >四星彩</a></li>
+	<li class="nav-item"><a class="nav-link " id="bounsRecords" href="__APP__/MemberCenter/bounsRecords" >返水紀錄</a></li>
+	<li class="nav-item"><a class="nav-link" id="rechargeRecords" href="__APP__/MemberCenter/rechargeRecords" >儲值紀錄</a></li>
+	<li class="nav-item"><a class="nav-link" id="givenRecord" href="__APP__/MemberCenter/givenRecord" >贈點紀錄</a></li>
+	<li class="nav-item"><a class="nav-link" id="transferRecords" href="__APP__/MemberCenter/transferRecords" >轉移紀錄</a></li>
+	<li class="nav-item"><a class="nav-link" id="withdrawRecords" href="__APP__/MemberCenter/withdrawRecords" >託售紀錄</a></li>
+</ul>
+
+

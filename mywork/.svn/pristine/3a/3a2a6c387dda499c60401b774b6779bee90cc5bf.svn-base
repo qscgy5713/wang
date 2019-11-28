@@ -1,0 +1,120 @@
+<?php
+/*
+ * 會員專屬帳戶
+ */
+class CommonMemberPrivateatmModel extends CommonModel {
+    public function getMemberPrivateatmData(){
+        $sql = "SELECT p.`privateATM_id`,m.`member_id`,m.`member_account`,p.`privateATM_bankcode`,p.`privateATM_bankaccount`,p.`privateATM_bankname`,p.`privateATM_enabled`
+                FROM `common_member_privateatm` p,`common_member` m
+                WHERE p.`member_id` = m.`member_id`";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 新增 會員帳戶 資料
+     */
+    public function addPrivateatmData($data){
+        if(!isset($data['member_id'])){
+            return false;
+        }
+        $sql = "INSERT INTO `common_member_privateatm` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+
+        return $return;
+    }
+    /*
+     * 修改  會員帳戶 資料
+     * 使用帳戶ID
+     */
+    public function setPrivateatmDataByPrivateatmId($data){
+        if(empty($data['privateATM_id']) && $data['privateATM_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'privateATM_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_member_privateatm` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `privateATM_id` = '{$data['privateATM_id']}'";
+        $return = $this->execute($sql);
+        
+        return $return;
+    }
+    /*
+     * 刪除 會員帳戶 資料
+     * 使用帳戶ID
+     */
+    public function delPrivateatmDataByPrivateatmId($data){
+        if(empty($data['privateATM_id']) && $data['privateATM_id'] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `common_member_privateatm` WHERE `privateATM_id` = '".$data['privateATM_id']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得分頁數 
+     */
+    public function getTotalNumberPrivateatmData($data){
+        $whereSql = "";
+        if(!empty($data['member_account'])){
+            $whereSql = " WHERE `member_account` LIKE '%{$data['member_account']}%'";
+        }
+
+        $sql = "SELECT count(*) AS totalnumber FROM `common_member_privateatm`;";
+        $return = $this->query($sql);
+
+        return $return;
+    }
+    /*
+     * 搜索分頁數 
+     */
+    public function getPrivateatmNumberData($data){
+        $whereSql = "";
+        if(!empty($data['member_account'])){
+            $whereSql = " AND m.`member_account` LIKE '%{$data['member_account']}%'";
+        }
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+
+        $sql = "SELECT p.`privateATM_id`,m.`member_id`,m.`member_account`,p.`privateATM_bankcode`,p.`privateATM_bankaccount`,p.`privateATM_bankname`,p.`privateATM_enabled`
+                FROM `common_member_privateatm` p,`common_member` m
+                WHERE p.`member_id` = m.`member_id`{$whereSql}{$pageSql};";
+                
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 搜尋 會員 帳號
+     */
+    public function searchMemberByMemberAccount($data){
+        $sql = "SELECT p.`privateATM_id`,m.`member_id`,m.`member_account`,p.`privateATM_bankcode`,p.`privateATM_bankaccount`,p.`privateATM_bankname`,p.`privateATM_enabled`
+        FROM `common_member_privateatm` p,`common_member` m
+        WHERE p.`member_id` = m.`member_id` AND `member_account` LIKE '" . $data['member_account'] . "%' LIMIT " . $data['limit'];
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+}

@@ -1,0 +1,23 @@
+<?php
+
+class GameAbDetailModel extends AgentModel{
+	protected $tableName = "game_ab_detail";
+	/**
+	 * 取得詳細資料
+	 */
+	public function getGameDetailData($data){
+		if(empty($data['agent_tree']) && empty($data['agent_tree'])){
+            return false;
+        }
+		if(empty($data['member_id']) && $data['member_id'] !== '0'){
+			return false;
+		}
+		$sql = "SELECT * FROM `{$this->tableName}`
+		WHERE `member_id` = '{$data['member_id']}'
+		AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+		AND (`detail_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+}

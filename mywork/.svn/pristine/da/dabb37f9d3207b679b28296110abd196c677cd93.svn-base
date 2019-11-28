@@ -1,0 +1,12 @@
+<?php
+/*
+ * 輪播圖
+ */
+class CommonCarouselModel extends CommonModel {
+    /*
+     * 取得 輪播圖 Data
+     */
+    function getCarouselData(){
+        
+    }
+}

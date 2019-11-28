@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		查詢日期: <input type="text" name="query_date" value="{$query_date}" /><br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="is_array($op_result)">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			執行成功, 明細=
+			<PHP>
+				var_dump($op_result);
+			</PHP>
+		</div>
+	<ELSE/>
+		<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+		<PHP>
+			var_dump($op_result);
+		</PHP>
+	</IF>
+</body>
+</html>

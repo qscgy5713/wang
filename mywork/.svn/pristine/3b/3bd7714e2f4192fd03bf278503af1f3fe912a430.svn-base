@@ -1,0 +1,37 @@
+<div id="header" class="header navbar-default">
+	<div class="navbar-header">
+		<a href="__APP__/AgentIndex/index" class="navbar-brand">
+			<i class="icomoon icon-smallcow f-s-35 vertical_align"></i>
+		</a>
+		<a href="__APP__/AgentIndex/index" class="logo-a text-black">
+			<span class="f-w-600 f-s-18">Agent</span>
+		</a>
+		<button type="button" class="navbar-toggle" data-click="sidebar-toggled">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+	</div>
+
+    <!-- <div class="mq-height container">
+		<marquee  style="height: 100%;" behavior="scroll" onmousemove="this.stop()" onmouseout="this.start()" scrollamount="1" direction="up">
+		     <span id="mq_contents" class="mq-sp-style">
+			     <VOLIST name="marqueeArray" id="marquee">
+				    <div class="mq-item">{$marquee.marquee_text}</div> 
+			     </VOLIST>
+		    </span>
+        </marquee>
+       </div> -->
+	
+       
+       <div class="mq-height">
+			<ul id="marquee2" class="marquee">
+			   <VOLIST name="marqueeArray" id="marquee">
+				  <li>{$marquee.marquee_text}</li>
+			   </VOLIST>
+			</ul>
+		</div>
+</div>
+
+
+ 

@@ -1,0 +1,332 @@
+
+<!-- menu -->
+<div id="header" class="navbar-toggleable-md clearfix header-md transparent sticky b-0 disable-uppercase shadow-after-3 header-m hidden-sm-down">
+
+	<!-- TOP NAV -->
+	<header id="topNav">
+		<div class="container">
+
+			<!-- Mobile Menu Button -->
+			<button class="btn btn-mobile" data-toggle="collapse" data-target=".nav-main-collapse">
+				<i class="fa fa-bars"></i>
+			</button>
+			
+			<!-- Logo -->
+			
+			<a class="logo float-left loading" href="__APP__/MemberIndex/index">
+				<if condition='$sietData eq "test"'>
+					<img src="__CSS__/images/index_logo_g_w.png" alt="" />
+					<img src="__CSS__/images/index_logo_g.png" alt="" />
+				</if>
+				<if condition='$sietData eq "demo"'>
+					<img src="__CSS__/images/index_logo_b_w.png" alt="" />
+					<img src="__CSS__/images/index_logo_b.png" alt="" />
+				</if>
+				<if condition='$sietData eq "official"'>
+					<img src="__CSS__/images/index_logo_red_w.png" alt="" />
+					<img src="__CSS__/images/index_logo_red.png" alt="" />
+				</if>
+			</a>
+			<!-- 
+				Top Nav 
+			-->
+			<div class="navbar-collapse collapse float-right nav-main-collapse">
+				<nav class="nav-main">
+					<ul id="topMain" class="nav nav-pills nav-main nav-hover-animate nav-animate-fadeIn">
+					
+						<li class="dropdown" onclick="showMenu('sports');"><!-- HOME -->
+							<a class="dropdown-toggle" href="#">
+								體育
+							</a>
+							<div class="row menu-row" style="left: 0px;">
+								<ul id="sports" class="dropdown-menu">
+								
+									<VOLIST name="gameSportNoShowMenuArray" id="gameTable">
+										<li style="visibility: hidden; background-image: url(__CSS__/images/menu-img/bgSB.jpg);">
+											<a href="#" class="p-0 game-item">
+												<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlSB.png">
+											</a>
+										</li>
+									</VOLIST>
+									
+									<VOLIST name="gameSportMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+												<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+													<if condition="$gameTable.gameCode eq 'SB' or $gameTable.gameCode eq 'SP'">
+														<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="p-0 game-item loading gameNewHtml">
+													<else/>
+														<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="p-0 game-item loading">
+													</if>
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/menu-img/caveat.png">
+													</div>
+													<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray" style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('realPerson');"><!-- PORTFOLIO -->
+							<a class="dropdown-toggle" href="#">
+								真人娛樂
+							</a>
+							
+							<div class="row menu-row" style="left: 0px;width: 68%;">
+								<ul id="realPerson" class="dropdown-menu">
+								
+									<VOLIST name="gamePersonNoShowMenuArray" id="gameTable">
+										<li style="visibility: hidden; background-image: url(__CSS__/images/menu-img/bgSB.jpg);">
+											<a href="#" class="p-0 game-item">
+												<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlSB.png">
+											</a>
+										</li>
+									</VOLIST>
+									
+									<VOLIST name="gamePersonMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+											
+												<li style=" background-image: url(__CSS__/images/menu-img/girl_bg-{$i}.jpg);background-size: cover;">
+													<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="p-0 game-item loading">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/menu-img/caveat.png">
+													</div>
+													<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray" style=" background-image: url(__CSS__/images/menu-img/bgSB.jpg);">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/girl_bg-{$i}.jpg);background-size: cover;">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('bingo');"><!-- ABOUT -->
+							<a class="dropdown-toggle" href="#">
+								彩票賓果
+							</a>
+							
+							<div class="row menu-row" style="left: 0px;">
+								<ul id="bingo" class="dropdown-menu">
+									<VOLIST name="gameLotteryNoShowMenuArray" id="gameTable">
+										<li style="visibility: hidden; background-image: url(__CSS__/images/menu-img/bgBNG.jpg);">
+											<a href="#" class="p-0 game-item">
+												<img class="girl_image mr-0" src="__CSS__/images/menu-img/gameBNG.png">
+											</a>
+										</li>
+									</VOLIST>
+									
+									<VOLIST name="gameLotteryMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+											  <IF condition="$gameTable.gameCode eq 'XBS'">
+												  <li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+													<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="p-0 game-item loading gameNewHtml">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												 </li>
+											  <ELSE/>
+											  	<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+													<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="p-0 game-item loading">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											  </IF>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/menu-img/caveat.png">
+													</div>
+													<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray" style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('electron');"><!-- CONTACT -->
+							<a class="dropdown-toggle" href="#">
+								電子遊戲
+							</a>
+							<div class="row menu-row" style="left: 0px;">
+								<ul id="electron" class="dropdown-menu">
+									<VOLIST name="gameElectronicNoShowMenuArray" id="gameTable">
+										<li style="visibility: hidden; background-image: url(__CSS__/images/menu-img/bgBNG.jpg);">
+											<a href="#" class="p-0 game-item">
+												<img class="girl_image mr-0" src="__CSS__/images/menu-img/gameBNG.png">
+											</a>
+										</li>
+									</VOLIST>
+								
+									<VOLIST name="gameElectronicMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+											
+												<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+													<IF condition="$gameTable.gameCode eq 'UC8'">
+														<a href="__APP__/Game{$gameTable.gameCode}/gameEnter" class="p-0 game-item loading">
+															<img class="girl_image mr-0" src="__CSS__/images/menu-img/game{$gameTable.gameCode}.png">
+														</a>
+													<ELSE/>
+														<a href="__APP__/Game{$gameTable.gameCode}/gameMenu" class="p-0 game-item loading">
+															<img class="girl_image mr-0" src="__CSS__/images/menu-img/game{$gameTable.gameCode}.png">
+														</a>
+													</IF>
+												</li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/menu-img/caveat.png">
+													</div>
+													<a href="#" style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray">
+														<img class="girl_image mr-0" src="__CSS__/images/menu-img/game{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/menu-img/game{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						
+						<li class="dropdown" onclick="showMenu('rebateEvent');">
+							<a class="dropdown-toggle" href="#">
+								優惠活動
+							</a>
+							<div class="row menu-row menu-row-rebateEvent">
+								<ul id="rebateEvent" class="dropdown-menu" style="background-color: rgba(0, 0, 0, 0.42);">
+									<div class="row d-flex">
+										<!--1-->
+										<li>
+											<a href="__APP__/RebateEvent/storeGiftPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/storeGiftPage.png">
+											</a>
+										</li>
+										<!--2-->
+										<li>
+											<a href="__APP__/RebateEvent/reversalPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/reversalPage.png">
+											</a>
+										</li>
+
+										<!--3-->
+										<li>
+											<a href="__APP__/RebateEvent/lottoFourPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/lottoFourPage.png">
+											</a>
+										</li>
+
+										<!--4-->
+										<li>
+											<a href="__APP__/RebateEvent/backWaterRealityPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/backWaterRealityPage.png">
+											</a>
+										</li>
+
+										<!--5-->
+										<li>
+											<a href="__APP__/RebateEvent/backWaterSportsPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/backWaterSportsPage.png">
+											</a>
+										</li>
+
+										<!--6-->
+										<li>
+											<a href="__APP__/RebateEvent/backWaterElectronicPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/backWaterElectronicPage.png">
+											</a>
+										</li>
+
+										<!--7-->
+										<li>
+											<a href="__APP__/RebateEvent/baccaratWinningPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/promotions/baccaratWinningPage.png">
+											</a>
+										</li>
+
+										<!--8-->
+										<li>
+											<a href="#" class="">
+												<img class="mr-0" src="__CSS__/images/promotions/comingsoon.png">
+											</a>
+										</li>
+
+									</div>
+							    </ul>
+							</div>
+						</li>
+						<li><!-- BLOG -->
+							<a class="loading" href="__APP__/AgentJoin/index">
+								代理加盟
+							</a>
+						</li>
+						
+					</ul>
+
+				</nav>
+			</div>
+
+		</div>
+	</header>
+	<!-- /Top Nav -->
+	<div id="clickLightbox" class="click_lightbox" style="display: none;" onclick="showMenu('clickLightbox');"></div>
+</div>
+<!-- rwd 三角形logo -->
+<if condition='$isLogin eq "false"'>
+<div class="container clip_logo d-sm-none">
+	<!-- Logo -->
+	<a href="#" class="logo float-left">
+		<if condition='$sietData eq "test"'>
+			<img class="clip_img" src="__CSS__/images/index_logo_g.png">
+		</if>
+		<if condition='$sietData eq "demo"'>
+			<img class="clip_img" src="__CSS__/images/index_logo_b.png">
+		</if>
+		<if condition='$sietData eq "official"'>
+			<img class="clip_img" src="__CSS__/images/index_logo_red.png">
+		</if>
+	</a>
+</div>
+</if>

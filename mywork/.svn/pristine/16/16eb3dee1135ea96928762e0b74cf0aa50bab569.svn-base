@@ -1,0 +1,164 @@
+<?php
+/*
+ * 儲值單
+ */
+class CashflowRechargeModel extends MemberModel {
+    protected $tableName = "cashflow_recharge";
+    protected $tableId = "recharge_id";
+
+    protected $ip = "";
+
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $this->ip = $ip;
+    }
+    
+    /*
+     * 取得儲值單
+     * 儲值成功筆數
+     */
+    public function getTotalNumberSuccessRechargeData($data,&$err = ""){
+        
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `recharge_modifyTime` > '{$data['recharge_createTime']}'
+                AND `recharge_status` = '2' AND `recharge_money` >= 3000;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+
+    /*
+     * 取得儲值單資料筆數
+     */
+    public function getTotalNumberRechargeData($data,&$err = ""){
+
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `recharge_createTime` > '{$data['recharge_createTime']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 會員 儲值單資料
+     */
+    public function getMemberRechargeData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `recharge_createTime` > '{$data['recharge_createTime']}'
+                ORDER BY `recharge_createTime` DESC
+                {$pageSql} ;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return;
+    }
+
+    public function getRechargeStatusStr($data){
+        $return = "";
+        switch($data){
+            case 0:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 1:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                break;
+            case 2:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                break;
+            case 3:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+                break;
+        }
+        return $return;
+    }
+
+    /*
+     * 新增 儲值單
+     */
+    public function addRechargeData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['agent_tree']) && $data['agent_tree'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['recharge_money']) && $data['recharge_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//
+            return false;
+        }
+        $data['recharge_ip'] = $this->ip;
+        //新增 儲值單
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return false;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        if($insertId) {
+            return $insertId;
+        }
+        return $return;
+    }
+    /*
+     * 修改儲值單資料
+     */
+    public function setRechargeDataById($data){
+        if(empty($data['recharge_id']) && $data['recharge_id'] !== 0){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'recharge_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `recharge_id` = '{$data['recharge_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

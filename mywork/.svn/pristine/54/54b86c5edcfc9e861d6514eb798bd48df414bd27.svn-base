@@ -1,0 +1,19 @@
+<?php
+/*
+ * 銀行代碼
+ */
+class CommonBankcodeModel extends MemberModel {
+    protected $tableName = "common_bankcode";
+    protected $tableId = "bankcode_id";
+    
+    /*
+     * 取得 銀行代碼 前端使用
+     */
+    public function getBankCodeData(){
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                Order by `bankcode_code`;";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

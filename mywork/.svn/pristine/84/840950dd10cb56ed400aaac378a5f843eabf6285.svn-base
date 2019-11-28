@@ -1,0 +1,182 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+<if condition='$isMobile eq "1"'>
+	<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+			<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+			<div class="display-table">
+				<div class="display-table-cell vertical-align-middle">
+					
+					<div class="container text-center">
+						
+						<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+						
+						<div class="row mt-30">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">電子錢包</label>
+								<input type="text" value="{$memberWallet}" readonly class="form-control required">
+							</div>
+						</div>
+						
+							<div class="row mt-10">
+								<div class="col-md-3 col-sm-3 m-auto">
+									<if condition='$gameLink eq "false"'>
+										<label class="txt-white mb-10">錯誤訊息</label>
+									<else/>
+										<label class="txt-white mb-10">遊戲餘額</label>
+									</if>
+									<input type="text" id="memberBalance" value="{$memberBalance}" readonly class="form-control required">
+									<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+								</div>
+							</div>
+						
+					</div>
+				</div>
+			</div>
+		</section>
+<else/>
+	<if condition='$gameLink eq "false"'>
+		<section id="slider" class="fullheight" style="background:url('__CSS__/images/bg-img/offer_bg1.jpg')">
+			<div class="overlay dark-5"><!-- dark overlay [1 to 9 opacity] --></div>
+			<div class="display-table">
+				<div class="display-table-cell vertical-align-middle">
+					
+					<div class="container text-center">
+						
+						<h1 class="m-0 fs-50 fw-300" >{$gameName}</h1>
+						
+						<div class="row mt-30">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">電子錢包</label>
+								<input type="text" value="{$memberWallet}" readonly class="form-control required">
+							</div>
+						</div>
+						<div class="row mt-10">
+							<div class="col-md-3 col-sm-3 m-auto">
+								<label class="txt-white mb-10">錯誤訊息</label>
+								<input type="text" id="memberBalance" value="{$memberBalance}" readonly class="form-control required">
+								<a href="#" onclick="reloadPage()" class="btn btn-default btn-lg mt-5">GO</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	<else/>
+		<iframe id="game_iframe" sandbox="allow-top-navigation" class="md-gameEnter la-gameEnter" src="" name="gameIframe" width="100%" height="100%" frameborder="0" scrolling="auto"></iframe>
+	</if>
+</if>
+
+		
+
+<include file="Common:game_footer"/>
+<script type="text/javascript">
+
+jQuery(document).ready(function(){
+	if("{$isMobile}" == "1"){
+		if("{$gameLink}" == "false"){
+			jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+		    alert("{$errMessage}");
+		} else {
+			var gamehtml = window.open('', 'gamePage');
+			gamehtml.document.location.href='{$gameLink}';
+		}
+	} else {
+		if("{$gameLink}" == "false"){
+			jQuery("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+		    alert("{$errMessage}");
+		} else {
+			mobileChange();
+		}
+	}
+});
+		
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	
+	jQuery("#game_iframe").attr("src","{$gameLink}");
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#game_iframe").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#game_iframe").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+function reloadPage(){
+	if("{$isMobile}" == "1"){
+		var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+	}
+	location.reload();
+}
+/*
+$(document).ready(function(){
+	var gamehtml = window.open('', 'gamePage');
+	  if("{$gameLink}" == "false"){
+	    gamehtml.close();
+	    $("#memberBalance").val("載入遊戲失敗，請聯繫客服!");
+	    alert("{$errMessage}");
+	  } else {
+	    gamehtml.document.location.href='{$gameLink}';
+	  }
+});
+function ajaxbutton(){
+	// 進入遊戲
+	if("{$gameLink}" == "false"){
+		var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+		window.location.reload();
+	} else {
+		window.open("{$gameLink}", '_blank');
+	}
+}*/
+/*function newWin(url, id) {
+    var a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('target', '_blank');
+    a.setAttribute('id', id);
+    // 防止反复添加
+    if(!document.getElementById(id)) document.body.appendChild(a);
+    a.click();
+}
+function ajaxf(TransferMoney){
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxTransfer",
+        data:{TransferMoney:TransferMoney},
+        dataType: "json",
+        success:function(data){
+        	var dataObject = JSON.parse(data);
+        	if(dataObject.return == 0){
+        		alert(dataObject.err);
+        	} else {
+        		//alert("轉移成功");
+        	}
+            //console.log(dataObject);
+        },
+		error:function(){
+			alert("網路錯誤");
+		}
+	});
+}*/
+
+</script>
+
+
+

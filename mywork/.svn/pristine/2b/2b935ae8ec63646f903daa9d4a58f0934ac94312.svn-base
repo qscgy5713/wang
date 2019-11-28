@@ -1,0 +1,134 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">客服訊息</h2>
+			 	<div class="separator-2"></div>
+			 	
+			 	<include file="Common:MemberCenterMenu"/>
+	     
+			     <div class="tab-content">
+	                <div class="tab-pane fade show active" role="tabpanel" >
+	                  <div class="row">
+	                    <div class="col-md-12">
+	                    	<table id="table1" class="table table-striped table-colored">
+				                <thead>
+				                  <tr>
+				                    <th>狀態</th>
+	                                <th>標題</th>
+	                                <th>時間</th>
+	                              </tr>
+				                </thead>
+				                
+				                <tbody>
+				                	<VOLIST name="showArray" id="vo">
+		                            	<tr  onclick="openmodal('showModal','{$vo.title}','{$vo.main}','{$vo.id}')"class="popup-content aservise" href="#">
+		                            	    <td name = "{$vo.id}status">{$vo.status}</td>
+		                            		<td>{$vo.title}</td>
+											<td>
+												{$vo.createTime}
+											</td>
+		                            	</tr>
+		                             </VOLIST>
+		                            <tr><td id="showMessage" colspan="3" align="center" style="display:none;">無客服訊息</td></tr>
+		                        </tbody>
+				              </table>
+	                    </div>
+	                  </div>
+	                  <div class="modal fade" id="showModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+			                <div class="modal-dialog" role="document">
+			                  <div class="modal-content">
+			                    <div class="modal-header">
+			                      <h4 class="modal-title" id="modalTitle"></h4>
+			                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+			                    </div>
+			                    <div class="modal-body" >
+			                      <p id="modalMain"></p>
+			                    </div>
+			                    <div class="modal-footer">
+			                      <button type="button" class="btn btn-sm btn-dark" data-dismiss="modal">Close</button>
+			                      
+			                    </div>
+			                  </div>
+			                </div>
+			           </div>
+					  		       
+	                  <if condition="$pageNumber neq ''">
+		                  <div class="row">
+			                  <div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+						                
+						                <if condition="$pageNumber-1 neq 0">
+						                  <li class="page-item">
+						                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$pageNumber-1}" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  </li>
+						                 </if>
+						                 
+						                 <volist name="pageArray" id="vo" >
+			                                <IF condition="$pageNumber eq $vo" >
+			                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$vo}">{$vo}</a></li>
+			                                <else/>
+			                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$vo}">{$vo}</a></li>
+			                                </IF>
+			                             </volist>
+						                  
+						                  
+						                  <if condition="$pageNumber+1 elt $totalPage ">
+							                  <li class="page-item">
+							                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$pageNumber+1}" aria-label="Next">
+							                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+							                      <span class="sr-only">Next</span>
+							                    </a>
+							                  </li>
+						                  </if>
+						                </ul>
+						              </nav>
+			                  </div>
+		                  </div>
+	                  </if>
+	                  
+	                  
+	                </div>
+	              </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	//alert("{$i+1}Page");
+	$("#"+"{$actionName}").addClass("active");
+	$("#"+"{$i+1}Page").addClass("active");
+	$("#"+"{$actionName}"+"RWD").attr("selected",true);
+	if($("#table1 tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#showMessage").show();
+	}
+})
+function openmodal(id, vo_title, vo_main, vo_id){
+	var statusId = vo_id+'status';
+	var td = $( "td[name='"+statusId+"']" );
+	
+	//傳是否讀取信件給後端
+	$.ajax({
+		 type:"POST",
+		 url:"__APP__/MemberCenter/ajaxSetMailStatus",
+		 data:{setId:vo_id},
+	     dataType: "text"
+	});
+	if(td.html() == "&lt;未讀&gt;"){
+		td.html("&lt;已讀&gt;");
+	}
+	$('#modalTitle').html(vo_title);
+	$('#modalMain').html(vo_main);
+	$('#'+id).modal('show');
+}
+</script>

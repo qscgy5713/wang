@@ -1,0 +1,95 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">儲值點數</h2>
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 確認儲值內容</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link active show" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>取得儲值代碼</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                
+			                
+			                  <div class="tab-pane" id="pill-pr-1">
+	                  			 	<div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">請繼續執行驟2</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-2-a').click();" >繼續</button>
+					                </div>
+			                  </div>
+			                  
+			                  
+			                  <div class="tab-pane active" id="pill-pr-2">
+					                
+					                <form method="post" action="smart-form/contact/php/smartprocess.php" id="formPointRecharge">
+						                <fieldset>
+						                  <div class="form-group">
+						                    <label for="disabledTextInput">儲值方式</label>
+						                    <input type="text" id="disabledTextInput" readonly="readonly" class="form-control" value="{$rechargeWay}">
+						                  </div>
+						                  
+						                  <if condition='$showStorCode neq ""'>
+					                  		 <div class="form-group">
+							                    <label for="disabledSelect">儲值代碼</label>
+							                    <input type="text" id="disabledTextInput" readonly="readonly" class="form-control" value="{$showStorCode}">
+							                    
+							                 </div>
+						                  <else />
+						                  	 <div class="form-group">
+							                    <label for="disabledSelect">銀行代碼</label>
+							                    <input type="text" id="disabledTextInput" readonly="readonly" class="form-control" value="{$showBankCode}">
+							                    
+							                 </div>
+							                 <div class="form-group">
+							                    <label for="disabledSelect">銀行帳號</label>
+							                    <input type="text" id="disabledTextInput" readonly="readonly" class="form-control" value="{$showBankAccount}">
+							                    
+							                 </div>
+						                  </if>
+						                  
+						                  <div class="form-group">
+						                      <label for="disabledSelect">儲值金額(元)</label>
+						                      <input type="text" id="disabledTextInput" readonly="readonly" class="form-control" value="{$rechargeAmount}">      
+						                  </div>
+						                  
+						                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="self.location.href='__APP__/MemberCenter/rechargeRecords'">完成</button>
+							              
+							              <div class="separator-2"></div>
+							              
+							              <div class="form-group">
+							              		<p class="margin-clear">
+							              			超商繳費方式流程有所不同，若遇繳費問題，請連絡客服為您即時解決。
+							              		</p>
+							              </div>
+						                </fieldset>
+						              </form>
+			                  </div>
+			                  
+			                </div>
+		                		
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>

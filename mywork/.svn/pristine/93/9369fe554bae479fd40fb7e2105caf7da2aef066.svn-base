@@ -1,0 +1,269 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+
+	<div id="content" class="content">
+		<p><button id="add_btn" class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                       新增後台頁面類別
+           </button>
+        </p>
+        <div class="modal fade" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 新增後台頁面類別</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/AdminPageClassManage/formAddAdminPageClass'>
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">顯示名稱</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control form-control-AgentPageClassManage" type="text" name="addShowName">
+								</div>
+							 </div>
+						</div>
+						<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+        <div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">後台頁面類別</h4>
+					</div>
+
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+                            	        <th>顯示名稱</th>
+                            	        <th>開關</th>
+                            	        <th>排序</th>
+                            	        <th>建立時間</th>
+                            	        <th>修改時間</th>
+                            	        <th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo" empty="$showEmpty">
+			                        	<tr>
+				                        	<td>{$key+1}</td>
+											<td>{$vo.showName}</td>
+											<td id="{$vo.id}enabled">{$vo.enabled}</td>
+											<td>
+												<if condition="$vo.order gt 1">
+													<form id="sortup{$vo.id}" class="div-style" method="post" action="__APP__/AdminPageClassManage/formSortAgentPageClass">
+														<input type="hidden" value="upSort" name="className">
+														<input type="hidden" value="{$vo.id}" name="sortId">
+														<input type="hidden" value="{$vo.order}" name="orderSort">
+														<a onclick="submit('sortup{$vo.id}')" href="#">
+														<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon"></i></a>
+													</form>
+												<else/>
+													<form class="div-style">
+														<a href="#">
+															<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon sort-icon-hide"></i>
+														</a>
+													</form>
+												</if>
+												<span class="f-s-17">{$vo.order}</span>
+
+												<if condition="$vo.order lt $totalNumber">
+					                                <form id="sortdown{$vo.id}" class="div-style" method="post" action="__APP__/AdminPageClassManage/formSortAgentPageClass">
+					                                	<input type="hidden" value="downSort" name="className">
+					                                	<input type="hidden" value="{$vo.order}" name="orderSort">
+					                                	<input type="hidden" value="{$vo.id}" name="sortId">
+					                                	<a onclick="submit('sortdown{$vo.id}')" href="#">
+					                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i></a>
+													</form>
+												<elseif condition="$totalPage lt '1'"/>
+													<form id="sortdowntwo{$vo.id}" class="div-style" method="post" action="__APP__/AdminPageClassManage/formSortAgentPageClass">
+					                                	<input type="hidden" value="downSort" name="className">
+					                                	<input type="hidden" value="{$vo.id}" name="sortId">
+					                                	<input type="hidden" value="{$vo.order}" name="orderSort">
+					                                	<a onclick="submit('sortdowntwo{$vo.id}')" href="#">
+					                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i></a>
+													</form>
+												</if>
+
+											</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.modifyTime}</td>
+											<td>
+												<a onclick="openmodal('setModal','{$vo.id}','{$vo.showName}')">
+													<i class="fas fa-wrench fa-fw icon-size"></i>
+												</a>
+
+												<if condition='$vo.enabled eq "啟用中"'>
+													<form id="formInquireTostop{$vo.id}" class="div-style form-vertical-align" method="post" action='__APP__/AdminPageClassManage/formStopAdminPageClass'>
+														<input type="hidden" value="{$vo.id}" name="stopId">
+														<div class="switcher">
+														  <input type="checkbox" id="switcher_checkbox_{$vo.id}" checked onclick="submitAjax('formInquireTostop','{$vo.id}','stopId')">
+														  <label for="switcher_checkbox_{$vo.id}" class="switchbtn"></label>
+														</div>
+									                 </form>
+												<else/>
+													<form id="formInquireTostart{$vo.id}" class="div-style form-vertical-align" method="post" action='__APP__/AdminPageClassManage/formStartAdminPageClass'>
+									                    <input type="hidden" value="{$vo.id}" name="startId">
+									                    <div class="switcher">
+														  <input type="checkbox" id="switcher_checkbox_{$vo.id}" onclick="submitAjax('formInquireTostart','{$vo.id}','startId')">
+														  <label for="switcher_checkbox_{$vo.id}" class="switchbtn"></label>
+														</div>
+									                </form>
+												</if>
+
+				                                <form id="delform{$vo.id}" class="div-style" method="post" action='__APP__/AdminPageClassManage/formDelAdminPageClass'>
+				                                	<input type="hidden" value="{$vo.id}" name="delId">
+				                                	<a onclick="submit('delform{$vo.id}')"><i class="fas fa-trash fa-fw icon-size"></i></a>
+				                                </form>
+			                                </td>
+										</tr>
+			                        </VOLIST>
+								</tbody>
+							</table>
+						</div>
+						<if condition="$pageNumber neq ''">
+		                  <div class="row">
+			                  <div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+
+						                <if condition="$pageNumber-1 neq 0">
+						                  <li id="" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber=1">第一頁</a></li>
+						                   <li class="page-item">
+						                     <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber-1}" aria-label="Previous">
+						                       <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                       <span class="sr-only">Previous</span>
+						                     </a>
+						                   </li>
+						                 </if>
+
+						                  <volist name="pageArray" id="vo" >
+			                                <IF condition="$pageNumber eq $vo" >
+			                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+			                                <else/>
+			                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+			                                </IF>
+			                              </volist>
+
+						                  <if condition="$pageNumber+1 elt $totalPage ">
+							                  <li class="page-item">
+							                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber+1}" aria-label="Next">
+							                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+							                      <span class="sr-only">Next</span>
+							                    </a>
+							                  </li>
+							                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$totalPage}">最末頁</a></li>
+						                  </if>
+						                </ul>
+						            </nav>
+			                  </div>
+		                  </div>
+	                  </if>
+					</div>
+				</div>
+			</div>
+        </div>
+
+        <div class="modal fade" id="setModal" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 修改後台頁面類別資料</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/AdminPageClassManage/formSetAdminPageClass'>
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+
+								<label class="col-md-4 col-sm-4 col-form-label">顯示名稱</label>
+								<div class="col-md-8 col-sm-8">
+									<input class="form-control" type="text" value="" name="setShowName" id="setShowName">
+									<input type="hidden" value="" name="setId" id="setId">
+								</div>
+							 </div>
+
+						</div>
+						<div class="modal-footer">
+							<button type="submit" name="okbtn" class="btn btn-info f-s-15">確認修改</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+});
+
+function openmodal(modalId,voId,showName){
+	//alert(id);
+	$('#setId').val(voId);
+	$('#setShowName').val(showName);
+	$('#'+modalId).modal('show');
+}
+function submit(formId){
+	 $("#"+formId).submit();
+}
+function submitAjax(mod_id,vo_id,mode_id){
+	$("#switcher_checkbox_"+vo_id).attr("disabled",true);
+	if(mod_id == 'formInquireTostop'){
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{stopId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+		    	$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+     			$("#"+vo_id+"enabled").html('停用中');
+     			$("#switcher_checkbox_"+vo_id).attr('onclick','submitAjax("formInquireTostart","'+vo_id+'","startId")');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	} else if(mod_id == 'formInquireTostart'){
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{startId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+		    	$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+				$("#"+vo_id+"enabled").html('啟用中');
+				$("#switcher_checkbox_"+vo_id).attr('onclick','submitAjax("formInquireTostop","'+vo_id+'","stopId")');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	}
+}
+</script>

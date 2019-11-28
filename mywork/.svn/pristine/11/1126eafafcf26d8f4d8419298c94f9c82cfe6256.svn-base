@@ -1,0 +1,15 @@
+<?php
+/*
+ * 活動列表
+ */
+class CommonEventModel extends AdminModel {
+    protected $tableName = "common_event";
+    protected $tableId = "event_id";
+    
+    public function getEventData(){
+        $sql = "SELECT * FROM `{$this->tableName}`";
+        $return = $this->cacheQuery($sql,300);
+        return $return;
+    }
+}
+    

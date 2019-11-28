@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="zxx">
+
+  <head>
+    <meta charset="utf-8">
+    <title>悟空娛樂</title>
+    <meta name="description" content="The Project a Bootstrap-based, Responsive HTML5 Template">
+    <meta name="author" content="author">
+    <meta name="robots" content="noimageindex">
+
+    <!-- Mobile Meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="__CSS__/images/1543202215.ico">
+    
+    <!-- icon -->
+    <link href="__CSS__/fonts/icomoon/style.css" rel="stylesheet">
+
+    <!-- Web Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Raleway:300,400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif" rel="stylesheet">
+
+    <!-- Bootstrap core CSS -->
+    <link href="__CSS__/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Font Awesome CSS -->
+    <link href="__CSS__/fonts/font-awesome/css/font-awesome.css" rel="stylesheet">
+
+    <!-- Plugins -->
+    <link href="__CSS__/plugins/magnific-popup/magnific-popup.css" rel="stylesheet">
+    <link href="__CSS__/plugins/htmlcoder/sliders/fullscreen-slider-layout.css" rel="stylesheet">
+    <link href="__CSS__/plugins/htmlcoder/sliders/slider-style.css" rel="stylesheet">
+    <link href="__CSS__/css/animations.css" rel="stylesheet">
+    <link href="__CSS__/plugins/slick/slick.css" rel="stylesheet">
+     <link href="__CSS__/plugins/rs-plugin-5/css/settings.css" rel="stylesheet">
+    <link href="__CSS__/plugins/rs-plugin-5/css/layers.css" rel="stylesheet">
+    <link href="__CSS__/plugins/rs-plugin-5/css/navigation.css" rel="stylesheet">
+    
+    
+    <link href="__CSS__/css/style.css" rel="stylesheet" >
+    
+    <link href="__CSS__/css/typography-scheme-3.css" rel="stylesheet" >
+    
+    <link href="__CSS__/css/skins/light_blue.css" data-style="styles-no-cookie" rel="stylesheet">
+    <link href="__CSS__/style-switcher/style-switcher.css" rel="stylesheet">
+
+    <!-- Custom css -->
+    <link href="__CSS__/css/custom.css" rel="stylesheet">
+    <!-- loading css -->
+    <link rel="stylesheet" type="text/css" href="__CSS__/loading/css/style.css" />
+    <!-- 搜尋功能拉霸 -->
+    <link href="__CSS__/select2/select2.css" rel="stylesheet">
+    
+    <!-- betty_css -->
+    <link href="__CSS__/css/bstyle.css" rel="stylesheet" >
+  </head>
+
+  
+  <body class="front-page transparent-header wide">
+ 

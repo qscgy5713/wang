@@ -1,0 +1,121 @@
+<?php
+
+class CommonAction extends Action {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        //宣告台灣時區
+        date_default_timezone_set('Asia/Taipei');
+        
+        // 跳過過濾字串參數
+        $ignore = array();
+        
+        // $_REQUEST過濾
+        foreach ($_REQUEST as $key => $val) {
+            if (!in_array($key, $ignore)) {
+                $_REQUEST[$key] = filterStr($val);
+            }
+        }
+        if(isset($_REQUEST['R'])){
+            $_SESSION['RCode'] = $_REQUEST['R'];
+        }
+        
+        $this->getLangArray();//取得語系檔陣列到前端
+        $this->getSietDataStr();//取得目前所在的設定STR
+       
+    }
+    
+    public function loading(){
+        $this->display();
+    }
+    
+    protected function getMenuList(){
+        
+        $menu_model = D("CommonMenu");
+        $menu_list = $menu_model->getMenuList();
+        if ($menu_list === false) {
+            $this->error(__CLASS__ . '_' . __FUNCTION__ . '_01');
+        }
+    }
+    /**
+     * 取得Request資料
+     *
+     * @return array
+     */
+    protected function getRequest() {
+        
+        foreach ($_REQUEST as $key => $val) {
+            if (is_array($val)) {
+                $data[$key] = ($val);
+            } else {
+                $data[$key] = trim($val);
+            }
+        }
+        
+        return $data;
+    }
+    /*
+     * 語系檔陣列
+     */
+    protected function getLangArray(){
+        if(!isset($_COOKIE['think_language'])){
+            $_COOKIE['think_language'] = 'zh-tw';
+        } else {
+            $_COOKIE['think_language'] = strtolower($_COOKIE['think_language']);
+        }
+        
+        $langArray = array(
+            'zh-tw' => array(
+                'iconName' => 'icon-hk',
+                'cnName' => '繁體中文',
+                'langCode' => 'zh-tw'
+            ),
+            'zh-cn' => array(
+                'iconName' => 'icon-china',
+                'cnName' => '简体中文',
+                'langCode' => 'zh-cn'
+            ),
+            /*'en-us' => array(
+                'iconName' => 'icon-usa',
+                'cnName' => 'English',
+                'langCode' => 'en-us'
+            ),*/
+        );
+        if(empty($langArray[$_COOKIE['think_language']])){
+            $_COOKIE['think_language'] = 'zh-tw';
+        }
+        $showLangArray = array();
+        foreach($langArray as $key => $value){
+            if($key != $_COOKIE['think_language']){
+                array_push($showLangArray,$langArray[$key]);
+            }
+            if($key == $_COOKIE['think_language']){
+                $this->assign('currentIconName',$value['iconName']);
+                $this->assign('currentCnName',$value['cnName']);
+            }
+        }
+        $this->assign('langStr',$_COOKIE['think_language']);//當前正在使用的版本標記
+        $this->assign('showLangArray',$showLangArray);
+    }
+    /*
+     * 取得目前所在的設定STR
+     */
+    protected function getSietDataStr(){
+        $sietData = C('SIETDATA');
+        $titleName = "";
+        switch ($sietData){
+            case 'test':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 'demo':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                break;
+            case 'official':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                break;
+        }
+        $this->assign("sietData",$sietData);
+        $this->assign("titleName",$titleName);
+    }
+}

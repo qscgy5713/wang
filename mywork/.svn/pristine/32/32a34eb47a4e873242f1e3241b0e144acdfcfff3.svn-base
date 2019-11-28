@@ -1,0 +1,268 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+
+	<div id="content" class="content">
+		<button id="add_btn" class="btn btn-info m-r-5 m-b-10" type="button">新增權限管理</button>
+
+        <div class="modal fade" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title"> 新增權限管理</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action="__APP__/AdminSubPagePower/formAddAdminSubPagePower">
+						<div class="modal-body">
+							<div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">顯示名稱 : </label>
+								<div class="col-md-8 col-sm-8">
+								    <input type="text" name="addShowName" class="form-control">
+								</div>
+							 </div>
+							 <div class="form-group row m-b-15">
+							 	<label class="col-md-4 col-sm-4 col-form-label">權限內容 :</label>
+							 </div>
+							 <div class="form-group row m-b-15">
+								<div class="col-md-12 col-sm-12">
+
+
+										<div class="form-group row m-b-15" id="meun">
+											<VOLIST name="showPageArray" id="vo">
+
+												<label class="col-md-2 col-sm-2 col-form-label">{$key}</label>
+												<div class="col-md-4 col-sm-4 m-b-20">
+													<div class="form-check">
+														<input type="checkbox" class="form-check-input" name ="addchkall{$vo.0.classId}" id="{$vo.0.classId}" onclick="addallselet({$vo.0.classId})">
+														<label class="form-check-label" for="{$vo.0.classId}">全選</label>
+													</div>
+													<VOLIST name="vo" id="power">
+														<div class="form-check">
+															<input id="{$power.id}{$power.showName}" type="checkbox"  class="form-check-input addPageClass{$power.classId}"  name="addPowerMain[{$power.id}]" id="addPowerMain[{$power.id}]" value="{$power.id}">
+															<label class="form-check-label" for="{$power.id}{$power.showName}">{$power.showName}</label>
+														</div>
+													</VOLIST>
+												</div>
+
+
+											</VOLIST>
+										</div>
+
+
+									<div class="modal-footer">
+										<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+										<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+        <div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">權限管理</h4>
+					</div>
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="table1" class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+										<th>職稱名稱</th>
+										<th>內容</th>
+										<th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo" empty="$pagePowerEmpty">
+										<tr>
+											<td>{$key+1}</td>
+											<td>{$vo.name}</td>
+											<td>
+												<a onclick="openmodal('{$vo.id}message')"><i class="far fa-file-alt icon-size"></i></a>
+											</td>
+
+											<td>
+											<a onclick="openmodal('{$vo.id}')" ><i class="fas fa-wrench fa-fw icon-size"></i></a>
+
+			                                <form id="delform{$vo.id}" class="div-style" method="post" action="__APP__/AdminSubPagePower/formDelAdminSubPagePower">
+												<input type="hidden" value="{$vo.id}" name="delId">
+												<a onclick="submit('delform{$vo.id}','{$vo.name}')" ><i class="fas fa-trash fa-fw icon-size"></i></a>
+											</form>
+			                                </td>
+										</tr>
+									</VOLIST>
+			                    </tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+					</div>
+					<!-- end panel-body -->
+				</div>
+				<!-- end panel -->
+			</div>
+        </div>
+        <!-- 內容 開始 -->
+        <VOLIST name="showArray" id="vo">
+	        <div class="modal fade" id="{$vo.id}message" style="display: none;">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title">權限內容</h4>
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						</div>
+						<div class="modal-body">
+							 <div class="form-group row m-b-15">
+								<div class="col-md-12 col-sm-12">
+									<VOLIST name="vo['powerMain']" id="pow" key="k">
+										<if condition='$pow neq ""'>
+
+											<div id="accordion{$k}" class="card-accordion">
+											    <div class="card">
+											        <div class="card-header bg-grey text-black pointer-cursor f-s-16" data-toggle="collapse" data-target="#collapse{$k}" aria-expanded="true">
+											          {$key}
+											        </div>
+
+											        <if condition='$k eq "1"'>
+											        	<div id="collapse{$k}" class="collapse f-s-14 show" data-parent="#accordion{$k}" style="">
+											        <else/>
+											        	<div id="collapse{$k}" class="collapse f-s-14" data-parent="#accordion{$k}" style="">
+											        </if>
+												        <VOLIST name="pow" id="pow1">
+															<if condition="$pow1.power eq 1">
+																<div>&nbsp;{$pow1.showName}&nbsp;&nbsp;&nbsp;&nbsp;</div>
+															</if>
+														</VOLIST>
+											        </div>
+											    </div>
+										    </div>
+										</if>
+									</VOLIST>
+								</div>
+							 </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</VOLIST>
+        <!-- 內容 結束 -->
+
+
+			<!-- 操作 開始 -->
+			<VOLIST name="showArray" id="vo">
+				<div class="modal fade" id="{$vo.id}" style="display: none;">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h4 class="modal-title"> 修改權限</h4>
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+							</div>
+
+							<form method="post" action='__APP__/AdminSubPagePower/formSetAdminSubPagePower'>
+								<div class="modal-body">
+									<div class="form-group row m-b-15">
+										<label class="col-md-4 col-sm-4 col-form-label">顯示名稱 :</label>
+										<div class="col-md-8 col-sm-8">
+											<input class="form-control"  type="text" name="setShowName" value="{$vo.name}"><br>
+											<input type="hidden" value="{$vo.id}" name="setId">
+										</div>
+									 </div>
+
+									 <div class="form-group row m-b-15">
+									 	<label class="col-md-4 col-sm-4 col-form-label">權限內容 :</label>
+									 </div>
+									 <div class="form-group row m-b-15">
+										<div class="col-md-12 col-sm-12">
+											<VOLIST name="vo['powerMain']" id="pow">
+												<div class="form-group row m-b-15" id="meun">
+														<label class="col-md-4 col-sm-4 col-form-label">{$key} :</label>
+														<div class="col-md-8 col-sm-8">
+															<div class="form-check">
+																<input id="{$vo.name}{$key}" type="checkbox" class="form-check-input" name ="set{$vo.id}chkall{$pow.0.classId}"  onclick="setallselet({$pow.0.classId},'{$vo.id}')">
+																<label class="form-check-label" for="{$vo.name}{$key}">全選</label>
+															</div>
+															<VOLIST name="pow" id="pow1">
+																<div class="form-check">
+																	<if condition="$pow1.power eq 1">
+																		<input id="{$vo.name}{$key}{$pow1.showName}" type="checkbox" name="setPowerMain[{$pow1.id}]" value="{$pow1.id}" checked class="form-check-input set{$vo.id}PageClass{$pow1.classId}" >
+																		<label class="form-check-label" for="{$vo.name}}{$key}{$pow1.showName}">{$pow1.showName}</label>
+																	<else/>
+																		<input id="{$vo.name}{$key}{$pow1.showName}" type="checkbox" name="setPowerMain[{$pow1.id}]" value="{$pow1.id}" class="form-check-input set{$vo.id}PageClass{$pow1.classId}" >
+																		<label class="form-check-label" for="{$vo.name}{$key}{$pow1.showName}">{$pow1.showName}</label>
+																	</if>
+																</div>
+															</VOLIST>
+														</div>
+													</div>
+											</VOLIST>
+											<div class="modal-footer">
+												<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+												<button type="submit" name="setbtn" class="btn btn-info f-s-15">確認修改</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</VOLIST>
+			<!-- 操作 結束 -->
+      	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+function openmodal(modal_id){
+	//alert(id);
+	$('#'+modal_id).modal('show');
+}
+function addallselet(thisa)
+{
+   if ($("input[name='addchkall"+thisa+"']").prop('checked')) {
+      $(".addPageClass"+thisa).prop("checked", true);
+    } else {
+      $(".addPageClass"+thisa).prop("checked", false);
+    }
+}
+ function setallselet(thisa,AdminAccount)
+ {
+    if ($("input[name='set"+AdminAccount+"chkall"+thisa+"']").prop('checked')) {
+       $(".set"+AdminAccount+"PageClass"+thisa).prop("checked", true);
+     } else {
+       $(".set"+AdminAccount+"PageClass"+thisa).prop("checked", false);
+     }
+ }
+ $(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+});
+ function submit(formId,vo_name){
+    askMsgShow('是否刪除' + vo_name+'權限');
+    $("#askMsgClose").on('click', function(e) {
+        askMsgClose_f();
+    })
+    $("#askMsgYes").on('click', function(e) {
+        $("#" + formId).submit();
+        askMsgClose_f();
+        okMsgShow('已刪除');
+    })
+}
+</script>

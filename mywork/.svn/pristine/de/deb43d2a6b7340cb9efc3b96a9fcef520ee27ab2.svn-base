@@ -1,0 +1,131 @@
+<?php
+/*
+ * 賓果明細
+ */
+class GameBgDetailModel extends CommonModel {
+    protected $tableName = "game_bg_detail";
+    
+    public function setBgDetailData($allDetailArray){
+        $valStr = "";
+        foreach($allDetailArray as $key => $value){
+            if(empty($valStr)){
+                $valStr = "('{$value['detail_id']}','{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                            '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['detail_gameAccount']}','{$value['detail_createTime']}','{$value['detail_orderDate']}',
+                            '{$value['detail_bettingMoney']}','{$value['detail_surplus']}','{$value['detail_effective']}',
+                            '{$value['detail_needBackWater']}','{$value['detail_isBackWater']}','{$value['detail_dataInJson']}')";
+            } else {
+                $valStr .= ",('{$value['detail_id']}','{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                            '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['detail_gameAccount']}','{$value['detail_createTime']}','{$value['detail_orderDate']}',
+                            '{$value['detail_bettingMoney']}','{$value['detail_surplus']}','{$value['detail_effective']}',
+                            '{$value['detail_needBackWater']}','{$value['detail_isBackWater']}','{$value['detail_dataInJson']}')";
+            }
+        }
+        
+        $sql = "
+        	INSERT INTO {$this->tableName}(
+        		detail_id, member_id, member_account, agent_id, agent_account,
+        		agent_tree, ratio_tree, detail_gameAccount, detail_createTime, detail_orderDate, 
+                detail_bettingMoney,detail_surplus, detail_effective, 
+                detail_needBackWater, detail_isBackWater,detail_dataInJson
+        	) VALUES {$valStr}
+        	ON DUPLICATE KEY UPDATE
+        		member_id           = VALUES(member_id),
+        		member_account      = VALUES(member_account),
+        		agent_id            = VALUES(agent_id),
+        		agent_account       = VALUES(agent_account),
+        		agent_tree          = VALUES(agent_tree),
+        		ratio_tree          = VALUES(ratio_tree),
+        		detail_gameAccount  = VALUES(detail_gameAccount),
+        		detail_createTime   = VALUES(detail_createTime),
+        		detail_orderDate    = VALUES(detail_orderDate),
+        		detail_bettingMoney = VALUES(detail_bettingMoney),
+        		detail_surplus      = VALUES(detail_surplus),
+        		detail_effective    = VALUES(detail_effective),
+        		detail_dataInJson   = VALUES(detail_dataInJson)
+        	";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    public function setBgReportData($allReportArray){
+        $valStr = "";
+        foreach($allReportArray as $key => $value){
+            if(empty($valStr)){
+                $valStr = "('{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                            '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['report_gameAccount']}','{$value['report_orderDate']}',
+                            '{$value['report_bettingMoney']}','{$value['report_surplus']}','{$value['report_effective']}','{$value['report_betNumber']}')";
+            } else {
+                $valStr .= ",('{$value['member_id']}','{$value['member_account']}','{$value['agent_id']}','{$value['agent_account']}',
+                            '{$value['agent_tree']}','{$value['ratio_tree']}','{$value['report_gameAccount']}','{$value['report_orderDate']}',
+                            '{$value['report_bettingMoney']}','{$value['report_surplus']}','{$value['report_effective']}','{$value['report_betNumber']}')";
+            }
+        }
+        
+        $sql = "
+        	INSERT INTO `game_bg_report`(
+        		member_id, member_account, agent_id, agent_account,
+        		agent_tree, ratio_tree, report_gameAccount, report_orderDate,
+                report_bettingMoney,report_surplus, report_effective,report_betNumber
+        	) VALUES {$valStr}
+        	ON DUPLICATE KEY UPDATE
+        		member_account      = VALUES(member_account),
+        		agent_account       = VALUES(agent_account),
+        		agent_tree          = VALUES(agent_tree),
+        		ratio_tree          = VALUES(ratio_tree),
+        		report_gameAccount  = VALUES(report_gameAccount),
+        		report_bettingMoney = VALUES(report_bettingMoney),
+        		report_surplus      = VALUES(report_surplus),
+        		report_effective    = VALUES(report_effective),
+        		report_betNumber   = VALUES(report_betNumber)
+        	";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    
+    public function getMemberDataByGameAccount($allMemberGameAccount){
+        $valStr = "";
+        foreach($allMemberGameAccount as $value){
+            if(empty($valStr)){
+                $valStr = "'".$value."'";
+            } else {
+                $valStr .= ",'".$value."'";
+            }
+        }
+        
+        $gameAccTable = "game_bg_member_info";
+        $sql = "
+			SELECT
+				m.member_id,
+				m.agent_id,
+				m.member_account,
+				m.agent_account,
+				LOWER(ga.game_account) as game_name,
+				t.agent_tree,
+				r.ratio_tree
+			FROM common_member m
+			JOIN `game_bg_member_info` ga
+				ON (ga.member_id=m.member_id)
+			JOIN `common_agent_tree` t
+				ON (m.`agent_id` = t.`agent_id`)
+			JOIN `common_agent_ratio` r
+				ON (m.`agent_id` = r.`agent_id`)
+			WHERE
+				ga.game_account IN ({$valStr})
+		";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+}

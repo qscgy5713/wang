@@ -1,0 +1,173 @@
+<include file="Common:header"/>
+
+<div id="page-loader" class="fade show"><span class="spinner"></span></div>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+		<div class="form-group row m-b-15">
+			<ol class="breadcrumb pull-left">
+				<VOLIST name="loginArray" id="vo">
+					<li class="breadcrumb-item">
+						<form class="div-style" id="{$key+1}form" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+							<input type='hidden' name='agentTree' value='{$vo.agentTree}'>
+							<input type='hidden' name='agentAccount' value='{$vo.agentAccount}'>
+							<a onClick="submitForm('{$key+1}form')" href="#" >{$vo.agentAccount}</a>
+						</form>
+					</li>
+				</VOLIST>
+			</ol>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">會員管理</h4>
+					</div>
+					<!-- end panel-heading -->
+					<div class="alert alert-info fade show text-center">
+						<button type="button" class="close" data-dismiss="alert">
+						<span aria-hidden="true">×</span>
+						</button>
+						{$comeAgentAccount}代理
+					</div>
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="agentTable" class="table table-striped m-b-0">
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>代理帳號</th>
+				                      <th>狀態</th>
+				                      <th>建立時間</th>
+				                      <th>操作</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="agentArray" id="vo">
+										<tr>
+											<td>{$key+1}</td>
+											<td>
+												<form class="div-style" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+													<input type='hidden' name='agentTree' value='{$vo.agentTree}'>
+													<input type='hidden' name='agentAccount' value='{$vo.agentAccount}'>
+													<input class="btn btn-danger f-s-15" type='submit' value='{$vo.agentAccount}'>
+												</form>
+											</td>
+											<td>{$vo.status}</td>
+											<td>{$vo.createTime}</td>
+											<td></td>
+										</tr>
+									</VOLIST>
+									<tr><td id="agentShowMessage" colspan="5" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+						
+					</div>
+					
+				</div>
+				
+				
+				
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-1">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title f-s-15">會員管理</h4>
+					</div>
+					<!-- end panel-heading -->
+					<div class="alert alert-info fade show text-center">
+						<button type="button" class="close" data-dismiss="alert">
+						<span aria-hidden="true">×</span>
+						</button>
+						{$comeAgentAccount}代理
+					</div>
+					<!-- begin panel-body -->
+					<div class="panel-body">
+						<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table id="memberTable" class="table table-striped m-b-0">
+							   <thead>
+			                      <tr>
+				                      <th>序</th>
+				                      <th>會員帳號</th>
+				                      <th>代理</th>
+				                      <th>狀態</th>
+				                      <th>建立時間</th>
+				                      <th>註冊IP</th>
+				                      <th>操作</th>
+			                      </tr>
+				                </thead>
+								<tbody>
+									<VOLIST name="memberArray" id="vo">
+										<tr>
+											<td>{$key+1}</td>
+											<td>{$vo.account}</td>
+											<td>{$vo.agentAccount}</td>
+											<td>{$vo.status}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.ip}</td>
+											<td>
+											</td>
+										</tr>
+									</VOLIST>
+									<tr><td id="memberShowMessage" colspan="7" align="center" style="display:none;">無資料</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	
+	if($("#agentTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#agentShowMessage").show()
+	}
+    if($("#memberTable tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#memberShowMessage").show()
+	}
+    
+    $("#"+"人事部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+function submitForm(id){
+	//alert(id);
+	$('#'+id).submit();
+}
+</script>

@@ -1,0 +1,106 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+					<include file="Common:MemberCenterMenu"/>
+					<div class="tab-content">
+						<div class="tab-pane active" id="">
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle">
+									<thead>
+					                  <tr>
+		                                <th>單號</th>
+		                            	<th>時間</th>
+		                            	<th>金額</th>
+		                            	<th>狀態</th>
+		                            	<th>轉出</th>
+		                            	<th>轉入</th>
+		                              </tr>
+				                	</thead>
+									<tbody>
+					                	<VOLIST name="showArray" id="vo">
+			                            	<tr class="bservise">
+			                            		<td>{$vo.id}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.money}</td>
+												<td>{$vo.status}</td>
+												<td>{$vo.from}</td>
+												<td>{$vo.to}</td>
+			                            	</tr>
+			                             </VOLIST>
+			                            
+			                        </tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					
+					<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="col-lg-12 text-center">
+	                  		<nav aria-label="Page navigation">
+				                <ul class="pagination justify-content-center">
+				                
+				                <if condition="$pageNumber-1 neq 0">
+				                  <li class="page-item">
+				                    <a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$pageNumber-1}" aria-label="Previous">
+				                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+				                      <span class="sr-only">Previous</span>
+				                    </a>
+				                  </li>
+				                 </if>
+				                 
+				                 <volist name="pageArray" id="vo" >
+	                                <IF condition="$pageNumber eq $vo" >
+	                                	<li id="{$vo}Page" class="page-item active"><a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$vo}">{$vo}</a></li>
+	                                <else/>
+	                                	<li id="{$vo}Page" class="page-item"><a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$vo}">{$vo}</a></li>
+	                                </IF>
+	                             </volist>
+				                  
+				                  
+				                  <if condition="$pageNumber+1 elt $totalPage ">
+					                  <li class="page-item">
+					                    <a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$pageNumber+1}" aria-label="Next">
+					                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+					                      <span class="sr-only">Next</span>
+					                    </a>
+					                  </li>
+				                  </if>
+				                </ul>
+				              </nav>
+		                  </div>
+	                  </div>
+	               </if>
+				</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	//alert("{$i+1}Page");
+	jQuery("#"+"{$actionName}").addClass("active");
+})
+</script>

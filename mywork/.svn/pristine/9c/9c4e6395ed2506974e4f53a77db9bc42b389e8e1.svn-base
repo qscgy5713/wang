@@ -1,0 +1,396 @@
+<include file="Common:header"/>
+	<include file="Common:menu"/>
+	<!-- begin #content -->
+	<div id="content" class="content">
+	
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+			<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">會員基本資料</h4>
+					</div>
+					<!-- end panel-heading -->
+					<div class="panel-body">
+							<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>會員帳號</th>
+										<th>創建日期</th>
+										<th>電子錢包</th>
+										<th>目前紅利</th>
+										<th>最後登入</th>
+										<th>最後IP</th>
+										<th>最後儲值</th>
+										<th>銀行帳號</th>
+										<th>累積儲值</th>
+										<th>累積託售</th>
+										<th>總計</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="memberArray" id="vo">
+			                        	<tr>
+										    <td>{$vo.account}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.money}</td>
+											<td>{$vo.gift}</td>
+											<td>{$vo.lastLoginTime}</td>
+											<td>{$vo.lastLoginIp}</td>
+											<td>{$vo.lastRechargeTime}</td>
+											<td>{$vo.bankCode}-{$vo.bankAccount}-{$vo.bankName}-{$vo.bankBranch}</td>
+											<td>{$vo.totalRecharge}</td>
+											<td>{$vo.totalWithdraw}</td>
+											<td>{$vo.total}</td>
+										</tr>
+			                        </VOLIST>
+								</tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+					</div>
+					<!-- end panel-body -->
+					
+					<div class="col-md-12 panel-body text-center">
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">1</button>
+							<button type="button" class="btn btn-white active">2</button>
+							<button type="button" class="btn btn-white">3</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">4</button>
+							<button type="button" class="btn btn-white">5</button>
+							<button type="button" class="btn btn-white">6</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">7</button>
+						</div>
+					</div>
+				</div>
+				<!-- end panel -->
+			</div>
+		</div>
+		  
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+			<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">託售單資料</h4>
+					</div>
+					<!-- end panel-heading -->
+					<div class="panel-body">
+							<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>託售單號</th>
+										<th>申請託售帳號</th>
+										<th>申請託售時間</th>
+										<th>申請託售IP</th>
+										<th>申請脫售點數</th>
+										<th>操作</th>
+										</tr>
+								</thead>
+								<tbody>
+									<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetWithdrawProcess'>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+										    <td>{$vo.id}<input type="hidden" value="{$vo.id}" name="setId"></td>
+											<td>{$vo.memberAccount}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.ip}</td>
+											<td>{$vo.money}</td>
+											<td>
+												<button type="submit" name="processButton" value="2" class="btn btn-info m-r-5 m-b-5">完成訂單</button>
+												
+												<a href="#" onclick="openmodal({$vo.id})" class="btn btn-info m-r-5 m-b-5" data-toggle="modal">取消訂單</a>
+												<div class="modal fade" id="{$vo.id}" style="display: none;" aria-hidden="true">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="modal-title">取消訂單</h4>
+																<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+															</div>
+															<div class="modal-body">
+																<p>
+														           <form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetWithdrawProcess'>
+																		
+											                            <div class="form-group ">
+											                                <input type="hidden" value="{$vo.id}" name="setId">
+											                            </div>
+											                            
+											                            <div class="form-group ">   
+											                            	<label >取消備註</label>             
+											                                <textarea class="form-control m-b-5" rows="3" name="setRemark"></textarea>
+											                            </div>
+																</p>
+															</div>
+																<div class="modal-footer">
+																	<button type="submit" name="processButton" value="3" class="btn btn-info m-r-5 m-b-5">確認</button>
+																</div>
+														     </form>
+														</div>
+													</div>
+												</div>
+												
+												<button type="submit" name="processButton" value="4" class="btn btn-info m-r-5 m-b-5">取消綁定</button>
+											</td>
+										</tr>
+			                       </VOLIST>
+								   </form>
+								</tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+					</div>
+					<!-- end panel-body -->
+					
+					<div class="col-md-12 panel-body text-center">
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">1</button>
+							<button type="button" class="btn btn-white active">2</button>
+							<button type="button" class="btn btn-white">3</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">4</button>
+							<button type="button" class="btn btn-white">5</button>
+							<button type="button" class="btn btn-white">6</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">7</button>
+						</div>
+					</div>
+				</div>
+			<!-- end panel -->
+			</div>
+		</div>
+		
+		
+		<div class="row">
+				<!-- begin col-6 -->
+				<div class="col-md-12">
+					<!-- begin nav-tabs -->
+					<ul class="nav nav-tabs nav-tabs-inverse">
+						<li class="nav-item"><a href="#default-tab-1" data-toggle="tab" class="nav-link active show"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">儲值紀錄</span></a></li>
+						<li class="nav-item"><a href="#default-tab-2" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-arrows-alt-h"></i> <span class="d-none d-lg-inline">託售紀錄</span></a></li>
+						<li class="nav-item"><a href="#default-tab-3" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-text-width"></i> <span class="d-none d-lg-inline">登入紀錄</span></a></li>
+						<li class="nav-item"><a href="#default-tab-4" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-arrows-alt"></i> <span class="d-none d-lg-inline">信件紀錄</span></a></li>		
+					</ul>
+					<!-- end nav-tabs -->
+					<!-- begin tab-content -->
+					<div class="tab-content">
+						<!-- begin tab-pane -->
+						<div class="tab-pane fade active show" id="default-tab-1">
+							<div class="row">
+								<div class="col-md-12 ui-sortable">
+									<!-- begin panel -->
+									<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+										<!-- begin panel-heading -->
+										<div class="panel-heading ui-sortable-handle">
+											<div class="panel-heading-btn">
+												<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+												<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+												<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+												<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+											</div>
+											<h4 class="panel-title">UI Elements in Table <span class="label label-success m-l-5 t-minus-1">NEW</span></h4>
+										</div>
+										<!-- end panel-heading -->
+										<!-- begin panel-body -->
+										<div class="panel-body">
+											<!-- begin table-responsive -->
+											<div class="table-responsive">
+												<table class="table table-striped m-b-0">
+													<thead>
+														<tr>
+															<th>#</th>
+															<th>Username</th>
+															<th>Email Address</th>
+															<th width="1%"></th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td class="with-img">
+																<img src="../assets/img/user/user-1.jpg" class="img-rounded height-30">
+															</td>
+															<td>Nicky Almera</td>
+															<td>nicky@hotmail.com</td>
+															<td class="with-btn" nowrap="">
+																<a href="#" class="btn btn-sm btn-primary width-60 m-r-2">Edit</a>
+																<a href="#" class="btn btn-sm btn-white width-60">Delete</a>
+															</td>
+														</tr>
+														<tr>
+															<td class="with-img">
+																<img src="../assets/img/user/user-2.jpg" class="img-rounded height-30">
+															</td>
+															<td>Edmund Wong</td>
+															<td>edmund@yahoo.com</td>
+															<td class="with-btn-group" nowrap="">
+																<div class="btn-group">
+																	<a href="#" class="btn btn-white btn-sm width-90">Settings</a>
+																	<a href="#" class="btn btn-white btn-sm dropdown-toggle width-30 no-caret" data-toggle="dropdown">
+																	<span class="caret"></span>
+																	</a>
+																	<ul class="dropdown-menu pull-right">
+																		<li><a href="#">Action 1</a></li>
+																		<li><a href="#">Action 2</a></li>
+																		<li><a href="#">Action 3</a></li>
+																		<li class="divider"></li>
+																		<li><a href="#">Action 4</a></li>
+																	</ul>
+																</div>
+															</td>
+														</tr>
+														<tr>
+															<td class="with-img">
+																<img src="../assets/img/user/user-3.jpg" class="img-rounded height-30">
+															</td>
+															<td>Harvinder Singh</td>
+															<td>harvinder@gmail.com</td>
+															<td class="with-btn" nowrap="">
+																<a href="#" class="btn btn-sm btn-primary width-60 m-r-2">Edit</a>
+																<a href="#" class="btn btn-sm btn-white width-60">Delete</a>
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+											<!-- end table-responsive -->
+										</div>
+										<!-- end panel-body -->
+									</div>
+									<!-- end panel -->
+								</div>
+							</div>
+						</div>
+						<!-- end tab-pane -->
+						<!-- begin tab-pane -->
+						<div class="tab-pane fade" id="default-tab-2">
+							<blockquote>
+								<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+								<small>Someone famous in <cite title="Source Title">Source Title</cite></small>
+							</blockquote>
+							<h4>Lorem ipsum dolor sit amet</h4>
+							<p>
+								Nullam ac sapien justo. Nam augue mauris, malesuada non magna sed, feugiat blandit ligula. 
+								In tristique tincidunt purus id iaculis. Pellentesque volutpat tortor a mauris convallis, 
+								sit amet scelerisque lectus adipiscing.
+							</p>
+						</div>
+						<!-- end tab-pane -->
+						<!-- begin tab-pane -->
+						<div class="tab-pane fade" id="default-tab-3">
+							<p>
+								<span class="fa-stack fa-4x pull-left m-r-10">
+									<i class="fa fa-square-o fa-stack-2x"></i>
+									<i class="fab fa-twitter fa-stack-1x"></i>
+								</span>
+								Praesent tincidunt nulla ut elit vestibulum viverra. Sed placerat magna eget eros accumsan elementum. 
+								Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam quis lobortis neque. 
+								Maecenas justo odio, bibendum fringilla quam nec, commodo rutrum quam. 
+								Donec cursus erat in lacus congue sodales. Nunc bibendum id augue sit amet placerat. 
+								Quisque et quam id felis tempus volutpat at at diam. Vivamus ac diam turpis.Sed at lacinia augue. 
+								Nulla facilisi. Fusce at erat suscipit, dapibus elit quis, luctus nulla. 
+								Quisque adipiscing dui nec orci fermentum blandit.
+								Sed at lacinia augue. Nulla facilisi. Fusce at erat suscipit, dapibus elit quis, luctus nulla. 
+								Quisque adipiscing dui nec orci fermentum blandit.
+							</p>
+						</div>
+						<!-- end tab-pane -->
+						
+						<!-- begin tab-pane -->
+						<div class="tab-pane fade" id="default-tab-4">
+							<p>
+								<span class="fa-stack fa-4x pull-left m-r-10">
+									<i class="fa fa-square-o fa-stack-2x"></i>
+									<i class="fab fa-twitter fa-stack-1x"></i>
+								</span>
+								Praesent tincidunt nulla ut elit vestibulum viverra. Sed placerat magna eget eros accumsan elementum. 
+								Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam quis lobortis neque. 
+								Maecenas justo odio, bibendum fringilla quam nec, commodo rutrum quam. 
+								Donec cursus erat in lacus congue sodales. Nunc bibendum id augue sit amet placerat. 
+								Quisque et quam id felis tempus volutpat at at diam. Vivamus ac diam turpis.Sed at lacinia augue. 
+								Nulla facilisi. Fusce at erat suscipit, dapibus elit quis, luctus nulla. 
+								Quisque adipiscing dui nec orci fermentum blandit.
+								Sed at lacinia augue. Nulla facilisi. Fusce at erat suscipit, dapibus elit quis, luctus nulla. 
+								Quisque adipiscing dui nec orci fermentum blandit.
+							</p>
+						</div>
+						<!-- end tab-pane -->
+					</div>
+					<!-- end tab-content -->
+					
+				
+					<!-- end tab-content -->
+				</div>
+				<!-- end col-6 -->
+				
+			</div>
+	</div>
+	<!-- end #content -->
+<include file="Common:footer"/>
+<script type="text/javascript">
+$(document).ready(function(){
+});
+function openmodal(id){
+	//alert(id);
+	$('#'+id).modal('show')
+}
+</script>
+
+<!-- <table>
+		<tr>
+			<th colspan="5">託售單資料</th>
+		</tr>
+		<tr>
+			<th>託售單號</th>
+			<th>申請託售帳號</th>
+			<th>申請託售時間</th>
+			<th>申請託售IP</th>
+			<th>申請脫售點數</th>
+			<th>操作</th>
+		</tr>
+		<tr>
+			<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetWithdrawProcess'>
+			<VOLIST name="showArray" id="vo">
+				<td>{$vo.id}<input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.ip}</td>
+				<td>{$vo.money}</td>
+		
+			<td colspan="5">
+				<button type="submit" name="processButton" value="2" class="btn btn-primary">完成訂單</button>
+				取消備註:<input type="text" name="setRemark" name="">
+				<button type="submit" name="processButton" value="3" class="btn btn-primary">取消訂單</button>
+				<button type="submit" name="processButton" value="4" class="btn btn-primary">取消綁定</button>
+			</td>
+		</tr>
+			</VOLIST>
+			</form>
+	</table> -->
+
+
+
+
+	

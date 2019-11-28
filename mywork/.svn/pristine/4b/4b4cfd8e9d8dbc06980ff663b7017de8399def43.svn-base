@@ -1,0 +1,76 @@
+<?php
+//返水腳本
+class ScriptBackWaterAction extends ScriptAction {
+    protected $power = false;
+    protected $gameCode = "";
+    protected $gameNameArray = array(
+        "Ab"
+    );
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        $request = $this->getRequest();
+        if(isset($request["MIS"]) && $request["MIS"]==="@@aaa123"){
+            cookie('MIS','@@aaa123','expire=3600');
+        }
+        $MIS = cookie('MIS');
+        if($MIS === "@@aaa123"){
+            if(!isset($request["gameCode"]) && empty($request["gameCode"])){
+                $this->power = false;
+            } else {
+                if(in_array(ucfirst($request["gameCode"]), $this->gameNameArray)){
+                    $this->power = true;
+                    $this->gameCode = ucfirst($request["gameCode"]);
+                }
+            }
+        }
+    }
+    public function addTestData(){
+        $gameDetail = D("Game".$this->gameCode."Detail");
+        $data = array(
+            "member_id" => 4,
+            "detail_createTime" => time(),
+            "detail_bettingMoney" => 632.46,
+            "detail_surplus" => 632.46,
+            "detail_effective" => 632.46,
+        );
+        //$return = $gameDetail->addMemberDetail($data,$err);
+        if($return === false){
+            echo $err;
+            exit();
+        }
+        echo '新增完成!明細編號為:'.$return;
+    }
+    //返水頁面
+    public function index(){
+        if(!$this->power){exit();}
+        var_dump($this->gameCode);
+        
+        $gameInfo = D("GameInfo");
+        $data = array(
+            'game_code' => $this->gameCode,
+            'waterRank_serial' => 1
+        );
+        $return = $gameInfo->getGameInfoData($data);
+        if($return === false){
+            echo "讀取資料庫失敗";
+            exit();
+        }
+        $data = array(
+            'gameClass_id'=>$return['gameClass_id'],
+            'waterRank_waterRate'=>$return['waterRank_waterRate']
+        );
+        var_dump($return);
+        
+        $gameDetail = D("Game".$this->gameCode."Detail");
+        $return = $gameDetail->getMemberBackWater($data);
+        if($return === false){
+            echo "讀取資料庫失敗";
+            exit();
+        }
+        var_dump($return);
+    }
+}

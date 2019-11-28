@@ -1,0 +1,129 @@
+<form method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+	會員名稱/電話/各館帳號:
+	<input type="search" id="member_account" name="memberAccount" value="{$memberAccount}" >
+	<input type="submit" value="查詢">
+</form>
+<IF condition='$MemberPointBool eq "true"'>
+	<div class="row">
+		<table class="table table-striped">
+				<tr>
+					<th colspan="2">總金額:</th>
+					<td colspan="2" id="totalPoint"></td>
+				</tr>
+				<tr>
+					<th colspan="4">會員資料</th>
+				</tr>
+				<tr>
+					<td colspan="4">電子錢包:{$walletMoney}</td>
+				</tr>
+			<VOLIST name="gameArray" id="classArray">
+				<tr>
+					<th colspan="4">{$key}</th>
+				</tr>
+				<tr>
+					<th>遊戲名稱</th>
+					<th>遊戲帳號</th>
+					<th>餘額</th>
+					<th>操作</th>
+				</tr>
+				<VOLIST name="classArray" id="vo">
+					<tr>
+						<td>{$vo.gameName}</td>
+							<IF condition="$vo.gameAccount eq ''">
+								<td id="{$key}gameAccount">無</td>
+								<td id="{$key}point">無</td>
+								<td id="{$key}operting"><input type="button" value="開通" onClick="openAccount('{$vo.gameCode}')"></td>
+							<ELSE />
+								<td id="{$key}gameAccount">{$vo.gameAccount}</td>
+								<td id="{$key}point"></td>
+								<td id="{$key}operting"><input type="button" value="重製" onClick="remakeAccount('{$vo.gameCode}')"></td>
+							</IF>
+					</tr>
+				</VOLIST>
+			</VOLIST>
+		</table>
+	</div>
+</IF>
+<include file="Common:footer"/> 
+<script>
+var searchArray = {$searchJson};
+var totalPoint = {$walletMoney};
+$(function(){
+	$("#totalPoint").html(totalPoint);
+	for(var i=0;i<searchArray.length;i++){
+		getMemberPoint(searchArray[i]);
+	}
+});
+function openAccount(gameCode){
+	alert(gameCode);
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxOpenMemberGameAccount",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	var dataArray = data.split(";");
+        	if(data.indexOf("false")!=-1){
+        		$("#"+gameCode+"point").html("開通帳號失敗");
+        		console.log(dataArray[1]);
+        	} else {
+        		$("#"+gameCode+"gameAccount").html(dataArray[1]);
+            	$("#"+gameCode+"operting").html("<input type='button' value='重製' onClick=\"openAccount('"+gameCode+"')\">");
+            	$("#"+gameCode+"point").html("0");
+            	alert(data[0]);
+        	}
+        	
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+function remakeAccount(gameCode){
+	
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxRemakeMemberGameAccount",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	$("#"+gameCode+"gameAccount").html("");
+        	$("#"+gameCode+"operting").html("<input type='button' value='開通' onClick=\"openAccount('"+gameCode+"')\">");
+        	alert(data);
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+function getMemberPoint(gameCode){
+	//alert(gameCode);
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxGetMemberPoint",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	//var dataObject = JSON.parse(data);
+        	if(data.indexOf("false")!=-1){
+        		var dataArray = data.split(";");
+        		$("#"+gameCode+"point").html("查詢點數失敗");
+        		console.log(dataArray[1]);
+        	} else {
+        		totalPoint = Number(totalPoint) + Number(data);
+        		$("#totalPoint").html(totalPoint);
+        		$("#"+gameCode+"point").html(data);
+        	}
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+</script>

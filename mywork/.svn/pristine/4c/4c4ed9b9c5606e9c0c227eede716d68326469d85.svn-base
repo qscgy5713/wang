@@ -1,0 +1,171 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameUc8MenuModel extends AgentModel {
+    const COL_KEY_GAME_ID_ = 'game_id';  //代表遊戲id的欄位名稱
+    const COL_KEY_NAME_ZHTW = 'title_zhtw';  //代表遊戲中文名稱的欄位名稱
+    
+    const ARR_GAME_COL_DEFINITIONS = array(
+        'game_id', 'title_enus', 'title_zhtw', 'game_type', 'is_chinese_supported',
+    );
+    
+    const ARR_GAMES = array(
+        array('SlotMachine_FruitsDeluxe','Fruits Deluxe','豪華水果','Video Slot','No',),
+        array('SlotMachine_ParrotsRock','Parrots Rock','鸚鵡搖滾','Video Slot','Yes',),
+        array('SlotMachine_DemiGods2','Demi Gods II','半神半人 II','Video Slot','Yes',),
+        array('SlotMachine_LilithPassion','Lilith\'s Passion','莉莉斯激情','Video Slot','Yes',),
+        array('SlotMachine_HuntingTreasures','Hunting Treasures','大海尋珍','Video Slot','Yes',),
+        array('SlotMachine_DemiGods2-CE','Demi Gods II Christmas Edition','半神半人 II','Video Slot','Yes',),
+        array('SlotMachine_LilithPassion-CE','Lilith\'s Passion Christmas Edition','莉莉斯激情','Video Slot','Yes',),
+        array('SlotMachine_HuntingTreasures-CE','Hunting Treasures Christmas Edition','大海尋珍','Video Slot','Yes',),
+        array('SlotMachine_SnowingLuck-CE','Snowing Luck Christmas Edition','瑞雪豐財','Video Slot','Yes',),
+        array('SlotMachine_CupidStrike','Cupid Strike','丘比特之擊','Video Slot','Yes',),
+        array('SlotMachine_CupidStrike-CE','Cupid Strike Christmas Edition','丘比特之擊','Video Slot','Yes',),
+        array('SlotMachine_DivineForest','Divine Forest','神秘叢林','Video Slot','Yes',),
+        array('SlotMachine_BookOfGuardians','Book Of Guardians','天神寶典','Video Slot','Yes',),
+        array('SlotMachine_TikiRainbow','Tiki Rainbow','提基彩虹','Video Slot','Yes',),
+        array('SlotMachine_HuntingTreasuresDeluxe','Hunting Treasures Deluxe','大海尋珍:豪華版','Video Slot','Yes',),
+        array('SlotMachine_WildHeist','Wild Heist','動物總動員','Video Slot','Yes',),
+        array('SlotMachine_8LuckyCharmsXtreme','8 Lucky Charms Xtreme','超級幸運8','Video Slot','Yes',),
+        array('SlotMachine_SnowingLuck','Snowing Luck','瑞雪豐財','Video Slot','Yes',),
+        array('Table_EuropeanRoulette','European Roulette','歐洲輪盤','Table Games','Yes',),
+        array('SlotMachine_RevivingLove','Reviving Love','再續前緣','Video Slot','Yes',),
+        array('SlotMachine_LotusKingdom','Lotus Kingdom','蓮花王國','Video Slot','Yes',),
+        array('SlotMachine_SlotNRoll','SlotNRoll','搖滾老虎機','Video Slot','Yes',),
+        array('SlotMachine_ChestOfFortunes','Chest Of Fortunes','富貴寶庫','Video Slot','Yes',),
+        array('SlotMachine_AbundanceSpell','Abundance Spell','財富魔法','Video Slot','Yes',),
+        array('SlotMachine_NightsOfFortune','Nights Of Fortune','淘金之夜','Video Slot','Yes',),
+        array('SlotMachine_GoldenDynasty','Golden Dynasty','黃金盛世','Video Slot','Yes',),
+        array('SlotMachine_VeryBigGoats','Very Big Goat','喜洋洋灰太狼','Video Slot','Yes',),
+        array('SlotMachine_88LuckyCharms','88 Lucky Charms','吉祥發發','Video Slot','Yes',),
+        array('SlotMachine_GreedyServants','Greedy servants','貪婪僕人','Video Slot','Yes',),
+        array('SlotMachine_FortuneKeepers','Fortune Keepers','財富守護使','Video Slot','Yes',),
+        array('SlotMachine_8LuckyCharms','8 Lucky Charms','幸運8','Video Slot','Yes',),
+        array('SlotMachine_EgyptianRebirth','Egyptian Rebirth','重生埃及','Video Slot','Yes',),
+        array('SlotMachine_4WinningDirections','4 Winning Directions','財進四方','Video Slot','Yes',),
+        array('SlotMachine_WildWildSpin','Wild wild spin','牛仔斡','Video Slot','Yes',),
+        array('SlotMachine_TerracotaWilds','Terracota Wilds','兵馬俑','Video Slot','Yes',),
+        array('SlotMachine_SamuraiPath','Samurai\'s Path','武道','Video Slot','Yes',),
+        array('SlotMachine_Surprising7','Surprising 7','神妙?7','Video Slot','Yes',),
+        array('SlotMachine_ExplodingPirates','Exploding Pirates','變形海盜','Video Slot','Yes',),
+        array('SlotMachine_AtlanticTreasures','Atlantic Treasures','亞特蘭蒂斯尋寶','Video Slot','Yes',),
+        array('SlotMachine_DemiGods','Demi Gods','半神半人','Video Slot','Yes',),
+        array('Lottery_MonsterScratch','Monsters\' Scratch','怪獸刮刮樂','Scratch Card','Yes',),
+        array('SlotMachine_MayDanceFestival','May Dance Festival','舞月狂歡','Video Slot','Yes',),
+        array('SlotMachine_ShogunBots','Shogun bots','機械戰將','Video Slot','Yes',),
+        array('SlotMachine_ForbiddenSlot','Forbidden slot','天使與魔鬼之戀','Video Slot','Yes',),
+        array('SlotMachine_ReelCircus','Reel circus','旋轉馬戲團','Video Slot','Yes',),
+        array('SlotMachine_SteamingReels','Steaming reels','蒸汽朋克','Video Slot','Yes',),
+        array('SlotMachine_StripToWin','Strip to win','脫衣舞男','Video Slot','Yes',),
+        array('SlotMachine_PreciousTreasures','Precious treasures','潛水世界','Video Slot','Yes',),
+        array('SlotMachine_ReelFighters','Reel Fighters','街頭霸王','Video Slot','Yes',),
+        array('SlotMachine_CodeNameJackpot','Code Name: Jackpot','代號:頭獎','Video Slot','Yes',),
+        array('SlotMachine_FarmOfFun','Farm of fun','娛樂農場','Video Slot','Yes',),
+        array('SlotMachine_SantaWildHelpers','Santa Wild Helpers','聖誕野性助手','Video Slot','Yes',),
+        array('SlotMachine_IrishCharms','Irish Charm','仙童之寶','Video Slot','Yes',),
+        array('Lottery_ScratchyBit','Scratchy Bit','刮刮樂園','Scratch Card','Yes',),
+        array('Lottery_SignsOfFortune','Signs Of Fortune','財富神符','Scratch Card','Yes',),
+        array('Lottery_SuperMask','Super Mask','超級面具','Scratch Card','Yes',),
+        array('SlotMachine_FluffySlot','Fluffy Slot','絨毛之戀','Video Slot','Yes',),
+        array('SlotMachine_TastyWin','Tasty Win','美味甜心','Video Slot','Yes',),
+        array('Lottery_DonutsRush','Donut Rush','甜甜圈之戀','Scratch Card','Yes',),
+        array('SlotMachine_EmpiresWarlords','Empires Warlords','帝國勇士','Video Slot','Yes',),
+        array('SlotMachine_PeonyLadies','Peony Ladies','窈窕美女','Video Slot','Yes',),
+        array('SlotMachine_WealthOfTheMonkey','Wealth of monkeys','幸運小猴','Video Slot','Yes',),
+        array('SlotMachine_LootAFruit','Loot a fruit','搶掠果實','Video Slot','Yes',),
+        array('SlotMachine_PondOfKoi','Pond of Koi','錦鯉水池','Video Slot','Yes',),
+        array('SlotMachine_RoyalWin','Royal win','皇家雙贏','Video Slot','Yes',),
+        array('SlotMachine_EgyptianAdventure','Egyptian adventure','冒險埃及','Video Slot','Yes',),
+        array('SlotMachine_SlotBound','Slot bound','巫婆世紀','Video Slot','Yes',),
+        array('SlotMachine_GodsOfSlots','Gods Of Slots','老虎機之神','Video Slot','Yes',),
+        array('SlotMachine_JadeConnection','Jade Connection','翡翠玉石','Video Slot','Yes',),
+        array('SlotMachine_Slotosaurus','Slotsaurus','恐龍機','Video Slot','Yes',),
+        array('SlotMachine_YearOfTheMonkey','Year of the monkey','猴年','Video Slot','Yes',),
+        array('SlotMachine_ZombieSlotMania','Zombie slot mania','馬尼亞殭屍症','Video Slot','Yes',),
+        array('SlotMachine_BikersGang','Bikers Gang','摩托黨','Video Slot','Yes',),
+        array('SlotMachine_UndyingPassion','Undying Passion','不滅激情','Video Slot','Yes',),
+        array('Lottery_SecretCupcakes','Secret Cupcakes','神秘蛋糕','Scratch Card','Yes',),
+        array('SlotMachine_WishList','Wish list','時尚心願','Video Slot','Yes',),
+        array('SlotMachine_DinerOfFortune','Diner of fortune','招財飯館','Video Slot','Yes',),
+        array('SlotMachine_LiveSlot','Live slot','賭場歡樂','Video Slot','Yes',),
+        array('SlotMachine_ScatteredToHell','Scattered to hell','地獄妖怪','Video Slot','Yes',),
+        array('SlotMachine_WackyMonsters','Wacky monsters','瘋狂怪物','Video Slot','Yes',),
+        array('SlotMachine_BlazingTires','Blazing Tires','熾烈卡車','Video Slot','Yes',),
+        array('SlotMachine_CatsGoneWild','Cats gone wild','狂貓蹦迪','Video Slot','Yes',),
+        array('SlotMachine_MasterPanda','Master Panda','熊貓廚師','Video Slot','Yes',),
+        array('SlotMachine_SoccerBabes','Soccer babes','足球女郎','Video Slot','Yes',),
+        array('SlotMachine_GangsterSlots','Gangster\'s slot','黑手黨','Video Slot','Yes',),
+        array('SlotMachine_VikingsGlory','Viking\'s Glory','維京人之榮','Video Slot','Yes',),
+        array('SlotMachine_9FiguresClub','9 Figures Club','豪華派','Video Slot','Yes',),
+        array('SlotMachine_CandySlotTwins','Candy slot twins','雙胞胎糖果','Video Slot','Yes',),
+        array('SlotMachine_YearOfLuck','Year of luck','幸運年','Video Slot','Yes',),
+        array('SlotMachine_HawaiiVacation','Hawaii Vacation','夏威夷假期','Video Slot','Yes',),
+        array('SlotMachine_LuckyMiners','Lucky Miners','幸運礦工','Video Slot','Yes',),
+        array('SlotMachine_SafariSamba','Safari Samba','草原桑巴','Video Slot','Yes',),
+        array('SlotMachine_PowerPupHeroes','Power Pup Heroes','幼仔英雄','Video Slot','Yes',),
+        array('SlotMachine_AmigosFiesta','Amigos Fiesta','友情盛宴','Video Slot','Yes',),
+        array('SlotMachine_SecretPotion','Secret Potion','神密藥水','Video Slot','Yes',),
+        array('SlotMachine_NutsCommander','Nuts Commander','突擊隊','Video Slot','Yes',),
+        array('SlotMachine_BugsTale','Bugs Tale','蟲蟲世界','Video Slot','Yes',),
+        array('Lottery_RedSquareGames','Red Square Games','紅場競技','Scratch Card','Yes',),
+        array('SlotMachine_ScatteredSkies','Scattered skies','宇宙乾坤','Video Slot','Yes',),
+        array('SlotMachine_StinkySocks','Stinky socks','臭襪子','Video Slot','Yes',),
+        array('SlotMachine_EatThemAll','Eat them all','食肉植物','Video Slot','Yes',),
+        array('SlotMachine_TennisChampion','Tennis Champions','網球王子','Video Slot','Yes',),
+        array('SlotMachine_ToysOfJoy','Toys of Joy','娃娃國土','Video Slot','Yes',),
+        array('SlotMachine_IronAssassins','Iron Assassins','殺人狂魔','Video Slot','Yes',),
+        array('SlotMachine_FireIce','Fire&Ice','冰燄戰略','Video Slot','Yes',),
+        array('SlotMachine_ForestHarmony','Forest Harmony','大自然和諧','Video Slot','Yes',),
+    );
+    
+    //--------------------------------------
+    public static function getAllGames() {
+        $arrRet = array();
+        foreach (self::ARR_GAMES as $gi => $gv) {
+            $arr = array();
+            $gameId = null;
+            foreach ($gv as $hi => $hv) {
+                $key = self::ARR_GAME_COL_DEFINITIONS[$hi];
+                if ($hi===0) {
+                    $gameId = $hv;
+                }
+                $arr[$key] = $hv;
+            }
+            $arrRet[$gameId] = $arr;
+        }
+        return $arrRet;
+    }
+    
+    //--------------------------------------
+    public static function getGameInfoById($argGameId) {
+        $arrAllGames = self::getAllGames();
+        if ( array_key_exists($argGameId, $arrAllGames) ) {
+            return $arrAllGames[$argGameId];
+        } else {
+            return false;
+        }
+    }
+    
+    //--------------------------------------
+    public static function getGameChNameById($argGameId) {
+        $res = self::getGameAttrByIdAndKey($argGameId, self::COL_KEY_NAME_ZHTW);
+        if ($res === false) {
+            return "不明的代碼({$argGameId})";
+        } else {
+            return $res;
+        }
+    }
+    
+    //=============================PROTECTED==============================
+    
+    //--------------------------------------
+    protected static function getGameAttrByIdAndKey($argGameId, $argKey) {
+        $arrGameInfo = self::getGameInfoById($argGameId);
+        if ( $arrGameInfo && array_key_exists($argKey, $arrGameInfo) ) {
+            return $arrGameInfo[$argKey];
+        } else {
+            return false;
+        }
+    }
+}

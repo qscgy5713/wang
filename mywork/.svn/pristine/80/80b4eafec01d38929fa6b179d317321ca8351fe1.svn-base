@@ -1,0 +1,105 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menu"/>
+		<include file="Common:menuRwd"/>
+
+	<div id="home_page_rwd" class="home_page_rwd ">
+		<section id="slider" class="slider fullwidthbanner-container roundedcorners">
+			<!--
+				Navigation Styles:
+
+					data-navigationStyle="" theme default navigation
+
+					data-navigationStyle="preview1"
+					data-navigationStyle="preview2"
+					data-navigationStyle="preview3"
+					data-navigationStyle="preview4"
+
+				Bottom Shadows
+					data-shadow="1"
+					data-shadow="2"
+					data-shadow="3"
+
+				Slider Height (do not use on fullscreen mode)
+					data-height="300"
+					data-height="350"
+					data-height="400"
+					data-height="450"
+					data-height="500"
+					data-height="550"
+					data-height="600"
+					data-height="650"
+					data-height="700"
+					data-height="750"
+					data-height="800"
+			-->
+			<div class="fullwidthbanner" data-height="500" data-navigationStyle="">
+				<ul class="hide">
+					<!-- SLIDE  -->
+					<li data-transition="random" data-slotamount="1" data-masterspeed="1000" data-saveperformance="off"  data-title="Slide">
+						<img src="" data-lazyload="__CSS__/images/{$langStr}/about_banner.jpg" alt="" data-bgfit="cover" data-bgposition="center top" data-bgrepeat="no-repeat" />
+					</li>
+				</ul>
+				<div class="tp-bannertimer"></div>
+			</div>
+		</section>
+	</div>
+	<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+		<div class="container mt-10">
+
+			<header class="text-center mb-30">
+				<h2 class="mb-20 mt-20">{$Think.lang.AboutMe}</h2>
+
+				<div class="responsibility_title"><i class="icomoon icon-smallcow responsibility-icon-style fs-40"></i></div>
+			</header>
+
+			<div class="row">
+				<div class="col-md-12 col-sm-12 pl-35">
+					<p class="mb-45 fw-700" style="line-height: 30px;">{$Think.lang.Detail1}</p>
+					<p class="mb-45 fw-700" style="line-height: 30px;">{$Think.lang.Detail2}</p>
+					<h3 class="text-center">{$Think.lang.Detail3}</h3>
+					<div class="divider divider-left"><!-- divider -->
+						<i class="fa fa-star-o"></i>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-12 col-sm-12 pl-35">
+					<ul class="responsibility_list text-danger">
+                        <li>
+                        	<p class="mb-10">{$Think.lang.Detail4}</p>
+                        	<p style="color: #666;">{$Think.lang.Detail5}</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">{$Think.lang.Detail6}</p>
+                        	<p style="color: #666;">{$Think.lang.Detail7}</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">{$Think.lang.Detail8}</p>
+                        	<p style="color: #666;">{$Think.lang.Detail9}</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">{$Think.lang.Detail10}</p>
+                        	<p style="color: #666;">{$Think.lang.Detail11}</p>
+                        </li>
+                        <li>
+                        	<p class="mb-10">{$Think.lang.Detail12}</p>
+                        	<p style="color: #666;">{$Think.lang.Detail13}</p>
+                        </li>
+                    </ul>
+
+				</div>
+				<div class="col-md-6 col-sm-6 m-auto">
+					<img style="width: 100%;" src="__CSS__/images/license.jpg">
+				</div>
+
+			</div>
+
+		</div>
+	</section>
+
+
+<include file="Common:footer"/>
+<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/js/jquery.themepunch.revolution.js"></script>

@@ -1,0 +1,749 @@
+<?php
+
+class GameRtgModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'https://egamingweb.twgaservices.com/LLBTWZXEHICOLQVPKPKM/RTGWebAPI/api';
+  protected $cfg_game_url = 'https://egamingcdk.twgaservices.com:2072';
+  protected $cfg_ssl_cert = 'Public/TP01/game_rtg_cert/egprod.crt.pem';
+  protected $cfg_ssl_key = 'Public/TP01/game_rtg_cert/egprod.key.pem';
+  protected $cfg_ssl_password = 'j@ckp0t33';
+  protected $cfg_ssl_key_password = '88979jhdjqw(*$';
+
+  const RTG_GAME_WIDTH = 'auto';  //取得遊戲連結時需要的常數
+  const RTG_GAME_HEIGHT = 'auto';  //取得遊戲連結時需要的常數
+  const RTG_DEFAULT_CURRENCY_CODE = 'THB';
+  const RTG_DEFAULT_LANG_CODE = 2;  //=skinId. 1 = English, 2 = Simplified Chinese
+  const RTG_DEFAULT_REQUEST_METHOD = 'POST';
+  const RTG_CURL_CONNECTTIMEOUT_MS = 15000;
+  const RTG_CURL_TIMEOUT_MS = 28000;
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+
+  public function __construct() {
+    $this->_setSSLCert($this->cfg_ssl_cert);
+    $this->_setSSLKey($this->cfg_ssl_key);
+  }
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['currency_type'] 3位貨幣代碼(非必須). 預設=TWD
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrParams = array(
+      "currency_id" => self::RTG_DEFAULT_CURRENCY_CODE,
+      "login" => $_user_name,
+      "password" => $_password,
+      "skin_id" => self::RTG_DEFAULT_LANG_CODE,
+      "first_name" => "test",
+      "last_name" => "test",
+      "email" => "test@test.com",
+      "day_phone" => "12345",
+      "evening_phone" => "12345",
+      "address_1" => "12345",
+      "address_2" => "12345",
+      "city" => "",
+      "state" => "",
+      "zip" => "",
+      "country" => "TW",
+      "cell_phone" => "",
+      "sms_message" => false,
+      "gender" => true,
+      "ip_address" => "127.0.0.1",
+      "mac_address" => "",
+      "user_id" => 0,
+      "download_id" => 0,
+      "birth_date" => "1980-08-03T09:37:07.085Z",
+      "called_from_casino" => 0,
+      "no_spam" => true
+    );
+
+    $url = $this->cfg_base_url."/players";
+    $httpMethod = 'POST';
+    $result = $this->_sendRequest($url, $httpMethod, $arrParams);
+    //Dbgr::preout($result);
+    if ($result!==false) {
+      $httpCodeReturned = $result['HTTP_CODE'];
+      $arrSuccessHttpCodes = array(
+        201,
+        202,  //created but 3rd Party Sync failed
+      );
+      if ( in_array($httpCodeReturned, $arrSuccessHttpCodes) ) {  //成功時
+        $argErr = null;
+        return true;
+      } else {  //失敗
+        if ($httpCodeReturned==409) {
+          $errCode = -1;
+          $errMsg = '409 - Player creation failed. Reasons: failed, banned, wrong email, or already exists';
+        } elseif ($httpCodeReturned==400) {
+          $errCode = -2;
+          $errMsg = '400 - Bad request';
+        } else {
+          $errCode = -3;
+          $errMsg = "{$httpCodeReturned} - Unknown error";
+        }
+        $err = $this->produceError($errCode, $errMsg, __METHOD__);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['game_code'] game_id
+   * @param $data['mach_id'] mach_id
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL (string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'game_id' => array('required'=>1,),
+      'mach_id' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( array_key_exists($_user_name, $this->arrPlayerIds) ) {
+      $playerId = $this->arrPlayerIds[$_user_name];
+    } else {
+      $playerId = $this->getPlayerId($_user_name,$argErr);
+      if ($playerId === false) {
+        return false;
+      }
+    }
+    $token = $this->_getToken($playerId,$argErr);
+    if ($token === false) {
+      return false;
+    }
+
+    if (strlen(trim($argReturnUrl))) {
+      $returnUrl = trim($argReturnUrl);
+    } else {
+      $returnUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    }
+
+    $forReal = 'True';
+    $betDenomination = '';
+    if (($argGameId=='6') && ($argMachineId=='160')) {
+      $betDenomination = '100';
+    }
+    $numOfHands = '';
+    //$betDenomination = 100;
+    $launchUrl = $this->cfg_game_url;
+
+    $launchUrl .= "/lobby.aspx?cdkModule=gameLauncher";
+    //$launchUrl .= "&betdenomination={$betDenomination}";
+    $launchUrl .= "&skinid=".self::RTG_DEFAULT_LANG_CODE;
+    $launchUrl .= "&user={$_user_name}";
+    $launchUrl .= "&forReal={$forReal}";
+    $launchUrl .= "&token={$token}";
+    $launchUrl .= "&gameId={$_game_id}";
+    $launchUrl .= "&machId={$_mach_id}";
+    $launchUrl .= "&betDenomination={$betDenomination}";
+    $launchUrl .= "&numOfHands={$numOfHands}";
+    $launchUrl .= "&width=".self::RTG_GAME_WIDTH;
+    $launchUrl .= "&height=".self::RTG_GAME_HEIGHT;
+    //$launchUrl .= "&returnurl={$returnUrl}";
+    return $launchUrl;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( array_key_exists($_user_name, $this->arrPlayerIds) ) {
+      $playerId = $this->arrPlayerIds[$_user_name];
+    } else {
+      $playerId = $this->getPlayerId($_user_name,$argErr);
+      if ($playerId === false) {
+        return false;
+      }
+    }
+    $arrParams = array(
+      'forMoney' => 'true'
+    );
+
+    $url = $this->cfg_base_url."/players/{$playerId}/balance";
+    $httpMethod = 'GET';
+    $result = $this->_sendRequest($url, $httpMethod, $arrParams);
+    //Dbgr::preout($result);
+    if ($result!==false) {
+      $httpCodeReturned = $result['HTTP_CODE'];
+      $arrSuccessHttpCodes = array(
+        200,
+      );
+      if ( in_array($httpCodeReturned, $arrSuccessHttpCodes) ) {  //成功時
+        $arrBalanceInfo = json_decode($result['RESULTS'], true)[0];
+        //Dbgr::preout($arrBalanceInfo);
+        /*
+        [{
+          "balance":1100.0000,
+          "bonus_balance":0.0000,
+          "comp_point":0,
+          "liability_amount":0.0000,
+          "liability_applied":0,
+          "limit_type":1,
+          "play_through_met":false,
+          "play_through_balance":0.0000,
+          "withdrawable_balance":1100.0000,
+          "currency_code":"THB",
+          "currency_symbol":" "
+        }]
+        */
+        return $arrBalanceInfo['balance'];
+      } else {  //失敗
+        if ($httpCodeReturned==404) {
+          $errCode = -1;
+          $errMsg = '404 - Player does not exist';
+        } elseif ($httpCodeReturned==400) {
+          $errCode = -2;
+          $errMsg = '400 - Bad Request';
+        } else {
+          $errCode = -3;
+          $errMsg = "{$httpCodeReturned} - Unknown error";
+        }
+        $err = $this->produceError($errCode, $errMsg, __METHOD__);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果 (bool)
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( array_key_exists($_user_name, $this->arrPlayerIds) ) {
+      $playerId = $this->arrPlayerIds[$_user_name];
+    } else {
+      $playerId = $this->getPlayerId($_user_name,$argErr);
+      if ($playerId === false) {
+        return false;
+      }
+    }
+    $transType = 'WITHDRAW';
+
+    return $this->_transfer(
+      $transType, //DEPOSIT=存款, WITHDRAW=提款
+      $playerId,  //會員帳號
+      $_amount,  //額度
+      $argErr
+    );
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果 (bool)
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    if ( array_key_exists($_user_name, $this->arrPlayerIds) ) {
+      $playerId = $this->arrPlayerIds[$_user_name];
+    } else {
+      $playerId = $this->getPlayerId($_user_name,$argErr);
+      if ($playerId === false) {
+        return false;
+      }
+    }
+    $transType = 'DEPOSIT';
+
+    return $this->_transfer(
+      $transType, //DEPOSIT=存款, WITHDRAW=提款
+      $playerId,  //會員帳號
+      $_amount,  //額度
+      $argErr
+    );
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['begin_date'] 起始日期時間
+   * @param $data['end_date'] 結束日期時間
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_date' => array('required'=>1,),
+      'end_date' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrParams = array(
+      "forMoney" => "True",
+      "startDate" => $_begin_date,
+      "endDate" => $_end_date,
+      //"playerId" => "String",  //playerId optional
+    );
+
+    $url = $this->cfg_base_url."/reports/gaming-stats";
+    $httpMethod = 'GET';
+    $result = $this->_sendRequest($url, $httpMethod, $arrParams);
+    //Dbgr::preout($result);
+    if ($result!==false) {
+      $httpCodeReturned = $result['HTTP_CODE'];
+      $arrSuccessHttpCodes = array(
+        200,
+      );
+      if ( in_array($httpCodeReturned, $arrSuccessHttpCodes) ) {  //成功時
+        return json_decode($result['RESULTS'], true);
+      } else {  //失敗
+        if ($httpCodeReturned==400) {
+          $errCode = -1;
+          $errMsg = '400 - Bad request';
+        } elseif ($httpCodeReturned==401) {
+          $errCode = -2;
+          $errMsg = '401 - Unauthorized';
+        } elseif ($httpCodeReturned==404) {
+          $errCode = -3;
+          $errMsg = '404 - Player does not exist';
+        } else {
+          $errCode = -4;
+          $errMsg = "{$httpCodeReturned} - Unknown error";
+        }
+        $err = $this->produceError($errCode, $errMsg, __METHOD__);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+  /* getPlayerId: 查詢會員的PID */
+  public function getPlayerId(
+    $argUserName,  //會員帳號
+    &$argErr = null
+    ) {
+    //return $argUserName;
+    if ( array_key_exists($argUserName, $this->arrPlayerIds) ) {
+      return $this->arrPlayerIds[$argUserName];
+    }
+    $arrParams = array(
+      'login' => $argUserName
+    );
+
+    $url = $this->cfg_base_url."/accounts/playerid";
+    $httpMethod = 'GET';
+    $result = $this->_sendRequest($url, $httpMethod, $arrParams);
+    var_dump($result);
+    if ($result!==false) {
+      $httpCodeReturned = $result['HTTP_CODE'];
+      $arrSuccessHttpCodes = array(
+        200,
+      );
+      if ( in_array($httpCodeReturned, $arrSuccessHttpCodes) ) {  //成功時
+        $playerId = trim(json_decode($result['RESULTS']));
+        $this->arrPlayerIds[$argUserName] = $playerId;
+        return $playerId;
+      } else {  //失敗
+        if ($httpCodeReturned==404) {
+          $errCode = -1;
+          $errMsg = '404 - Player does not exist';
+        } elseif ($httpCodeReturned==400) {
+          $errCode = -2;
+          $errMsg = '400 - Unauthorized';
+        } else {
+          $errCode = -3;
+          $errMsg = "{$httpCodeReturned} - Unknown error";
+        }
+        $err = $this->produceError($errCode, $errMsg, __METHOD__);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+	//--------------------非通用函數--------------------
+
+  /* set this->SSLCert */
+  protected function _setSSLCert($argSSLCertPath) {
+    $SSLCertPath = trim($argSSLCertPath);
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+      //If using Windows
+      //return ($this->cfg_ssl_cert = dirname(__FILE__) . '\\'.$SSLCertPath);
+        return ($this->cfg_ssl_cert = '\\'.$SSLCertPath);
+    } else {
+      //If using Linux
+      return ($this->cfg_ssl_cert = './'.$SSLCertPath);
+      //return ($this->cfg_ssl_cert = $SSLCertPath);
+    }
+  }
+
+  /* set this->SSLKey */
+  protected function _setSSLKey($argSSLKeyPath) {
+    $SSLKeyPath = trim($argSSLKeyPath);
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+      //If using Windows
+      //return ($this->cfg_ssl_key = dirname(__FILE__) . '\\'.$SSLKeyPath);
+        return ($this->cfg_ssl_key = '\\'.$SSLKeyPath);
+    } else {
+      //If using Linux
+      return ($this->cfg_ssl_key = './'.$SSLKeyPath);
+      //return ($this->cfg_ssl_key = $SSLKeyPath);
+    }
+  }
+
+  /* _getToken: 查詢會員通行 token (用以進入遊戲等) */
+  protected function _getToken(
+    $argPlayerId,  //player id
+    &$argErr = null
+    ) {
+    $arrParams = array(
+      'token_type' => 'external_token'
+    );
+
+    $url = $this->cfg_base_url."/players/{$argPlayerId}/token";
+    $httpMethod = 'POST';
+    $result = $this->_sendRequest($url, $httpMethod, $arrParams);
+    //Dbgr::preout($result);
+    if ($result!==false) {
+      $httpCodeReturned = $result['HTTP_CODE'];
+      $arrSuccessHttpCodes = array(
+        200,
+      );
+      if ( in_array($httpCodeReturned, $arrSuccessHttpCodes) ) {  //成功時
+        $token = json_decode($result['RESULTS']);
+        return $token;
+      } else {  //失敗
+        if ($httpCodeReturned==404) {
+          $errCode = -1;
+          $errMsg = '404 - Player does not exist';
+        } elseif ($httpCodeReturned==400) {
+          $errCode = -2;
+          $errMsg = '400 - Bad Request';
+        } else {
+          $errCode = -3;
+          $errMsg = "{$httpCodeReturned} - Unknown error";
+        }
+        $err = $this->produceError($errCode, $errMsg, __METHOD__);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /* transfer: 上下點 */
+  protected function _transfer(
+    $argTransType, //DEPOSIT=存款, WITHDRAW=提款
+    $argPlayerId,  //PlayerId
+    $argAmount,  //額度
+    &$argErr = null
+    ) {
+    $transType = strtoupper(trim($argTransType));
+    $amount = abs($argAmount);
+    if ($transType == 'DEPOSIT') {
+      $url = $this->cfg_base_url."/cashier/common-wallet-deposit";
+    } else {  //WITHDRAW
+      $url = $this->cfg_base_url."/cashier/common-wallet-withdrawal";
+    }
+    $arrParams = array(
+      "player_id" => "{$argPlayerId}",
+      "method_id" => 10,
+      "amount" => $amount,
+      "tracking_one" => "",
+      "tracking_two" => "",
+      "tracking_three" => "",
+      "tracking_four" => "",
+      "session_id" => 0,
+      "user_id" => 0,
+      "skin_id" => self::RTG_DEFAULT_LANG_CODE,
+      "depositor" => "global",
+    );
+
+    $httpMethod = 'POST';
+    $result = $this->_sendRequest($url, $httpMethod, $arrParams);
+    //Dbgr::preout($result);
+    if ($result!==false) {
+      $httpCodeReturned = $result['HTTP_CODE'];
+      $arrSuccessHttpCodes = array(
+        200,
+        201,
+      );
+      if ( in_array($httpCodeReturned, $arrSuccessHttpCodes) ) {  //成功時
+        return true;
+      } else {  //失敗
+        if ($httpCodeReturned==202) {
+          $errCode = -1;
+          $errMsg = '202 - Transaction pending. Please refresh';
+        } elseif ($httpCodeReturned==400) {
+          $errCode = -2;
+          $errMsg = '417 - Transaction denied';
+        } else {
+          $errCode = -3;
+          $errMsg = "{$httpCodeReturned} - Unknown error";
+        }
+        $err = $this->produceError($errCode, $errMsg, __METHOD__);
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02')).': '.$err;  //回傳結果為不成功
+      }
+    }
+    $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /* send request */
+  protected function _sendRequest(
+    $argUrl,
+    $argMethod,
+    $argArrData=null,
+    $argArrHttpHeader=null
+    ) {
+    $method = strtoupper($argMethod);
+    $httpHeader = array(
+      "Content-Type: application/json",
+    );
+    if ($argArrHttpHeader) {
+      $httpHeader = $argArrHttpHeader;
+    }
+    $arrCurlDatas = array(
+      //CURLOPT_CUSTOMREQUEST => $method,
+      CURLOPT_HTTPHEADER => $httpHeader,
+      CURLOPT_SSL_VERIFYHOST => false,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_SSLCERT => $this->cfg_ssl_cert,
+      CURLOPT_SSLCERTPASSWD => $this->cfg_ssl_password,
+      CURLOPT_SSLKEY => $this->cfg_ssl_key,
+      CURLOPT_SSLKEYPASSWD => $this->cfg_ssl_keyPassword,
+      CURLOPT_CONNECTTIMEOUT_MS => self::RTG_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::RTG_CURL_TIMEOUT_MS,
+      CURLOPT_RETURNTRANSFER => true,
+    );
+    if ( $method == 'POST') {  //POST
+      $url = $argUrl;
+      if ($argArrData) {
+        $dataStrInJson = json_encode($argArrData);  //can only send 1-d array as postfield data
+        $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStrInJson;
+      }
+      $arrCurlDatas[CURLOPT_POST] = true;
+    } elseif ( $method == 'PUT') {  //PUT
+      $arrCurlDatas[CURLOPT_PUT] = true;
+    } else {  //GET
+      if ($argArrData && is_array($argArrData) && sizeof($argArrData)) {
+        $queryStr = http_build_query($argArrData);
+        $url = "{$argUrl}?{$queryStr}";
+      } else {
+        $url = "{$argUrl}";
+      }
+      $arrCurlDatas[CURLOPT_CUSTOMREQUEST] = 'GET';
+    }
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+    $curlInfo = curl_getinfo($ch);
+    $httpCode = $curlInfo['http_code'];
+    $curlError = curl_error($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => $curlError,
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+    //var_dump($curlInfo);
+    //var_dump($url);
+    //var_dump($arrData);
+    //var_dump($result);
+    $debuginfo = array();
+    $debuginfo['URL'] = $url;
+    $debuginfo['METHOD'] = $argMethod;
+    $debuginfo['BODY'] = json_encode($argArrData);
+    $debuginfo['CURL_ERROR'] = $curlError;
+    $debuginfo['RESULTS'] = $result;
+    $debuginfo['HTTP_CODE'] = $httpCode;
+    //var_dump($debuginfo);
+    //echo '<br/>----------------<br/>';
+
+    if ($result !== false) {
+      $arrRes = array(
+        'HTTP_CODE' => $httpCode,
+        'RESULTS' => $result,
+        'ERROR' => $curlError,
+        'DEBUGINFO' => $debuginfo,
+      );
+      $this->responseArr = $arrRes;
+      return $arrRes;
+    } else {
+      //var_dump($curlInfo);
+      echo "RTG::sendRequest: curlError={$curlError} (http code: {$httpCode}) <br/>";
+      return false;
+    }
+  }
+
+  protected function produceError($argCode, $argMsg=null, $argErrorSource=null) {
+    $arr = array(
+      'code' => $argCode,
+      'message' => $argMsg,
+    );
+    if ($argErrorSource) {
+      $arr['source'] = $argErrorSource;
+    }
+    return "{$argMsg}(code {$argCode})";
+  }
+
+}

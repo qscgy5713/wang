@@ -1,0 +1,262 @@
+<include file="Common:header"/>
+<body style="background-image: url(__CSS__/images/1.jpg);">
+<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+		  <div class="content admin-div">
+		  	<p>
+                <button class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                       新增帳號
+                </button>
+             </p>
+             
+             <div class="collapse mb10" id="collapseExample" style="">
+                 <div class="card card-body pt5 pb5">
+                 
+                  <form method="post" action='__APP__/AdminManage/formAddAdmin'>
+                  	<div class="form-group form-group-m">
+	                  	
+	                       <label class=" col-form-label">帳號</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-width" type="text" name="addAccount">
+	                       </div>
+	                       
+	                       <label  class=" col-form-label">密碼</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-width" type="password" name="addPassword" >
+	                       </div>
+	                       
+	                       <label  class=" col-form-label">確認密碼</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-width" type="password" name="addCheckPassword" >
+	                       </div>
+	                       <br>
+	                       <foreach name="showPageArray" item="showPageVal">
+						    <div class="fancy-title mb1 mt5">
+			                      <h6>{$key}</h6>
+			                      <div class="fancy-title-sep gray-sep"></div>
+			                </div>
+			                <div class="form-check">
+				                <label class="form-check-label">
+				                	<input type="checkbox" name ="chkall{$showPageVal.0.classId}" onclick="allselet({$showPageVal.0.classId})" class="form-check-input">
+				                		全選
+				                </label>
+			                </div>
+			                <foreach name="showPageVal" item="PageVal">
+				                <div class="form-check">
+				                      <label class="form-check-label">
+				                          <input class="form-check-input PageClass{$PageVal.classId}" type="checkbox" value="{$PageVal.id}" name="addPageId[]">
+				                          {$PageVal.showName}
+				                      </label>
+				                </div>
+			                </foreach>
+						 </foreach>
+	                       
+	                       <button type="submit" name="addbtn" class="btn btn-info btn-style ml10">確認新增</button>
+                  	 </div>
+                  </form>
+                 </div>
+             </div>
+		  	
+		  	  <div class="row">
+         			<table class="table table-striped">
+                        <thead>
+                            <tr>
+                            	<th>序</th>
+                            	<th>帳號</th>
+                            	<th>狀態</th>
+                            	<th>備註</th>
+                            	<th>建立時間</th>
+                            	<th>修改時間</th>
+                            	<th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <foreach name="showArray" item="showVal">
+                        	<tr>
+	                        	<td>{$key+1}</td>
+								<td>{$showVal.account}</td>
+								<td>{$showVal.status}</td>
+								<td>{$showVal.remark}</td>
+								<td>{$showVal.createTime}</td>
+								<td>{$showVal.modifyTime}</td>
+								<td>
+								
+								<a class="popup-content btn btn-info btn-style" href="#{$key+1}">修改</a>
+								<form class="div-style" method="post" action='__APP__/AdminManage/formStopAdmin'>
+									<input type="hidden" value="{$showVal.id}" name="stopId">
+                                	<button type="submit" class="btn btn-info btn-style">停用</button>
+                                </form>
+                                <form class="div-style" method="post" action='__APP__/AdminManage/formStartAdmin'>
+                                	<input type="hidden" value="{$showVal.id}" name="startId">	
+                                	<button type="submit" class="btn btn-info btn-style">啟用</button>
+                                </form>
+                                <form class="div-style" method="post" action='__APP__/AdminManage/formDelAdmin'>
+                                	<input type="hidden" value="{$showVal.id}" name="delId">	
+                                	<button type="submit" class="btn btn-info btn-style">刪除</button>
+                                </form>	
+                                
+                                	<div id="{$key+1}" class="popup-content-area white-popup mfp-hide popup-content-area-max-width">
+				                        <h4>修改客服資料</h4><hr>
+				                        <form method="post" action='__APP__/AdminManage/formSetAdmin'>
+				                           <div class="form-group mb5">
+				                                <label>帳號</label>
+				                                <span class="ml10">{$showVal.account}</span>
+				                                <input type="hidden" value="{$showVal.id}" name="setId">
+				                            </div>
+				                            <div class="form-group mb5">                
+				                                <label >密碼</label>
+				                                <input type="password" name="setPassword" class="form-control">
+				                            </div>
+				                             <div class="form-group mb5">                
+				                                <label >確認密碼</label>
+				                                <input type="password" name="setCheckPassword" class="form-control">
+				                             </div>
+				                             
+				                             <div class="form-group mb5">                
+				                                <label >備註</label>
+				                                <input type="text" name="setRemark" value="{$showVal.remark}" class="form-control">
+				                             </div>
+				                             <br>
+				                             
+				                             <foreach name="showVal.pageData" item="classVal">
+											    <div class="fancy-title mb1 mt5">
+								                      <h6>{$key}</h6>
+								                      <div class="fancy-title-sep gray-sep"></div>
+								                </div>
+						                
+								                <div class="form-check">
+									                <label class="form-check-label">
+									                	<input type="checkbox" name ="chkall{$classVal.0.classId}" onclick="allselet({$classVal.0.classId})" class="form-check-input">
+									                		全選
+									                	
+									                </label>
+								                </div>
+								                <foreach name="classVal" item="pageVal">
+									                <eq name="pageVal.power" value="1">
+									                	 <div class="form-check">
+										                      <label class="form-check-label">
+										                          <input class="form-check-input PageClass{$pageVal.classId}" checked="checked" type="checkbox" value="{$pageVal.id}" name="setPageId[]">
+										                         {$pageVal.showName}
+										                      </label>
+										                </div>
+													<else />
+														<div class="form-check">
+										                      <label class="form-check-label">
+										                          <input class="form-check-input PageClass{$pageVal.classId}" type="checkbox" value="{$pageVal.id}" name="setPageId[]">
+										                          {$pageVal.showName}
+										                      </label>
+										                </div>
+													</eq>
+								                </foreach>
+									      </foreach>
+				                             
+				                            <div class="clearfix">
+				                                <button type="submit" name ="okbtn" class="btn btn-primary float-right btn-style">確認修改</button>
+				                            </div>
+				                        </form>
+				                    </div>
+				                    
+                                </td>
+							</tr>
+                        </foreach>
+                        
+                        </tbody>
+                    </table>
+         		</div>
+		  
+	<!-- <table>
+		<tr><th>序</th><th>帳號</th><th>狀態</th><th>備註</th><th>建立時間</th><th>修改時間</th><th>操作</th></tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$showVal.account}</td>
+				<td>{$vo.status}</td>
+				<td>{$vo.remark}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.modifyTime}</td>
+				<td>
+					修改資料BUTTON
+					關閉BUTTON
+					<form method="post" action='__APP__/AdminManage/formStopAdmin'>
+						<input type="hidden" value="{$vo.id}" name="stopId">
+						<button type="submit" class="btn btn-primary">停用</button>
+					</form>
+					啟用BUTTON
+					<form method="post" action='__APP__/AdminManage/formStartAdmin'>
+						<input type="hidden" value="{$vo.id}" name="startId">
+						<button type="submit" class="btn btn-primary">啟用</button>
+					</form>
+					刪除BUTTON
+					<form method="post" action='__APP__/AdminManage/formDelAdmin'>
+						<input type="hidden" value="{$vo.id}" name="delId">
+						<button type="submit" class="btn btn-primary">刪除</button>
+					</form>
+				</td>
+			</tr>
+			<tr>
+			<form method="post" action='__APP__/AdminManage/formSetAdmin'>
+				<td></td>
+				<td>帳號:{$vo.account}
+				<input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td>密碼:<input type="password" name="setPassword" value=""></td>
+				<td>確認密碼:<input type="password" name="setCheckPassword"  value="" ></td>
+				<td>備註:<input type="text" name="setRemark"  value="{$vo.remark}" ></td>
+				<td></td>
+				<td></td>
+				<td><button type="submit" class="btn btn-primary">確認修改</button></td>
+			</form>
+			</tr>
+		</VOLIST>
+	</table> -->	  	 	
+	
+	      </div>
+<include file="Common:footer"/> 
+<script>
+ function allselet(thisa)
+{
+	 if ($("input[name='chkall"+thisa+"']").prop('checked')) {
+	    $(".PageClass"+thisa).prop("checked", true);
+	  } else {
+	    $(".PageClass"+thisa).prop("checked", false);
+	  }
+}
+
+ $(document).ready(function(){
+		//修改
+		$("button[name='setbtn']").click(function(){
+			var password = $("input[name='setPassword']").val();
+			var checkPassword = $("input[name='setCheckPassword']").val();
+			
+			password = $.trim(password);
+			checkPassword = $.trim(checkPassword);
+			
+			 if (password == 0 && checkPassword == 0){
+				 //alert("1");
+			 }
+			 else if(password == checkPassword){
+				 //alert("2");
+				
+			 }else{
+				 alert("請確認 密碼 與 確認密碼 資料是否一致");
+				 return false;
+			 }
+		 })
+		 //新增
+		 $("button[name='addbtn']").click(function(){
+			 var addPassword = $("input[name='addPassword']").val();
+			 var addCheckPassword = $("input[name='addCheckPassword']").val();
+			 
+			 addPassword = $.trim(addPassword);
+			 addCheckPassword = $.trim(addCheckPassword);
+			 
+			 if (addPassword == 0 || addCheckPassword == 0){
+				 alert("請輸入密碼");
+				 return false;
+			 }else if(addPassword != addCheckPassword){
+				 alert("請確認 密碼 與 確認密碼 資料是否一致");
+				 return false;
+			 }
+		 })
+		 
+	});
+ </script>

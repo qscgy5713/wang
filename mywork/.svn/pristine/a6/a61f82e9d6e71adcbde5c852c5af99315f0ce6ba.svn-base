@@ -1,0 +1,191 @@
+<?php
+class RebateEventAction extends MemberAction {
+    protected $storegift = false;//儲值送點數　活動
+    protected $storegift_eventId = 0;
+    protected $storegift_money = 1000;
+    
+    protected $formEnabled = false;
+    protected $eventEnabled = false;
+    
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        if(empty($_SESSION['Member']['id'])){
+            return;
+        } else {
+            $this->formEnabled = true;//代表會員有登入 可開放功能
+        }
+    }
+    //TODO:優惠活動 手機板
+    public function index(){
+        $this->display();
+    }
+    //TODO:首充1000送1000頁面
+    public function storeGiftPage(){
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => 'storegift',
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->assign("eventErrMessage","活動錯誤");
+        }
+        if($return['event_enabled'] === '0'){
+            $this->assign("eventErrMessage","活動未開放");
+            return;
+        }
+        $CommonMember = D("CommonMember");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id']
+        );
+        $return = $CommonMember->getMemberStoreGiftDatabyId($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage","請先登入會員帳號!");
+        }
+        if($return['wallet_totalRecharge'] == 0){
+            //未充值過會員
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage","您未充值，無法參加此活動!");
+            $this->display();
+            return;
+        }
+        if(!empty($return['storegift_id']) && $return['event_status'] == 2){
+            //申請成功過會員
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage","您已申請過此活動!");
+            $this->display();
+            return;
+        }
+        if(!empty($return['storegift_id']) && $return['event_status'] == 0){
+            //申請成功過會員
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage","您訂單處理中，請稍後!");
+            $this->display();
+            return;
+        }
+        
+        $this->assign("eventEnabled","true");
+        $this->display();
+    }
+    //TODO:首充1000送1000功能
+    public function formStoreGift(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => 'storegift',
+        );
+        
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->assign("eventErrMessage","活動錯誤");
+        }
+        if($return['event_enabled'] === '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//此活動已關閉。
+            return;
+        } else {
+            $this->storegift_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+        $CommonMember = D("CommonMember");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id']
+        );
+        $return = $CommonMember->getMemberStoreGiftDatabyId($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//請先登入會員帳號!
+            return;
+        }
+        if($return['wallet_totalRecharge'] == 0){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//您未充值，無法參加此活動!
+            return;
+        }
+        if(!empty($return['storegift_id']) && $return['event_status'] == 2){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//您已申請過此活動!
+            return;
+        }
+        if(!empty($return['storegift_id']) && $return['event_status'] == 0){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//您訂單處理中，請稍後!
+            return;
+        }
+        
+        
+        $CommonEventStoregift = D("CommonEventStoregift");
+        $data = array(
+            'event_id' => $this->storegift_eventId,
+            'member_id' => $_SESSION['Member']['id'],
+            'agent_id' =>$_SESSION['Member']['agentId'],
+            'agent_tree' =>$_SESSION['Member']['agentTree'],
+            'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+            'event_status' =>'0',
+            'event_money'=>$this->storegift_money,
+            'event_createTime' =>time(),
+            'storegift_ip'=>get_ip_inet_pton(getIp())
+        );
+        $return = $CommonEventStoregift->checkEventStoregiftDataById($data);
+        switch ($return['memberCount']) {
+            case '0':
+                $return = $CommonEventStoregift->addEventStoregiftData($data);
+                break;
+            case '1':
+                $return = $CommonEventStoregift->setEventStoregiftData($data);
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                break;
+        }
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//資料庫錯誤。
+            return;
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+    }
+    //TODO:翻本金888頁面
+    public function reversalPage(){
+        $this->display();
+    }
+    //TODO:翻本金888功能
+    public function formReversal(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $this->display();
+    }
+    //TODO:百家樂連贏頁面
+    public function baccaratWinningPage(){
+        $this->display();
+    }
+    //TODO:百家樂連贏功能
+    public function formBaccaratWinning(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $this->display();
+    }
+    
+    //TODO:四星彩頁面
+    public function lottoFourPage(){
+        $this->display();
+    }
+    
+    //TODO:電子返水頁面
+    public function backWaterElectronicPage(){
+        $this->display();
+    }
+    
+    //TODO:體育返水頁面
+    public function backWaterSportsPage(){
+        $this->display();
+    }
+    
+    //TODO:真人返水頁面
+    public function backWaterRealityPage(){
+        $this->display();
+    }
+    
+}

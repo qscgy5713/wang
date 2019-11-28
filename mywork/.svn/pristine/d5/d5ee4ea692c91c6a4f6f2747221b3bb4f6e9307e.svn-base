@@ -1,0 +1,59 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+        <div class="container pt20 pb50 bg-min-height">
+			<div class="title-heading1 hidden-sm-mb20">
+               	<h3>線上客服</h3>
+           	</div>
+ 
+            <div class="row pb60">
+                <div class="col-lg-6 hidden-xl-up-pl360  col-6">
+                    <div class="icon-box icon-box-center">
+                        <a href="https://daw.duokebo.com/webchat/chat.aspx?siteid=378206" target="_blank">
+                        	<i class="icon-hover-1 bg-primary ti-headphone-alt icon-hover-default"></i>
+                        </a>
+                        <h4>線上客服</h4>  
+                    </div>
+                </div><!--/col-->
+               
+                <div class="col-lg-6 hidden-xl-up-pr360 col-6">
+                    <div class="icon-box icon-box-center">
+                    	<a href="https://line.me/R/ti/p/Gfuob6TlgG" target="_blank">
+                        	<i class="icon-hover-1 bg-primary ti-themify-favicon icon-hover-default"></i>
+                        </a>
+                        <h4>LINE</h4>
+                        <p>
+                           ID: yes5168net
+                        </p>
+                    </div>
+                </div><!--/col-->
+             </div>
+             
+             <div class="row pb60">
+              
+                <div class="col-lg-6 hidden-xl-up-pl360 col-6">
+                    <div class="icon-box icon-box-center">
+                    	<a href="http://weixin.qq.com/r/j7rVzQPEjF7zrUeu9__d" target="_blank">
+                        	<i class="icon-hover-1 bg-primary ti-themify-favicon icon-hover-default"></i>
+                        </a>
+                        <h4>微信</h4>
+                        <p>
+                            ID: yes5168net
+                        </p>
+                    </div>
+                </div><!--/col-->
+                <div class="col-lg-6 hidden-xl-up-pr360 col-6">
+                    <div class="icon-box icon-box-center">
+                        <i class="icon-hover-1 bg-primary ti-linux icon-hover-default"></i>
+                        <h4>QQ</h4>
+                        <p>
+                           ID: 2338465380
+                        </p>
+                    </div>
+                </div><!--/col-->
+               
+            </div>
+
+        </div>
+       
+<include file="Common:footer"/>

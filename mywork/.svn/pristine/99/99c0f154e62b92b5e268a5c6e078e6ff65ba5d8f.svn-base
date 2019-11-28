@@ -1,0 +1,7 @@
+<?php
+/*
+ * 代理加盟
+ */
+class CommonAgentAgentjoinModel extends AgentModel {
+    
+}

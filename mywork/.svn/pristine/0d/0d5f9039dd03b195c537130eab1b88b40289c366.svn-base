@@ -1,0 +1,390 @@
+<!-- FOOTER -->
+<footer id="footer">
+	<div class="copyright hidden-sm-down">
+		<div class="container">
+			<ul class="list-inline inline-links mobile-block float-right m-0">
+				<!--<li><a href="#">聯繫客服</a></li> -->
+				
+			</ul>
+
+			&copy; All Rights Reserved, 小牛遊戲
+		</div>
+	</div>
+</footer>
+<!-- /FOOTER -->
+
+<!-- FOOTER-RWD -->
+<if condition='$isLogin eq "true"'>
+	<footer id="footer">
+		<div class="copyright copyright-rwd hidden-lg-up">
+			<div class="container">
+				<div class="row">
+					<div class="col-3 mb-0">
+						<a href="__APP__/MemberIndex/index">
+							<div><i class="fa fa-home footer-icon-fa"></i></div>
+							<label class="icon_label fs-14" style="position: static;">首頁</label>
+						</a>
+					</div>
+					<div class="col-3 mb-0">
+						<a href="__APP__/RebateEvent/index">
+							<div><i class="icomoon icon-coffer footer-icon-icomoon"></i></div>
+							<label class="icon_label fs-14" style="position: static;">優惠活動</label>
+						</a>
+					</div>
+					<div class="col-3 mb-0">
+						<a href="__APP__/PointRecharge/index">
+							<div><i class="icomoon icon-cdollar footer-icon-icomoon"></i></div>
+							<label class="icon_label fs-14" style="position: static;">點數儲值</label>
+						</a>
+					</div>
+					<div class="col-3 mb-0">
+						<a href="__APP__/OnlineService/index">
+							<div><i class="icomoon icon-telemarketer footer-icon-icomoon"></i></div>
+							<label class="icon_label fs-14" style="position: static;">聯繫客服</label>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</footer>
+</if>
+<!-- /FOOTER -->
+
+		</div>
+		<!-- /wrapper -->
+		
+		<!-- SCROLL TO TOP 
+		<a href="#" id="toTop"></a>-->
+		<!-- 聯繫客服 -->
+		<a href="__APP__/OnlineService/index" class="btn btn-3d btn-aqua show_msg-right hidden-sm-down"><i class="et-key"></i>聯繫客服</a>
+		
+		<!-- PRELOADER -->
+		<!--  <div id="preloader">
+			<div class="inner">
+				<span class="loader"></span>
+			</div>
+		</div>-->
+		<!-- 協議內容 -->
+		<div id="MemberConditionModal" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="MemberConditionModal" style="display: none; padding-right: 17px;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+
+					<!-- Modal Header -->
+					<div class="modal-header modal-bg pr-30">
+						<button type="button" class="close-style" data-dismiss="modal" ><span aria-hidden="true">×</span></button>
+						
+						<h4 class="modal-title txt-white" id="">會員條款</h4>
+					</div>
+
+					<!-- Modal Body -->
+					<div class="modal-body modal-body-bg">
+						<include file="Common:MemberCondition"/>
+					</div>
+					<!-- Modal Footer -->
+					<div class="modal-footer modal-bg">
+		             	<button id="closeBtn" type="button" class="btn btn-dark" data-dismiss="modal">關閉</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- JAVASCRIPT FILES -->
+	    <script>var plugin_path = '__CSS__/Smarty/HTML_BS4/assets/plugins/';</script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/jquery/jquery-3.3.1.min.js"></script>
+		<!-- SCRIPTS -->
+		<script src="__CSS__/Smarty/HTML_BS4/assets/js/scripts.js"></script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/bootstrap/popper.min.js"></script>
+		<!-- REVOLUTION SLIDER -->
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/js/jquery.themepunch.tools.min.js"></script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/js/jquery.themepunch.revolution.min.js"></script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/js/view/demo.revolution_slider.js"></script>
+		<!-- 字體動畫 -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
+	    <!-- 搜尋拉霸 -->
+	    <script src="__CSS__/select2/select2.js"></script>
+	    <!-- 跑馬燈 -->
+	    <script src="__CSS__/js/marquee/lib/jquery.marquee.js"></script>
+	    
+	</body>
+</html>
+<script>
+var use_debug = false;
+function debug(){
+	if( use_debug && window.console && window.console.log ) console.log(arguments);
+}
+// on DOM ready
+jQuery(document).ready(function (){
+	jQuery(".marquee").marquee({
+		loop: -1
+		// this callback runs when the marquee is initialized
+		, init: function ($marquee, options){
+			debug("init", arguments);
+
+			// shows how we can change the options at runtime
+			if( $marquee.is("#marquee2") ) options.yScroll = "bottom";
+		}
+		// this callback runs before a marquee is shown
+		, beforeshow: function ($marquee, $li){
+			debug("beforeshow", arguments);
+
+			// check to see if we have an author in the message (used in #marquee6)
+			var $author = $li.find(".author");
+			// move author from the item marquee-author layer and then fade it in
+			if( $author.length ){
+				$("#marquee-author").html("<span style='display:none;'>" + $author.html() + "</span>").find("> span").fadeIn(850);
+			}
+		}
+		// this callback runs when a has fully scrolled into view (from either top or bottom)
+		, show: function (){
+			debug("show", arguments);
+		}
+		// this callback runs when a after message has being shown
+		, aftershow: function ($marquee, $li){
+			debug("aftershow", arguments);
+			// find the author
+			var $author = $li.find(".author");
+			// hide the author
+			if( $author.length ) $("#marquee-author").find("> span").fadeOut(250);
+		}
+	});
+});
+
+function openmodal(id){
+	//alert(id);
+	jQuery('#'+id).modal('show');
+}
+function showMenu(id){
+	//alert(id);
+	if(id == "clickLightbox"){
+		jQuery('.dropdown-menu').removeClass( "show" );
+		jQuery('#clickLightbox').hide();
+	}else{
+		jQuery('#'+id).addClass("show");
+		jQuery('#clickLightbox').show();
+	}
+}
+//註冊
+function regist(){
+	var addPassword = jQuery('#addPassword').val();
+	var addCheckPassword = jQuery('#addCheckPassword').val();
+	var addPhone = jQuery('#addPhone').val();
+	if(addPhone.length != 10){
+		alert("電話長度不為10碼!");
+		return;
+	}
+	if(addPassword != addCheckPassword){
+		alert("請重新輸入確認密碼!");
+		return;
+	}
+	if(addPassword.length <= 5){
+		alert("密碼長度應界於6~20位之間");
+		return;
+	}
+	jQuery.ajax({
+        type:"post",
+        url:"__APP__/RegistPage/formRegist",
+        data:{addPassword:addPassword,addCheckPassword:addCheckPassword,addPhone:addPhone},
+        dataType: "json",
+        success:function(data){
+          var dataObject = JSON.parse(data);
+          if(dataObject.return == 1){
+            jQuery('#sendOutBtn').show();//立即送出btn
+            jQuery('#addVerificationCodeDiv').show(500);
+            jQuery('#addPhone').removeClass("phone-ok").attr("readonly","readonly");
+            jQuery("#phoneIcon").removeClass(" phone-error-i");
+            jQuery('#registBtn').hide();//立即註冊btn
+            jQuery('#addPasswordDiv').hide(500);
+            jQuery('#addCheckPasswordDiv').hide(500);
+          } else {
+            alert(dataObject.errMessage);
+          }
+        },
+        error:function(){
+          alert("error");
+        }
+    });
+}
+//送出
+function sendOut(){
+	var addVerificationCode = jQuery('#addVerificationCode').val();
+	if(addVerificationCode.length == 0){
+		alert("請輸入驗證碼!");
+		return;
+	}
+	jQuery.ajax({
+        type:"POST",
+        url:"__APP__/RegistPage/formRegistCheck",
+        data:{addVerificationCode:addVerificationCode},
+        dataType: "json",
+        success:function(data){
+          var dataObject = JSON.parse(data);
+          if(dataObject.return == 1){
+            jQuery('#addPhone').attr("readonly","readonly");
+            jQuery('#addPhoneLabel').show(500);
+            jQuery('#addAccountDiv').show(500);
+            jQuery('#addAccountLabel').html('帳號');
+            jQuery('#addAccount').val(dataObject.addAccount).attr("readonly","readonly");
+            jQuery('#addPasswordDiv').show(500);
+            jQuery('#addPassword').attr("type","text").val(dataObject.addPassword).attr("readonly","readonly");
+            jQuery('#addPasswordLabel').html('密碼');
+            jQuery('#addCheckPasswordDiv').hide(500);
+            jQuery('#addVerificationCodeDiv').hide(500);
+            jQuery('#finishBtn').show();
+            jQuery('#sendOutBtn').hide();
+            jQuery('#registBtn').hide();
+            
+          } else {
+            alert(dataObject.errMessage);
+          }
+        },
+        error:function(){
+          alert("error");
+        }
+    });
+}
+//檢查電話幾碼
+jQuery( "#addPhone" ).change(function() {
+	var addPhone = jQuery("#addPhone").val();
+	jQuery("#phoneIcon").addClass(" phone-error-i");
+	if(addPhone == '0900000000'){
+		jQuery("#addPhone").removeClass().addClass("form-control login-input phone-ok");
+		return;
+	}
+	//alert(addPhone.length);return;
+	if(addPhone.length == 10){
+		jQuery.ajax({
+			 type:"POST",
+			 url:"__APP__/RegistPage/ajaxCheckMemberPhone",
+			 data:{addPhone:addPhone},
+		     dataType: "text",
+		     success:function(data){
+		    	 //alert(data);
+		        if(data == true){
+		        	jQuery("#addPhone").removeClass().addClass("form-control login-input phone-ok");
+		        	
+		        } else {
+		        	jQuery("#addPhone").removeClass().addClass("form-control login-input phone-error");
+		        	jQuery("#checkPhone").html(data);
+		        }
+		     },
+			 error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	} else {
+		jQuery("#addPhone").removeClass().addClass("form-control login-input phone-error");
+		
+	}
+});
+var announcementBool = "{$announcementBool}";
+var isLogin = "{$isLogin}";
+
+jQuery(window).on('load',function(){
+	jQuery("#loader-bg").hide();
+	jQuery("#loader-text").hide();
+	
+	 if(isLogin == "true"){
+		 jQuery("#home_page_rwd > section").addClass("section_rwd");
+	 }else{
+		 jQuery("#home_page_rwd > section").removeClass("section_rwd");
+	 }
+	 if(isLogin == "true" && announcementBool == "1"){
+		 jQuery('#systemMsgModal').modal('show');
+	 }
+	 if(announcementBool == "2"){
+		 jQuery('#noshow').attr("checked","true");
+	 }
+	 if(isLogin == "true" && announcementBool != "0"){
+		 jQuery('#systemMsgBtn').show();
+	 }
+});
+
+jQuery(document).ready(function(){
+	//網頁版判斷登入帳號密碼
+	  jQuery("#loginBtn").click(function() {
+			var loginFormAccount = jQuery("#loginFormAccount").val();
+			var loginFormPassword = jQuery("#loginFormPassword").val();
+			loginFormAccount = jQuery.trim(loginFormAccount);
+			loginFormPassword = jQuery.trim(loginFormPassword);
+			//alert(account_phone);
+			//alert(password_phone);
+			if(loginFormAccount == "" || loginFormPassword == ""){
+				
+				alert("請輸入帳號或密碼!");
+				return;
+			}
+			jQuery("#loader-bg").show();
+			jQuery("#loader-text").show();
+			document.loginForm.submit();
+			
+	   });
+});
+function noshowagain(){
+	/*
+	if(jQuery('#noshow').is(':checked')){
+		jQuery.ajax({
+			type:"POST",
+	        url:"MemberIndex/setAnnouncementAjax",
+	        data:{announcementBool:'2'}
+		});
+	}*/
+	jQuery("#closeBtn").click();
+}
+jQuery(".game-item").click(function(){
+	 var isLogin = "{$isLogin}";
+	 if( isLogin == "false"){
+			alert("請先登入會員!");
+		}else{
+			//var gamehtml = window.open('__APP__/Common/loading', 'gamePage');
+		}	
+});
+function gameMaintain(defendMessage){
+	 var isLogin = "{$isLogin}";
+	 if(isLogin == "false"){
+		alert("請先登入會員!");
+	 } else {
+		 if(defendMessage == ""){
+			 alert("遊戲維護中!");
+		 } else {
+			 alert(defendMessage);
+		 }
+	 }	
+}
+//loading 框顯示
+jQuery('.loading').click(function(){
+	
+	jQuery("#loader-bg").show();
+	jQuery("#loader-text").show();
+});
+//loading 文自動畫
+jQuery('.ml6 .letters').each(function(){
+	jQuery(this).html(jQuery(this).text().replace(/([^\x00-\x80]|\w)/g, "<span class='letter'>$&</span>"));
+	});
+
+anime.timeline({loop: true})
+  .add({
+    targets: '.ml6 .letter',
+    translateY: ["1.1em", 0],
+    translateZ: 0,
+    duration: 750,
+    delay: function(el, i) {
+      return 50 * i;
+    }
+  }).add({
+    targets: '.ml6',
+    opacity: 0,
+    duration: 1000,
+    easing: "easeOutExpo",
+    delay: 1000
+  });
+ 
+</script>   
+   
+   
+   
+   
+		
+		
+   
+   

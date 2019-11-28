@@ -1,0 +1,161 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+
+				<div class="row">
+						<!-- FORM -->
+						<div class="col-md-7 m-auto">
+							<ul class="process-steps nav nav-justified">
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-1" id="pill-pr-1-a" data-toggle="tab">1</a>
+									<h5>{$Think.lang.SendVerification}</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link active" href="#pill-pr-2" id="pill-pr-2-a" data-toggle="tab">2</a>
+									<h5>{$Think.lang.ConfirmVerification}</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-3" id="pill-pr-3-a" data-toggle="tab">3</a>
+									<h5>{$Think.lang.ConfirmAccPwd}</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-4" id="pill-pr-4-a" data-toggle="tab">4</a>
+									<h5>{$Think.lang.LoginComplete}</h5>
+								</li>
+							</ul>
+
+
+							<div class="tab-content pt-0">
+								<div class="tab-pane" id="pill-pr-1">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">{$Think.lang.GetVerification}<br>{$Think.lang.Step2Verification}</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-2-a').click();" >{$Think.lang.Continue}</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane active" id="pill-pr-2">
+
+									<div class="card card-default mt-15">
+										<div class="card-block">
+											<form method="post" action="__APP__/ForgetPage/formRemeberCheck" id="formRemeberCheck">
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.Phone}</label>
+														<input type="text" readonly value="{$memberPhone}" class="form-control">
+
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.EnterVerification}</label>
+														<input type="text" name="forgetVerificationCode" id="forgetVerificationCode" autocomplete="off" class="form-control">
+
+													</div>
+												</div>
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-1-a').click();" >{$Think.lang.Previous}</button>
+						              					<button type="submit" id="btnok" name="btnok" class="btn btn-secondary btn-shadow-1 loading">{$Think.lang.ConfirmVerification}</button>
+													</div>
+												</div>
+											</form>
+										</div>
+									</div>
+
+
+
+								</div>
+								<div class="tab-pane fade" id="pill-pr-3">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">{$Think.lang.NotYetConfirmVerification}<br>{$Think.lang.Step2ClickConfirm}</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-2-a').click();" >{$Think.lang.Return}</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane fade" id="pill-pr-4">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">{$Think.lang.NotYetConfirmVerification}<br>{$Think.lang.Step2ClickConfirm}</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-2-a').click();" >{$Think.lang.Return}</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- /FORM -->
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+jQuery(document).ready(function(){
+
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

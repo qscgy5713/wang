@@ -1,0 +1,97 @@
+<?php
+class OldChangeNewAction extends AgentAction {
+    //TODO:轉換資料
+    public function index(){
+        $this->display();
+    }
+    public function changeAgent(){
+        echo md5("@@aaa123".C("HASH_KEY"));exit();
+        $User = M("User");
+        $sql = "SELECT * FROM `j_group`;";
+        $return = $User->query($sql);
+        $Agent_Id=array('game'=>1);
+        echo count($return)."<BR>";
+        $addSql = array();
+        $addSqlStr = "";
+        $id = 1;
+        foreach ($return as $key => $value){
+            $agent_account = strtolower($value['account']);
+            if(strlen($agent_account) > 20){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' length='.strlen($agent_account);return;
+            }
+            if($agent_account == 'game' or $agent_account == '101'){continue;}
+            $agent_password = md5($value['abcdepassabcde'].C("HASH_KEY"));
+            if(strlen($agent_password) > 32){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' password='.$agent_password.' length='.strlen($agent_password);return;
+            }
+            $agent_createtime = strtotime($value['apply_time']);
+            if(strlen($agent_createtime) > 10){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' createtime='.$agent_createtime.' length='.strlen($agent_createtime);return;
+            }
+            $agent_phone = $value['phone'];
+            if(strlen($agent_phone) > 20){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' phone='.$agent_phone.' length='.strlen($agent_phone);return;
+            }
+            $agent_status = 0;
+            $power = $value['power'];
+            if(strstr($power,"s")){
+                $agent_status = 1;
+            }
+            $agent_contact = $value['contact'];
+            if(strlen($agent_contact) > 24){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' contact='.$agent_contact.' length='.strlen($agent_contact);return;
+            }
+            $agent_contactWay = $value['other'];
+            if(strlen($agent_contactWay) > 48){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' contactWay='.$agent_contactWay.' length='.strlen($agent_contactWay);return;
+            }
+            $boss = strtolower($value['boss']);
+            if(!isset($Agent_Id[$boss])){
+                echo '<BR>無此上級1 account='.$agent_account.' boss='.$boss;continue;
+            }
+            $agent_bossId = $Agent_Id[$boss];
+            if(empty($agent_bossId)){
+                echo '<BR>無此上級2 account='.$agent_account.' boss='.$boss;return;
+            }
+            $agent_ratioRemark = $value['proportion'];
+            if(strlen($agent_ratioRemark) > 20){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' ratioRemark='.$agent_ratioRemark.' length='.strlen($agent_ratioRemark);return;
+            }
+            $agent_remark = $value['remark'];
+            if(strlen($agent_remark) > 64){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' remark='.$agent_remark.' length='.strlen($agent_remark);return;
+            }
+            $agent_head = $value['head'];
+            if(strlen($agent_head) > 32){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' head='.$agent_head.' length='.strlen($agent_head);return;
+            }
+            /*
+            if($agent_head !== $boss){
+                echo '<BR>account='.$agent_account.' boss='.$boss.' head='.$agent_head.'<BR>';
+            }*/
+            $agent_bodys = $value['bodys'];
+            if(strlen($agent_bodys) > 11){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' bodys='.$agent_bodys.' length='.strlen($agent_bodys);return;
+            }
+            $agent_memnum = $value['memnum'];
+            if(strlen($agent_memnum) > 11){
+                echo '<BR>發生錯誤 長度不符規定 account='.$agent_account.' memnum='.$agent_memnum.' length='.strlen($agent_memnum);return;
+            }
+            $Agent_Id[$agent_account] = ++$id;
+            $addSqlStr = "INSERT INTO `common_agent` (`agent_id`,`agent_account`,`agent_password`,`agent_status`,`agent_createtime`,`agent_phone`,`agent_contact`,`agent_contactWay`,`agent_ratioRemark`,`agent_remark`,`agent_head`,`agent_bodys`,`agent_memnum`,`agent_bossId`) 
+                        VALUES 
+                        ('{$Agent_Id[$agent_account]}','{$agent_account}','{$agent_password}','{$agent_status}','{$agent_createtime}','{$agent_phone}','{$agent_contact}','{$agent_contactWay}','{$agent_ratioRemark}','{$agent_remark}','{$agent_head}','{$agent_bodys}','{$agent_memnum}','{$agent_bossId}');";
+            array_push($addSql,$addSqlStr);
+        }
+        foreach($addSql as $value){
+            echo '<BR>'.$value;
+            /*
+            $return = $User->query($value);
+            if($return === false){
+                echo '<BR>發生錯誤 '.$value;
+                return;
+            }*/
+        }
+        echo 'test changeAgent END 匯agent 大概17s';
+    }
+}

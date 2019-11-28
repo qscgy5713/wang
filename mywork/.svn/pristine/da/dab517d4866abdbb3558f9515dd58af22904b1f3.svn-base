@@ -1,0 +1,73 @@
+<ul class="nav nav-tabs style-4 hidden-sm-down" role="tablist">
+   <li class="nav-item">
+     <a class="nav-link loading" id="lottoRecords" href="__APP__/MemberCenter/lottoRecords" role="tab"><i class="fa fa-home pr-2"></i>四星彩</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="memberInfo" href="__APP__/MemberCenter/memberInfo" role="tab"><i class="fa fa-user pr-2"></i>會員資料</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="bounsRecords" href="__APP__/MemberCenter/bounsRecords" role="tab"><i class="fa fa-envelope pr-2"></i>返水紀錄</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="rechargeRecords" href="__APP__/MemberCenter/rechargeRecords" role="tab"><i class="fa fa-envelope pr-2"></i>儲值紀錄</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="givenRecord" href="__APP__/MemberCenter/givenRecord" role="tab"><i class="fa fa-envelope pr-2"></i>贈點紀錄</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="transferRecords" href="__APP__/MemberCenter/transferRecords" role="tab" ><i class="fa fa-envelope pr-2"></i>轉移紀錄</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="withdrawRecords" href="__APP__/MemberCenter/withdrawRecords" role="tab" ><i class="fa fa-envelope pr-2"></i>託售紀錄</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="contactService" href="__APP__/MemberCenter/contactService" role="tab" ><i class="fa fa-envelope pr-2"></i>聯絡客服</a>
+   </li>
+   <li class="nav-item">
+     <a class="nav-link loading" id="ServiceRecords" href="__APP__/MemberCenter/ServiceRecords" role="tab" ><i class="fa fa-envelope pr-2"></i>客服訊息</a>
+   </li>
+   
+ </ul>
+
+<div class="row hidden-lg-up">
+	<div class="col-12">
+		<div class="form-group">
+		  <select class="form-control" id="SelectID" onchange="javascript:location.href=this.value;">
+		    <option id="lottoRecordsRWD"  class="loading" value="__APP__/MemberCenter/lottoRecords">四星彩</option>
+            <option id="memberInfoRWD" class="loading" value="__APP__/MemberCenter/memberInfo">會員資料</option>
+            <option id="bounsRecordsRWD" class="loading" value="__APP__/MemberCenter/bounsRecords">返水紀錄</option>
+            <option id="rechargeRecordsRWD" class="loading" value="__APP__/MemberCenter/rechargeRecords">儲值紀錄</option>
+            <option id="givenRecordRWD" class="loading" value="__APP__/MemberCenter/givenRecord">贈點紀錄</option>
+            <option id="transferRecordsRWD" class="loading" value="__APP__/MemberCenter/transferRecords">轉移紀錄</option>
+            <option id="withdrawRecordsRWD" class="loading" value="__APP__/MemberCenter/withdrawRecords">託售紀錄</option>
+            <option id="contactServiceRWD" class="loading" value="__APP__/MemberCenter/contactService">聯絡客服</option>
+            <option id="ServiceRecordsRWD" class="loading" value="__APP__/MemberCenter/ServiceRecords">客服訊息</option>
+		  </select>
+		</div>
+	</div>
+</div>
+
+
+<!-- 
+<div class="container pt10 pb50 bg-min-height" >
+	 		<div class="row hidden-md-up">
+			    <div class="col-md-12 mb40">
+			        <form>
+			            <div class="form-group">
+			                <h2 class="text-center">會員中心</h2>
+			                <select class="form-control" id="exampleSelect1" onchange="javascript:location.href=this.value;">
+			                    <option class="loading" value="__APP__/MemberCenter/lottoRecords" selected="selected">四星彩</option>
+			                    <option class="loading" value="__APP__/MemberCenter/memberInfo">會員資料</option>
+			                    <option class="loading" value="__APP__/MemberCenter/bounsRecords">返水紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/rechargeRecords">儲值紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/givenRecord">贈點紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/transferRecords">轉移紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/withdrawRecords">託售紀錄</option>
+			                    <option class="loading" value="__APP__/MemberCenter/contactService">聯絡客服</option>
+			                    <option class="loading" value="__APP__/MemberCenter/ServiceRecords">客服訊息</option>
+			                </select>
+			            </div>
+			        </form>
+			    </div>
+			</div>
+	 	 -->

@@ -1,0 +1,98 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">忘記帳號/密碼</h2>
+				
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 發送驗證碼</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link active show" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>確認驗證碼</a>
+					               </li>
+					               <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-3" id="pill-pr-3-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>確認帳號密碼</a>
+					               </li>
+					               <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-4" id="pill-pr-4-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>完成</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                
+			                  <div class="tab-pane " id="pill-pr-1">
+	                  			 <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white"> 已取得驗證碼，<br>請至步驟2確認驗證碼</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-2-a').click();" >繼續</button>
+				                 </div>
+			                  </div>
+			                  
+			                  <div class="tab-pane active" id="pill-pr-2">
+			                  	<form method="post" action="__APP__/ForgetPage/formRemeberCheck" id="formRemeberCheck">
+					                <fieldset>
+					                
+					                  <div class="form-group">
+						                  <label for="inputDanger1">電話</label>
+						                  <input type="text" readonly value="{$memberPhone}" class="form-control">
+						                  
+						              </div>
+						              
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">輸入驗證碼</label>
+					                    <input type="text" name="forgetVerificationCode" id="forgetVerificationCode" class="form-control">
+					                  	
+					                  </div>
+					                  
+					                  
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-1-a').click();" >上一步</button>
+						              <button type="submit" id="btnok" name="btnok" class="btn btn-outline-danger">發送驗證碼</button>
+						              
+					                </fieldset>
+					              </form>
+					                
+			                  </div>
+			                  
+			                  <div class="tab-pane" id="pill-pr-3">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">尚未確認驗證碼，<br>請至步驟2選擇後按下『確認驗證碼』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-2-a').click();" >返回</button>
+					                </div>
+			                  </div>
+			                  
+			                  <div class="tab-pane" id="pill-pr-4">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white"> 尚未確認驗證碼，<br>請至步驟2選擇後按下『確認驗證碼』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger" onclick="$('#pill-pr-2-a').click();" >返回</button>
+					                </div>
+			                  </div>
+			                  
+			                </div>
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>

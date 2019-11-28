@@ -1,0 +1,142 @@
+<?php
+/*
+ * 歐博 遊戲明細
+ */
+class GameAbDetailModel extends AdminModel {
+    protected $tableName = "game_ab_detail";
+    protected $tableId = "detail_id";
+    protected $gameCode = "Ab";
+    
+    protected function getMonth($monthOne){
+        //$monthOne = date('Y-m-01 12:00:00'); //本月第一天
+        $year=date('Y');
+        $month=date('m');
+        $datetime = date('Y-m-d H:i:s');
+        if(strtotime($monthOne) > strtotime($datetime)){
+            //少兩個月的計算
+            if($month == 1){
+                $month = 11;
+                $year = $year - 1;
+            } else if($month == 2){
+                $month = 12;
+                $year = $year - 1;
+            } else {
+                $month = $month - 2;
+            }
+        } else {
+            //少一個月的計算
+            if($month == 1){
+                $month = 12;
+                $year = $year - 1;
+            } else {
+                $month = $month - 1;
+            }
+        }
+        $returnArray = array(
+            'year'=>$year,
+            'month'=>$month
+        );
+        return $returnArray;
+    }
+    
+    public function getMemberBackWater($data){
+        if(empty($data['gameClass_id']) && $data['gameClass_id'] !== '0'){
+            return false;
+        }
+        $monthOne = date('Y-m-01 12:00:00'); //本月第一天
+        $returnArray = $this->getMonth($monthOne);
+        $year = $returnArray['year'];
+        $month = $returnArray['month'];
+        
+        $sql = "SELECT 
+                    GROUP_CONCAT(`detail_id`) AS AllId,a.`member_id`,a.`member_account`,`agent_tree`,`ratio_tree`, 
+                    SUM(`detail_effective`) AS AllEffective,b.`decimalPoint_money`,c.*
+                FROM `{$this->tableName}` a
+                LEFT OUTER JOIN `common_member_bankWater_decimalPoint` b ON (a.`member_id` = b.`member_id`)
+                LEFT OUTER JOIN `common_member_waterRank_level` c 
+                    ON (
+                        a.`member_id` = c.`member_id` 
+                        AND c.`gameClass_id` = '{$data['gameClass_id']}'
+                        AND c.`level_year` = '{$year}'
+                        AND c.`level_month` = '{$month}'
+                        )
+                WHERE 
+                    `detail_isBackWater` = 0 
+                AND `detail_effective` > 0
+                GROUP BY a.`member_id`,`agent_tree`,`ratio_tree`;";
+        echo "<BR>".$sql."<BR>";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        //
+        foreach($return as $key => $value){
+            $data = array(
+                
+            );
+        }
+        var_dump($return);exit();
+        return $return;
+    }
+    public function addMemberDetail($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        $detail_createTime = $data["detail_createTime"];
+        $detail_bettingMoney = $data["detail_bettingMoney"];
+        $detail_surplus = $data["detail_surplus"];
+        $detail_effective = $data["detail_effective"];
+        
+        $sql = "SELECT * FROM `common_member` a 
+                JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`) 
+                JOIN `common_agent_ratio` c ON (a.`agent_id` = c.`agent_id`) 
+                WHERE a.`member_id` = '{$data['member_id']}';";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = "讀取資料庫失敗!";
+            return false;
+        }
+        if(empty($return[0]['member_id'])){
+            $err = "無此會員帳號，或是會員代理無佔成!";
+            return false;
+        }
+        $data = array(
+            'member_id' => $return[0]['member_id'],
+            'member_account' => $return[0]['member_account'],
+            'agent_id' => $return[0]['agent_id'],
+            'agent_account' => $return[0]['agent_account'],
+            'agent_tree' => $return[0]['agent_tree'],
+            'ratio_tree' => $return[0]['ratio_tree'],
+            'detail_createTime' => $detail_createTime,
+            'detail_bettingMoney' => $detail_bettingMoney,
+            'detail_surplus' => $detail_surplus,
+            'detail_effective' => $detail_effective,
+        );
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = "讀取資料庫失敗!";
+            return false;
+        }
+        $insertId = $this->getLastInsertId();
+        if($insertId) {
+            return $insertId;
+        }
+        return $return;
+    }
+}

@@ -1,0 +1,120 @@
+<?php
+/*
+ * 會員錢包
+ */
+class CommonMemberWalletModel extends MemberModel {
+    protected $tableName = "common_member_wallet";
+    protected $tableId = "wallet_id";
+    /**
+     * 新增 會員錢包 資料
+     * @param $data //$data['member_id']
+     * @param $err //錯誤訊息
+     * @return boolean
+     */
+    public function addWalletData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//註冊失敗
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_05"));
+            return $return;
+        }
+        return true;
+    }
+    /**
+     * 讀取會員錢包 如果沒有 會自動新增錢包
+     * @param $data
+     * @param string $err
+     */
+    public function getWalletData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得錢包失敗
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        if(empty($return[0]['wallet_id']) && $return[0]['wallet_id'] !== 0){
+            //如果沒有會員錢包資料 創建會員錢包 再重新讀取資料一次
+            $return = $this->addWalletData($data,$err);
+            if($return === false){
+                return false;
+            }
+            return $this->getWalletData($data,$err);
+        }
+        return $return[0];
+    }
+    /**
+     * 對會員電子錢包下點
+     * @param array $data
+     * @param string $err
+     * @return boolean|false
+     */
+    public function setWalletDataByDeductMoney($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['wallet_money']) && $data['wallet_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "UPDATE `{$this->tableName}`
+                SET `wallet_money` = `wallet_money` + {$data['wallet_money']}
+                WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->execute($sql);
+        if ($return === false) {
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 對會員電子錢包上點
+     * @param $data
+     * @param string $err
+     * @return boolean|false
+     */
+    public function setWalletDataByAdditionMoney($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['wallet_money']) && $data['wallet_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "UPDATE `{$this->tableName}`
+                SET `wallet_money` = `wallet_money` + {$data['wallet_money']}
+                WHERE `member_id` = '{$data['member_id']}';";
+        $return = $this->execute($sql);
+        if ($return === false) {
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+}

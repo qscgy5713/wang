@@ -1,0 +1,31 @@
+<?php
+class GameInfoModel extends MemberModel {
+    protected $tableName = "game_info";
+    protected $tableId = "game_id";
+    
+    public function getGameIdDataByGameCode($data,&$err = ""){
+        if(empty($data['game_code']) && $data['game_code'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//取得錢包失敗
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `game_code` = '{$data['game_code']}'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    public function getAllGameNameData(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->cacheQuery($sql,12);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+}

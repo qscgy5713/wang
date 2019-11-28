@@ -1,0 +1,222 @@
+<?php
+//遊戲紀錄 
+class GameLogAction extends AdminAction{
+	protected $GameLog = 10; //分頁數
+	protected $pageMoreNumber = 5; //一頁最多幾筆
+	//首頁
+	public function index(){
+		$request = $this->getRequest();
+
+		//時間製作開始
+		$today = date('Y-m-d');
+	    $startTime = $today.' 00:00:00';
+	    $endTime = $today.' 23:59:59';
+
+	    if(isset($request['startTime'])){
+	        $startTime = $request['startTime'];
+	    }
+	    if(isset($request['endTime'])){
+	        $endTime = $request['endTime'];
+	    }
+
+	    if(date('D') === 'Mon') {
+	        $tsThisWeek = strtotime('today');
+	    } else {
+	        $tsThisWeek = strtotime('last monday');
+	    }
+	    $tsYesterday = strtotime('yesterday');
+	    $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+	    $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+	    $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+	    $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+	    $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+	    $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+	    $yesterday = date('Y-m-d',$tsYesterday);
+	    $lastMonthA = date('Y-m-d',$tsLastMonth);
+	    $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+	    $thisMonthA = date('Y-m-d',$tsThisMonth);
+	    $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+	    $this->assign("startTime",$startTime);//查詢開始時間
+	    $this->assign("endTime",$endTime);//查詢最後時間
+	    $this->assign("today",$today);//今日
+	    $this->assign("yesterday",$yesterday);//昨日
+	    $this->assign("thisWeekA",$thisWeekA);//本週第一天
+	    $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+	    $this->assign("lastWeekA",$lastWeekA);//上週第一天
+	    $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+	    $this->assign("thisMonthA",$thisMonthA);//本月第一天
+	    $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+	    $this->assign("lastMonthA",$lastMonthA);//上月第一天
+	    $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+	    //時間結束
+
+	    $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+
+	    //製作分頁
+	    if(empty($request['pageNumber'])){
+	        $pageNumber = 1;
+	    } else {
+	        $pageNumber = $request['pageNumber'];
+	    }
+
+	    //重製頁數
+        if (empty($request['oldSearch'])) {
+            $oldSearch = "";
+        } else {
+            $oldSearch = $request['oldSearch'];
+        }
+        $nowSearch = $request['search'];
+        if($oldSearch != $nowSearch){
+            $pageNumber = 1;
+            $oldSearch = $request['search'];
+        }
+
+	    //預設遊戲code
+	   	if(empty($request['classCode'])){
+	   		$classCode = 'Dg';
+	   	} else {
+	   		$classCode = $request['classCode'];
+	   	}
+	    //取得所有遊戲代號
+	    $GameInfo = D('GameInfo');
+	    $return = $GameInfo->getriskEnableCode();
+	    $CommonCurlLog = D('CommonCurlLog');
+	    $FieldChange = array(
+	    	'game_code' => 'gameCode',
+	    	'game_name' => 'gameName',
+	    );
+	    $showStr = "";
+	    $gameInfoArray = array();
+	    foreach ($return as $key => $value) {
+	    	foreach ($FieldChange as $key1 => $value1) {
+	    		switch ($key1) {
+	    			case 'game_name':
+	    				$gameNameArray = json_decode($value[$key1], true);
+	    				$showStr = $gameNameArray['zh-tw'];
+	    				break;
+	    			default:
+	    				$showStr = $value[$key1];
+	    				break;
+	    		}
+	    		$gameInfoArray[$key][$value1] = $showStr;
+	    	}
+	    }
+	    //取的所有遊戲代號
+
+	    $changeArray = array(
+	    	'會員帳號' => 'member_account',
+	    	'紀錄ID' => 'log_id',
+	    	'紀錄帳號' => 'admin_id',
+	    	'紀錄類別' => 'log_function',
+	    	'是否錯誤' => 'log_isFail',
+	    );
+
+    	$data = array(
+		    "startTime" => strtotime($startTime),
+		    "endTime" => strtotime($endTime),
+	    	'member_account' => $memberAccount,
+	    	'search' => $changeArray[$request['search']],
+	    	'log_gameCode' => $classCode,
+	    );
+	    //取得總筆數
+	    $total = $CommonCurlLog->getCommonCurlLogDataTotal($data);
+	    if($total === false){
+	    	$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION . '_01'))); //資料庫錯誤
+	    }
+	    $totalNumber = $total['totalNumber']; //總筆數
+	    $totalPage = ceil($totalNumber / $this->GameLog); //總頁數
+	    $pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNumber); //頁數陣列
+
+    	$data = array(
+	    	'startTime' => strtotime($startTime),
+	    	'endTime' => strtotime($endTime),
+	    	'page' => array(
+	    		'pageNumber' => $pageNumber,
+	    		'number' => $this->GameLog,
+	    	),
+	    	'member_account' => $memberAccount,
+    		'search' => $changeArray[$request['search']],
+	    	'log_gameCode' => $classCode,
+	    );
+
+	    //取得所有資料
+	    $return = $CommonCurlLog->getCommonCurlLogData($data);   
+
+	    $FieldChange = array(
+	    	'log_id' => 'id',
+	    	'log_gameCode' => 'logGameCode',
+	    	'admin_id' => 'adminId',
+	    	'member_id' => 'memberId',
+	    	'log_function' => 'function',
+	    	'log_isFail' => 'isFail',
+	    	'log_createTime' => 'createTime',
+	    	'log_result' => 'logResult',
+	    	'member_account' => 'memberAccount',
+	    	'admin_account' => 'adminAccount',
+	    );
+	    $showArray = array();
+	    foreach ($return as $key => $value) {
+	    	foreach ($FieldChange as $key1 => $value1) {
+	    		switch ($key2) {
+	    			case 'log_result':
+	    				$resultArray = json_decode($value[$key1], true);
+	    				$showStr = $resultArray;
+	    				break;
+	    			case 'log_createTime':
+	    				$showStr = date("Y-m-d H:i:s", $value[$key1]);
+	    				break;
+	    			default:
+	    				$showStr = $value[$key1];
+	    				break;
+	    		}
+	    		$showArray[$key][$value1] = $showStr;
+	    	}
+	    }
+	    $searchArray = array(
+	    	0 => array('value' => '會員帳號'),
+	    	1 => array('value' => '紀錄類別'),
+	    );
+	    $this->assign('totalPage', $totalPage);//總頁數
+	    $this->assign('pageNumber', $pageNumber);//目前頁數
+	    $this->assign('pageNumber1', $pageNumber1);//目前頁數
+	    $this->assign('searchArray', $searchArray);//code
+        $this->assign("nowSearch", $request['search']);
+        $this->assign("oldSearch",$oldSearch); 
+	    $this->assign('pageArray', $pageArray);//分頁陣列
+        $this->assign("memberAccount", $memberAccount);
+        $this->assign("showArray", $showArray);
+        $this->assign("gameInfoArray", $gameInfoArray);
+        $this->assign("classCode", $classCode);
+        $this->assign("showEmpty","<tr><td colspan='7' align='center'>無資料</td></tr>");
+	    $this->display();
+	}
+	/*
+    * 搜索 會員帳號
+    */
+    public function searchMemberName() {
+      // 判斷有無輸入
+      $request = $this->getRequest();
+
+      $CommonMember = D("CommonMember");
+      if (empty($request["query"])) {
+          exit();
+      }
+
+      $limit = 7;
+      $data = array(
+          "member_acount" => $request["query"],
+          "limit"=> 7
+      );
+      $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+      if ($member_child_arr === false) {
+          $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+      }
+      foreach ($member_child_arr as $member_child) {
+          $can_send_name[] = $member_child["member_account"];
+      }
+      echo json_encode($can_send_name);
+    }
+}

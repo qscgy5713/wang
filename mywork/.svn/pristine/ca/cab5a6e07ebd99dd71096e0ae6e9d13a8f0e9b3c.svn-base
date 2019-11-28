@@ -1,0 +1,340 @@
+<?php
+/*
+ * SB體育抓帳
+ * 抓帳限制: 
+ *     每次長度:
+ *     每次間隔:
+ *     最遠時間:
+ */
+class ScriptGameReportSbAction extends ScriptGameReportAction {
+    
+    protected function _initialize() {
+        $this->gameCode = 'Sb';
+        $request = $this->getRequest();
+        if (isset($request['startTime']) && isset($request['endTime'])) {
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+            if(strtotime($this->endTime) > (strtotime($this->startTime)+(60*60*24))){
+                $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*24));
+                $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*(24+24)));
+                
+                $this->allStartTime = $this->startTime;
+                $this->allEndTime = $this->endTime;
+                
+                $this->endTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*24));
+            }
+        } else {  //沒給時的預設抓帳起始
+            $nowTs = time();
+            if ($nowTs < strtotime(date('Y-m-d').' 12:00:00')) {  //未超過當日12點: 前日到當日
+                $this->startTime = date('Y-m-d', $nowTs-60*60*24*1);
+                $this->endTime = date('Y-m-d', $nowTs);
+            } else {  //已超過當日12點: 當日到明日
+                $this->startTime = date('Y-m-d', $nowTs);
+                $this->endTime = date('Y-m-d', $nowTs+60*60*24*1);
+            }
+        }
+        
+        if(isset($request['allStartTime']) && isset($request['allEndTime'])){
+            $this->allStartTime = $request['allStartTime'];
+            $this->allEndTime = $request['allEndTime'];
+            
+            if(strtotime($this->endTime) >= strtotime($this->allEndTime)){
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+                
+                $this->allStartTime = '';
+                $this->allEndTime = '';
+            } else {
+                $this->nextStartTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*24));
+                $this->nextEndTime = date('Y-m-d H:i:s',strtotime($this->startTime)+(60*60*(24+24)));
+            }
+        }
+
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function index() {
+        if (!$this->power) {exit();}
+
+        $GameReportData = D("GameReportData");
+        $GameModel = D("Game".$this->gameCode);
+        if (!method_exists($GameModel,'getGameRecord')) {
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'無此代號(Err000)</span>');
+            $this->display();
+            exit();
+        }
+        
+        $this->getSbGameReportData($err);//抓前一天的
+        //if ($this->startTime != date('Y-m-d', time()) && $this->endTime != date('Y-m-d', strtotime('+1 days'))) {
+        //    $this->setTime(date('Y-m-d', strtotime($this->endTime)),date('Y-m-d', strtotime('+1 days',strtotime($this->endTime))));//修改時間
+        //    $this->getSbGameReportData($err);
+        //}
+
+        //設定抓總結的起始時間
+        $this->reportStartTime = $this->getBetDate($this->startTime).' 00:00:00';
+        $this->reportEndTime = $this->getBetDate($this->endTime).' 23:59:59';
+
+        $return = $this->getReportApi();
+        if ($return === false) {
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err002) Err=>'.$this->err.'</span>');
+            $this->display();
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        $this->assign("detailNumber",count($this->allDetailArray));//更新總注單
+        $this->assign("allDetailArray",$this->allDetailArray);
+        
+        $this->assign("reportNumber",count($this->allReportArray));//更新總統整
+        $this->assign("allReportArray",$this->allReportArray);
+        
+        $this->assign("status","<span style='color:Blue;'>".$this->gameCode.$this->success.'</span>');
+        $this->display();
+    }
+    
+    /*
+     * 抓帳
+     */
+    protected function getSbGameReportData(&$err='') {
+        $this->timeStr .= ((!empty($this->timeStr))? '<BR>' : '').$this->startTime.' ~ '.$this->endTime;
+        
+        $GameModel = D("Game".$this->gameCode);
+        $GameReportData = D("GameReportData");
+
+        $arrMaxModIds = $GameReportData->getGameSbMaxModIdFromDbBets(
+            $this->startTime,
+            $this->endTime
+        );
+
+
+        $round = 1;
+        $arrRawBets = array();
+        $isContinue = false;
+
+        do {
+            if (isset($arrMaxModIds[$this->startTime])) {
+                $maxModId = $arrMaxModIds[$this->startTime];
+            } else {  //選出最接近beginDate且小於beginDate的maxModId
+                if (sizeof($arrMaxModIds)) {
+                    $beginTime = strtotime($this->startTime);
+                    $minTime = null;
+                    foreach ($arrMaxModIds as $modDate => $maxModId) {
+                        $curntTime = strtotime($modDate);
+                        if ($minTime !== null) {
+                            if ($curntTime > $minTime) {
+                                if ($curntTime < $beginTime) {
+                                    $minTime = $curntTime;
+                                }
+                            }
+                        } else {
+                            $minTime = $curntTime;
+                        }
+                    }
+                    $minDate = date('Y-m-d');
+                    if (isset($arrMaxModIds[$minDate])) {
+                        $maxModId = $arrMaxModIds[$minDate];
+                        if (isset($request['max_mod_id'])&&strlen($request['max_mod_id'])) {
+                            $maxModId = $request['max_mod_id'];
+                        }
+                        echo ">>> 初始 maxModId 現在被設為 '{$maxModId}' (日期{$minDate})";
+                    }
+                }
+            }
+            $data = array(
+                'max_mod_id' => $maxModId,
+            );
+            $arrGetGameRecordRes = $GameModel->getGameRecord($data,$err);
+            if ($arrGetGameRecordRes === false) {
+                //紀錄錯誤到Db
+                $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err001) Err=>'.$err.'</span>');
+                $this->display();
+                exit();
+            }
+            $arrBets = $arrGetGameRecordRes['wgs'];
+            if (sizeof($arrBets)) {
+                $arrRawBets = array_merge($arrRawBets, $arrBets);
+            }
+
+            $maxModId = $arrGetGameRecordRes['maxModId'];  //此批查詢結果最大的注單號, 下次從此號開始查起
+            $isContinue = ((isset($arrGetGameRecordRes['more']))&&($arrGetGameRecordRes['more']==1));
+            ++$round;
+        } while ($isContinue);
+
+        self::_preprocessBets($arrRawBets);  //處理注單明細格式
+
+        foreach ($arrRawBets as $bk => $bv) {
+            //把遊戲帳號 加入 搜尋會員帳號陣列 Start
+            if (!in_array($bv['meusername1'], $this->allMemberGameAccount)) {
+                array_push($this->allMemberGameAccount, $bv['meusername1']);
+            }
+            //把遊戲帳號 加入 搜尋會員帳號陣列 End
+            
+            $arrMbAndSb = self::_splitSingleBet($bv);
+            $data = array(
+                "detail_id" => $bv['id'],
+                "detail_gameAccount" => $bv['meusername1'],
+                "detail_createTime" => strtotime($bv['added_date']),
+                "detail_bettingMoney" => $bv['gold'],
+                "detail_surplus" => $bv['meresult'],
+                "detail_effective" => $bv['gold_c'],
+                "detail_needBackWater"=> 0,
+                "detail_modId" => $bv['mrid'],
+                "detail_isBackWater" => 0,
+                "detail_dataInJson" => $arrMbAndSb['dataInJson'],  //json_encode($dataInJson, JSON_UNESCAPED_UNICODE),
+                "detail_subbetInJson" => $arrMbAndSb['subbetInJson'],  //json_encode($arrSubbets, JSON_UNESCAPED_UNICODE),
+            );
+            $data["detail_orderDate"] = strtotime($this->getBetDate($bv['orderdate']).' 12:00:00');
+            array_push($this->allDetailArray, $data);
+        }
+    }
+
+    //-----------------------------------------------
+    //把原始API抓回的注單格式處理轉換為我們的格式
+    protected function _preprocessBets(&$argBets) {
+        if ($argBets&&is_array($argBets)) {
+            foreach ($argBets as &$bet) {
+                $bet['orderdate'] = date('Y-m-d', strtotime($bet['orderdate']));  //原本為'Ymd'格式
+                //if (isset($bet['pr'])&&($bet['pr']==SB_REPORT_TICKS_LINKED_BETS_ID)&&  //pr=0時非過關,pr=1時代表過關
+                //  isset($bet['subw'])&&is_array($bet['subw'])&&sizeof($bet['subw'])  //子內含注單
+                //  ) { //含子注單
+                $bet['detail_1'] = '';  //此欄位用不到.
+                $bet['meusername'] = trim($bet['meusername']);
+                $bet['meusername1'] = trim($bet['meusername1']);
+                if (strpos($bet['stats'], '<') !== false) {
+                    $strpos_1 = strpos($bet['stats'], '>');
+                    $strpos_2 = strpos( substr($bet['stats'], $strpos_1+1), '<');
+                    $bet['stats'] = substr($bet['stats'], $strpos_1+1, ($strpos_2-$strpos_1));
+                } else {
+                    $bet['stats'] = addslashes($bet['stats']);
+                }
+                
+                //} else {
+                    //$bet['detail_1'] = addslashes($bet['detail_1']);  //含有html 標籤
+                //}
+                $bet['meusername1'] = strtolower($bet['meusername1']);  //大寫轉為小寫才符合我方資料庫
+            }
+        }
+    }
+
+    //-----------------------------------------------
+    //找出一個時間的歸帳日
+    public static function getBetDate($argTime) {
+        if (date('Y-m-d',strtotime($argTime))==$argTime) {
+            return $argTime;
+        }
+        $splitTimeS = '12:00:00';  //區分不同歸帳日的時間點
+        $orderDate = null;
+        if (is_int($argTime)&&($argTime >= strtotime('1970-01-01 00:00:00'))) {  //傳入timestamp
+            $dateTime = $argTime;
+        } else {  //傳入日期時間字串
+            $dateTime = strtotime($argTime);
+        }
+        $splitDatetime = date("Y-m-d {$splitTimeS}", $dateTime);
+        $splitTime = strtotime($splitDatetime);
+
+        if ($dateTime >= $splitTime) {  //若已經跨越區分不同歸帳日的時間點-->當日
+            $orderDate = date("Y-m-d", $splitTime);
+        } else {  //未跨越-->前一日
+            $orderDate = date("Y-m-d", $splitTime-60*60*24*1);
+        }
+        //echo "getBetDate({$argTime})={$orderDate}<br/>";
+        return $orderDate;
+    }  //--function getBetDate
+
+    //-----------------------------------------------
+    //將單一筆注單(含子注單或不含)轉為注單、子注單結構方便寫入，然後傳回
+    protected function _splitSingleBet($argBet) {
+        $arrMainBet = array();
+        $arrSubbets = array();
+
+        $id = $argBet['id'];
+        $mrid = $argBet['mrid'];
+        $pr = $argBet['pr'];
+        $status = $argBet['status'];
+        $stats = $argBet['stats'];
+        $mark = $argBet['mark'];
+        $meid = $argBet['meid'];
+        $meusername = $argBet['meusername'];
+        $meusername1 = $argBet['meusername1'];
+        $gold = $argBet['gold'];
+        $gold_c = $argBet['gold_c'];
+        $io = $argBet['io'];
+        $result = $argBet['result'];
+        $meresult = $argBet['meresult'];
+        $gtype = $argBet['gtype'];
+        $rtype = $argBet['rtype'];
+        $g_title = $argBet['g_title'];
+        $r_title = $argBet['r_title'];
+        $orderdate = $argBet['orderdate'];
+        $added_date = $argBet['added_date'];
+        $modified_date = $argBet['modified_date'];
+        $detail_1 = $argBet['detail_1'];
+
+        $arrMainBet = array(
+            'id' => $id,
+            'mrid' => $mrid,
+            'pr' => $pr,
+            'status' => $status,
+            'stats' => $stats,
+            'mark' => $mark,
+            'meid' => $meid,
+            'meusername' => $meusername,
+            'meusername1' => $meusername1,
+            'gold' => $gold,
+            'gold_c' => $gold_c,
+            'io' => $io,
+            'result' => $result,
+            'meresult' => $meresult,
+            'gtype' => $gtype,
+            'rtype' => $rtype,
+            'g_title' => $g_title,
+            'r_title' => $r_title,
+            'orderdate' => $orderdate,
+            'added_date' => $added_date,
+            'modified_date' => $modified_date,
+            'detail_1' => $detail_1,
+        );
+        if (isset($argBet['pr'])&&($argBet['pr']==GameSbModel::SB_REPORT_TICKS_LINKED_BETS_ID)&&  //pr=0時非過關,pr=1時代表過關
+            isset($argBet['subw'])&&is_array($argBet['subw'])&&sizeof($argBet['subw'])  //子內含注單
+            ) { //含子注單
+            $subw = $argBet["subw"];    //子注單們
+
+            $subwSize = sizeof($subw);
+
+            foreach ($subw as $sb) {
+                $sub = $sb['sub'];  //子注單序號(1-5)
+                $sb_g_title = $sb['g_title'];
+                $sb_r_title = $sb['r_title'];
+                $sb_result = $sb['result'];
+                $sb_bet_txt_1 = $sb['bet_txt_1'];
+                $sb_bet_txt_2 = $sb['bet_txt_2'];
+
+                $subbet = array(
+                    'sub' => $sub,
+                    'g_title' => $sb_g_title,
+                    'r_title' => $sb_r_title,
+                    'result' => $sb_result,
+                    'bet_txt_1' => $sb_bet_txt_1,
+                    'bet_txt_2' => $sb_bet_txt_2,
+                    'betId' => $id,
+                );
+                $arrSubbets[] = $subbet;
+            }
+            $arrMainBet['bet_txt_1'] = '';
+            $arrMainBet['bet_txt_2'] = '';
+        } else {    //不含子注單
+            $arrMainBet['bet_txt_1'] = $argBet['bet_txt_1'];
+            $arrMainBet['bet_txt_2'] = $argBet['bet_txt_2'];
+        }
+
+        //$arrMainBet['subbetInJson'] = json_encode($arrSubbets, JSON_UNESCAPED_UNICODE);
+
+        return array(
+            'dataInJson' => json_encode($arrMainBet, JSON_UNESCAPED_UNICODE),
+            'subbetInJson' => json_encode($arrSubbets, JSON_UNESCAPED_UNICODE),
+        );
+    }  //--function _splitSingleBet
+}

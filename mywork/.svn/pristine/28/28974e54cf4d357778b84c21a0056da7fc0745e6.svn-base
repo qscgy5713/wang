@@ -1,0 +1,31 @@
+<?php
+/**
+ * 會員變更紀錄
+ */
+class CommonSystemLogModel extends MemberModel{
+	protected $tableName = "common_system_log";
+	/**
+	 * 新增 系統 紀錄
+	 */
+	public function addSystemLogData($data){
+		$sql = "INSERT INTO `{$this->tableName}`";
+		$keySql = "";
+		$valSql = "";
+		foreach ($data as $key => $value) {
+			if(empty($keySql)){
+				$keySql = "(`{$key}`";
+			} else {
+				$keySql .= ",`{$key}`";
+			}
+			if(empty($valSql)){
+				$valSql = "('{$value}'";
+			} else {
+				$valSql .= ",'{$value}'";
+			}
+		}
+		$sql .= "{$keySql}) VALUES {$valSql})";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+}

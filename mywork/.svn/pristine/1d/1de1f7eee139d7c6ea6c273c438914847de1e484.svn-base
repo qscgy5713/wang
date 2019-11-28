@@ -1,0 +1,54 @@
+<include file="Common:header" />
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+    <include file="Common:menu" />
+    <include file="Common:menu2" />
+    <div id="content" class="content">
+        <div class="row">
+			<div class="col-lg-12 ui-sortable">
+				<div class="panel panel-inverse" data-sortable-id="flot-chart-2">
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">Flot Interactive Chart</h4>
+					</div>
+					<div class="panel-body">
+						<p>
+							One of the goals of Flot is to support user interactions. Try pointing and clicking on the points and you will see a jQuery created <code>tooltip</code>.
+						</p>
+						<div id="interactive-chart" class="height-sm" style="padding: 0px; position: relative;"><canvas class="flot-base" width="724" height="375" style="direction: ltr; position: absolute; left: 0px; top: 0px; width: 579.6px; height: 300px;"></canvas><div class="flot-text" style="position: absolute; top: 0px; left: 0px; bottom: 0px; right: 0px; font-size: smaller; color: rgb(84, 84, 84);"><div class="flot-x-axis flot-x1-axis xAxis x1Axis" style="position: absolute; top: 0px; left: 0px; bottom: 0px; right: 0px;"><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 22px; text-align: center;">0</div><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 105px; text-align: center;">2</div><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 188px; text-align: center;">4</div><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 272px; text-align: center;">6</div><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 356px; text-align: center;">8</div><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 437px; text-align: center;">10</div><div class="flot-tick-label tickLabel" style="position: absolute; max-width: 72px; top: 281px; left: 520px; text-align: center;">12</div></div><div class="flot-y-axis flot-y1-axis yAxis y1Axis" style="position: absolute; top: 0px; left: 0px; bottom: 0px; right: 0px;"><div class="flot-tick-label tickLabel" style="position: absolute; top: 267px; left: 13px; text-align: right;">0</div><div class="flot-tick-label tickLabel" style="position: absolute; top: 214px; left: 6px; text-align: right;">20</div><div class="flot-tick-label tickLabel" style="position: absolute; top: 162px; left: 6px; text-align: right;">40</div><div class="flot-tick-label tickLabel" style="position: absolute; top: 109px; left: 6px; text-align: right;">60</div><div class="flot-tick-label tickLabel" style="position: absolute; top: 56px; left: 6px; text-align: right;">80</div><div class="flot-tick-label tickLabel" style="position: absolute; top: 3px; left: 1px; text-align: right;">100</div></div></div><canvas class="flot-overlay" width="724" height="375" style="direction: ltr; position: absolute; left: 0px; top: 0px; width: 579.6px; height: 300px;"></canvas><div class="legend"><div style="position: absolute; width: 84.8px; height: 45.6px; top: 17px; right: 17px; background-color: rgb(249, 249, 249); opacity: 0.85;"> </div><table style="position:absolute;top:17px;right:17px;;font-size:smaller;color:#545454"><tbody><tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #007AFF;overflow:hidden"></div></div></td><td class="legendLabel">Page Views</td></tr><tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #4CD964;overflow:hidden"></div></div></td><td class="legendLabel">Visitors</td></tr></tbody></table></div></div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-12 ui-sortable">
+				<div class="panel panel-inverse" data-sortable-id="flot-chart-5">
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">Flot Interactive Pie Chart</h4>
+					</div>
+					<div class="panel-body">
+						<p>The pie can be made interactive with <code>hover</code> and <code>click</code> events. It will alert the value for each categories</p>
+						<div id="interactive-pie-chart" class="height-sm" style="padding: 0px; position: relative;"><canvas class="flot-base" width="724" height="375" style="direction: ltr; position: absolute; left: 0px; top: 0px; width: 579.6px; height: 300px;"></canvas><canvas class="flot-overlay" width="724" height="375" style="direction: ltr; position: absolute; left: 0px; top: 0px; width: 579.6px; height: 300px;"></canvas><div class="legend"><div style="position: absolute; width: 64.8px; height: 66.4px; top: 5px; right: 5px; background-color: rgb(255, 255, 255); opacity: 0.85;"> </div><table style="position:absolute;top:5px;right:5px;;font-size:smaller;color:#545454"><tbody><tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #FF9500;overflow:hidden"></div></div></td><td class="legendLabel">Series1</td></tr><tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #333;overflow:hidden"></div></div></td><td class="legendLabel">Series2</td></tr><tr><td class="legendColorBox"><div style="border:1px solid #ccc;padding:1px"><div style="width:4px;height:0;border:5px solid #8a8a8f;overflow:hidden"></div></div></td><td class="legendLabel">Series3</td></tr></tbody></table></div></div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+    <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<include file="Common:footer" />
+<script>
+
+$(document).ready(function() {
+
+});
+</script>

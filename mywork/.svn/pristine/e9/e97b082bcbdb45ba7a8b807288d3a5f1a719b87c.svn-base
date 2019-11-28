@@ -1,0 +1,195 @@
+<?php
+/*
+ * 前後台公告
+ */
+class CommonAnnouncementModel extends CommonModel {
+    protected $tableName = "common_announcement";
+    protected $tableId = "announcement_id";
+    /*
+     * 取得Client公告
+     */
+    public function getClientAnnouncementData(){
+        $sql = "SELECT `announcement_text` FROM `{$this->tableName}`
+                WHERE `announcement_belong` = '1' AND `announcement_enabled` = '1';";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 取得Agent公告
+     */
+    public function getAgentAnnouncementData(){
+        $sql = "SELECT `announcement_text` FROM `{$this->tableName}`
+                WHERE `announcement_belong` = '2' AND `announcement_enabled` = '1';";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 取得Admin公告
+     */
+    public function getAdminAnnouncementData(){
+        $sql = "SELECT `announcement_text` FROM `{$this->tableName}`
+                WHERE `announcement_belong` = '3' AND `announcement_enabled` = '1';";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 取得公告資料
+     * 公告管理 使用
+     */
+    public function getAnnouncementDate(){
+        $sql = "SELECT * FROM `{$this->tableName}` ORDER BY `announcement_belong`,`announcement_order` ASC;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 新增公告
+     */
+    public function addAnnouncementData($data,&$err = ""){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+        }
+        return $return;
+    }
+    /*
+     * 修改 公告 資料
+     * 使用公告ID
+     */
+    public function setAnnouncementDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}'";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 刪除公告 資料
+     * 使用公告ID
+     */
+    public function delAnnouncementById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `{$this->tableId}` = '{$data["{$this->tableId}"]}';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 搜尋公告 隸屬資料 是否一樣
+     * 使用公告ID
+     */
+    public function getAnnouncementBelongDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `{$this->tableId}` = '{$data["{$this->tableId}"]}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 隸屬資料 最大的排序
+     * 使用公告ID
+     */
+    public function getAnnouncementBelongOrderDataById($data){
+        if(empty($data["announcement_belong"]) && $data["announcement_belong"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT Max(`announcement_order`) as MaxOrder FROM `{$this->tableName}`
+                WHERE `announcement_belong` = '{$data["announcement_belong"]}';";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 修改 公告排序 高變低
+     * 使用 隸屬資料 和 排序
+     */
+    public function setAnnouncementOrderHighLowDataByBelong($data){
+        if(empty($data["announcement_belong"]) && $data["announcement_belong"] !== '0'){
+            return false;
+        }
+        if(empty($data["announcement_order"]) && $data["announcement_order"] !== '0'){
+            return false;
+        }
+        $sql = "UPDATE `{$this->tableName}` SET `announcement_order` = `announcement_order`-1
+                WHERE `announcement_belong` = '{$data["announcement_belong"]}' 
+                AND `announcement_order` > '{$data["announcement_order"]}';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 跑馬燈排序 高變低 
+     */
+    public function setSortAgentPageClassOrder($data){
+        $sql = "UPDATE `{$this->tableName}` a ,`{$this->tableName}` b 
+            SET a.`announcement_order`='{$data['announcement_order2']}' , 
+                b.`announcement_order` = '{$data['announcement_order']}' 
+            WHERE a.`announcement_order` = '{$data['announcement_order']}' 
+            AND b.`announcement_order`='{$data['announcement_order2']}' 
+            AND a.`announcement_belong` = '{$data['announcement_belong']}'
+            AND b.`announcement_belong` = '{$data['announcement_belong']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 後台頁面 資料
+     * 修改 頁面 比對資料使用 
+     */
+    public function getAnnouncementPageData($data){
+        if(empty($data['announcement_id']) && $data['announcement_id']){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` WHERE `announcement_id` = '{$data['announcement_id']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 把announcement_id 的 announcement_order 排序往前-1
+     * 修改頁面 別的 Class 使用
+     * 使用 把announcement_id announcement_order
+     */
+    public function setAnnouncementPageOrderByClassIdAndPageOrder($data){
+        if(empty($data['announcement_order']) && $data['announcement_order']){
+            return false;
+        }
+        $sql = "UPDATE `{$this->tableName}` SET `announcement_order` = `announcement_order` - 1 WHERE `announcement_order`>'{$data['announcement_order']}';";
+            $return = $this->query($sql);
+            return $rerturn;
+    }
+}

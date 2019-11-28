@@ -1,0 +1,14 @@
+<?php
+/*
+ * 帳變其它列表
+ */
+class CommonMemberGiveotherModel extends AdminModel {
+    protected $tableName = "common_member_giveother";
+    protected $tableId = "other_id";
+    
+    public function getOtherData(){
+        $sql = "SELECT * FROM `{$this->tableName}`";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

@@ -1,0 +1,866 @@
+<?php
+
+class GameSpModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_api_name = 'api';
+  protected $cfg_base_url = 'http://apiball.king588.net';
+  protected $cfg_ag_url = 'http://ag.king588.net';
+  protected $cfg_encode_key = 'WGI@X9ENgpo138jL';
+  protected $cfg_base_ag_name = 'G53889';
+  protected $cfg_base_ag_pass = 'bbqq1234';
+  protected $cfg_boss_name = 'G';
+
+  const SP_ENCRYPTION_IV = 'm%2qQ7L&wfafUj&b';
+  const SP_ACCOUNT_LEVEL_MEMBER = 1;
+  const SP_ACCOUNT_LEVEL_AGENT = 2;
+  const SP_ACCOUNT_LEVEL_DIRECTOR = 3;  //總監
+  const SP_RESPONSE_SUCCESS_CODE = 999;
+  const SP_DEFAULT_REQUEST_METHOD = 'GET';
+  const SP_DEFAULT_BET_ROW_PAGE_SIZE = 100;
+
+  const SP_BALL_TYPE_ALL =  0;  //球類-所有
+  /*
+  SP_BALL_TYPE= 0: 全部, 1: 美棒, 2: 日棒, 3: 台棒, 4: 韓棒, 5: 冰球, 6: 籃球, 7: 彩球, 8: 美足, 9: 網球, 10: 足球, 11: 指數, 12: 賽馬, 14: 其他
+  */
+  const SP_BET_TYPE_ALL =  0;  //玩法-所有
+
+  const ARR_SP_BALL_TYPES = array(  //ball_type
+     0=>'全部',1=>'美棒',2=>'日棒',3=>'台棒',4=>'韓棒',5=>'冰球',6=>'籃球',7=>'彩球',8=>'美足',9=>'網球',10=>'足球',11=>'指數',12=>'賽馬',13=>'電競',14=>'其它',15=>'2018世足賽',
+  );
+
+  const ARR_SP_FASHION_TYPES = array(  //fashion_type
+     1=>'讓分',2=>'大小',3=>'獨贏',4=>'單雙',5=>'一輸二贏',10=>'搶首分',11=>'搶尾分',12=>'波膽',13=>'單節最高分',20=>'過關',
+  );
+
+  const ARR_SP_GAME_TYPES = array(  //game_type
+     0=>'全場',1=>'上半場',2=>'下半場',3=>'第一節',4=>'第二節',5=>'第三節',6=>'第四節',7=>'滾球',8=>'滾球上半場',9=>'滾球下半場',10=>'多種玩法',
+  );
+
+  const ARR_SP_STATUS_TYPES = array(  //status_type
+    'd'=>'刪除單','f'=>'退組','l'=>'輸','w'=>'贏',
+  );
+
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+  }
+
+  //--------------------非通用函數--------------------
+
+  /**
+   * 註冊新會員
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['nickname'] 會員暱稱
+   * @param $data['agent'] 所屬代理(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return SP創出的會員ID (string)
+   */
+  public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'nickname' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'add';
+    $func = 'account';
+    $apiUrl = $this->cfg_base_url;
+    $apiName = $this->cfg_api_name;
+    $url = "{$apiUrl}/{$apiName}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "nickname" => $_nickname,
+      "passwd" => $_password,
+      "level" => self::SP_ACCOUNT_LEVEL_MEMBER,
+      "up_account" => $_agent,
+      "up_passwd" => $_agent_password,
+    );
+
+    $arrColsNeedEnc = array(
+      'account', 'passwd', 'up_account', 'up_passwd',
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    //var_dump($result);
+    if ($result !== false) {
+      if ($result && isset($result['code']) && ($result['code']==self::SP_RESPONSE_SUCCESS_CODE)) {
+        $argErr = null;
+        return true;
+      } else {
+        $errCode = $result['code'];
+        $errMsg = $result['msg'];
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($errCode,$errMsg);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+   */
+  public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $func = 'login';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $apiName = $this->cfg_api_name;
+    $url = "{$apiUrl}/{$apiName}/{$func}";
+
+    $arrRet = array(
+      'account' => $this->_encrypt($_user_name),
+      'passwd' => $this->_encrypt($_password),
+      //'url' => "{$url}",
+      //'method' => self::SP_DEFAULT_REQUEST_METHOD,
+    );
+
+    $qStr = http_build_query($arrRet);
+    $gameLink = "{$url}?{$qStr}";
+    return $gameLink;
+  }
+
+  /**
+   * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+   */
+  public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $act = 'search';
+    $func = 'points';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $apiName = $this->cfg_api_name;
+    $url = "{$apiUrl}/{$apiName}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "up_account" => $_agent,
+      "up_passwd" => $_agent_password,
+    );
+    //Dbgr::preout($data);
+
+    $arrColsNeedEnc = array(
+      'account', 'up_account', 'up_passwd',
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::SP_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['point'])) {
+          $curntPoint = $result['data']['point'];
+          return $curntPoint;
+        }
+      } else {
+        $errCode = $result['code'];
+        $errMsg = $result['msg'];
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($errCode,$errMsg);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number),
+   */
+  public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'sub';
+    $func = 'points';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $apiName = $this->cfg_api_name;
+    $url = "{$apiUrl}/{$apiName}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "point" => $_amount,
+      "status_id" => $argNote,  //optional
+      "up_account" => $_agent,
+      "up_passwd" => $_agent_password,
+    );
+
+    $arrColsNeedEnc = array(
+      'account', 'up_account', 'up_passwd',
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::SP_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['point'])) {
+          $curntPoint = $result['data']['point'];
+          return $curntPoint;
+        }
+      } else {
+        $errCode = $result['code'];
+        $errMsg = $result['msg'];
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($errCode,$errMsg);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number),
+   */
+  public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'add';
+    $func = 'points';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $apiName = $this->cfg_api_name;
+    $url = "{$apiUrl}/{$apiName}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "point" => $_amount,
+      "status_id" => $argNote,  //optional
+      "up_account" => $_agent,
+      "up_passwd" => $_agent_password,
+    );
+
+    $arrColsNeedEnc = array(
+      'account', 'up_account', 'up_passwd',
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::SP_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['point'])) {
+          $curntPoint = $result['data']['point'];
+          return $curntPoint;
+        }
+      } else {
+        $errCode = $result['code'];
+        $errMsg = $result['msg'];
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($errCode,$errMsg);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 抓取注單報表。要注意必須傳入會員ID的陣列，可以透過 GameSPModel::getTotalReportWithMembers 方法取得
+   * 頂層代理下的會員總結，即可得到會員ID。
+   *
+   * @param $data['begin_date'] 起始日期 (Y-m-d)
+   * @param $data['end_date'] 結束日期 (Y-m-d)
+   * @param $data['array_user_names'] 查詢的代理或用戶名稱，必須是一維陣列
+   * @param $data['account_level'] (非必須) 傳入的用戶階級 (總監，代理，會員)。預設=會員
+   * @param $data['ball_type'] (非必須) 欲查詢的球種。預設=全部球類
+   * @param $data['bet_type'] (非必須) 欲查詢的玩法。預設=全部玩法
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   */
+  public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_date' => array('required'=>1,),
+      'end_date' => array('required'=>1,),
+      'array_user_names' => array('required'=>1,),
+      'account_level' => array('required'=>0,'default'=>self::SP_ACCOUNT_LEVEL_MEMBER,),
+      'ball_type' => array('required'=>0,'default'=>self::SP_BALL_TYPE_ALL,),
+      'bet_type' => array('required'=>0,'default'=>self::SP_BET_TYPE_ALL,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'detail';
+    $arrDetails = $this->_getReport($act, $_begin_date, $_end_date, $_array_user_names, $argErr, $_account_level, $_ball_type, $_bet_type);
+    return $arrDetails;
+  }
+
+  /**
+   * 抓取會員OR代理的總結。可查詢代理下帳務總結(包含各會員的總結)
+   *
+   * @param $data['begin_date'] 起始日期 (Y-m-d)
+   * @param $data['end_date'] 結束日期 (Y-m-d)
+   * @param $data['array_user_names'] (非必須) 查詢的代理或用戶名稱，必須是一維陣列。預設=頂層代理名稱
+   * @param $data['account_level'] (非必須) 傳入的用戶階級 (總監，代理，會員)。預設=代理
+   * @param $data['ball_type'] (非必須) 欲查詢的球種。預設=全部球類
+   * @param $data['bet_type'] (非必須) 欲查詢的玩法。預設=全部玩法
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表總結(array)
+   */
+  public function getTotalReportWithMembers($arrDatas, &$argErr = null) {
+    $arrKeys = array(
+      'begin_date' => array('required'=>1,),
+      'end_date' => array('required'=>1,),
+      'array_user_names' => array('required'=>0,'default'=>array($this->cfg_base_ag_name)),
+      'account_level' => array('required'=>0,'default'=>self::SP_ACCOUNT_LEVEL_AGENT,),
+      'ball_type' => array('required'=>0,'default'=>self::SP_BALL_TYPE_ALL,),
+      'bet_type' => array('required'=>0,'default'=>self::SP_BET_TYPE_ALL,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'memberTotal';
+    $res = $this->_getReport($act, $_begin_date, $_end_date, $_array_user_names, $argErr, $_account_level, $_ball_type, $_bet_type);
+    return $res;
+  }
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar)
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + sb_html           有格式的子注單.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+
+    if ($argArrRowBetDetails) {
+
+      $arrBetStatusStr = array(  //bet['status']: 注單狀態
+        'w' => '<span style="color:#0B0;margin:1px;">贏</span>',
+        'l' => '<span style="color:#C00;margin:1px;font-weight:bold;">輸</span>',
+        'd' => '<span style="color:#F00;margin:1px;font-weight:bold;">刪除單</span>',
+        'f' => '<span style="color:#F80;;margin:1px;">退組</span>'
+      );
+      $arrBetStatusNoteStr = array(  //bet['status_note']: 注單狀態
+        'Y' => '<span style="color:#00D;margin:1px;">正常單</span>',
+        'D' => '<span style="color:#555;margin:1px;font-weight:bold;">刪除單</span>'
+      );
+      $arrEndStr = array(  //bet['end']: 注單已結?
+        '0' => '<span style="color:#00D;margin:1px;">未結</span>',
+        '1' => '<span style="color:#090;margin:1px;font-weight:bold;">已結帳</span>'
+      );
+
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $bet['detail_bettingMoney'] = round(floatVal($bet['detail_bettingMoney']),3);
+        $bet['detail_effective'] = round(floatVal($bet['detail_effective']),3);
+        $bet['detail_surplus'] = round(floatVal($bet['detail_surplus']),3);
+
+        $bet['sb_html'] = '';
+        $bet_id = $bet['detail_id'];
+        //$sn = $bet['sn'];
+        //...
+
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        $arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+
+        $subbetIdx = 1;
+        
+        $prevSubbetSn = 0;
+        foreach ($arrSubbets as $sbKey=>$sb) {
+          //bgr::preout($sb);
+          $subbet_id     = $sb['subbet_id'];
+          //$mbSn          = $sb['sn'];
+          $fashion       = $sb['fashion'];
+          $g_type        = $sb['g_type'];
+          $league        = $sb['league'];
+          $main_team     = $sb['main_team'];
+          $visit_team    = $sb['visit_team'];
+          $matter        = strip_tags($sb['matter']);
+          $matter        = str_replace('&nbsp;',' ', $matter);
+          $mv_set        = $sb['mv_set'];
+          $mode          = $sb['mode'];
+          $chum_num      = $sb['chum_num'];
+          $compensate    = $sb['compensate'];
+          $score1        = $sb['score1'];
+          $score2        = $sb['score2'];
+          $status_note   = $sb['status_note'];
+          $end           = $sb['end'];
+          $fashion_name = self::__getStr(self::ARR_SP_FASHION_TYPES, $fashion);
+          $game_name = self::__getStr(self::ARR_SP_GAME_TYPES, $g_type);
+          //$fashion_name  = $sb['fashion_name'];
+          //$game_name     = $sb['game_name'];
+          //if ($mbSn != $prevSubbetSn) { $subbetIdx = 1; }
+          $mb = $arrBetContents;
+          //$statusStr  = $arrBetStatusStr[$mb['status']];
+          if (($mb['status']=='d')||($mb['status']=='f')) {
+            $statusStr = $arrEndStr[$mb['end']].'('.$arrBetStatusStr[$mb['status']].')';  //ex.已結帳(刪除單)
+          } else {
+            $statusStr = $arrEndStr[$mb['end']];  //ex.已結帳, 未結
+          }
+          $statusNoteStr  = $arrBetStatusNoteStr[$status_note];
+          $full_mode_str = "{$game_name} - {$fashion_name}";
+          //$mbTeamNo = $mb['team_no'];  //球種(籃球足球)編號
+          //$mbBallName = $mb['ball_name'];  //球種名稱(籃球足球)
+
+          $divBgColor = '#FDFDFD';
+
+          //押注對象
+          //mv_set = 下注隊伍 (0客隊,1主隊)
+          if ($mv_set==1) {
+            $betTargetStr = "{$matter}";
+          } else {
+            $betTargetStr = "{$matter}";
+          }
+          //讓分
+          $homeYieldStr = '';
+          $awayYieldStr = '';
+          $yStr = '';
+          /*
+          if (($betTypeId==1)||($betTypeId==5)||($betTypeId==26)||($betTypeId==27)) {
+            if ($yield_team_id=='2') {
+              $homeYieldStr = '<span style="color:#FF6240;">'.$score_opt.'</span>';
+              $yStr = '主讓';
+            } else {
+              if (($yield_team_id=='1')||(!strlen($yield_team_id))||(!strlen($yield_team))) {
+                $awayYieldStr = '<span style="color:#FF6240;">'.$score_opt.'</span>';
+                $yStr = '客讓';
+              }
+            }
+          }*/
+          if ($mode==1) {  //盤口位置:客隊
+            $homeYieldStr = '<span style="color:#FF6240;">'.$chum_num.'</span>';
+            $yStr = '主讓';
+          } elseif ($mode==2) {  //盤口位置:主隊
+            $awayYieldStr = '<span style="color:#FF6240;">'.$chum_num.'</span>';
+            $yStr = '客讓';
+          } else {  //沒有盤口
+            $homeYieldStr = '';
+            $awayYieldStr = '';
+            $yStr = '';
+          }
+          //賠率字串
+          /*
+          $arrMatter = explode(' ',$matter);
+          $maybeCompStr = $arrMatter[sizeof($arrMatter)-1];  //疑似為賠率的字串
+          echo "\$maybeCompStr={$maybeCompStr},\$compensate={$compensate}. ";
+          if (((float)$maybeCompStr)==((float)$compensate)) {  //最後一個字串是否跟賠率相同
+            $matter = str_replace($maybeCompStr,'',$matter);  //去除賠率字樣
+          } else {
+            echo "\$maybeCompStr={$maybeCompStr} <> \$compensate={$compensate} <br/>";
+          }
+          $compensate    = (float)round(floatVal($compensate),3);  //賠率變更樣式至小數下3位
+          */
+          if ($fashion==2) {  //若玩法=大小
+          //if ($fashion) {
+            //押注對象字串加上顯示押注讓分資訊
+            $tMatter = $matter;
+            $tMatter = str_replace($chum_num,'',$tMatter);  //去除matter內原本就有的chum_num
+            //$betTargetStr = "<span style=\"color:#FF6240;\">{$chum_num}</span> {$matter}";
+            $betTargetStr = "<span style=\"color:#FF6240;\">{$chum_num}</span> {$tMatter}";
+          }
+
+          $homeScoreStr = '';
+          $awayScoreStr = '';
+          //$winStr = '<span style="color:#A00;font-italic:italic;font-weight:bold;font-size:150%;">O</span>';
+          //$loseStr = '<span style="color:#0A0;font-italic:italic;font-weight:bold;font-size:150%;">X</span>';
+          $homeWinStr = '';
+          $awayWinStr = '';
+          $singleScoreStr = '';
+          if (strlen($score1)) { $homeScoreStr = "<span class=\"home_score\">[{$score1}]</span>"; }
+          if (strlen($score2)) { $awayScoreStr = "<span class=\"away_score\">[{$score2}]</span>"; }
+          //組合: 比賽隊伍名稱,比分,讓分
+          $teamsStr = '';
+          if (strlen($main_team)) {
+            if ($g_type==10) {  //足球的主隊在前
+              $teamsStr = "<div>{$homeScoreStr} <span style=\"color:#000;\">{$main_team}(主)</span> {$homeYieldStr} <span style=\"color:#888;\"><b>VS.</b></span> <span style=\"color:#000;\">{$visit_team}</span> {$awayYieldStr} {$awayScoreStr} {$singleScoreStr}</div>";
+            } else {
+              $teamsStr = "<div>{$awayScoreStr} <span style=\"color:#000;\">{$visit_team}</span> {$awayYieldStr} <span style=\"color:#888;\"><b>VS.</b></span> <span style=\"color:#000;\">{$main_team}(主)</span> {$homeYieldStr} {$homeScoreStr} {$singleScoreStr}</div>";
+            }
+          } else {
+            $teamsStr = "<div><span style=\"color:#000;\">{$visit_team}</span> {$singleScoreStr}</div>";
+          }
+          //if ($home_score > $away_score) {$homeWinStr = $winStr;$awayWinStr = $loseStr;}
+          //elseif ($home_score < $away_score) {$awayWinStr = $winStr;$homeWinStr = $loseStr;}
+          $subbetIdxStr = "";
+          if ($subbetIdx >= 2) {
+            $subbetIdxStr = "({$subbetIdx})";
+          }
+
+          //子注單
+          $subbetHtml = <<<END
+            <div class="subbet_subdiv" style="background-color:{$divBgColor};border:1px solid #00A0FF" title="子注單編號:{$subbet_id}">
+              <div style="float:right;">{$statusStr}</div>
+              <div style="color:#0097A7;"><span style="float:left;">{$subbetIdxStr}</span> {$league} - {$full_mode_str}</div>
+              {$teamsStr}
+              <div style="border:#777;padding:2px;"></div>
+              <div style="color:#605BFF;"> {$betTargetStr}</div>
+            </div>
+END;
+          //<img src="img/16x16-blue-check-symbol-icon.png">
+          //Dbgr::preout($subbetHtml);
+          $bet['sb_html'] .= $subbetHtml;
+          //$prevSubbetSn = $mbSn;
+          ++$subbetIdx;
+        }  //subbet foreach
+        $arrBets[$bet_id] = $bet;
+      }  //rowBetDetails foreach
+      return $arrBets;
+    } else {  //if ($argArrRowBetDetails)
+      return false;
+    }
+  }
+
+  public static function __getStr($argArr, $argIndex) {
+    if (isset($argArr[$argIndex])) {
+      return $argArr[$argIndex];
+    } else {
+      return "不明項目({$argIndex})";
+    }
+  }
+
+  //--------------------非通用函數--------------------
+
+  /* get report */
+  //查詢會員或代理帳務
+  protected function _getReport(
+    $argAct,
+    $argBeginDate,
+    $argEndDate,
+    $argArrAccounts,  //帳號陣列
+    &$argErr,
+    $argAccountLevel=self::SP_ACCOUNT_LEVEL_DIRECTOR,  //帳號等級=3:總代理, 2:代理, 1:會員
+    $argBallType=self::SP_BALL_TYPE_ALL,  //球類
+    $argBetType=self::SP_BET_TYPE_ALL  //玩法
+    ) {
+    $func = 'report';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $apiName = $this->cfg_api_name;
+    $url = "{$apiUrl}/{$apiName}/{$func}";
+    $accuntStr = implode(',',$argArrAccounts);
+    $beginDate = date('Y-m-d',strtotime($argBeginDate));
+    $endDate = date('Y-m-d',strtotime($argEndDate));
+    $data = array(
+      "act" => $argAct,
+      "account" => $accuntStr,
+      "level" => $argAccountLevel,
+      "s_date" => $beginDate,
+      "e_date" => $endDate,
+      "ball" => $argBallType,
+      "type" => $argBetType,
+    );
+
+    $arrColsNeedEnc = array(
+      'account',
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::SP_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data'])) {
+          $arrDetailedReport = $result['data'];
+          return $arrDetailedReport;
+        }
+      } else {
+        $errCode = $result['code'];
+        $errMsg = $result['msg'];
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')).": ".$this->_produceError($errCode,$errMsg);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /* get aes key */
+  protected function _getEncKey() {
+    return $this->cfg_encode_key;
+  }
+
+  protected function _decrypt($encryptedData) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    $key = $this->_getEncKey();
+    $iv = self::SP_ENCRYPTION_IV;
+    $initializationVectorSize = mcrypt_get_iv_size($cipher, $mode);
+
+    $data =  mcrypt_decrypt(
+        $cipher,
+        $key,
+        base64_decode($encryptedData),
+        $mode,
+        $iv
+    );
+    $pad = ord($data[strlen($data) - 1]);
+    return substr($data, 0, -$pad);
+  }
+
+  // 加密
+  protected function _encrypt($xml_data) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    $key = $this->_getEncKey();
+    $iv = self::SP_ENCRYPTION_IV;
+    $blockSize = mcrypt_get_block_size($cipher, $mode);
+    $pad = $blockSize - (strlen($xml_data) % $blockSize);
+
+    return base64_encode(mcrypt_encrypt(
+        $cipher,
+        $key,
+        $xml_data . str_repeat(chr($pad), $pad),
+        $mode,
+        $iv
+    ));
+  }
+
+  /* produce error */
+  protected function _produceError($argErrCode,$argErrMsg=null) {
+    $arrErrorMsgs = array(
+      /*900=>'general error',  //
+      901=>'invalid account or password',  //
+      902=>'account has been locked',  //
+      911=>'account not exists',  //
+      921=>'insufficient credit',  //
+      941=>'log not exists',  //
+      912=>'account has been used',*/
+    );
+    if ($argErrMsg) {
+      return "{$argErrMsg} (code {$argErrCode})";
+    } else {
+      if (array_key_exists($argErrCode,$arrErrorMsgs)) {
+        return "{$arrErrorMsgs[$argErrCode]} (code {$argErrCode})";
+      } else {
+        return "{$argErrMsg} (code {$argErrCode})";
+      }
+    }
+  }
+
+  /* send http request via curl and return its response in assoc array */
+  protected function _sendRequest($argUrl,$argArrData,$argArrColsNeedEnc,$argReturnOrgResp=false,$argMethod=self::SP_DEFAULT_REQUEST_METHOD) {
+    foreach ($argArrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$argArrData)) {
+        $enc = $this->_encrypt($argArrData[$cVal]);
+        //echo "enc({$argArrData[$cVal]}) = {$enc}, ";
+        $argArrData[$cVal] = $enc;
+      }
+    }
+    $queryStr = http_build_query($argArrData);
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $argMethod,
+      //CURLOPT_POSTFIELDS => $argArrData,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_CONNECTTIMEOUT_MS => 10000,
+      CURLOPT_TIMEOUT_MS => 15000,
+      CURLOPT_HTTPHEADER => array(
+        'Content-Type: text/html; charset=utf-8',
+      )
+    );
+    $url = "{$argUrl}?{$queryStr}";
+    if (strtoupper($argMethod) == 'POST') {
+      $url = $argUrl;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $argArrData;
+    } else {
+      //...
+    }
+    //echo "\$url={$url} <br/>";
+    //Dbgr::preout($argArrData);
+    //Dbgr::preout($arrCurlDatas);
+    $ch = curl_init($url);
+    curl_setopt_array(
+      $ch,
+      $arrCurlDatas
+    );
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+
+    //echo "\$result={$result} <br/>";
+    curl_close($ch);
+    if ($result !== false) {
+      if ($argReturnOrgResp === false) {
+        $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+        //var_dump($resultInAssoc);
+        $this->responseArr = $resultInAssoc;
+        return $resultInAssoc;
+      } else {
+        return $result;
+      }
+    } else {
+      //echo "\$curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+}

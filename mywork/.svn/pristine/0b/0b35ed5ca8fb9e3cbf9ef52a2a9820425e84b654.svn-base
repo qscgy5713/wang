@@ -1,0 +1,565 @@
+<?php
+
+class GameGgModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'https://api.gg626.com/api/doLink.do';
+  protected $cfg_report_url = 'http://betrec.gg626.com/api/doReport.do';
+  protected $cfg_agent = 'CA002';
+  protected $cfg_md5_key = '4HlrO4uO98T0t3NC08';
+  protected $cfg_des_key = '505T52t1';
+  protected $cfg_des_iv = '505T52t1';
+
+  protected $desInst = null;
+
+  const GG_CONNECTION_TIMEOUT_MS = 12000;
+  const GG_REQUEST_TIMEOUT_MS = 12000;
+  const GG_IS_DEBUGGING = false;
+  const GG_ERROR_MSG_ID_ON_SUCCESS = 0;
+  const GG_REAL_MONEY = 1;
+  const GG_NOT_REAL_MONEY = 0;
+  const GG_TRANSFER_TYPE_DEPOSIT = 'IN';
+  const GG_TRANSFER_TYPE_WITHDRAW = 'OUT';
+  const GG_ORDER_STATUS_SUCCESS = '0';
+  const GG_USER_STATUS_FROZEN = '0';
+  const GG_USER_STATUS_UNFROZEN = '1';
+  const GG_DEFAULT_LANG = 'TWD';
+  const GG_DEFAULT_CURRENCY = 'zh-HK';
+  const GG_QS_SPLITTER = '/\\\\/';
+
+  const GG_RESPONSE_SUCCESS_CODE =  0;
+  const GG_PLATFORM_ID_DESKTOP =  1;
+  const GG_PLATFORM_ID_MOBILE =  2;
+  const GG_DEFAULT_CURRENCYENCY_CODE =  'TWD';
+  const GG_DEFAULT_LANGUAGE_CODE =  'zh_CN';
+  const GG_GAME_CODE_LOBBY =  'SLOT_LOBBY';
+  const GG_GET_TICKETS_NUM_PER_PAGE =  500;
+  const GG_BALANCE_RATIO =  100;  //遊戲點數對實際金額的比值
+  const GG_TIMEZONE_OFFSET = 8;
+  const GG_TRANSACATION_ID_LENGTH_MAX = 16;
+  const GG_TRANSACATION_ID_DEPOSIT_PREFIX = '1';
+  const GG_TRANSACATION_ID_WITHDRAW_PREFIX = '2';
+  const GG_TRANSACATION_ID_BONUS_PREFIX = '3';
+  const GG_UNKNOWN_GAME_ID =  999;  //不在表列的遊戲的ID
+  const GG_UNKNOWN_GAME_CODE =  'UNKNOWN_GAME';  //不在表列的遊戲的gameCode
+  const GG_UNKNOWN_GAME_CH_NAME =  '不明的遊戲?';  //不在表列的遊戲的中文名稱
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['currency_type'] 3位貨幣代碼(非必須). 預設=TWD
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'currency' => array('required'=>0, 'default'=>self::GG_DEFAULT_CURRENCY),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'ca';
+    $arrParams = array(
+      'cagent'=>$this->cfg_agent,
+      'loginname'=>$_user_name,
+      'password'=>$_password,
+      'method'=>$method,
+      'actype'=>self::GG_REAL_MONEY,  //真錢 OR 假錢
+      'cur'=>$_currency
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('msg','code');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return true;
+    } else {
+      if ($checkRespRes===false) {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02'));  //CURL 結果為不成功
+        return false;
+      } else {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')) . ': ' . "{$checkRespRes}";  //回傳結果為不成功
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['game_code'] 遊戲代碼
+   * @param $data['language'] 語系代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL (string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'game_code' => array('required'=>1,),
+      'language' => array('required'=>0, 'default'=>self::GG_DEFAULT_LANG),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'fw';
+    $arrParams = array(
+      'cagent'=>$this->cfg_agent,
+      'loginname'=>$_user_name,
+      'password'=>$_password,
+      'method'=>$method,
+      'sid'=>$this->_getSid(),
+      'lang'=>$_language,
+      'gametype'=>$_game_code,
+      'ip'=>$this->_getClientIp()
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('msg','code','url');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $url = $resp['url'];
+      return $url;
+    } else {
+      if ($checkRespRes===false) {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02'));  //CURL 結果為不成功
+        return false;
+      } else {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')) . ': ' . "{$checkRespRes}";  //回傳結果為不成功
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['currency'] 貨幣(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('password'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'gb';
+    $arrParams = array(
+      'cagent'=>$this->cfg_agent,
+      'loginname'=>$_user_name,
+      'password'=>$_password,
+      'method'=>$method,
+      'cur'=>$_currency
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('msg','code','balance');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $bal = $resp['balance'];
+      return $bal;
+    } else {
+      if ($checkRespRes===false) {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02'));  //CURL 結果為不成功
+        return false;
+      } else {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')) . ': ' . "{$checkRespRes}";  //回傳結果為不成功
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param $data['currency'] 貨幣(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $transferType = self::GG_TRANSFER_TYPE_WITHDRAW;
+    return $this->_transferCredit($arrDatas, $transferType, $argErr);
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param $data['currency'] 貨幣(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 交易後餘額 (number)
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $transferType = self::GG_TRANSFER_TYPE_DEPOSIT;
+    return $this->_transferCredit($arrDatas, $transferType, $argErr);
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['user_name'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間。開始時間與結束時間最多只能相差10分鐘。
+   * @param $data['page'] 頁次, 自1開始
+   * @param $data['rows'] 每頁筆數, <= 1000 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'tr';
+    $arrParams = array(
+      'cagent' => $this->cfg_agent,
+      'startdate' => $_begin_datetime,
+      'enddate' => $_end_datetime,
+      'method' => $method,
+    );
+    $resp = $this->_sendRequest($method, $arrParams, $this->cfg_report_url);
+    $arrEssentialKeys = array('msg','code','betlist');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $arrRes = $resp['betlist'];
+      return $arrRes;
+    } else {
+      if ($checkRespRes===false) {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02'));  //CURL 結果為不成功
+        return false;
+      } else {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')) . ': ' . "{$checkRespRes}";  //回傳結果為不成功
+        return false;
+      }
+    }
+
+	}
+
+	//--------------------非通用函數--------------------
+
+  /*
+    @func:  transferCredit
+    @desc:
+  */
+  protected function _transferCredit($arrDatas, $argTransferType, &$argErr) {
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'trans_id' => array('required'=>0,'default'=>$this->_getTransId()),
+      'currency' => array('required'=>0,'default'=>self::GG_DEFAULT_CURRENCY,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01')).': '.$dk;  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'tc';
+    $ip = $this->_getClientIp();
+    $arrParams = array(
+      'cagent'=>$this->cfg_agent,
+      'loginname'=>$_user_name,
+      'password'=>$_password,
+      'method'=>$method,
+      'billno'=>$_trans_id,
+      'type'=>$argTransferType,
+      'credit'=>$_amount,
+      'cur'=>$_currency,
+      'ip'=>$ip,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('msg','code');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $bal = $resp['balance'];
+      return $bal;
+    } else {
+      if ($checkRespRes===false) {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_02'));  //CURL 結果為不成功
+        return false;
+      } else {
+        $argErr = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_03')) . ': ' . "{$checkRespRes}";  //回傳結果為不成功
+        return false;
+      }
+    }
+  }
+
+  /* get bill # */
+  public function _getTransId() {
+    $agent = $this->cfg_agent;
+    $randNum = str_pad( rand(1,999),3,'0',STR_PAD_LEFT );
+    $sn = date("YmdHis").$randNum;
+    $billNo = "{$agent}{$sn}";
+    //if (GG_IS_DEBUGGING) echo "getBillNo::billNo={$billNo}<br/>";
+    return $billNo;
+  }
+
+  protected function _checkResp($argRawResponse,$argArrEssentialKeys=null) {
+    if ($argRawResponse !== false) {
+      $errorMsgId = $argRawResponse['code'];
+      $errorMsg = $argRawResponse['msg'];
+      if ($errorMsgId == self::GG_ERROR_MSG_ID_ON_SUCCESS) {
+        if (($argArrEssentialKeys !== null)&&(is_array($argArrEssentialKeys))) {
+          $essKeyPassed = true;
+          $lackKeyStr = '';
+          foreach ($argArrEssentialKeys as $eKeyVal) {
+            if (!array_key_exists($eKeyVal,$argRawResponse)) {
+              if (strlen($lackKeyStr)) {$lackKeyStr .= ',';}
+              $lackKeyStr .= $eKeyVal;
+              $essKeyPassed = false;
+            }
+          }
+          if ($essKeyPassed===true) {
+            return true;
+          } else {
+            $err = "response array lacks key: {$lackKeyStr} (code -9901)";
+            return $err;
+          }
+        } else {
+          return true;
+        }
+      } else {
+        $err = "{$errorMsg} (code {$errorMsgId})";
+        return $err;
+      }
+    } else {
+      //$err = "{$errorMsg} (code -9900)";
+      return false;  //CURL error
+    }
+  }
+
+  /* get key */
+  protected function _getKey($argQs) {
+    $fullStr = $argQs . $this->cfg_md5_key;
+    //if (self::GG_IS_DEBUGGING) echo "getKey::fullStr={$fullStr}<br/>";
+    return hash('md5',$fullStr);
+  }
+
+  /* get sid # */
+  protected function _getSid() {
+    $agent = $this->cfg_agent;
+    $randNum = str_pad( rand(1,999),3,'0',STR_PAD_LEFT );
+    $sn = date("YmdHis").$randNum;
+    $sid = "{$agent}{$sn}";
+    //if (self::GG_IS_DEBUGGING) echo "getSid::sid={$sid}<br/>";
+    return $sid;
+  }
+
+  /* perform HTTP GET request and grab the response */
+  protected function _httpsPost($argUrl,$argPostFieldStr=null,$argHeader=null, &$argCurlErr=null) {
+    //if (GG_IS_DEBUGGING) echo "httpsPost::argUrl={$argUrl}<br/>";
+    //if (GG_IS_DEBUGGING) echo "httpsPost::argPostFieldStr={$argPostFieldStr}<br/>";
+    if (strlen($argUrl)) {
+      if ($argHeader===null) {
+        $argHeader = array(
+          //'Content-Type:application/x-www-form-urlencoded',
+          //'Content-Length:' . strlen($argPostFieldStr),
+          'GGaming:' . 'WEB_GG_GI_' . $this->cfg_agent
+        );
+      }
+      $ch = curl_init();
+      curl_setopt_array(
+        $ch,
+        array(
+          CURLOPT_URL=>$argUrl,
+          CURLOPT_RETURNTRANSFER=>1,
+          CURLOPT_SSL_VERIFYPEER=>false,
+          CURLOPT_HTTPHEADER=>$argHeader,
+          CURLOPT_CONNECTTIMEOUT_MS=>self::GG_CONNECTION_TIMEOUT_MS,
+          CURLOPT_TIMEOUT_MS=>self::GG_REQUEST_TIMEOUT_MS,
+          CURLOPT_CUSTOMREQUEST => 'GET',
+          CURLOPT_POST=>0,
+         )
+      );
+      $response = curl_exec($ch);
+      if (curl_errno($ch)) {
+        $this->curlError = array(
+          'curl_error' => curl_error($ch),
+          'curl_errno' => curl_errno($ch),
+        );
+      } else {
+        $this->curlError = null;
+      }
+      //if (GG_IS_DEBUGGING) Dbgr::preout($response);
+
+      //Dbgr::preout($argUrl);
+      //Dbgr::preout($argPostFieldStr);
+      //Dbgr::preout($response);
+      curl_close($ch);
+      return $response;
+    } else {
+      //curl_close($ch);
+      return false;
+    }
+  }
+
+  protected function _getClientIp() {
+    $ipaddress = '';
+    if (isset($_SERVER['HTTP_CLIENT_IP']))
+      $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+    else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+      $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    else if(isset($_SERVER['HTTP_X_FORWARDED']))
+      $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+    else if(isset($_SERVER['HTTP_FORWARDED_FOR']))
+      $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+    else if(isset($_SERVER['HTTP_FORWARDED']))
+      $ipaddress = $_SERVER['HTTP_FORWARDED'];
+    else if(isset($_SERVER['REMOTE_ADDR']))
+      $ipaddress = $_SERVER['REMOTE_ADDR'];
+    else
+      $ipaddress = 'UNKNOWN';
+    return $ipaddress;
+  }
+
+  protected function _sendRequest($argMethod,$argArrParams,$argUrl=null) {
+    $qs = '';
+    foreach ($argArrParams as $pKey => $pVal) {
+      if (strlen($qs)) { $qs.=self::GG_QS_SPLITTER; }
+      $qs .= "{$pKey}={$pVal}";
+    }
+    //echo "GG::sendRequest: qs={$qs}";
+    if ($this->desInst === null) {
+      $this->desInst = new CryptDes($this->cfg_des_key,$this->cfg_des_iv);
+    }
+    $encipheredQs = $this->desInst->encrypt($qs);
+    $key =$this->_getKey($encipheredQs);
+
+    //if (GG_IS_DEBUGGING) echo "sendRequest::qs={$qs}<br/>";
+    //if (GG_IS_DEBUGGING) echo "sendRequest::key={$key}<br/>";
+    //if (GG_IS_DEBUGGING) echo "sendRequest::encipheredQs={$encipheredQs}<br/>";
+
+    $postFieldStr = "params={$encipheredQs}&key={$key}";
+    $curlHeaderOptStr = array(
+      //'Content-Type:application/x-www-form-urlencoded',
+      //'Content-Length:' . strlen($postFieldStr),
+      'GGaming:' . 'WEB_GG_GI_' . $this->cfg_agent
+    );
+    if ($argUrl === null) {
+      $url = $this->cfg_base_url."?{$postFieldStr}";
+    } else {
+      $url = "{$argUrl}?{$postFieldStr}";
+    }
+    $ps = '';
+    $res = $this->_httpsPost( $url, $ps, $curlHeaderOptStr );
+    if ($res !== false) {
+      $arrJsonRes = json_decode($res,true);
+      $this->responseArr = null;
+      $this->responseArr = $arrJsonRes;
+      return $arrJsonRes;
+    }
+    return false;
+  }
+
+}

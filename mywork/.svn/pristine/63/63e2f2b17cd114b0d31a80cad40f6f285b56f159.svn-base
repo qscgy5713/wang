@@ -1,0 +1,495 @@
+<?php
+/*
+ * 儲值單
+ */
+class CashflowYipayModel extends MemberModel {
+    //商店代號 603200
+    //驗證KEY H55VVJ7SPAR
+    //一般商品履約完成回傳網址: yipay.8857tw.net
+    
+    protected $storeCode = '603210';
+//     商店代號: 603210
+//     介接 HashKey: PPUXXF7G4HHQEY9HYJX9B9YMCM
+//     介接 HashIV: Y7HT8LSGABNLJ75UNFKAU33HTA
+//     驗證KEY: XLTYB7KKLB    ....2019/1/14
+    
+    protected $apiStoreUrl = "http://payflow.mycash.asia/StorePayment.php";//API 超商繳款 網址
+    protected $apiVirAccountUrl = "http://payflow.mycash.asia/VirAccountPayment.php";//API 虛擬帳戶 網址
+    protected $hashKey = "PPUXXF7G4HHQEY9HYJX9B9YMCM";//由易沛提供
+    protected $hashIv = "Y7HT8LSGABNLJ75UNFKAU33HTA";//由易沛提供
+    protected $merTradeId = "";//店家交易編號。店家自行設定，不得小於6個字元，不得重複。
+    protected $merProdectId = "ASG888";//店家商品代號。店家自行設定，不得小於4個字元。
+    protected $merUserId = "";//店家消費者ID。店家自行設定，限英文或數字組合，最少2個字元。
+    protected $choosePayment = "CVS";//超商 代碼 或 條碼。CVS:超商代碼，BARCODE:超商條碼。
+    protected $Amount = "";//交易金額。
+    protected $tradeDesc = "";//交易描述。
+    protected $itemName = "";//商品名稱。
+    protected $method = "POST";
+    
+    //智付通資料
+    protected $spgatewayUrl = "https://core.spgateway.com/API/gateway/vacc";
+    
+    /**
+     * 易沛超商繳款
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function getYipayStoreData($data,&$err){
+        if(empty($data["MerTradeID"]) && $data["MerTradeID"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["MerUserID"]) && $data["MerUserID"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["Amount"]) && $data["Amount"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        
+        $return = $this->YipayStoreSendRequest($data,$err);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 易沛虛擬帳戶
+     * @param array $data
+     * @param string $err
+     * @return boolean
+     */
+    public function getYipayVirAccountData($data,&$err){
+        if(empty($data["MerTradeID"]) && $data["MerTradeID"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data["MerUserID"]) && $data["MerUserID"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data["Amount"]) && $data["Amount"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        
+        /*
+        $return = $this->SpgatewayAccountSendRequest($data,$err);
+        if($return === false){
+            return false;
+        }
+        */
+        
+        $return = $this->YipayVirAccountSendRequest($data,$err);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    //虛擬帳戶 CURL
+    protected function SpgatewayAccountSendRequest($data,&$err="") {
+        $argUrl = $this->spgatewayUrl;
+        /*
+        $arrData = $data;
+        
+        $arrData['HashKey'] = $this->hashKey;
+        $arrData['HashIV'] = $this->hashIv;
+        $arrData['MerProductID'] = $this->merProdectId;
+        $arrData['TradeDesc'] = "點數交易";
+        $arrData['ItemName'] = "點數";
+        */
+        
+        $postData = "RespondType=Json&TimeStamp=".time()."&Version=1.0&MerchantOrderNo=".$data["MerTradeID"]."&Amt=".$data["Amount"]."&ProdDesc=Item1&BankType=Esun";
+        $postData = $this->pay2go_encrypt($this->hashKey,$this->hashIv,$postData);
+        $arrData = array(
+            "MerchantID_" => $this->storeCode,
+            "PostData_" => $postData
+        );
+        
+        
+        
+        $argMethod = $this->method;
+        //var_dump($arrData);
+        $method = strtoupper($argMethod);
+        
+        $arrCurlDatas = array(
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CONNECTTIMEOUT_MS => 5000,
+            CURLOPT_TIMEOUT_MS => 15000
+        );
+        if ( $method == 'GET') {  //GET
+            $queryStr = http_build_query($arrData);
+            $url = "{$argUrl}?{$queryStr}";
+        } else {  //POST
+            $url = $argUrl;
+            //$dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+            $arrCurlDatas[CURLOPT_POSTFIELDS] = $arrData;
+        }
+        
+        $ch = curl_init($url);
+        foreach ($arrCurlDatas as $cKey => $cVal ) {
+            curl_setopt($ch, $cKey, $cVal);
+        }
+        $result = curl_exec($ch);
+        echo $result;
+        
+        if (curl_errno($ch)) {
+            $this->curlError = array(
+                'curl_error' => curl_error($ch),
+                'curl_errno' => curl_errno($ch),
+            );
+        } else {
+            $this->curlError = null;
+        }
+        curl_close($ch);
+        
+        if ($result !== false) {
+            //$resultInAssoc = json_decode($result,true);  //decoded as assoc. arrayW
+            //echo $result;
+            return $result;
+        } else {
+            //echo "sendRequest::curlError={$curlError} <br/>";
+            $CommonCurlErr = D("CommonCurlErr");
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $data = array(
+                "curlErr_type" => 1,//1金流錯誤 2遊戲錯誤
+                "curlErr_item_id" => 2,//易沛 超商繳款ID //先寫死，後續要活動 在做讀取cashflow_info
+                "curlErr_user_id" => $_SESSION["Member"]["id"],
+                "curlErr_function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__),
+                "curlErr_createTime" => time(),
+                "curlErr_curlMessage" => $curlError["curl_error"],
+                "curlErr_returnErr" => $result,
+                "curlErr_ip" => $ip
+            );
+            $CommonCurlErr->addCurlErrData($data);
+            $err = "此儲值方式維護中，請重新選擇!";
+            return false;
+        }
+    }
+    
+    protected function pay2go_encrypt($key = "", $iv = "", $str = "") {
+        $str = trim(bin2hex(openssl_encrypt($this->addpadding($str), 'aes-256-cbc', $key, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv)));
+        return $str;     
+    } 
+    protected function addpadding($string, $blocksize = 32) {         
+        $len = strlen($string);         
+        $pad = $blocksize - ($len % $blocksize);         
+        $string .= str_repeat(chr($pad), $pad);         
+        return $string;     
+    }
+    
+    /* send request */
+    //超商繳款 CURL
+    protected function YipayStoreSendRequest($data,&$err="") {
+        $argUrl = $this->apiStoreUrl;
+        $arrData = $data;
+        
+        $arrData['HashKey'] = $this->hashKey;
+        $arrData['HashIV'] = $this->hashIv;
+        $arrData['MerProductID'] = $this->merProdectId;
+        $arrData['TradeDesc'] = "點數交易";
+        $arrData['ItemName'] = "點數";
+        $arrData["ChoosePayment"] = $this->choosePayment;//超商繳款才有的參數
+        
+        $argMethod = $this->method;
+        //var_dump($arrData);
+        $method = strtoupper($argMethod);
+        $arrCurlDatas = array(
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CONNECTTIMEOUT_MS => 5000,
+            CURLOPT_TIMEOUT_MS => 15000
+        );
+        if ( $method == 'GET') {  //GET
+            $queryStr = http_build_query($arrData);
+            $url = "{$argUrl}?{$queryStr}";
+        } else {  //POST
+            $url = $argUrl;
+            //$dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+            $arrCurlDatas[CURLOPT_POSTFIELDS] = $arrData;
+        }
+        
+        $ch = curl_init($url);
+        foreach ($arrCurlDatas as $cKey => $cVal ) {
+            curl_setopt($ch, $cKey, $cVal);
+        }
+        $result = curl_exec($ch);
+        //echo $result;
+        //var_dump($result);
+        
+        if (curl_errno($ch)) {
+            $curlError = array(
+                'curl_error' => curl_error($ch),
+                'curl_errno' => curl_errno($ch),
+            );
+            
+        } else {
+            $curlError = null;
+        }
+        //var_dump($curlError);
+        curl_close($ch);
+        
+        $exArray1 = explode("CVS",$result);
+        $exArray2 = explode("(請抄下此組至 7-11、全家、萊爾富、OK 繳費)",$exArray1[1]);
+        $str = $exArray2[0];
+        $str = str_ireplace("\"","",$str);
+        $str = str_ireplace("b","",$str);
+        $str = str_ireplace("class","",$str);
+        $str = str_ireplace("red","",$str);
+        $str = str_ireplace("<","",$str);
+        $str = str_ireplace(">","",$str);
+        $str = str_ireplace("=","",$str);
+        $str = str_ireplace(" ","",$str);
+        $resultStr = "CVS".$str;
+        //var_dump($resultStr);
+        
+        
+        if ($result !== false && preg_match("/CVS/i",$resultStr)) {
+            //$resultInAssoc = json_decode($result,true);  //decoded as assoc. arrayW
+            //echo $result;
+            return $resultStr;
+        } else {
+            //echo "sendRequest::curlError={$curlError} <br/>";
+            $CommonCurlErr = D("CommonCurlErr");
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $data = array(
+                "curlErr_type" => 1,//1金流錯誤 2遊戲錯誤
+                "curlErr_item_id" => 1,//易沛 超商繳款ID //先寫死，後續要活動 在做讀取cashflow_info
+                "curlErr_user_id" => $_SESSION["Member"]["id"],
+                "curlErr_function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__),
+                "curlErr_createTime" => time(),
+                "curlErr_curlMessage" => $resultStr,
+                "curlErr_returnErr" => $result,
+                "curlErr_ip" => $ip
+            );
+            $CommonCurlErr->addCurlErrData($data);
+            $err = "此儲值方式維護中，請重新選擇!";
+            return false;
+        }
+    }
+    
+    //虛擬帳戶 CURL
+    protected function YipayVirAccountSendRequest($data,&$err="") {
+        $argUrl = $this->apiVirAccountUrl;
+        $arrData = $data;
+        
+        $arrData['HashKey'] = $this->hashKey;
+        $arrData['HashIV'] = $this->hashIv;
+        $arrData['MerProductID'] = $this->merProdectId;
+        $arrData['TradeDesc'] = "點數交易";
+        $arrData['ItemName'] = "點數";
+        
+        $argMethod = $this->method;
+        //var_dump($arrData);
+        $method = strtoupper($argMethod);
+        
+        $arrCurlDatas = array(
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CONNECTTIMEOUT_MS => 5000,
+            CURLOPT_TIMEOUT_MS => 15000
+        );
+        if ( $method == 'GET') {  //GET
+            $queryStr = http_build_query($arrData);
+            $url = "{$argUrl}?{$queryStr}";
+        } else {  //POST
+            $url = $argUrl;
+            //$dataStrInJson = json_encode($arrData);  //can only send 1-d array as postfield data
+            $arrCurlDatas[CURLOPT_POSTFIELDS] = $arrData;
+        }
+        
+        $ch = curl_init($url);
+        foreach ($arrCurlDatas as $cKey => $cVal ) {
+            curl_setopt($ch, $cKey, $cVal);
+        }
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            $this->curlError = array(
+                'curl_error' => curl_error($ch),
+                'curl_errno' => curl_errno($ch),
+            );
+        } else {
+            $this->curlError = null;
+        }
+        curl_close($ch);
+        
+        //echo $result;exit();
+        //--------------------------------------------------------------------------------------
+        $html = $result;
+        //var_dump($html);
+        $coding = mb_detect_encoding($html);
+        if ($coding != "UTF-8" || !mb_check_encoding($html, "UTF-8")){
+            $html = mb_convert_encoding($html, 'utf-8', 'GBK,UTF-8,ASCII');
+        }
+        $pattern = '|<input[^>]*(.*)>|isU';
+        preg_match_all($pattern, $html, $matches);
+        //var_dump($matches);
+        
+        $check = array(
+        );
+        for($i=0;$i< count($matches[0]);$i++){
+            $dom = new DOMDocument();
+            
+            @$dom->loadHTML($matches[0][$i]);//$a是上面得到的一些a标签
+            
+            $inputlist = $dom->getElementsByTagName("input");
+            
+            foreach ($inputlist as $input){
+                $name = $input->getAttribute("name");
+                $value = $input->getAttribute("value");
+                $check[$name] = $value;
+            }
+        }
+        //var_dump($check);exit();
+        
+        
+        header("Content-type:text/html;charset=utf-8");
+        $uri = "https://core.spgateway.com/MPG/mpg_gateway";//这里换成你服务器的地址
+        // 参数数组
+        $ch = curl_init ();  //初始化curl
+        curl_setopt ( $ch, CURLOPT_URL, $uri );
+        curl_setopt ( $ch, CURLOPT_POST, 1 );  //使用post请求
+        curl_setopt ( $ch, CURLOPT_HEADER, 0 );
+        curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, 1 );//將結果回傳成字串
+        curl_setopt ( $ch, CURLOPT_REFERER, "https://core.spgateway.com/MPG/mpg_gateway" );
+        curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,0);
+        curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,0);
+        curl_setopt ( $ch, CURLOPT_POSTFIELDS, $check);  //提交数据
+        //curl_setopt ( $ch, CURLOPT_FOLLOWLOCATION, true);  //重定向地址也输出
+        $return = curl_exec ( $ch ); //得到返回值
+        curl_close ( $ch );  //关闭
+        //echo $return;
+        //var_dump($return);
+        //exit();
+        
+        
+        
+        $html = $return;
+        //var_dump($html);
+        $coding = mb_detect_encoding($html);
+        if ($coding != "UTF-8" || !mb_check_encoding($html, "UTF-8")){
+            $html = mb_convert_encoding($html, 'utf-8', 'GBK,UTF-8,ASCII');
+        }
+        $pattern = '|<input[^>]*(.*)>|isU';
+        preg_match_all($pattern, $html, $matches);
+        //var_dump($matches);
+        $check = array("post_data"=>"","PaymentType"=>"","Email"=>"");
+        for($i=0;$i< count($matches[0]);$i++){
+            $dom = new DOMDocument();
+            
+            @$dom->loadHTML($matches[0][$i]);//$a是上面得到的一些a标签
+            
+            $inputlist = $dom->getElementsByTagName("input");
+            
+            foreach ($inputlist as $input){
+                $str = $input->getAttribute("name");
+                foreach($check as $key => $val){
+                    if($str == $key){
+                        $str = $input->getAttribute("value");
+                        $check[$key] = $str;
+                        //var_dump($str);
+                    }
+                }
+            }
+        }
+        //$check['ATM_Bank'] = "Esun";
+        $check['ATM_Bank'] = "BOT";
+        
+        //-----
+        $check['MapInfo'] = "";
+        $check['PaymentToken'] = "";
+        //-----
+        //var_dump($check);exit();
+        header("Content-type:text/html;charset=utf-8");
+        $uri = "https://core.spgateway.com/MPG/mpg_gateway/payment_info_submit";//这里换成你服务器的地址
+        // 参数数组
+        $ch = curl_init ();  //初始化curl
+        curl_setopt ( $ch, CURLOPT_URL, $uri );
+        curl_setopt ( $ch, CURLOPT_POST, 1 );  //使用post请求
+        curl_setopt ( $ch, CURLOPT_HEADER, 0 );
+        curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, 1 );//將結果回傳成字串
+        curl_setopt ( $ch, CURLOPT_REFERER, "https://core.spgateway.com/MPG/mpg_gateway" );
+        curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,0);
+        curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,0);
+        curl_setopt ( $ch, CURLOPT_POSTFIELDS, $check);  //提交数据
+        //curl_setopt ( $ch, CURLOPT_FOLLOWLOCATION, true);  //重定向地址也输出
+        $return = curl_exec ( $ch ); //得到返回值
+        curl_close ( $ch );  //关闭
+        //echo $return;
+        $html = $return;
+        //var_dump($html);
+        $coding = mb_detect_encoding($html);
+        if ($coding != "UTF-8" || !mb_check_encoding($html, "UTF-8")){
+            $html = mb_convert_encoding($html, 'utf-8', 'GBK,UTF-8,ASCII');
+        }
+        $pattern = '|<input[^>]*(.*)>|isU';
+        preg_match_all($pattern, $html, $matches);
+        $check = array("JSONData"=>"");
+        for($i=0;$i< count($matches[0]);$i++){
+            $dom = new DOMDocument();
+            
+            @$dom->loadHTML($matches[0][$i]);//$a是上面得到的一些a标签
+            
+            $inputlist = $dom->getElementsByTagName("input");
+            
+            foreach ($inputlist as $input){
+                $str = $input->getAttribute("name");
+                foreach($check as $key => $val){
+                    if($str == $key){
+                        $str = $input->getAttribute("value");
+                        $check[$key] = $str;
+                        //var_dump($str);
+                    }
+                }
+            }
+        }
+        //var_dump($check["JSONData"]);
+        $resultErr = $check["JSONData"];
+        $result = json_decode($check["JSONData"],true);
+        //var_dump($result);
+        $result = json_decode($result["Result"],true);
+        //var_dump($result);exit();
+        if(!empty($result["BankCode"]) && !empty($result["CodeNo"])){
+            $result = $result["BankCode"]."-".$result["CodeNo"];
+        } else {
+            $result = false;
+        }
+        //--------------------------------------------------------------------------------------
+        
+        
+        if ($result !== false) {
+            //$resultInAssoc = json_decode($result,true);  //decoded as assoc. arrayW
+            //echo $result;
+            return $result;
+        } else {
+            //echo "sendRequest::curlError={$curlError} <br/>";
+            $CommonCurlErr = D("CommonCurlErr");
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $data = array(
+                "curlErr_type" => 1,//1金流錯誤 2遊戲錯誤
+                "curlErr_item_id" => 2,//易沛 超商繳款ID //先寫死，後續要活動 在做讀取cashflow_info
+                "curlErr_user_id" => $_SESSION["Member"]["id"],
+                "curlErr_function" => strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__),
+                "curlErr_createTime" => time(),
+                "curlErr_curlMessage" => $curlError["curl_error"],
+                "curlErr_returnErr" => $resultErr,
+                "curlErr_ip" => $ip
+            );
+            $CommonCurlErr->addCurlErrData($data);
+            $err = "此儲值方式維護中，請重新選擇!";
+            return false;
+        }
+    }
+}

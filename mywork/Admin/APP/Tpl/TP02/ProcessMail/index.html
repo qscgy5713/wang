@@ -1,0 +1,272 @@
+<include file="Common:header" />
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+    <include file="Common:menu" />
+    <include file="Common:menu2" />
+    <div id="content" class="content">
+        <div class="row">
+            <div class="col-md-2">
+                <div>
+                    <h6>重整倒數 &nbsp;<span id="min"></span>:<span id="sec"></span></h6>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check p-t-0">
+                    <input class="form-check-input is-valid" type="checkbox" id="noRenew" name="noRenew">
+                    <label class="form-check-label" for="validCheckbox">不重整</label>
+                </div>
+            </div>
+            <div>
+                <div id="newMessageDIV" style="display:none">
+                    <audio id="play">
+                        <source src="__CSS__/mp3/DoorBell.mp3"' type="audio/wav"/>
+						<source src="__CSS__/mp3/DoorBell.mp3" type="audio/mpeg"/>
+					</audio>
+				</div>
+			</div>
+		</div>
+		<button type="button" class="btn btn-info m-b-10 m-r-10" onclick="self.location.href=' __APP__/{$Think.MODULE_NAME}/maliDetail'">郵件歷史紀錄 </button> <button id="add_btn" class="btn btn-info m-b-10" type="button">發送訊息</button>
+                        <div class="modal fade" id="modal-dialog" style="display: none;">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">發送訊息</h4>
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                    </div>
+                                    <form method="post" action='__APP__/ProcessMail/sentMemberMessage'>
+                                        <div class="modal-body">
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">會員帳號 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <input class="form-control" type="text" name="sentMemAccount" id="member_account" value="{$memberAccount}">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">信件主旨 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <input class="form-control" type="text" name="sentTitle">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">信件內容 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <textarea class="form-control" name="sentMain" rows="10"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+                                            <button type="submit" name="addbtn" class="btn btn-info f-s-15">確認新增</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12 ui-sortable">
+                                <div class="panel panel-inverse">
+                                    <div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+                                        <div class="panel-heading-btn">
+                                            <a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+                                        </div>
+                                        <h4 class="panel-title">會員發問</h4>
+                                    </div>
+                                    <div class="panel-body">
+                                        <!-- begin table-responsive -->
+                                        <div class="table-responsive">
+                                            <table id="table1" class="table table-striped m-b-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>信件ID</th>
+                                                        <th>會員帳號</th>
+                                                        <th>建立時間</th>
+                                                        <th>狀態</th>
+                                                        <th>郵件IP</th>
+                                                        <th>管理ID</th>
+                                                        <th>信件回覆時間</th>
+                                                        <th>信件回覆</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <VOLIST name="showArray" id="vo" empty="$memberEmpty">
+                                                        <tr id="{$vo.id}trid">
+                                                            <td>{$vo.id}</td>
+                                                            <td>{$vo.memberAccount}</td>
+                                                            <td>{$vo.createTime}</td>
+                                                            <td>{$vo.status}</td>
+                                                            <td>{$vo.ip}</td>
+                                                            <td>{$vo.adminId}</td>
+                                                            <td>{$vo.modifyTime}</td>
+                                                            <td>
+                                                                <a onclick="openmodal('setModal','{$vo.id}','{$vo.memberAccount}','{$vo.title}','{$vo.main}')"><i class="fas fa-wrench fa-fw icon-size"></i></a>
+                                                            </td>
+                                                        </tr>
+                                                    </VOLIST>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="setModal" style="display: none;">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">信件回覆</h4>
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                    </div>
+                                    <form method="post" action='__APP__/ProcessMail/formReplyMailManage'>
+                                        <input type="hidden" value="" name="mailId" id="mailId">
+                                        <div class="modal-body">
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">帳號 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <input class="form-control" type="text" id="memberaccount" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">主旨 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <input class="form-control" type="text" id="title" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">內容 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <textarea class="form-control" id="main" rows="10" readonly></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row m-b-15">
+                                                <label class="col-md-4 col-sm-4 col-form-label">信件回覆 :</label>
+                                                <div class="col-md-8 col-sm-8">
+                                                    <textarea class="form-control" name="reply" rows="10"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+                                            <button type="submit" name="setbtn" class="btn btn-info f-s-15">確認新增</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+            </div>
+            <include file="Common:footer" />
+            <script type="text/javascript">
+            var audio = document.getElementById("play");
+            var t, count = 5;
+            var allDataId = "{$allDataId}";
+            var dataIdArray = allDataId.split(",");
+            $(document).ready(function() {
+
+                t = setInterval(showAuto, 1000);
+
+                $("#noRenew").change(function() {
+                    var noRenew = $('#noRenew:checked').val();
+                    if (noRenew == "on") {
+                        clearInterval(t);
+                    } else {
+                        t = setInterval(showAuto, 1000);
+                    }
+                });
+                $("#add_btn").click(function() {
+                    $('#modal-dialog').modal('show');
+                });
+                $('#member_account').typeahead({
+                    ajax: {
+                        url: '__URL__/searchMemberName',
+                        timeout: 200
+                    }
+                });
+            });
+
+            function showAuto() {
+                var min = Math.floor(count / 60);
+                var sec = count % 60;
+                if (sec < 10) {
+                    sec = '0' + sec;
+                }
+                $('#min').html(min);
+                $('#sec').html(sec);
+                if (count == 0) {
+                    clearInterval(t);
+                    count = 5;
+                    var noRenew = $('#noRenew:checked').val();
+                    if (noRenew != "on") {
+                        getAjaxNewData();
+                    }
+                }
+                --count;
+            }
+            var trText = '無未回覆信件';
+
+            function getAjaxNewData() {
+                $.ajax({
+                    type: "post",
+                    dataType: "text",
+                    url: "__URL__/getAjaxMailForm",
+                    success: function(data) {
+                        splitArray = data.split(";;");
+                        if (splitArray[0] == 'err') {
+                            t = setInterval(showAuto, 1000);
+                            return;
+                        }
+                        ajaxDataId = splitArray[0]; //資料id
+                        ajaxDataStr = splitArray[1]; //資料明細
+                        ajaxDataIdArray = ajaxDataId.split(",");
+                        ajaxDataStrArray = ajaxDataStr.split(",");
+                        for (var i = 0; i < ajaxDataIdArray.length; i++) {
+                            var instr = $.inArray(dataIdArray[i], ajaxDataIdArray);
+                            if (instr == -1) {
+                                $("#" + dataIdArray[i] + 'trid').remove();
+                            }
+                        }
+                        var tr0 = $($('table > tbody > tr')[0]).text();
+                        if (ajaxDataIdArray != "") {
+                            if(tr0 == trText){
+                            	$("#table1 tr:not(:first)").html("");
+                            }
+                            for (var i = 0; i < ajaxDataIdArray.length; i++) {
+                                var instr = $.inArray(ajaxDataIdArray[i], dataIdArray);
+                                if (instr == -1) {
+                                    fieldDatastrArray = ajaxDataStrArray[i].split(";");
+                                    mailId = ajaxDataIdArray[i];
+                                    var trData = "<tr id=" + mailId + "trid>";
+                                    for (j = 0; j < fieldDatastrArray.length; j++) {
+                                        if (j <= 6) {
+                                            trData = trData + "<td>" + fieldDatastrArray[j] + "</td>";
+                                        }
+                                    }
+                                    var onclick = '"setModal","' + fieldDatastrArray[0] + '","' + fieldDatastrArray[1] + '","' + fieldDatastrArray[7] + '","' + fieldDatastrArray[8] + '"';
+                                    trData = trData + "<td><a onclick='openmodal(" + onclick + ")'><i class='fas fa-wrench fa-fw icon-size'></i></a></td>";
+                                    trData = trData + "</tr>";
+                                    $($('table > tbody > tr')[0]).before(trData);
+                                    audio.play();
+                                }
+                            }
+                        } else {
+                            if (tr0 != trText) {
+                                $("#table1 tr:not(:first)").html("");
+                                $('table > tbody').html("<tr><td colspan='8' style='text-align:center;'>" + trText + "</td></tr>");
+                            }
+                        }
+                        dataIdArray = ajaxDataIdArray;
+                        t = setInterval(showAuto, 1000);
+                    },
+                    error: function() {
+                        alert("網路連線錯誤，請檢查您的網路狀況");
+                    }
+                });
+            }
+
+            function openmodal(modalId, voMailId, voAccount, voTitle, voMain) {
+                $('#mailId').val(voMailId);
+                $('#memberaccount').val(voAccount);
+                $('#title').val(voTitle);
+                $('#main').val(voMain);
+                $('#' + modalId).modal('show');
+            }
+            </script>

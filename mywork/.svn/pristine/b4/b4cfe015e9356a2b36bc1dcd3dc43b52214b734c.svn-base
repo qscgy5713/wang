@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>Assan 3.0</title>    
+        <!-- Plugins CSS -->
+        <link href="__CSS__/css/plugins/plugins.css" rel="stylesheet">
+        <!-- REVOLUTION STYLE SHEETS -->
+        <link rel="stylesheet" type="text/css" href="__CSS__/revolution/css/settings.css">
+        <!-- REVOLUTION LAYERS STYLES -->
+        <link rel="stylesheet" type="text/css" href="__CSS__/revolution/css/layers.css">
+        <!-- REVOLUTION NAVIGATION STYLES -->
+        <link rel="stylesheet" type="text/css" href="__CSS__/revolution/css/navigation.css">
+        <!-- load css for cubeportfolio -->
+        <link rel="stylesheet" type="text/css" href="__CSS__/cubeportfolio/css/cubeportfolio.min.css">     
+        <link href="__CSS__/css/style.css" rel="stylesheet">
+        <link type="text/css" rel="stylesheet" href="__CSS__/smart-form/contact/css/smart-forms.css">
+        
+    </head>

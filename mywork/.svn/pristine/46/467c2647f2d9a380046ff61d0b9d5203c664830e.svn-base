@@ -1,0 +1,189 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:menuRwd"/>
+		<if condition='$isMobile eq "true"'>
+			<!-- 手機板輪播 -->
+			<include file="Common:bannerRwd"/>
+		</if>
+		<!-- rwd跑馬燈 -->
+		<include file="Common:marquee"/>
+	    <!-- rwd首頁 -->
+		<section id="md-login-bg" class="pt-10 pb-0 d-sm-none">
+			<if condition='$isLogin eq "false"'>
+				<!-- 登入 -->
+				<div id="login-container" class="container">
+					<div class="row">
+						<!-- LOGIN -->
+						<div class="col-md-4">
+							<ul class="nav nav-tabs nav-justified">
+								<li class="nav-item"><a class="nav-link bookmark_type active" href="#loginRwd" data-toggle="tab">{$Think.lang.MemberIndex27}</a></li>
+								<li class="nav-item"><a class="nav-link bookmark_type" href="#profileRwd" data-toggle="tab">{$Think.lang.MemberIndex28}</a></li>
+
+							</ul>
+
+							<div class="tab-content pt-20 pb-0">
+								<div class="tab-pane active" id="loginRwd">
+									<div class="row">
+										<div class="col-11 m-auto">
+											<!-- login form -->
+											<form class="mb-0" id="loginFormRwd" name="loginFormRwd" method="post" action='__APP__/MemberIndex/formLogin' onsubmit="return loginFunctionRwd()">
+												<div class="clearfix">
+													<!-- Email -->
+													<div class="form-group">
+														<div class="fancy-form">
+															<i class="fa fa-user txt-white"></i>
+															<input type="text" name='account' id="loginFormAccountRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex29}">
+														</div>
+													</div>
+
+													<!-- Password -->
+													<div class="form-group">
+														<div class="fancy-form">
+															<i class="fa fa-lock txt-white"></i>
+															<input type="password" name='password' id="loginFormPasswordRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex30}">
+														</div>
+													</div>
+
+												</div>
+
+												<div class="row">
+													<div class="col-12 d-flex mb-20">
+														<button type="button" onclick="registBtn()" class="btn btn-danger btn-shadow-1 btn-login-md btn-left">{$Think.lang.MemberIndex31}</button>
+														<button id="loginBtnRwd" type="submit" class="btn btn-danger btn-shadow-1 btn-login-md btn-right">{$Think.lang.MemberIndex32}</button>
+													</div>
+												</div>
+
+											</form>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-12 m-auto modal-footer-m mb-15">
+											<label class="checkbox ">
+												<input type="checkbox" id="checkbox1_rwd" value="1" checked="checked">
+												<i></i>
+											</label>
+											<span class="pr-10" onclick="openMemberConditionModal('MemberConditionModal')" >{$Think.lang.MemberIndex33}</span>
+
+											<span>|</span>
+											<a class="txt-white" href="__APP__/OnlineService/index">{$Think.lang.MemberIndex34}</a>
+											<span>|</span>
+											<a class="txt-white" href="__APP__/ForgetPage/index.html">{$Think.lang.MemberIndex35}</a>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane fade" id="profileRwd">
+									<div class="row">
+										<div class="col-8 col-sm-8 mb-0 m-auto text-center pb-30">
+											<a href="__APP__/MemberIndex/downloadIndex">
+												<img src="__CSS__/images/{$langStr}/promotions/btn.png" style="width: 100%; height: auto;" >
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- 註冊 -->
+				<div id="regist-container" class="container" style="display:none;">
+					<div class="row">
+						<!-- LOGIN -->
+						<div class="col-md-4">
+							<ul class="nav nav-tabs nav-justified">
+								<li class="nav-item"><a class="nav-link bookmark_type active" href="#registRwd" data-toggle="tab">{$Think.lang.MemberIndex36}</a></li>
+							</ul>
+
+							<div class="tab-content pt-10 pb-0">
+								<div class="tab-pane active" id="registRwd">
+									<div class="row">
+										<div class="col-11 m-auto">
+											<!-- login form -->
+											<form class="mb-0">
+												<div class="clearfix">
+													<!-- Phone -->
+													<div class="form-group">
+														<label class="txt-white" id="addPhoneLabelRwd" style="display:none;">{$Think.lang.MemberIndex37}</label>
+														<div class="fancy-form">
+															<i id="phoneIconRwd" class="fa fa-mobile txt-white regist-icon"></i>
+															<input type="text" id="addPhoneRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex38}">
+															<span id="checkPhoneRwd" class="invalid-feedback">{$Think.lang.MemberIndex39}</span>
+															<span class="valid-feedback">{$Think.lang.MemberIndex40}</span>
+														</div>
+													</div>
+
+
+													<!-- 帳號 -->
+													<div id="addAccountDivRwd" class="form-group" style="display:none;">
+														<label class="txt-white" id="addAccountLabelRwd">{$Think.lang.Account}</label>
+														<div class="fancy-form">
+															<i class="fa fa-mobile txt-white regist-icon"></i>
+															<input type="text" id="addAccountRwd" name="account" class="form-control login-input" >
+														</div>
+													</div>
+
+
+													<!-- Password -->
+													<div id="addPasswordDivRwd" class="form-group">
+														<label class="txt-white" id="addPasswordLabelRwd"></label>
+														<div class="fancy-form">
+															<i class="fa fa-lock txt-white"></i>
+															<input type="password" id="addPasswordRwd" name="password" class="form-control login-input" placeholder="{$Think.lang.MemberIndex30}">
+														</div>
+													</div>
+
+													<!-- Password -->
+													<div id="addCheckPasswordDivRwd" class="form-group">
+														<div class="fancy-form">
+															<i class="fa fa-lock txt-white"></i>
+															<input type="password" id="addCheckPasswordRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex41}">
+														</div>
+													</div>
+
+													<!-- 驗證碼 -->
+													<div id="addVerificationCodeDivRwd" class="form-group" style="display:none;">
+														<div class="fancy-form">
+															<i class="fa fa-lock txt-white"></i>
+															<input type="text" id="addVerificationCodeRwd" class="form-control login-input" placeholder="{$Think.lang.MemberIndex42}">
+														</div>
+													</div>
+												</div>
+											</form>
+										</div>
+									</div>
+									<div class="col-md-12 mb-10">
+										<button id="registBtnRwd" type="button" onclick="registRwd();"class="btn btn-primary login-btn">{$Think.lang.MemberIndex31}</button>
+										<button id="sendOutBtnRwd" type="button" onclick="sendOutRwd();"class="btn btn-primary login-btn" style="display:none;">{$Think.lang.MemberIndex43}</button>
+										<button id="finishBtnRwd" type="button" onclick="self.location.href='__APP__/EventExperiencePage/index'" class="btn btn-primary login-btn" style="display:none;">{$Think.lang.MemberIndex44}</button>
+									</div>
+									<div class="row">
+										<div class="col-12 m-auto modal-footer-m mb-15">
+											<label class="checkbox">
+												<input type="checkbox" id="checkbox2_rwd" value="1" checked="checked" >
+												<i></i>
+											</label>
+											<span class="pr-10" onclick="openMemberConditionModal('MemberConditionModal')">{$Think.lang.MemberIndex33}</span>
+
+											<span>|</span>
+											<a class="txt-white" href="__APP__/OnlineService/index">{$Think.lang.ContactService}</a>
+											<span>|</span>
+											<a class="txt-white" href="__APP__/ForgetPage/index.html">{$Think.lang.MemberIndex45}</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</if>
+		</section>
+<include file="Common:memberIndex_footer"/>
+<script>
+jQuery(document).ready(function (){
+	var getUrlString = location.href;
+	var url = new URL(getUrlString);
+	var kind = url.searchParams.get('kind');
+	if(kind == '2'){
+		registBtn();
+	}
+});
+</script>

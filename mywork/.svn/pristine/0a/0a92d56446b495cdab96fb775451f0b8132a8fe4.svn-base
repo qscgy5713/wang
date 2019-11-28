@@ -1,0 +1,32 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/> 
+<div class="container pt100 pb50 bg-min-height RebateEvent-xs-bg" >
+
+    	   <div class="vtimeline-content mb20 vtimeline-height" id="888"> 
+               <a href="" class="simple-hover"><img src="__CSS__/images/dg-entrance1.jpg" alt="" class="img-fluid mb20"></a>
+               <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong888"><h3>翻本金888</h3></a>
+               <br><br>
+               <button type="button" class="btn btn-outline-primary mb5 hidden-xs-down">立即申請</button>
+           </div>
+            
+            <div class="vtimeline-content mb20 vtimeline-height" id="44477"> 
+                <a href="" class="simple-hover"><img src="__CSS__/images/og-entrance1.jpg" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong4234"><h3>四星彩加碼送點數，儲值3000元三萬點數等你拿 !</h3></a>
+                <br><br>
+            </div>
+            
+            <div class="vtimeline-content mb20 vtimeline-height" id="10001"> 
+                <a href="" class="simple-hover"><img src="__CSS__/images/ab-entrance1.jpg" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong10001"><h3>新會員首次儲值1000點，送1000點數</h3></a>
+                <br><br>
+                <button type="button" class="btn btn-outline-primary mb5 hidden-xs-down">立即申請</button>
+            </div>
+            
+             <div class="vtimeline-content mb20 vtimeline-height" id="10002"> 
+                <a href="" class="simple-hover"><img src="__CSS__/images/sa-entrance1.jpg" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong10002"><h3>新會員首次儲值1000點，送1000點數</h3></a>
+                <br><br>
+                <button type="button" class="btn btn-outline-primary mb5 hidden-xs-down">立即申請</button>
+            </div>
+        </div>
+<include file="Common:footer"/>

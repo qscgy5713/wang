@@ -1,0 +1,283 @@
+<?php
+class SubManageAction extends AgentAction {
+    //TODO: 代理子帳號管理 首頁
+    public function index(){
+        if($_SESSION['Agent']['identity'] == 2){
+            //如果是子帳號，報錯
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //讀取 代理子帳號 資料
+        $CommonAgentSub = D("CommonAgentSub");
+        //表明 getAgentSubDataByAgentId()取得資料
+        $data = array(
+            "agent_id"=> $_SESSION['Agent']['id']
+        );
+        $return = $CommonAgentSub->getAgentSubDataByAgentId($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "sub_id"=>"id",
+            "sub_account"=>"account",
+            "sub_status"=>"status",
+            "sub_createTime"=>"createTime",
+            "sub_modifyTime"=>"modifyTime",
+            "sub_job"=>"job",
+            "sub_remark"=>"remark",
+            "power_id"=>"powerId",
+            "power_main"=>"pageData",
+        );
+        $showPageArray = $this->getPageArray();//取得頁面資訊
+        $showStr = "";
+        $showStrArray = array();
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'sub_status'://開關  轉換 文字
+                        if($value[$key1] == 0){
+                            $showStr = "帳號正常";
+                            break;
+                        }
+                        $showStr = "帳號停權";
+                        break;
+                    case 'sub_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'sub_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'power_main':
+                        $powerArray = explode(",",substr($value[$key1],0,-1));//substr() 去除最後一個字元   explode()切割字串
+                        foreach($showPageArray as $classKey => $classValue){
+                            foreach($classValue as $pageKey => $pageValue){
+                                $showEnable = $pageValue;
+                                $showEnable['power'] = 0;
+                                if (in_array($pageValue['id'], $powerArray)) {
+                                    $showEnable['power'] = 1;
+                                }
+                                $showStrArray[$classKey][$pageKey] = $showEnable;
+                            }
+                        }
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                if($key1 == 'power_main'){
+                    $showArray[$key][$value1] = $showStrArray;
+                } else {
+                    $showArray[$key][$value1] = $showStr;
+                }
+            }
+        }
+        $newSubAccountDataArray = $this->getSubNewAccount();//取得新 子帳號
+        
+        //var_dump($showArray);
+        //var_dump($showArray[0]['pageData']);
+        //var_dump($showPageArray);
+        //exit();
+        $this->assign("newSubAccount",$newSubAccountDataArray['newSubAccount']);
+        $this->assign("showArray",$showArray);
+        $this->assign("showPageArray",$showPageArray);
+        $this->display();
+    }
+    /*
+     * 取得新子帳號 規格
+     * 回傳 array newSubAccount 、  sub_bodys
+     */
+    protected function getSubNewAccount(){
+        $CommonAgentSub = D("CommonAgentSub");
+        $data = array(
+            "agent_id" => $_SESSION['Agent']['id']
+        );
+        $return = $CommonAgentSub->getAgentSubNewAccountDataByAgentId($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        
+        if(empty($return['MaxBodys'])){
+            $data = array(
+                "newSubAccount" => '1s'.$_SESSION['Agent']['account'],
+                "sub_bodys" => 1
+            );
+        } else {
+            $bodys = $return['MaxBodys'] + 1;
+            $data = array(
+                "newSubAccount" => $bodys.'s'.$_SESSION['Agent']['account'],
+                "sub_bodys" => $bodys
+            );
+        }
+        return $data;
+    }
+    //TODO: 子帳號新增
+    public function formAddAgentSub(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查 帳號 傳入 並且不為空
+        /*if(!isset($request['addAccount']) || empty($request['addAccount'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//密碼為空，請重新輸入
+        }*/
+        //檢查是否有 addPassword 傳入 並且不為空
+        if(!isset($request['addPassword']) || empty($request['addPassword'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//密碼為空，請重新輸入
+        }
+        if($request['addPassword'] !== $request['addCheckPassword']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼與確認密碼不符，請重新輸入。
+        }
+        
+        $CommonAgentSub = D("CommonAgentSub");
+        $newSubAccountDataArray = $this->getSubNewAccount();
+        $nowTime = time();//取得現在時間戳
+        //從 CommonAgentSubModel getMd5Password($password) 傳入密碼 取得加密後的密碼 作新增
+        $password = $CommonAgentSub->getMd5Password($request['addPassword']);
+        $powerMain = "";//做power字串
+        foreach ($request["addPageId"] as $value){
+            $powerMain .= $value.",";
+        }
+        $data = array(
+            "sub_account" => $newSubAccountDataArray['newSubAccount'], //管理帳號
+            "agent_id" => $_SESSION['Agent']['id'], //代理ID
+            "sub_password" => $password,
+            "sub_status" => 0,
+            "sub_createtime" => $nowTime,
+            "sub_remark" => $request['addRemark'],
+            "sub_bodys" => $newSubAccountDataArray['sub_bodys'],
+            "power_main" => $powerMain
+        );
+        
+        $return = $CommonAgentSub->addAgentSubData($data,$err);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error($err);
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 子帳號修改
+    public function formSetAgentSub(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 Id 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改帳號為空，請重新登入。
+        }
+        $CommonAgentSub = D("CommonAgentSub");
+        $nowTime = time();//取得現在時間戳
+        
+        $powerMain = "";//做power字串
+        foreach ($request["setPageId"] as $value){
+            $powerMain .= $value.",";
+        }
+        //檢查是否有修改密碼
+        if(!empty($request['setPassword'])){
+            if($request['setPassword'] !== $request['setCheckPassword']){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//密碼與確認密碼不符，請重新輸入。
+            }
+            //從 CommonAgentModel getMd5Password($password) 傳入密碼 取得加密後的密碼 作修改
+            $password = $CommonAgentSub->getMd5Password($request['setPassword']);
+            $data = array(
+                "sub_id" => $request['setId'], //管理帳號
+                "sub_password" => $password,
+                "sub_modifyTime"=> $nowTime,
+                "sub_remark" => $request['setRemark'],
+                "power_main" => $powerMain
+            );
+        } else {
+            $data = array(
+                "sub_id" => $request['setId'], //管理帳號
+                "sub_modifyTime"=> $nowTime,
+                "sub_remark" => $request['setRemark'],
+                "power_main" => $powerMain
+            );
+        }
+        $return = $CommonAgentSub->setAgentSubDataPageDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        //是，顯示成功訊息
+        $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    //TODO: 刪除 子帳號
+    public function formDelAgentSub(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 setDomainId 傳入 並且不為空
+        if(!isset($request['delId']) || (empty($request['delId']) && $request['delId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除ID為空，請重新操作
+        }
+        $CommonAgentSub = D("CommonAgentSub");
+        $data = array(
+            "sub_id" => $request['delId']
+        );
+        $return = $CommonAgentSub->delAgentSubDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//操作錯誤，請重新登入。
+    }
+    //TODO: 帳號停用
+    public function formStopAgentSub(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 ID 傳入 並且不為空
+        if(!isset($request['stopId']) || (empty($request['stopId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CommonAgentSub = D("CommonAgentSub");
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "sub_id" => $request['stopId'],
+            "sub_status" => 1,
+            "sub_modifyTime"=> $nowTime
+        );
+        $return = $CommonAgentSub->setAgentSubDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//權限不足或操作錯誤，請重新登入。
+    }
+    //TODO: 啟用啟用
+    public function formStartAgentSub(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 ID 傳入 並且不為空
+        if(!isset($request['startId']) || (empty($request['startId']) && $request['startId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//傳入ID為空，請重新操作。
+        }
+        $CommonAgentSub = D("CommonAgentSub");
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "sub_id" => $request['startId'],
+            "sub_status" => 0,
+            "sub_modifyTime"=> $nowTime
+        );
+        $return = $CommonAgentSub->setAgentSubDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+    }
+}

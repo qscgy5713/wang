@@ -1,0 +1,146 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		
+		
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+			
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">代理加盟</h2>
+					
+					<div class="responsibility_title"><i class="fa fa-gavel responsibility-icon-style"></i></div>	
+				</header>
+
+				<div class="row">
+
+					<div class="col-md-12 col-sm-12">
+					<!-- Useful Elements -->
+						<div class="card card-default">
+
+							<div class="card-block">
+
+								<form id="applyForm" name="applyForm" method="post" action='__APP__/AgentJoin/formAgentJoin' onclick="return false">
+
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<label>聯絡姓名</label>
+												<input type="text" id="applyName" name="applyName" placeholder="請輸入姓名" class="form-control">
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<label>聯絡方式</label>
+												<select id="exampleSelect1" name="code" class="form-control pointer">
+													<option value="LINE">LINE</option>
+					                                <option value="微信">微信</option>
+					                                <option value="E-Mail">E-Mail</option>
+					                                <option value="其他">其他</option>
+												</select>
+												<input type="text" id="applyContact" name="applyContact" placeholder="聯絡方式" class="form-control">
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<label>申請留言</label>
+												<textarea id="applyMsg" name="applyMsg" rows="4" placeholder="若您有任何問題或需求，請在此留言" class="form-control"></textarea>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<a data-toggle="modal" onclick="openmodal('myModalLabel')" href="#" class="btn btn-3d btn-secondary"><i class="fa fa-question-circle-o"></i>代理加盟制度表</a>
+											</div>
+										</div>
+
+										<div id="myModalLabel" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none; padding-right: 17px;">
+											<div class="modal-dialog modal-dialog-m2">
+												<div class="modal-content">
+													<!-- Modal Header -->
+													<div class="modal-header modal-bg pr-30">
+														<button type="button" class="close-style" data-dismiss="modal" ><span style="color: red;" aria-hidden="true">×</span></button>
+														
+														<h4 class="modal-title tex-black" id="">代理加盟制度表</h4>
+													</div>
+								
+													<!-- Modal Body -->
+													<div class="modal-body modal-body-bg">
+														<img style="width: 100%;" src="__CSS__/images/{$langStr}/180608.jpg">
+													</div>
+													<!-- Modal Footer -->
+													<div class="modal-footer modal-bg">
+										             	<button type="button" class="btn btn-dark closeBtn" data-dismiss="modal">確定</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-5 col-sm-5 m-auto">
+												<button type="submit" name="btnok" id="btnok" class="btn btn-secondary btn-shadow-1">送出申請</button>
+											</div>
+										</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 } 
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	 
+	jQuery("#btnok").click(function(){
+		 var applyName = jQuery("#applyName").val();
+		 var applyContact = jQuery("#applyContact").val();
+		 //alert(applyName);
+		 //alert(applyContact);
+		 applyName = jQuery.trim(applyName);
+		 applyContact = jQuery.trim(applyContact);
+		 
+        if(applyName == 0){
+            alert("您尚未填寫姓名");
+            eval("document.applyForm['applyName'].focus()");
+            return;
+        }else if(applyContact == 0){
+            alert("您尚未填寫聯絡方式");
+            eval("document.applyForm['applyContact'].focus()");    
+            return;
+        }else{
+        	jQuery("#loader-bg").show();
+       	 	document.applyForm.submit();
+        }
+	 })
+});
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+
+			

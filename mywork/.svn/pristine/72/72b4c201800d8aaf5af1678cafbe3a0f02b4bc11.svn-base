@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		遊戲帳號: <input type="text" name="user_name" value="{$user_name}" /><br/>
+		遊戲代碼: <select name="game_code">
+			<option value="BG12_animals">BG12_animals (十二發財星)</option>
+			<option value="BG15_golden_eggs">BG15_golden_eggs (快樂鳥)</option>
+			<option value="BG88_wild_dragon">BG88_wild_dragon (走運一路8)</option>
+		</select><br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="isset($op_result['form_id']) and ($op_result['form_id']=='bng_game_form')">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			<PHP>var_dump($op_result);</PHP>
+			<IF condition="strlen($op_result2)"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+		<strong>登入成功，送出下列表單即可進入遊戲:</strong>
+		<form id="bng_game_form" method="op_result['form_method']" action="{$op_result['form_action']}" target="_self">
+			partner_id: <input type="text" id="bng_partner_id" name="partner_id" value="{$op_result['bng_partner_id']}" /> 來自 login 回傳結果的 bng_partner_id<br/>
+			token: <input type="text" id="bng_token" name="token" value="{$op_result['bng_token']}" /> 來自 login 回傳結果的 bng_token<br/>
+			lang: <input type="text" id="bng_lang" name="lang" value="{$op_result['bng_lang']}" /> 來自 login 回傳結果的 bng_lang<br/>
+			fun: <input type="text" id="bng_fun" name="fun" value="{$op_result['bng_fun']}" /> 來自 login 回傳結果的 bng_fun。fun 是否試玩. 0:real money, 1:fun mode<br/>
+			<hr/>
+			<button type="submit">進入BNG</button>
+		</form>
+	<ELSE/>
+		<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+	</IF>
+</body>
+</html>

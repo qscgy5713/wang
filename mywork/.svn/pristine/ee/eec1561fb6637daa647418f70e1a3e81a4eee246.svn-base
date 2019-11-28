@@ -1,0 +1,34 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameQtMenuModel extends MemberModel {
+    /*
+     * 取得 遊戲菜單資料 資料
+     * 遊戲菜單使用
+     */
+    public function getGameQtMenuData(){
+        $sql = "SELECT 
+                    provider, game_id, UPPER(game_type) AS game_type, is_support_demo, game_name_en, game_name_ch, note
+                FROM `game_qt_menu`
+                WHERE 
+                    `support_desktop`= 1
+                    AND `is_active`=1
+                ORDER BY 
+                    game_type,
+		            game_name_en;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 遊戲菜單資料 資料
+     * 測試使用
+     */
+    public function getGameQtMenuDataUseTestQt(){
+        $sql = "SELECT
+                    *
+                FROM `game_qt_menu`;";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

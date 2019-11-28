@@ -1,0 +1,123 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+					
+					<include file="Common:MemberCenterMenu"/>
+
+
+					<div class="tab-content">
+						<div class="tab-pane active" id="">
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle">
+									<thead>
+					                  <tr>
+		                                <th>序號</th>
+		                                <th>時間</th>
+		                                <!-- <th>金額</th> -->
+		                                <th>號碼</th>
+		                                <th>開獎</th>
+		                                <th>結果</th>
+		                              </tr>
+					                </thead>
+									<tbody>
+					                	<VOLIST name="showArray" id="vo" empty="$showEmpty">
+			                            	<tr>
+			                            		<td>{$vo.id}</td>
+			                            		<td>{$vo.createTime}</td>
+												<!-- <td>{$vo.rechargeMoney}</td> -->
+												<td>{$vo.lottofour}</td>
+												<td>{$vo.lotterTime}</td>
+												<td>{$vo.result}</td>
+			                            	</tr>
+			                             </VOLIST>
+		                        	</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					
+					<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="col-lg-12 text-center">
+	                  		<nav aria-label="Page navigation">
+				                <ul class="pagination justify-content-center">
+				                
+				                <if condition="$pageNumber-1 neq 0">
+				                  <li class="page-item">
+				                    <a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$pageNumber-1}" aria-label="Previous">
+				                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+				                      <span class="sr-only">Previous</span>
+				                    </a>
+				                  </li>
+				                 </if>
+				                 
+				                 <volist name="pageArray" id="vo" >
+	                                <IF condition="$pageNumber eq $vo" >
+	                                	<li id="{$vo}Page" class="page-item active"><a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$vo}">{$vo}</a></li>
+	                                <else/>
+	                                	<li id="{$vo}Page" class="page-item"><a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$vo}">{$vo}</a></li>
+	                                </IF>
+	                             </volist>
+				                  
+				                  
+				                  <if condition="$pageNumber+1 elt $totalPage ">
+					                  <li class="page-item">
+					                    <a class="page-link loading" href="__APP__/{$Think.MODULE_NAME}/{$actionName}&pageNumber={$pageNumber+1}" aria-label="Next">
+					                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+					                      <span class="sr-only">Next</span>
+					                    </a>
+					                  </li>
+				                  </if>
+				                </ul>
+				              </nav>
+		                  </div>
+	                  </div>
+	               </if>
+	               
+	               <div class="alert alert-default mb-30"><!-- DEFAULT -->
+						<strong>四星彩活動說明：</strong> 
+						<ul class="fs-14 pl-20">
+	                        <li style="list-style:decimal;">每充值一筆3000元以上金額並確認繳款後，系統即配發一組四位數獎號可供您與台彩四星彩獎號對獎。</li>
+	                        <li style="list-style:decimal;">中獎規則視當期四星彩二個號碼以上才算中獎！中獎點數會充值至您的電子錢包中。例如您的獎號為1123，本期四星獎號為2023，這樣即中二星。需中由個位數到千位數順序才算。若開獎號為1132 這樣則視為不中獎。</li>
+	                        <li style="list-style:decimal;">四星彩官方開獎時間為星期一至六每天晚上20:30開始開獎，實際開獎時間一切依台彩公佈為準。</li>
+	                        <li style="list-style:decimal;">未加入公司LINE: yes5168net 即尚失資格領取。</li>
+	                        <li style="list-style:decimal;">小牛遊戲保有四星彩活動的最終解釋及更改權利。</li>
+	                    </ul>
+	                    <a href="http://www.taiwanlottery.com.tw/lotto/4D/history.aspx" target="_blank" style="height: 61px;" class="btn btn-secondary btn-shadow-1">台灣彩卷4星彩<br>各期獎號查詢</a>
+				   </div>
+				</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	//alert("{$i+1}Page");
+	jQuery("#"+"{$actionName}").addClass("active");
+})
+</script>
+
+
+			

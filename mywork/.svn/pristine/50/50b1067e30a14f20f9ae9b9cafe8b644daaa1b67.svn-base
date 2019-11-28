@@ -1,0 +1,307 @@
+<!-- menu -->
+<div id="header" style="position: fixed;" class="navbar-toggleable-md clearfix header-md transparent transparent-m sticky b-0 disable-uppercase shadow-after-3-m header-m hidden-sm-down">
+
+	<!-- TOP NAV -->
+	<header id="topNav">
+		<div class="container">
+
+			<!-- Mobile Menu Button -->
+			<button class="btn btn-mobile" data-toggle="collapse" data-target=".nav-main-collapse">
+				<i class="fa fa-bars"></i>
+			</button>
+
+			<!-- Logo -->
+			<a class="logo float-left loading" href="__APP__/MemberIndex/index">
+				<if condition='$sietData eq "test"'>
+					<img src="__CSS__/images/{$langStr}/index_logo_g.png" alt="" />
+					<img src="__CSS__/images/{$langStr}/index_logo_g.png" alt="" />
+				</if>
+				<if condition='$sietData eq "demo"'>
+					<img src="__CSS__/images/{$langStr}/index_logo_b.png" alt="" />
+					<img src="__CSS__/images/{$langStr}/index_logo_b.png" alt="" />
+				</if>
+				<if condition='$sietData eq "official"'>
+					<img src="__CSS__/images/{$langStr}/index_logo_red.png" alt="" />
+					<img src="__CSS__/images/{$langStr}/index_logo_red.png" alt="" />
+				</if>
+			</a>
+			<!--
+				Top Nav
+			-->
+			<div class="navbar-collapse collapse float-right nav-main-collapse">
+				<nav class="nav-main">
+					<ul id="topMain" class="nav nav-pills nav-main nav-hover-animate nav-animate-fadeIn">
+
+						<li class="dropdown" onclick="showMenu('sports');"><!-- HOME -->
+							<a class="dropdown-toggle" href="#">
+								{$Think.lang.MeanPE}
+							</a>
+							<div class="row menu-row" id="sports-div">
+								<ul id="sports" class="dropdown-menu">
+									<VOLIST name="gameSportMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+												<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+													<a href="__APP__/Game{$gameTable.gameCode}/{$gameTable.gameHref}" class="p-0 game-item loading {$gameTable['gameHtmlPopup']==1?'gameNewHtml':''}">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/{$langStr}/menu-img/caveat.png">
+													</div>
+													<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray" style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('realPerson');"><!-- PORTFOLIO -->
+							<a class="dropdown-toggle" href="#">
+								{$Think.lang.MeanLiveEntertainment}
+							</a>
+							<div class="row menu-row" id="realPerson-div">
+								<ul id="realPerson" class="dropdown-menu">
+									<VOLIST name="gamePersonMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+
+												<li style=" background-image: url(__CSS__/images/menu-img/girl_bg-{$i}.jpg);background-size: cover;">
+													<a href="__APP__/Game{$gameTable.gameCode}/{$gameTable.gameHref}" class="p-0 game-item loading {$gameTable['gameHtmlPopup']==1?'gameNewHtml':''}">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/{$langStr}/menu-img/caveat.png">
+													</div>
+													<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray" style=" background-image: url(__CSS__/images/menu-img/bgSB.jpg);">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/girl_bg-{$i}.jpg);background-size: cover;">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('bingo');"><!-- ABOUT -->
+							<a class="dropdown-toggle" href="#">
+								{$Think.lang.MeanLotteryBingo}
+							</a>
+							<div class="row menu-row" id="bingo-div">
+								<ul id="bingo" class="dropdown-menu">
+									<VOLIST name="gameLotteryMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+											  <li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="__APP__/Game{$gameTable.gameCode}/{$gameTable.gameHref}" class="p-0 game-item loading {$gameTable['gameHtmlPopup']==1?'gameNewHtml':''}">
+													<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											 </li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/{$langStr}/menu-img/caveat.png">
+													</div>
+													<a href="#" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray" style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/girl{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('electron');"><!-- CONTACT -->
+							<a class="dropdown-toggle" href="#">
+								{$Think.lang.MeanElectronicGames}
+							</a>
+							<div class="row menu-row" id="electron-div">
+								<ul id="electron" class="dropdown-menu">
+									<VOLIST name="gameElectronicMenuArray" id="gameTable">
+										<IF condition='$isLogin eq "true"'>
+											<IF condition="$gameTable.gameEnabled eq '1'">
+
+												<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+													<a href="__APP__/Game{$gameTable.gameCode}/{$gameTable.gameHref}" class="p-0 game-item loading {$gameTable['gameHtmlPopup']==1?'gameNewHtml':''}">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/game{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											<ELSE/>
+												<li>
+													<div class="caution">
+														<img src="__CSS__/images/{$langStr}/menu-img/caveat.png">
+													</div>
+													<a href="#" style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);" onClick="gameMaintain('{$gameTable.gameDefendMessage}')" class="p-0 game-maintain game-gray">
+														<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/game{$gameTable.gameCode}.png">
+													</a>
+												</li>
+											</IF>
+										<ELSE/>
+											<li style=" background-image: url(__CSS__/images/menu-img/bg{$gameTable.gameCode}.jpg);">
+												<a href="#" class="p-0 game-item">
+													<img class="girl_image mr-0" src="__CSS__/images/{$langStr}/menu-img/game{$gameTable.gameCode}.png">
+												</a>
+											</li>
+										</IF>
+									</VOLIST>
+								</ul>
+							</div>
+						</li>
+
+						<li class="dropdown" onclick="showMenu('rebateEvent');">
+							<a class="dropdown-toggle" href="#">
+								{$Think.lang.PreferentialActivity}
+							</a>
+							<div class="row menu-row menu-row-rebateEvent">
+								<ul id="rebateEvent" class="dropdown-menu" style="background-color: rgba(0, 0, 0, 0.42);">
+									<div class="row d-flex">
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/experiencePage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/experiencePage.png">
+											</a>
+										</li>
+										<!--1-->
+
+										<!--11-->
+										<!--<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/dragonStorePlusPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/dragonStorePlusPage.png">
+											</a>
+										</li>-->
+										<!--11-->
+
+
+										<!--10-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/storeGiftPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/storeGift2Page.png">
+											</a>
+										</li>
+										<!--10-->
+										<!--<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/storeGiftPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/storeGiftPage.png">
+											</a>
+										</li>-->
+
+										<!--11
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/storePlusPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/storePlusPage.png">
+											</a>
+										</li>-->
+										<!--11-->
+
+										<!--2-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/reversalPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/reversalPage.png">
+											</a>
+										</li>
+
+										<!--3-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/lottoFourPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/lottoFourPage.png">
+											</a>
+										</li>
+
+										<!--4-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/backWaterRealityPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/backWaterRealityPage.png">
+											</a>
+										</li>
+
+										<!--5-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/backWaterSportsPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/backWaterSportsPage.png">
+											</a>
+										</li>
+
+										<!--6-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/backWaterElectronicPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/backWaterElectronicPage.png">
+											</a>
+										</li>
+
+										<!--7-->
+										<li class="rebateEventHover">
+											<a href="__APP__/RebateEvent/baccaratWinningPage" class="loading">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/baccaratWinningPage.png">
+											</a>
+										</li>
+
+										<!--comingsoon
+										<li class="rebateEventHover">
+											<a href="#" class="">
+												<img class="mr-0" src="__CSS__/images/{$langStr}/promotions/comingsoon.png">
+											</a>
+										</li>-->
+									</div>
+							    </ul>
+							</div>
+						</li>
+						<li><!-- BLOG -->
+							<a class="loading" href="__APP__/AgentJoin/index">
+								{$Think.lang.AgentJoin}
+							</a>
+						</li>
+
+					</ul>
+
+				</nav>
+			</div>
+
+		</div>
+	</header>
+	<!-- /Top Nav -->
+	<div id="clickLightbox" class="click_lightbox" style="display: none;" onclick="showMenu('clickLightbox');"></div>
+</div>
+<!-- rwd 三角形logo -->
+<if condition='$isLogin eq "false"'>
+<div class="container clip_logo d-sm-none">
+	<!-- Logo -->
+	<a href="#" class="logo float-left">
+		<if condition='$sietData eq "test"'>
+			<img class="clip_img" src="__CSS__/images/{$langStr}/index_logo_g.png">
+		</if>
+		<if condition='$sietData eq "demo"'>
+			<img class="clip_img" src="__CSS__/images/{$langStr}/index_logo_b.png">
+		</if>
+		<if condition='$sietData eq "official"'>
+			<img class="clip_img" src="__CSS__/images/{$langStr}/index_logo_red.png">
+
+		</if>
+	</a>
+</div>
+</if>

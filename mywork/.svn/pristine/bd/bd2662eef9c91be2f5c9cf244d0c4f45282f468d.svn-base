@@ -1,0 +1,836 @@
+<?php
+
+class GameRtg2Model {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'https://cms-pre.rtgintegrations.com';
+  protected $cfg_agent = 'egpredapi';
+  protected $cfg_agent_key = '290dfc60c4';
+  //agentId = 828d5c73-6657-45d6-85e4-56f1a8436676
+
+  protected $token = null;
+  protected $token_retrive_ts = null;  //token取得時的timestamp。用以計算屆壽否
+
+  //protected $arr_start_datas = null;  //apiStart取回的資料放這(array)
+
+  const RTG2_DEFAULT_REQUEST_METHOD = 'POST';
+  const RTG2_CURL_CONNECTTIMEOUT_MS = 8000;
+  const RTG2_CURL_TIMEOUT_MS = 28000;
+  const RTG2_TOKEN_ALIVE_TIME_SEC = 30;  //token自取得後可以持續使用的時間長度。不知道多久，官方建議隨用隨取
+
+  const RTG2_DEFAULT_FIRST_NAME = 'test';
+  const RTG2_DEFAULT_LAST_NAME = 'test';
+  const RTG2_DEFAULT_EMAIL = 'test@test.com';
+  const RTG2_DEFAULT_GENDER = 'Male';
+  const RTG2_DEFAULT_BIRTHDATE = '1990-01-01T23:00';
+  const RTG2_DEFAULT_COUNTRY_ID = 'TW';
+  const RTG2_DEFAULT_CURRENCY = 'TWD';
+  const RTG2_DEFAULT_LANGUAGE = 'zh-CN';
+  const RTG2_TRANSFER_SUCCESS_CODE = 'OK';
+  const RTG2_REPORT_DEFAULT_PAGE_SIZE = 500;
+  const RTG2_TIMEZONE_OFFSET = 8;
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+  //--------------------通用函數--------------------
+	/**
+	 * 註冊新會員
+   * @param $data['agent_id'] 代理/运营商的系统ID
+	 * @param $data['user_name'] 會員帳號
+   * @param $data['currency'] 貨幣(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null) {
+    $arrKeys = array(
+      //'token' => array('required'=>1,),
+      'agent_id' => array('required'=>1,),
+      'user_name' => array('required'=>1,),
+      'first_name' => array('required'=>0,'default'=>self::RTG2_DEFAULT_FIRST_NAME,),
+      'last_name' => array('required'=>0,'default'=>self::RTG2_DEFAULT_LAST_NAME,),
+      'email' => array('required'=>0,'default'=>self::RTG2_DEFAULT_EMAIL,),
+      'gender' => array('required'=>0,'default'=>self::RTG2_DEFAULT_GENDER,),
+      'birthdate' => array('required'=>0,'default'=>self::RTG2_DEFAULT_BIRTHDATE,),
+      'country_id' => array('required'=>0,'default'=>self::RTG2_DEFAULT_COUNTRY_ID,),
+      'currency' => array('required'=>0,'default'=>self::RTG2_DEFAULT_CURRENCY,),
+    );
+    //$err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//無帳號
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+
+    $method = 'PUT';
+    $action = 'api/player';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'agentId' => $_agent_id,
+      'username' => $_user_name,
+      'firstName' => $_first_name,
+      'lastName' => $_last_name,
+      'email' => $_email,
+      'gender' => $_gender,
+      'birthdate' => $_birthdate,
+      'countryId' => $_country,
+      //'walletId' => $_wallet_id,  //(only for seamless) - 第三者单一钱包id
+      'currency' => $_currency,
+    );
+    $dataInJson = json_encode($arrData);
+    $res = $this->_sendRequest($url, $dataInJson, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==201) {  //201 here
+        if (isset($res['agentId']) && strlen($res['agentId'])) {
+          $argErr = null;
+          return $res;
+        } else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //必需的KEY不存在或是其值異常
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+	/**
+	 * 會員登入
+   * @param $data['agent_id'] 代理/运营商的系统ID
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null) {
+
+    $arrKeys = array(
+      'agent_id' => array('required'=>1,),
+      'user_name' => array('required'=>1,),
+      'game_id' => array('required'=>1,),
+      'language' => array('required'=>0,'default'=>self::RTG2_DEFAULT_LANGUAGE,),
+      'return_url' => array('required'=>1,),  // URL 将于退出游戏时开启或重導
+      'is_trial' => array('required'=>0,'default'=>false,),  //如果设置为true，游戏将以试玩模式启动。如果设置为false，它将以真钱模式启动
+      'game_name' => array('required'=>0,'default'=>'Good times with good games',),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+
+    $beginDatetimeInFormat = date('c', strtotime($_begin_datetime));
+    $endDatetimeInFormat = date('c', strtotime($_end_datetime));
+
+    $method = 'POST';
+    $action = 'api/GameLauncher';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'player' => array(
+        'agentId' => $_agent_id,
+        'playerLogin' => $_user_name,
+      ),
+      'gameId' => $_game_id,
+      'locale' => $_language,
+      'returnUrl' => $_return_url,
+      'isDemo' => $_is_trial,
+      'gameName' => $_game_name,
+    );
+    $dataInJson = json_encode($arrData);
+    $res = $this->_sendRequest($url, $dataInJson, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        if (isset($res['instantPlayUrl']) && isset($res['token'])) {
+          //instantPlayUrl: 启动游戏的URL
+          //token: 认证令牌验证。 也可用于外部验证
+          return $res['instantPlayUrl'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+	/**
+	 * 取得會員餘額
+   * @param $data['agent_id'] 代理/运营商的系统ID
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null) {
+
+    $arrKeys = array(
+      'agent_id' => array('required'=>1,),
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+
+    $method = 'POST';
+    $action = 'api/wallet';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'agentId' => $_agent_id,
+      'playerLogin' => $_user_name,
+      //'playerId' => $_player_id,  //玩家的系统ID。 如果使用playerId(玩家ID)作为参数，则不需要 playerLogin(玩家账号)和agentId (代理ID)
+    );
+    $dataInJson = json_encode($arrData);
+    $res = $this->_sendRequest($url, $dataInJson, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        return doubleVal($res);
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+	/**
+	 * 下點(提款)
+   * @param $data['agent_id'] 代理/运营商的系统ID
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(Bool). API未提供餘額所以無法回傳餘額。
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null) {
+    $transType = 'OUT';
+
+    return $this->_transfer(
+      $transType,
+      $arrDatas,
+      $argErr
+    );
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['agent_id'] 代理/运营商的系统ID
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(Bool). API未提供餘額所以無法回傳餘額。
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null) {
+    $transType = 'IN';
+
+    return $this->_transfer(
+      $transType,
+      $arrDatas,
+      $argErr
+    );
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null) {
+
+    $arrKeys = array(
+      'agent_id' => array('required'=>1,),
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'page' => array('required'=>1,),
+      'page_size' => array('required'=>0,'default'=>self::RTG2_REPORT_DEFAULT_PAGE_SIZE,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+
+    $beginDatetimeInFormat = date('c', strtotime($_begin_datetime));
+    $endDatetimeInFormat = date('c', strtotime($_end_datetime));
+
+    $method = 'POST';
+    $action = 'api/report/playergame';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'params' => array(
+        'agentId' => $_agent_id,
+        'fromDate' => $beginDatetimeInFormat,  //报告的开始時間日期. 注意格式
+        'toDate' => $endDatetimeInFormat,  // 报告的结束時間日期 注意格式
+        'pageIndex' => $_page,  //页码
+        'pageSize' => $_page_size,  //每页最大记录值
+      ),
+      'filters' => array(  // 包含过滤参数的数列。 用来过滤返回结果
+        //'field' => 'playerName',  //用来过滤的字段
+        //'filterText' => 'Testplayer',  // 字段中的文字
+        //'findExact' => true,  //确认字段的确切值 (exactvalue)是否与过滤文字 (filterText) 匹配
+        //'startDate' => '2018-12-20T02:00:00',  //根据报告的开始日期进行过滤 注意格式
+        //'endDate' => '2018-12-20T06:00:00',  //根据报告的结束日期进行过滤 注意格式
+      ),
+    );
+    $dataInJson = json_encode($arrData);
+    $res = $this->_sendRequest($url, $dataInJson, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        if (isset($res['totalCount']) && isset($res['items'])) {
+          //totalCount: 此批明細筆數
+          //items: 注單明細陣列
+          return $res['items'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + game_name_str     遊戲名稱
+   * + sb_html           有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $arrBet) {
+        $detail_id = $arrBet['detail_id'];
+
+        $arrBetContents = json_decode($arrBet['detail_dataInJson'], true);
+        $rtgApiAgentId     = $arrBetContents['agentId'];  //代理/运营商的系统ID
+        $rtgApiAgentName   = $arrBetContents['agentName'];  //代理名称
+        $casinoPlayerId    = $arrBetContents['casinoPlayerId'];  //玩家的系统ID
+        $casinoId          = $arrBetContents['casinoId'];  //平台的系统ID
+        $agent_account     = $arrBetContents['playerName'];  //玩家用户名
+        $gameDate          = $arrBetContents['gameDate'];  //游戏完成日期UTC + 0
+        $gameStartDate     = $arrBetContents['gameStartDate'];  //游戏开始日期UTC + 0
+        $gameNumber        = $arrBetContents['gameNumber'];  //游戏回合编号
+        $gameName          = $arrBetContents['gameName']; //已玩游戏的名称
+        $gameId            = $arrBetContents['gameId'];  //游戏的系统ID
+        $win               = $arrBetContents['win'];  //赢额。包含任何盈利 (例如，大奖彩池与一般盈利)
+        $jpBet             = $arrBetContents['jpBet'];  // 大奖彩池累积奖金
+        $jpWin             = $arrBetContents['jpWin'];  //大奖彩池累积盈利
+        $currency          = $arrBetContents['currency']; //使用货币
+        $roundId           = $arrBetContents['roundId'];  //尚未使用货币
+        $balanceStart      = $arrBetContents['balanceStart'];  //游戏开始时玩家余额
+        $balanceEnd        = $arrBetContents['balanceEnd'];  //游戏结束时玩家余额
+        $platform          = $arrBetContents['platform'];  //游戏平台 (立即游戏 – 桌面/手机)
+        $externalGameId    = $arrBetContents['externalGameId'];  //游戏ID
+        $sideBet           = $arrBetContents['sideBet'];  //旁观下注
+        $jackpotDetails    = $arrBetContents['jackpotDetails'];  //大奖彩池信息
+        $jpType            = $arrBetContents['jpType'];  //大奖彩池类型 (例如一般(Random)，特殊(Major)，超级 (Minor))
+        $jpBet             = $arrBetContents['jpBet'];  //特定大奖彩池累积奖金
+        $totals            = $arrBetContents['totals'];  //目前尚未使用
+        $gameNameZhCn      = $arrBetContents['gameNameZhCn'];  //遊戲中文名稱
+        
+        $arrBet['game_name_str'] = $gameNameZhCn;
+
+        $arrBet['sb_html'] = null;
+        $arrBets[] = $arrBet;
+      }
+      return $arrBets;
+    } else {
+      return false;
+    }
+  }
+
+
+  //--------------------PUBLIC 非通用函數--------------------
+
+  /**
+   * 取得可用於API操作的token
+   * @param argForceRenew 是否強制重取(API). 預設=true. 认证令牌有使用效期。 我们建议每个API呼叫时使用更新认证令牌
+   * @return 結果(string/bool)
+   */
+  public function getToken($argErr = null, $argForceRenew=false) {
+    if (($argForceRenew !== true) && $this->_isTokenAvailable()) {
+      return $this->token;
+    }
+    $arrHeader = array();
+    $method = 'GET';
+    $action = 'api/start/token';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'username' => $this->cfg_agent,
+      'password' => $this->cfg_agent_key,
+    );
+ 
+    $res = $this->_sendRequest($url, $arrData, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        if (isset($res['token']) && strlen($res['token'])) {
+          $token = $res['token'];
+          //file_put_contents('token.txt', $token);
+          //$token = str_replace('Bearer', '', $token);
+          //$token = trim($token);
+          $this->_setToken($token, time());
+          $argErr = null;
+          return $token;
+        } else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //必需的KEY不存在或是其值異常
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+  /**
+   * Start (启动) 是提供使用API时的参数。它将根据“ Token (认证令牌)”使用的用户返回信息
+   * @param argForceRenew 是否強制重取(API). 預設=true. 认证令牌有使用效期。 我们建议每个API呼叫时使用更新认证令牌
+   * @return 相關參數(array)
+   */
+  public function apiStart($argErr = null) {
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+    $method = 'GET';
+    $action = 'api/start';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array();
+
+    $res = $this->_sendRequest($url, $arrData, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        if (isset($res['agentId']) && strlen($res['agentId'])) {
+          $argErr = null;
+          return $res;
+        } else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //必需的KEY不存在或是其值異常
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+  /**
+   * Game Strings (游戏字串): 根据地区/语言提供与游戏相关信息
+   * @param argForceRenew 是否強制重取(API). 預設=true. 认证令牌有使用效期。 我们建议每个API呼叫时使用更新认证令牌
+   * @return 相關參數(array)
+   */
+  public function getGameStrings($argErr = null) {
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+    $method = 'GET';
+    $action = 'api/gamestrings';
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'locale' => 'zh-CN',  //locales":["en-US","zh-CN"],
+    );
+
+    $res = $this->_sendRequest($url, $arrData, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        return $res;
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+  public static function getBetDate($argBetDate, &$argSplitTimestamp=null) {
+    $betTime = strtotime($argBetDate);
+    $targetDate = date('Y-m-d',$betTime);
+    return $targetDate;
+  }
+
+  public static function getArrayValueByKey($arrArray, $arrKey) {
+    if (array_key_exists($arrKey, $arrArray)) {
+      return $arrArray[$arrKey];
+    } else {
+      if (array_key_exists('unknown', $arrArray)) {
+        return "{$arrArray['unknown']}({$arrKey})";
+      } else {
+        'Unknown key';
+      }
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  /**
+   * 點數轉出入
+   * @param $data['agent_id'] 代理/运营商的系统ID
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(Bool). API未提供餘額所以無法回傳餘額。
+   */
+  protected function _transfer($argTransferType, $arrDatas, &$argErr = null){
+
+    $arrKeys = array(
+      'agent_id' => array('required'=>1,),
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'trans_id' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $_amount = doubleval($_amount) + 0.0;
+
+    $isForceRenew = false;
+    $token = $this->getToken($argErr, $isForceRenew);
+
+    if ($token === false) {
+      return false;
+    }
+
+    $arrHeader = array(
+      "Authorization: {$token}",
+      "Content-Type: application/json",
+    );
+
+    $depositOrWithdraw = '';
+    if ($argTransferType=='IN') {
+      $depositOrWithdraw = 'deposit';
+    } else {
+      $depositOrWithdraw = 'withdraw';
+    }
+    $method = 'POST';
+    $action = "api/wallet/{$depositOrWithdraw}/{$_amount}";
+    $httpCodePassedIn = null;
+    $url = "{$this->cfg_base_url}/{$action}";
+    $arrData = array(
+      'agentId' => $_agent_id,
+      'playerLogin' => $_user_name,
+      //'playerId' => $_player_id,  //玩家的系统ID。 如果使用playerId(玩家ID)作为参数，则不需要 playerLogin(玩家账号)和agentId (代理ID)
+      //'trackingOne' => $_first_name,  //追踪信息。例如第三方的交易记录。用于辨认交易
+    );
+    if (isset($_trans_id) && strlen($_trans_id)) {
+      $arrData['trackingOne'] = $_trans_id;
+    }
+    $dataInJson = json_encode($arrData);
+    $res = $this->_sendRequest($url, $dataInJson, $arrHeader, $httpCodePassedIn, $method);
+
+    if (($res !== false) && ($httpCodePassedIn !== null)) {
+      if ($httpCodePassedIn==200) {
+        if (isset($res['errorMessage']) && ($res['errorMessage']==self::RTG2_TRANSFER_SUCCESS_CODE)) {
+          $argErr = null;
+          return true;
+        } else {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //必需的KEY不存在或是其值異常
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //非預期的http code
+      }
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //請求結果失敗
+    }
+    return false;
+  }
+
+  /* send request */
+  protected function _sendRequest($argUrl, $argArrData, $argArrHeader, &$argRefHttpCode, $argMethod=self::RTG2_DEFAULT_REQUEST_METHOD) {
+
+    $method = strtoupper($argMethod);
+
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYHOST => false,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::RTG2_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::RTG2_CURL_TIMEOUT_MS,
+      CURLOPT_HTTPHEADER => $argArrHeader,
+    );
+
+    if ( $method == 'GET') {  //GET
+      $dataStr = http_build_query($argArrData);
+      $url = "{$argUrl}?{$dataStr}";
+    } else {  //POST
+      $url = $argUrl;
+      //$dataStr = http_build_query($argArrData);
+      $arrCurlDatas[CURLOPT_POST] = true;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $argArrData;
+    }
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+    //echo $result."<BR>";
+
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+      $arrCurlInfo = curl_getinfo($ch);
+      $argRefHttpCode = $arrCurlInfo['http_code'];
+    }
+    curl_close($ch);
+
+    /*
+    echo '<hr/>';
+    echo 'url = ';
+    var_dump($url);
+    echo '<br/>';
+
+    echo 'arrCurlDatas = ';
+    var_dump($arrCurlDatas);
+    echo '<br/>';
+
+    echo 'result = ';
+    var_dump($result);
+    echo '<hr/>';
+    //var_dump($arrCurlDatas);
+    //var_dump($result);
+    //var_dump($curlError);
+    //var_dump($arrCurlInfo);
+    */
+
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result, true, 512, JSON_BIGINT_AS_STRING);  //decoded as assoc. array
+      //var_dump($resultInAssoc);
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //echo "sendRequest::curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+  /**
+   * 檢驗CLASS內的token是否可用
+   * @param 不需要
+   * @return 結果(bool)
+   */
+  protected function _isTokenAvailable() {
+    if (
+      ($this->token === null)
+      || ($this->token_retrive_ts === null)
+      || ( ($this->token_retrive_ts+self::RTG2_TOKEN_ALIVE_TIME_SEC) >= time() )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * 重設CLASS內的token為初始狀態
+   * @param 不需要
+   * @return 結果(bool)
+   */
+  protected function _resetToken() {
+    if (($this->token = null) && ($this->token_retrive_ts = null)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 設定CLASS內的token
+   * @param argToken token本身
+   * @param argTokenRetrieveTimestamp 取得token的時間
+   * @return 結果(bool)
+   */
+  protected function _setToken($argToken, $argTokenRetrieveTimestamp) {
+    if (($this->token = $argToken) && ($this->token_retrive_ts = $argTokenRetrieveTimestamp)) {
+      return true;
+    }
+    return false;
+  }
+}

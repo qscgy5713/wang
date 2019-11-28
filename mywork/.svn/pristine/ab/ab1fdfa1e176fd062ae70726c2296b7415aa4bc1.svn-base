@@ -1,0 +1,102 @@
+.f-s-60{
+    font-size: 60px;
+}
+.f-s-35{
+    font-size: 35px;
+}
+.p-t-200 {
+    padding-top: 200px!important;
+}
+.p-8{
+	padding: 8px;
+}
+.vertical_align{
+   vertical-align: sub;
+}
+.logo-a{
+	position: absolute;
+    left: 57px;
+    top: 15px;	
+}
+.m-l-auto{
+	margin-left: auto !important;
+}
+.card-shadow{
+	box-shadow: 2px 2px 7px #11111154;
+}
+.div-style{
+   display: initial !important;
+}
+.div-style-contents{
+	display: contents !important;
+}
+.div-style-inline-flex{
+	/*display: -webkit-inline-box !important;*/
+	display: inline-flex;
+}
+.mq-height{
+	float: left;
+    padding: 10px 20px;
+    height: 50px;
+    width: 77%;
+    font-size: 14px;
+    text-decoration: none;
+}
+@media screen and (max-width: 520px){
+	.mq-height{
+		width: 100%;
+	}
+	.time-btn-rwd{
+    	margin-bottom: 10px !important;
+    }
+    .time-input-rwd{
+    	margin-bottom: 6px !important;
+    }
+    .modal-open{
+		overflow:hidden !important;
+		position: fixed !important;
+	}
+	.time-btn-rwd-p{
+		padding-left: 7px !important;
+    	padding-right: 7px !important;
+	}
+
+    .modal-body{
+        overflow:hidden !important;
+    }
+
+}
+.loader-bg {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    overflow: hidden;
+    position: fixed;
+    background: hsl(0, 0%, 0%);
+    opacity: 0.8;
+}
+.icon-size:hover, .sort-icon:hover {
+    color: #FF3B30;
+    text-shadow: 2px 2px 8px #6c757db8;
+	font-size: 23px;
+}
+.icon-size {
+    margin-right: 4px!important;
+    margin-left: 4px!important;
+    font-size: 25px;
+}
+.width-auto{
+   width: auto !important;
+}
+@media (min-width: 768px){
+    
+}
+.form-vertical-align {
+    vertical-align: sub;
+}
+.close {
+    color: #ff3b30;
+    opacity: 1;
+}

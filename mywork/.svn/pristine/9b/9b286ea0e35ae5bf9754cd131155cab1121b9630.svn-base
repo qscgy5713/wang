@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ManageBank首頁</title>
+</head>
+<body>
+<span> Test ManageBank Index </span>
+<form method="post" action="__APP__/ManageBank/index">
+	會員帳號搜尋 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+	<input class="btn btn-pink m-r-5 m-b-5" type="submit" value="查詢">
+</form>
+	<table>
+		<tr><th>序</th><th>會員帳號</th><th>銀行代碼</th><th>銀行帳號</th><th>銀行戶名</th><th>銀行分行</th><th>建立時間</th><th>修改時間</th><th>操作</th></tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.memberAccount}</td>
+				<td>{$vo.code}</td>
+				<td>{$vo.account}</td>
+				<td>{$vo.name}</td>
+				<td>{$vo.branch}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.modifyTime}</td>
+				<td>{$vo.remark}</td>
+				<td>
+					修改資料BUTTON
+					刪除BUTTON
+					<form method="post" action='__APP__/ManageBank/formDelMemberBank'>
+						<input type="hidden" value="{$vo.id}" name="delId">
+						<button type="submit" class="btn btn-primary">刪除</button>
+					</form>
+				</td>
+			</tr>
+			<tr>
+			<form method="post" action='__APP__/ManageBank/formSetMemberBank'>
+				<td></td>
+				<td>帳號:{$vo.memberAccount}
+				<input type="hidden" value="{$vo.id}" name="setId"></td>
+				<td>銀行代碼:<input type="text" name="setCode"  value="{$vo.code}" ></td>
+				<td>銀行帳號:<input type="text" name="setAccount"  value="{$vo.account}" ></td>
+				<td>銀行戶名:<input type="text" name="setName"  value="{$vo.name}" ></td>
+				<td>銀行分行:<input type="text" name="setBranch"  value="{$vo.branch}" ></td>
+				<td>備註:<input type="text" name="setRemark"  value="{$vo.remark}" ></td>
+				<td></td>
+				<td></td>
+				<td><button type="submit" class="btn btn-primary">確認修改</button></td>
+			</form>
+			</tr>
+		</VOLIST>
+	</table>
+
+	<if condition="$pageNumber neq ''">
+		                  <div class="row">
+			                  <div class="main col-lg-12">
+			                  		<nav aria-label="Page navigation">
+						                <ul class="pagination justify-content-center">
+						                
+						                <if condition="$pageNumber-1 neq 0">
+						                  <li class="page-item">
+						                    <a class="page-link" href="__APP__/ManageBank/index&pageNumber={$pageNumber-1}" aria-label="Previous">
+						                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+						                      <span class="sr-only">Previous</span>
+						                    </a>
+						                  </li>
+						                 </if>
+						                  
+						                  <for start="0" end="$totalPage">
+						                  	<!-- <if condition="$totalPage elt 11"> -->
+						                  		<li id="{$i+1}Page" class="page-item"><a class="page-link" href="__APP__/ManageBank/index&pageNumber={$i+1}">{$i+1}</a></li>
+						                  	<!-- </if> -->
+						                  </for>
+						                  
+						                  <if condition="$pageNumber+1 elt $totalPage ">
+							                  <li class="page-item">
+							                    <a class="page-link" href="__APP__/ManageBank/index&pageNumber={$pageNumber+1}" aria-label="Next">
+							                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+							                      <span class="sr-only">Next</span>
+							                    </a>
+							                  </li>
+						                  </if>
+						                </ul>
+						            </nav>
+			                  </div>
+		                  </div>
+	                  </if>
+<script>
+$(document).ready(function(){
+	$('#member_account').typeahead({
+		ajax: {
+			url: '__URL__/seachMemberNumber',
+			timeout: 200
+		}
+	});
+});
+</script>
+</body>
+</html>

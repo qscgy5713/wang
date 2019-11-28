@@ -1,0 +1,147 @@
+	<!-- 錯誤彈框 -->
+	<div id="errorModal" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="errorModal" style="display: none; padding-right: 17px;">
+		<div class="modal-dialog wow tada animation-visible animated" style="margin-top: 158px;">
+			<div class="modal-content">
+	
+				<!-- Modal Header -->
+				<div class="modal-header modal-bg pr-30">
+					<button type="button" class="close-style" data-dismiss="modal" ><span aria-hidden="true">×</span></button>
+					<h4 class="modal-title tex-black text-center" id="">訊息</h4>
+				</div>
+	
+				<!-- Modal Body -->
+				<div class="modal-body modal-body-bg">
+					<p id="errorMain" class="text-center fw-600 fs-20"></p>
+				</div>
+	
+				<!-- Modal Footer -->
+				<div class="modal-footer modal-bg">
+	             	<button id="MemberConditionModalBtn" type="button" class="btn btn-dark closeBtn" data-dismiss="modal">{$Think.lang.Close}</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+		<!-- JAVASCRIPT FILES -->
+	    <script>var plugin_path = '__CSS__/Smarty/HTML_BS4/assets/plugins/';</script>
+	    <!-- 全版公告彈框使用的變數 -->
+		<script>var plugin_path_m = '__CSS__/';</script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/jquery/jquery-3.3.1.min.js"></script>
+		<!-- SCRIPTS -->
+		<script src="__CSS__/Smarty/HTML_BS4/assets/js/scripts.js"></script>
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/bootstrap/popper.min.js"></script>
+		<!-- REVOLUTION SLIDER -->
+		<script src="__CSS__/Smarty/HTML_BS4/assets/plugins/slider.revolution/js/jquery.themepunch.tools.min.js"></script>
+
+		<script src="__CSS__/Smarty/HTML_BS4/assets/js/view/demo.revolution_slider.js"></script>
+	    <!-- 跑馬燈 -->
+	    <script src="__CSS__/js/marquee/lib/jquery.marquee.js"></script>
+	</body>
+</html>
+<script>
+function errorShow(error){
+	jQuery('#errorMain').html(error);
+	jQuery('#errorModal').modal('show');
+}
+jQuery(".gameNewHtml").click(function(){
+	var gamehtml = window.open('__APP__/Common/loading&xn', 'gamePage');
+});
+jQuery(".game-item").click(function(){
+	 var isLogin = "{$isLogin}";
+	 if( isLogin == "false"){
+			errorShow("{$Think.lang.PlzLoginNow}!");
+		}else{
+			//var gamehtml = window.open('__APP__/Common/loading&xn', 'gamePage');
+		}
+});
+function gameMaintain(defendMessage){
+	 var isLogin = "{$isLogin}";
+	 if(isLogin == "false"){
+		errorShow("{$Think.lang.PlzLoginNow}!");
+	 } else {
+		 if(defendMessage == ""){
+			 errorShow("{$Think.lang.GameMaintaining}");
+		 } else {
+			 errorShow(defendMessage);
+		 }
+	 }
+}
+var use_debug = false;
+function debug(){
+	if( use_debug && window.console && window.console.log ) console.log(arguments);
+}
+jQuery(document).ready(function (){
+	//小牛loading消失
+	jQuery("#loader-bg").hide();
+	//跑馬燈
+	jQuery(".marquee").marquee({
+		loop: -1
+		// this callback runs when the marquee is initialized
+		, init: function ($marquee, options){
+			debug("init", arguments);
+
+			// shows how we can change the options at runtime
+			if( $marquee.is("#marquee2") ) options.yScroll = "bottom";
+		}
+		// this callback runs before a marquee is shown
+		, beforeshow: function ($marquee, $li){
+			debug("beforeshow", arguments);
+
+			// check to see if we have an author in the message (used in #marquee6)
+			var $author = $li.find(".author");
+			// move author from the item marquee-author layer and then fade it in
+			if( $author.length ){
+				$("#marquee-author").html("<span style='display:none;'>" + $author.html() + "</span>").find("> span").fadeIn(850);
+			}
+		}
+		// this callback runs when a has fully scrolled into view (from either top or bottom)
+		, show: function (){
+			debug("show", arguments);
+		}
+		// this callback runs when a after message has being shown
+		, aftershow: function ($marquee, $li){
+			debug("aftershow", arguments);
+			// find the author
+			var $author = $li.find(".author");
+			// hide the author
+			if( $author.length ) $("#marquee-author").find("> span").fadeOut(250);
+		}
+	});
+	//影城功能
+	jQuery('.Login-movie').click(function(){
+	  	if( isLogin == "false"){
+	  		openmodal('loginModal');
+	  	}else{
+	  		window.open('{$movieUrl}', 'freeVideo');
+	  	}
+	});
+});
+function openmodal(id){
+	//alert(id);
+	jQuery('#'+id).modal('show');
+}
+function showMenu(id){
+	//alert(id);
+	if(id == "clickLightbox"){
+		jQuery('.dropdown-menu').removeClass( "show" );
+		jQuery('#clickLightbox').hide();
+	}else{
+		jQuery('#'+id).addClass("show");
+		jQuery('#clickLightbox').show();
+	}
+}
+var announcementBool = "{$announcementBool}";
+var isLogin = "{$isLogin}";
+//loading 框顯示
+jQuery('.loading').click(function(){
+	jQuery("#loader-bg").show();
+
+});
+//回上一頁監聽事件
+window.onpageshow=function(e){
+	if(e.persisted) {
+		jQuery("#loader-bg").hide();
+		//window.location.reload();
+	}
+};
+</script>

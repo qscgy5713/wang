@@ -1,0 +1,110 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-10">
+			
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">隱私政策</h2>
+					
+					<div class="responsibility_title"><i class="fa fa-gavel responsibility-icon-style"></i></div>	
+				</header>
+
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<p class="mb-30 fw-700" style="line-height: 30px;">對於保存客戶資料方面，小牛遊戲一向採取最謹慎的態度及工作程序。以下的政策說明了我們對客戶所肩負起的責任與承諾。
+						另外，也清晰說明了我們處理客戶資料的方式。當閣下使用小牛遊戲，表示您承認並接受小牛遊戲隱私政策的規則與條件，並了解收集各項資料之目的及處理之方式。</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h3>資料收集與使用</h3>
+					</div>	
+					<div class="col-md-6 col-sm-6 pl-35">
+						<h4 style="line-height: 30px;">當客戶在開設及使用賬戶時，我們會收集相關數據，例如姓名，地址，年齡，電郵，電話，IP位置等，目的為：</h4>
+						<ul class="responsibility_list">
+	                        <li>協助改善戶口管理</li>
+	                        <li>安全理由（包括客戶的身份證明）</li>
+	                        <li>建立客戶檔案</li>
+	                        <li>管理客戶關係及達至營銷目的</li>
+	                    </ul>
+	                    <h4>傳送優惠訊息</h4>
+	                    <p style="line-height: 30px;">在開設戶口後，客戶將自動不定期收到由小牛遊戲發出之信息。更改您的個人資料 客戶可隨時更改個人資料。如有需要，可向我們的客戶服務員聯絡。</p>
+						<h4>個人資料的安全與準確性</h4>
+						<p style="line-height: 30px;">我們承諾會妥善地保存客戶的所有數據，並維護相關數據的準確性。根據法律，客戶有權保留個人資料及要求更改任何錯誤。</p>
+					</div>
+					<div class="col-md-6 col-sm-6">
+						<p class="mb-40" style="line-height: 30px;">同時，我們更會採取所有步驟以確保客戶數據在處理過程中，能達至最嚴格的安全標準。
+						此外，客戶資料只有在適用於法律的情況下方有機會被透露，而資料則主要透露給小牛遊戲等。有關部門、商業夥伴、顧問與供貨商(如信用卡處理機構)。我們承諾不會將客戶的數據售賣給第三者。</p>
+						<h4>小型文本文件(Cookies)</h4>
+						
+						<p class="mb-40" style="line-height: 30px;">當客戶首次瀏覽小牛遊戲時，一個稱為Cookies的小型文本文件數據將會傳送到您的瀏覽器以對其作出分析。
+						及後，當客戶再次瀏覽本網站時，小型文本文件擁有一個特別的標識符以區分有關用戶的計算機。這幫助我們根據客戶的喜好及興趣，以協助提供更佳的上網服務。</p>
+						
+						<p class="fw-700" style="line-height: 30px;">縱然客戶的瀏覽器選擇不接受小型文本文件，但亦可流暢地瀏覽我們的網頁，分別是我們不能提供更佳的上網服務。</p>
+						
+					</div>
+					<div class="col-md-12 col-sm-12 pl-35">
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 col-sm-12 pl-35">
+						<h3>網站信息</h3>
+						<p>我們的系統會自動記錄小牛遊戲瀏覽者的網絡IP地址，但我們決不會記錄網站訪問者的電郵地址，而此項主要是用作網站流量統計之用。</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+						<h3>安全性</h3>
+						<p style="line-height: 30px;">小牛遊戲為確保客戶提供給我們的個人信息及數據是絕對安全保密。所有傳送給我們的相關內容，都必定經過高科技的保密設施後，然後儲存進我們的服務器內。
+						這項保密設施，乃使用目前最先進的防火牆技術來維護。我們的網站和軟件更會採用最佳的保密程序，目的是保證用戶的個人資料不會被第三方胡亂使用。</p>
+						<div class="divider divider-left"><!-- divider -->
+							<i class="fa fa-star-o"></i>
+						</div>
+						<p class="text-center fw-700">如客戶對我們的隱私政策和安全有任何疑問，請隨時電郵service@x591.net， 或致電熱線與我們聯絡。</p>
+					</div>
+				</div>
+			</div>
+			
+			
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+	     if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		 }else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		 } 
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>
+
+
+			

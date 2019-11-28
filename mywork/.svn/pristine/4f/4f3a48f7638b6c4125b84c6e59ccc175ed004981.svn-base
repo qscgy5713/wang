@@ -1,0 +1,474 @@
+<!-- 優惠活動頁 -->
+<include file="Common:header"/> 
+<body>
+       <div id="loader-bg" class="loader-bg">
+	   	  <div id="loader" class="loader loader-area"></div>
+	   	  <h6 id="loader-text" class="ml9 text-center">
+			  <span id="loader-span" class="text-wrapper">
+			    <span id="loader-span2" class="letters text-white">讀取中，請稍後!</span>
+			  </span>
+		  </h6>
+	   </div>
+        
+        <!--登入條-->
+         	<div class="top-bar clearfix light hidden-sm-down">
+	           <div class="container">
+	             <div class="float-sm-right">
+		            <if condition='$isLogin eq "false"'>
+		                
+		                    <ul class="list-inline mb0">
+		                        <li class="list-inline-item">
+		                           <a href="__APP__/OnlineService/index" class="social-icon-sm si-gray si-twitter loading">
+		                                <i class="ti-headphone-alt"><span>線上客服</span></i>
+		                                <i class="ti-headphone-alt"><span>線上客服</span></i>
+		                            </a>
+		                        </li>
+		
+		                        <li class="list-inline-item">
+		                            <a id = "noLogin-movie" href="#" class="social-icon-sm si-gray si-twitter loading">
+		                                <i class="ti-layout-width-default"><span>免費影城</span></i>
+		                                <i class="ti-layout-width-default"><span>免費影城</span></i>
+		                            </a>
+		                        </li>
+		                    </ul>
+		                
+		              <else/>
+		            	<ul class="list-inline mb0">
+		                    	<li class="list-inline-item">
+		                        	<a href="__APP__/MemberCenter/index" class="social-icon-sm si-gray si-twitter loading">
+		                                <i class="ti-crown"><span>會員中心</span></i>
+		                                <i class="ti-crown"><span>會員中心</span></i>
+		                            </a>
+		                        </li>
+		                       <li class="list-inline-item nav-item dropdown dropdown-full-width dropdown-submenu ">
+		                            <a href="#" class="social-icon-sm-a si-gray si-twitter font-size15">
+		                                <i class="ti-money ml10"><span>電子錢包：{$memberWallet}</span><i class="ti-angle-down menu-i-style" style="color:#999 !important;"></i></i>
+		                                <i class="ti-money ml10"><span>電子錢包：{$memberWallet}</span><i class="ti-angle-down menu-i-style"></i></i> 
+		                            </a>
+		                         
+		                            <ul class="dropdown-menu dropdown-mega-fw mt5 menu-m">
+		                                <li class="container">
+		                                    <div class="mega-menu-content pt10 pb10">
+		                                        <div class="row">
+		                                            <ul class="mega-inner-nav list-unstyled">
+		                                                <li><a class="loading" href="__APP__/PointRecharge/index"><i class="ti-plus"></i> 儲值點數</a></li>
+		                                                <li><a class="loading" href="__APP__/PointWithdraw/index"><i class="ti-money"></i> 託售點數</a></li>
+		                                                <li><a class="loading" href="__APP__/PointCenter/index"><i class="ti-star"></i> 點數中心</a></li>
+		                                               
+		                                            </ul>
+		                                        </div>
+		                                    </div>
+		                                </li>
+		                            </ul>
+		                        </li>
+		                        <li class="list-inline-item">
+		                            <a href="__APP__/OnlineService/index" class="social-icon-sm si-gray si-twitter loading">
+		                                <i class="ti-headphone-alt"><span>線上客服</span></i>
+		                                <i class="ti-headphone-alt"><span>線上客服</span></i>
+		                            </a>
+		                        </li>
+		
+		                        <li class="list-inline-item">
+		                            <a id="Login-movie" href="#" class="social-icon-sm si-gray si-twitter loading">
+		                                <i class="ti-layout-width-default"><span>免費影城</span></i>
+		                                <i class="ti-layout-width-default"><span>免費影城</span></i>
+		                            </a>
+		                        </li>
+		                    </ul>
+		                </if>    
+	          		 </div> 
+	                <div class="float-sm-left">
+	                	<if condition='$isLogin eq "false"'>
+	                    	<form method="post" action='__APP__/MemberIndex/formLogin'>
+	                            <input type="text" class="login-input" name='account' placeholder="請輸入帳號">
+	                            <input type="password" class="login-input" name='password' placeholder="請輸入密碼">
+								<button type="submit" class="btn btn-outline-primary mb5 login-btn loading">登入</button>
+								<button type="submit" formaction='__APP__/RegistPage/index.html'  class="btn btn-outline-primary mb5 login-btn ml10 loading">註冊</button>
+								<button type="submit" formaction='__APP__/ForgetPage/index.html'  class="btn btn-outline-primary mb5 login-btn loading">忘記帳號/密碼</button>
+							</form>
+						
+						<else/>
+							<form method="post" action='__APP__/MemberIndex/logout'>
+								歡迎光臨  財神娛樂, <span>{$memberAccount}</span>
+								<button type="submit" class="btn btn-outline-primary mb5 login-btn loading">登出</button>
+							</form>
+						</if>
+	                </div>
+	            </div>
+            </div>
+        <!--/登入條-->
+        
+        <!-- Pushy Menu -->
+      
+        <!-- Site Overlay -->
+        <div class="site-overlay "></div>
+
+        <nav class="navbar navbar-expand-lg navbar-light navbar-transparent bg-faded nav-sticky menu-bg-color" style="position: static;">
+       
+            <div class="search-inline hidden-sm-down">
+                <form>
+                    <input type="text" class="form-control" placeholder="Type and hit enter...">
+                    <button type="submit"><i class="ti-search"></i></button>
+                    <a href="javascript:void(0)" class="search-close"><i class="ti-close"></i></a>
+                </form>
+            </div><!--/search form-->
+            
+            <!--網頁版-->
+            <div class="container hidden-sm-down">
+               <!--logo-->
+                <a class="navbar-brand loading" href="__APP__/MemberIndex/index">
+                    <img class='logo logo-dark' src="__CSS__/images/logo.png" alt="">
+                    <img class='logo logo-light hidden-md-down' src="__CSS__/images/logo-light.png" alt="">
+                </a>
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">體育</a>
+                            <ul class="dropdown-menu dropdown-menu-right">
+                                <li><a href="__APP__/GamePA/gameEnter" class="dropdown-item game-item loading">美金盤</a></li>
+                                <li><a href="__APP__/GameSB/gameEnter" class="dropdown-item game-item loading">鑫寶體育</a></li>
+                                <li><a href="__APP__/GameSP/gameEnter" class="dropdown-item game-item loading">SP體育</a></li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">真人娛樂 </a>
+                            <ul class="dropdown-menu dropdown-menu-right">
+                                <li><a href="__APP__/GameSA/gameEnter" class="dropdown-item game-item loading">沙龍真人</a></li>
+                                <li><a href="__APP__/GameDG/gameEnter" class="dropdown-item game-item loading">夢幻真人</a></li>
+                                <li><a href="__APP__/GameAB/gameEnter" class="dropdown-item game-item loading">歐博真人</a></li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">彩票賓果  </a>
+                            <ul class="dropdown-menu dropdown-menu-right">
+                                <li><a href="__APP__/GameBJ/gameEnter" class="dropdown-item game-item loading">北京賽車</a></li>
+                                <li><a href="__APP__/GameXBS/gameEnter" class="dropdown-item game-item loading">新六合彩</a></li>
+                                <li><a href="__APP__/GameBG/gameEnter" class="dropdown-item game-item loading">賓果賓果</a></li>
+                                
+                                
+                            </ul>
+                        </li>
+                        
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">電子遊戲</a>
+                            <ul class="dropdown-menu dropdown-menu-right">
+                                <li><a href="__APP__/GameRTG/gameEnter" class="dropdown-item loading">RTG電子</a></li>
+                                <li><a href="__APP__/GameBNG/index" class="dropdown-item loading">博狗電子</a></li>
+                                <li><a href="__APP__/GameQT/index" class="dropdown-item loading">QT電子</a></li>
+                                <li><a href="__APP__/GameUC8/index" class="dropdown-item loading">手機電子</a></li>
+                                <li><a href="__APP__/GameGG/index" class="dropdown-item loading">財神捕魚</a></li>
+                                
+                            </ul>
+                        </li>
+                        
+                        <div class=" navbar-right-elements">
+		                  <ul class="list-inline">
+		                      <li class="list-inline-item">
+			                      <a class="loading" href="__APP__/RebateEvent/index">
+			                      	<span>優惠活動</span>
+			                      </a>
+		                      </li>
+		                      <li class="list-inline-item">
+			                      <a class="loading" href="__APP__/AgentJoin/index" >
+			                      	<span>代理加盟</span>
+			                      </a>
+		                      </li>
+		                      <li class="list-inline-item">
+			                      <a class="loading" href="__APP__/PointRecharge/index">
+			                      	<span>點數儲值</span>
+			                      </a>
+		                      </li>
+		                    
+		                  </ul>
+		              </div>
+                      
+                    </ul>        
+                </div>
+                
+            </div>
+            
+            <!--行動版-->
+            <div class="container hidden-md-up">
+            	
+            	<if condition='$isLogin eq "false"'>
+	        		<button style="display:none;" class="navbar-toggler navbar-toggler-right collapsed hidden-md-up" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+	        	<else/>
+	        		<button class="navbar-toggler navbar-toggler-right collapsed hidden-md-up" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+	        	</if>
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+               <!--logo-->
+                <a class="navbar-brand loading" href="__APP__/MemberIndex/index">
+                    <img class='logo logo-dark' src="__CSS__/images/logo.png" alt="">
+                    <img class='logo logo-light hidden-md-down' src="__CSS__/images/logo-light.png" alt="">
+                </a>
+                <!--行動版-->
+                <div  id="navbarNavDropdown" class="hidden-md-up navbar-collapse collapse ">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link phone-a-border-b" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">
+                            	電子錢包:{$memberWallet}元
+                            </a>
+                        </li>
+                       
+                        <li class="nav-item dropdown dropdown-full-width">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="__APP__/PointRecharge/index">
+                               	儲值點數
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="__APP__/PointCenter/index">
+                            	點數中心 
+                             </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="#">
+                            	線上託售
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="__APP__/MemberCenter/index">
+                            	會員中心
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="__APP__/RebateEvent/index">
+                            	優惠活動
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="#">
+                            	首存加碼
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="__APP__/AgentJoin/index">
+                            	代理加盟
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link phone-a-border-t loading" data-toggle="" aria-haspopup="true" aria-expanded="false" href="__APP__/MemberIndex/logout">
+                            	登出
+                            </a>
+                        </li>
+                    </ul>        
+                </div>
+            </div>
+        </nav>
+
+<div class="navbar-seconday bg-faded nav-sticky text-center hidden-xs-down" id="navsecondary">
+       <ul class="mb0 list-inline">
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#888" class="nav-link">翻本金888</a></li>
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#44477" class="nav-link">四星彩加碼送</a></li>
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#10001" class="nav-link">首儲送1000</a></li>
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#eee" class="nav-link">電子激情送</a></li>
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#pe" class="nav-link">體育高額返點</a></li>
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#666" class="nav-link">百家下注立即返</a></li>
+	        <li class="list-inline-item nav-item "><a data-scroll="" href="#111" class="nav-link">百家連贏送點數</a></li>
+       </ul>
+</div> 
+       
+        
+      	<div class="container pt100 pb50 bg-min-height RebateEvent-xs-bg" >
+      			<div class="vtimeline-content mb20" id="888"> 
+	                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLong888"><img src="__CSS__/images/promotions/888.png" alt="" class="img-fluid mb20"></a>
+	                
+	                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong888"><h3>翻本金888</h3></a>
+	                <br><br>
+	               
+	                <button type="button" class="btn btn-outline-primary mb5 hidden-xs-down">立即申請</button>
+	                
+	                <div class="modal fade" id="ModalLong888" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+	                    <div class="modal-dialog" role="document">
+	                        <div class="modal-content">
+	                            <div class="modal-header">
+	                                <h5 class="modal-title" id="exampleModalLongTitle">翻本金888</h5>
+	                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	                                    <span aria-hidden="true">×</span>
+	                                </button>
+	                            </div>
+	                            
+	                            <div class="modal-body">
+	                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/4888.png">
+	                            </div>
+	                            
+	                            <div class="modal-footer">
+	                            	<button type="button" class="btn btn-primary">立即申請</button>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+      		
+            
+            
+            <div class="vtimeline-content mb20" id="44477">  
+            
+                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLong4234"><img src="__CSS__/images/promotions/44477.png" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong4234"><h3>四星彩加碼送點數，儲值3000元三萬點數等你拿 !</h3></a>
+                <br><br>
+                
+                <div class="modal fade" id="ModalLong4234" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">四星彩加碼送點數，儲值3000元三萬點數等你拿 !</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            
+                            <div class="modal-body">
+                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/4234.png">
+                            </div>
+                            
+                            <div class="modal-footer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vtimeline-content mb20" id="10001">  
+            
+                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLong10001"><img src="__CSS__/images/promotions/10001.jpg" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong10001"><h3>新會員首次儲值1000點，送1000點數</h3></a>
+                <br><br>
+               
+                <button type="button" class="btn btn-outline-primary mb5 hidden-xs-down">立即申請</button>
+                
+                <div class="modal fade" id="ModalLong10001" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">新會員首次儲值1000點，送1000點數</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            
+                            <div class="modal-body">
+                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/1000.png">
+                            </div>
+                            
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary">立即申請</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vtimeline-content mb20" id="eee">  
+            
+                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLongeee"><img src="__CSS__/images/promotions/eee.png" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLongeee"><h3>電子遊戲，激情放送</h3></a>
+                <br><br>
+                <div class="modal fade" id="ModalLongeee" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">電子遊戲，激情放送</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            
+                            <div class="modal-body">
+                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/4ee.png">
+                            </div>
+                            
+                            <div class="modal-footer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vtimeline-content mb20" id="pe">  
+            
+                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLongpe"><img src="__CSS__/images/promotions/pe.png" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLongpe"><h3>體育高額返點，下注立即返</h3></a>
+                <br><br>
+                
+                <div class="modal fade" id="ModalLongpe" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">體育高額返點，下注立即返</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            
+                            <div class="modal-body">
+                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/pe-1.png">
+                            </div>
+                            
+                            <div class="modal-footer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vtimeline-content mb20" id="666">  
+            
+                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLong666"><img src="__CSS__/images/promotions/666.png" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong666"><h3>真人百家廳下注立即返，最高返點千分之六</h3></a>
+                <br><br>
+                
+                 <div class="modal fade" id="ModalLong666" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">真人百家廳下注立即返，最高返點千分之六</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            
+                            <div class="modal-body">
+                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/102-1.png">
+                            </div>
+                            
+                            <div class="modal-footer"></div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="vtimeline-content mb20" id="111">  
+            
+                <a href="#" class="simple-hover" data-toggle="modal" data-target="#ModalLong111"><img src="__CSS__/images/promotions/111.png" alt="" class="img-fluid mb20"></a>
+                <a class="hidden-xs-down" href="#" data-toggle="modal" data-target="#ModalLong111"><h3>百家樂連贏加送點數</h3></a>
+                <br><br>
+                
+                <button type="button" class="btn btn-outline-primary mb5 hidden-xs-down">立即申請</button>
+                
+                 <div class="modal fade" id="ModalLong111" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">百家樂連贏加送點數</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            
+                            <div class="modal-body">
+                                <img class="img-w" id="mc-modal-mdlReadPromoContent-contentImage" src="__CSS__/images/11111.png">
+                            </div>
+                            
+                            <div class="modal-footer">
+                            	<button type="button" class="btn btn-primary">立即申請</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+<include file="Common:footer"/>

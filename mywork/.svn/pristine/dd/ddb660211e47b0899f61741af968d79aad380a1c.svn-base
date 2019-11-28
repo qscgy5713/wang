@@ -1,0 +1,246 @@
+<?php
+class ManageBankAction extends AdminAction {
+    protected $memberBankNumber = 10;//紀錄 一頁幾筆
+    protected $pageMoreNumber = 5;//頁數最多筆數
+    //TODO: 會員銀行碼管理 首頁
+    public function index(){
+        $request = $this->getRequest();
+
+        //銀行代碼名稱
+        $CommonBankcode = D("CommonBankcode");
+        $bankcode = $CommonBankcode->getBankCodeData();
+        if($bankcode === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        $FieldChange = array(
+            'bankcode_code' => 'bankCode',
+            'bankcode_name' => 'bankName',
+        );
+        $bankStr = "";
+        $bankArray = array();
+        foreach ($bankcode as $key => $value) {
+            foreach ($FieldChange as $key1=> $value1) {
+                switch ($value) {
+                    default:
+                        $bankStr = $value[$key1];
+                        break;
+                }
+                $bankArray[$key][$value1] = $bankStr;
+            }
+        }
+
+        if(empty($request["pageNumber"])){
+            $pageNumber = 1;
+        } else {
+            $pageNumber = $request["pageNumber"];
+        }
+
+        $memberAccount = "";
+        if(isset($request['memberAccount']) && !empty($request['memberAccount'])){
+            $memberAccount = $request['memberAccount'];
+        }
+
+        //讀取 頁面資料
+        $CommonMemberBankdata = D("CommonMemberBankdata");
+        $data = array(
+            "member_account" => $memberAccount
+        );
+        $return = $CommonMemberBankdata->getTotalNumberMemberBankData($data,$err);
+        if($return === false){
+            $this->error($err);//讀取筆數，失敗。
+        }
+        $totalNumber = $return["totalNumber"];//總筆數
+        $totalPage = ceil($totalNumber / $this->memberBankNumber);//總頁數
+        $pageArray = getPageArray($pageNumber,$totalPage,$this->pageMoreNumber);//取得 頁數 陣列 演算法
+
+
+        //表明 getManageBankData()取得資料
+        $data = array(
+            "member_account" => $memberAccount,
+            "page" => array(
+                "number" => $this->memberBankNumber,
+                "pageNumber" => $pageNumber
+            )
+        );
+        $return = $CommonMemberBankdata->getMemberBankData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //var_dump($return);
+        $showArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "bankdata_id"=>"id",
+            "member_id"=>"memberId",
+            "member_account"=>"memberAccount",
+            "bankdata_code"=>"code",
+            "bankdata_account"=>"account",
+            "bankdata_name"=>"name",
+            "bankdata_branch"=>"branch",
+            "bankdata_createTime"=>"createTime",
+            "bankdata_modifyTime"=>"modifyTime",
+            "bankdata_remark"=>"remark",
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'bankdata_createTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'bankdata_modifyTime'://修改時間 時間戳 轉換 日期
+                        if(empty($value[$key1])){
+                            $showStr = "無最後修改時間";
+                            break;
+                        }
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'bankdata_code':
+                        foreach ($bankArray as $bankcodekey => $bankcodevalue) {
+                            if($bankArray[$bankcodekey]['bankCode'] == $value[$key1])
+                            $showArray[$key]['bankName'] = $value[$key1] . "-" . $bankArray[$bankcodekey]['bankName'];
+                        }
+                        $showStr = $value[$key1];
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        // var_dump($showArray);die;
+        $this->assign("memberAccount",$memberAccount);
+        $this->assign("bankArray",$bankArray);
+        $this->assign("totalPage",$totalPage);//總頁數
+        $this->assign("pageNumber",$pageNumber);//目前的頁數
+        $this->assign("pageArray", $pageArray); //顯示的頁數陣列
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty","<tr><td colspan='10' align='center'>無資料</td></tr>");
+        $this->display();
+    }
+
+    //TODO: 會員銀行碼 修改
+    public function formSetMemberBank(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 Id 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改ID為空，請重新登入。
+        }
+        if(!isset($request['setCode']) || (empty($request['setCode']) && $request['setCode'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        if(!isset($request['setAccount']) || (empty($request['setAccount']) && $request['setAccount'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+        }
+        if(!isset($request['setName']) || (empty($request['setName']) && $request['setName'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        if(!isset($request['setBranch']) || (empty($request['setBranch']) && $request['setBranch'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+
+        $CommonMemberBankdata = D("CommonMemberBankdata");
+        $nowTime = time();//取得現在時間戳
+        $data = array(
+            "bankdata_id" => $request['setId'], //管理帳號
+            "bankdata_code" => $request['setCode'],
+            "bankdata_account" => $request['setAccount'],
+            "bankdata_name" => $request['setName'],
+            "bankdata_branch" => $request['setBranch'],
+            "bankdata_modifyTime"=> $nowTime,
+            "bankdata_remark" => $request['setRemark']
+        );
+        $addData = array(
+            'operateLog_class'=>31, //刪除綁定
+            'operateLog_objectId'=>$_SESSION['Admin']['id'],
+            'operateLog_objectAccount'=>$_SESSION['Admin']['account'],
+            'operateLog_main'=> array(
+                "bankdata_id" => $request['setId'], //管理帳號
+                "bankdata_code" => $request['setCode'],
+                "bankdata_account" => $request['setAccount'],
+                "bankdata_name" => $request['setName'],
+                "bankdata_branch" => $request['setBranch'],
+                "bankdata_modifyTime"=> $nowTime,
+                "bankdata_remark" => $request['setRemark']
+            ),
+        );
+        $this->addAdminOperateLog($addData);
+        $return = $CommonMemberBankdata->setMemberBankDataById($data);
+        if($return === false){
+            //否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//權限不足或操作錯誤，請重新登入。
+    }
+    //TODO:會員銀行碼管理 刪除
+    public function formDelMemberBank(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 setDomainId 傳入 並且不為空
+        if(!isset($request['delId']) || (empty($request['delId']) && $request['delId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//刪除ID為空，請重新操作
+        }
+        $CommonMemberBankdata = D("CommonMemberBankdata");
+        $data = array(
+            "bankdata_id" => $request['delId']
+        );
+        $return = $CommonMemberBankdata->getMemberBankDataForLog($data);
+        $addData = array(
+            'operateLog_class'=>32, //刪除綁定
+            'operateLog_objectId'=>$_SESSION['Admin']['id'],
+            'operateLog_objectAccount'=>$_SESSION['Admin']['account'],
+            'operateLog_main'=> array(
+                'bankdata_id' => $return['bankdata_id'],
+                'member_id' => $return['member_id'],
+                'bankdata_code' => $return['bankdata_code'],
+                'bankdata_account' => $return['bankdata_account'],
+                'bankdata_name' => $return['bankdata_name'],
+                'bankdata_branch' => $return['bankdata_branch'],
+                'bankdata_remark' => $return['bankdata_remark'],
+            ),
+        );
+        $this->addAdminOperateLog($addData);
+        $return = $CommonMemberBankdata->delMemberBankDataById($data);
+        if($return === false){//否，顯示錯誤
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        } else {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//操作錯誤，請重新登入。
+        }
+    }
+    /*
+     * 搜索 會員帳號
+     */
+    public function searchMemberName() {
+        // 判斷有無輸入
+        $request = $this->getRequest();
+        if (empty($request["query"])) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        $CommonMember = D("CommonMember");
+        $limit = 7;
+        $data = array(
+            "member_acount" => $request["query"],
+            "limit"=> 7
+        );
+        $member_child_arr = $CommonMember->searchMemberByMemberAccount($data);
+        if ($member_child_arr === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+        }
+        foreach ($member_child_arr as $member_child) {
+            $can_send_name[] = $member_child["member_account"];
+        }
+        echo json_encode($can_send_name);
+    }
+}

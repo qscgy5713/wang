@@ -1,0 +1,50 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" style="background:url(__CSS__/images/OnlineService-bg.jpg);">
+			<div class="OnlineService-girl-div">
+				<img class="" style="width:100%; height: auto;" src="__CSS__/images/OnlineService-girl.png">
+			</div>
+			<div class="box">
+				<div class="row box-content">
+         			<div class="col-lg-4 col-md-2 col-sm-2 OnlineService-width-rwd OnlineService-margin">
+						<a href="#" class="image-hover-zoom image-hover-overlay">
+							<img class="img-fluid" src="__CSS__/images/OnlineService-btn.png">
+						</a>
+					</div>
+					<div class="col-lg-4 col-md-2 col-sm-2 OnlineService-width-rwd OnlineService-margin">
+						<a href="#" class="image-hover-zoom image-hover-overlay">
+							<img class="img-fluid" src="__CSS__/images/OnlineService-line.png">
+						</a>
+					</div>
+				</div>
+			</div>
+		</section>
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+		 jQuery(".box").css("height",h-topBar_h-header_h+"px");
+	} 
+}
+</script>
+
+
+			

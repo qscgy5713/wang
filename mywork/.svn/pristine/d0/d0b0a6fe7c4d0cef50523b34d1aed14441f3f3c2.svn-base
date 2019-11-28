@@ -1,0 +1,150 @@
+<?php
+
+class CommonAction extends Action {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        //宣告台灣時區
+        date_default_timezone_set('Asia/Taipei');
+        
+        // 跳過過濾字串參數
+        $ignore = array();
+        
+        // $_REQUEST過濾
+        foreach ($_REQUEST as $key => $val) {
+            if (!in_array($key, $ignore)) {
+                $_REQUEST[$key] = filterStr($val);
+            }
+        }
+        if(isset($_REQUEST['R'])){
+            $_SESSION['RCode'] = $_REQUEST['R'];
+        }
+        $this->getLangArray();//取得語系檔陣列到前端
+        $this->getSietDataStr();//取得目前所在的設定STR
+        $this->getDomainData();//取得網域資料
+    }
+    
+    public function loading(){
+        $this->display();
+    }
+    
+    protected function getMenuList(){
+        
+        $menu_model = D("CommonMenu");
+        $menu_list = $menu_model->getMenuList();
+        if ($menu_list === false) {
+            $this->error(__CLASS__ . '_' . __FUNCTION__ . '_01');
+        }
+    }
+    /**
+     * 取得Request資料
+     *
+     * @return array
+     */
+    protected function getRequest() {
+        
+        foreach ($_REQUEST as $key => $val) {
+            if (is_array($val)) {
+                $data[$key] = ($val);
+            } else {
+                $data[$key] = trim($val);
+            }
+        }
+        
+        return $data;
+    }
+    /*
+     * 語系檔陣列
+     */
+    protected function getLangArray(){
+        if(!isset($_COOKIE['think_language'])){
+            $_COOKIE['think_language'] = 'zh-tw';
+        } else {
+            $_COOKIE['think_language'] = strtolower($_COOKIE['think_language']);
+        }
+        
+        $langArray = array(
+            'zh-tw' => array(
+                'iconName' => 'icon-hk',
+                'cnName' => '繁體中文',
+                'langCode' => 'zh-tw'
+            ),
+            'zh-cn' => array(
+                'iconName' => 'icon-china',
+                'cnName' => '简体中文',
+                'langCode' => 'zh-cn'
+            ),
+            'en-us' => array(
+                'iconName' => 'icon-usa',
+                'cnName' => 'English',
+                'langCode' => 'en-us'
+            ),
+        );
+        if(empty($langArray[$_COOKIE['think_language']])){
+            $_COOKIE['think_language'] = 'zh-tw';
+        }
+        $showLangArray = array();
+        foreach($langArray as $key => $value){
+            if($key != $_COOKIE['think_language']){
+                array_push($showLangArray,$langArray[$key]);
+            }
+            if($key == $_COOKIE['think_language']){
+                $this->assign('currentIconName',$value['iconName']);
+                $this->assign('currentCnName',$value['cnName']);
+            }
+        }
+        $this->assign('langStr',$_COOKIE['think_language']);//當前正在使用的版本標記
+        $this->assign('showLangArray',$showLangArray);
+    }
+    /*
+     * 取得目前所在的設定STR
+     */
+    protected function getSietDataStr(){
+        $sietData = C('SIETDATA');
+        $titleName = "";
+        switch ($sietData){
+            case 'test':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 'demo':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                break;
+            case 'official':
+                $titleName = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                break;
+        }
+        $this->assign("sietData",$sietData);
+        $this->assign("titleName",$titleName);
+    }
+    /*
+     * 取得網域資料
+     */
+    protected function getDomainData(){
+        
+        $CommonAgentDomain = D("CommonAgentDomain");
+        $data = array(
+            'domain_site' => $_SERVER['HTTP_HOST']
+        );
+        $return = $CommonAgentDomain->getDomainDataBySite($data);
+        if($return === false || empty($return)){
+            //如果不存在或出錯 輸出 預設
+            $domain_titleName = '';
+            $domain_keywords = '{"zh-tw":"小牛遊戲,小牛遊戲客服中心,小牛遊戲出款中心,小牛遊戲平台,小牛遊戲官網網址","zh-cn":"小牛游戏,小牛游戏客服中心,小牛游戏出款中心,小牛游戏平台,小牛游戏官网网址","en-us":"Mavericks game, Mavericks game call center, Mavericks game withdrawal center, Mavericks game platform, Mavericks game official website"}';
+            $domain_description = '{"zh-tw":"小牛遊戲建置了海量的遊戲平台,不管是真人娛樂、電子遊戲、體育即時賽事，跟豐富的彩票遊戲,只要你想玩上小牛絕對超乎你的想像,滿足你的刺激體驗。","zh-cn":"小牛游戏建置了海量的游戏平台,不管是真人娱乐、电子游戏、体育即时赛事，跟丰富的彩票游戏,只要你想玩上小牛绝对超乎你的想像,满足你的刺激体验。","en-us":"The Mavericks game has built a huge number of game platforms, whether it is live entertainment, video games, sports instant events, and rich lottery games, as long as you want to play the Mavericks absolutely beyond your imagination, to satisfy your exciting experience."}';
+        } else {
+            $domain_titleName = $return['domain_titleName'];
+            $domain_keywords = $return['domain_keywords'];
+            $domain_description = $return['domain_description'];
+        }
+        if(!empty($domain_titleName)){
+            $titleName = json_decode($domain_titleName, true);
+            $this->assign("titleName",$titleName[$_COOKIE['think_language']]);
+        }
+        
+        $keywords = json_decode($domain_keywords, true);
+        $description = json_decode($domain_description, true);
+        $this->assign("keywords",$keywords[$_COOKIE['think_language']]);
+        $this->assign("description",$description[$_COOKIE['think_language']]);
+    }
+}

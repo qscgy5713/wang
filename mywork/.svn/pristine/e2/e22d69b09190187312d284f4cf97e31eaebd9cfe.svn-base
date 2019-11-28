@@ -1,0 +1,101 @@
+<?php
+class CommonAgentOnlineModel extends AgentModel {
+    protected $tableName = "common_agent_online";
+    protected $tableId = "online_id";
+    
+    public function getAgentOnlineDataById($data,&$err=""){
+        
+        $WhereSql = "";
+        if($data["sub_id"] == null){
+            $WhereSql = "(`agent_id` = '{$data['agent_id']}') AND (`sub_id` is null)";
+        } else {
+            $WhereSql = "(`agent_id` = '{$data['agent_id']}') AND (`sub_id` = '{$data['sub_id']}')";
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE {$WhereSql} LIMIT 1";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 新增  資料
+     */
+    public function addAgentOnlineData($data,&$err=""){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    
+    /*
+     * 修改 資料
+     * 使用AgentId OR subId
+     */
+    public function setAgentOnlineDataById($data,&$err=""){
+        if((empty($data["agent_id"]) && $data["agent_id"] !== '0') 
+            && (empty($data["sub_id"]) && $data["sub_id"] !== '0')){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "agent_id"){continue;}
+            if($key == "sub_id"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $WhereSql = "";
+        if($data["sub_id"] == null){
+            $WhereSql = "(`agent_id` = '{$data['agent_id']}') AND (`sub_id` is null)";
+        } else {
+            $WhereSql = "(`agent_id` = '{$data['agent_id']}') AND (`sub_id` = '{$data['sub_id']}')";
+        }
+        $sql .= " WHERE {$WhereSql};";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 刪除 資料
+     */
+    public function delAgentOnlineDataById($data){
+        if((empty($data["agent_id"]) && $data["agent_id"] !== '0')
+            && (empty($data["sub_id"]) && $data["sub_id"] !== '0')){
+                $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                return false;
+        }
+        $WhereSql = "";
+        if($data["sub_id"] == null){
+            $WhereSql = "(`agent_id` = '{$data['agent_id']}') AND (`sub_id` is null)";
+        } else {
+            $WhereSql = "(`agent_id` = '{$data['agent_id']}') AND (`sub_id` = '{$data['sub_id']}')";
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE {$WhereSql};";
+        $return = $this->execute($sql);
+        return $return;
+    }
+}

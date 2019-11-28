@@ -1,0 +1,116 @@
+<?php
+/*
+ * 轉移單
+ */
+class CashflowTransferModel extends AdminModel {
+    protected $tableName = "cashflow_transfer";
+    protected $tableId = "transfer_id";
+    
+    /*
+     * 取得轉移單資料
+     */
+    public function getTransferData($data,&$err = ""){
+        $WHERESQL = "";
+        foreach ($data as $key => $value) {
+            if(empty($WHERESQL)){
+                $WHERESQL .= "`{$key}` = '{$value}'";
+            } else {
+                $WHERESQL .= " AND `{$key}` = '{$value}'";
+            }
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE {$WHERESQL}
+                LIMIT 1;";
+        
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+    
+    
+    
+    /*
+     * 新增 轉移單
+     */
+    public function addTransferData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        if(empty($data['transfer_money']) && $data['transfer_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        if(empty($data['transfer_from']) && $data['transfer_from'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//
+            return false;
+        }
+        if(empty($data['transfer_to']) && $data['transfer_to'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));//
+            return false;
+        }
+        if(($data['transfer_from'] != 'wallet' && $data['transfer_to'] != 'wallet') || ($data['transfer_from'] === $data['transfer_to'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));//
+            return false;
+        }
+        
+        //新增 轉移單
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_06"));
+            return false;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        if($insertId) {
+            return $insertId;
+        }
+        return $return;
+    }
+    /**
+     * 轉移失敗 修改轉移單 狀態，標記錯誤訊息
+     * @param $data['agentjoin_id'] && $data["admin_id"]
+     * @return boolean|false
+     */
+    public function setErrorTransferDataById($data,&$err){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+}

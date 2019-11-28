@@ -1,0 +1,115 @@
+<include file="Common:header"/>
+<body style="background-image: url(__CSS__/images/1.jpg);">
+<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+		  <div class="content admin-div">
+		  	<p>
+                <button class="btn btn-info collapsed btn-style" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                       新增藍新帳號
+                </button>
+             </p>
+             
+             <div class="collapse mb10" id="collapseExample" style="">
+                 <div class="card card-body pt5 pb5">
+                 
+                  <form method="post" action='__APP__/{$Think.MODULE_NAME}/formAddMerchantnumber'>
+                  	<div class="form-group form-group-m">
+	                       <label class=" col-form-label">藍新帳號</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-width" type="text" name="addMerchantnumber">
+	                       </div>
+	                       
+	                       <label  class=" col-form-label">交易密碼</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-width" type="text" name="addCode" >
+	                       </div>
+	                       
+	                       <label  class=" col-form-label">備註</label>
+	                       <div class="div-style">
+	                           <input class="form-control form-control-width" type="text" name="addRemark" >
+	                       </div>
+	                       
+	                       <button type="submit" name="addbtn" class="btn btn-info btn-style ml10">確認新增</button>
+                  	 </div>
+                  </form>
+                 </div>
+             </div>
+		  	
+		  	  <div class="row">
+         			<table class="table table-striped">
+                        <thead>
+	                        <tr>
+	                        	<th colspan="6" style="text-align:center">
+	                        		目前使用 
+	                        		商編:
+	                        		<span style="color:blue">{$nowUseMerchantnumber}</span>
+	                        		交易密碼:
+	                        		<span style="color:blue">{$nowUseCode}</span>
+	                        	</th>
+	                        </tr>
+                            <tr>
+                            	<th>序</th>
+                            	<th>藍新商編</th>
+                            	<th>狀態</th>
+                            	<th>交易密碼</th>
+                            	<th>備註</th>
+                            	<th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <VOLIST name="showArray" id="vo">
+                        	<tr>
+	                        	<td>{$key+1}</td>
+								<td>{$vo.merchantnumber}</td>
+								<td>{$vo.enabled}</td>
+								<td>{$vo.code}</td>
+								<td>{$vo.remark}</td>
+								<td>
+								
+								<if condition="$vo.enabled eq '停用中'">
+									<a class="popup-content btn btn-info btn-style" href="#{$key+1}">修改</a>
+									<form class="div-style" method="post" action='__APP__/{$Think.MODULE_NAME}/formStartMerchantnumber'>
+	                                	<input type="hidden" value="{$vo.id}" name="startId">	
+	                                	<button type="submit" class="btn btn-info btn-style">啟用</button>
+	                                </form>
+								
+	                                <form class="div-style" method="post" action='__APP__/{$Think.MODULE_NAME}/formDelMerchantnumber'>
+	                                	<input type="hidden" value="{$vo.id}" name="delId">	
+	                                	<button type="submit" class="btn btn-info btn-style">刪除</button>
+	                                </form>	
+	                            <else />
+	                            	<span>目前使用中，無法異動!</span>
+                                </if>
+                                	<div id="{$key+1}" class="popup-content-area white-popup mfp-hide popup-content-area-max-width">
+				                        <h4>修改藍新資料</h4><hr>
+				                        <form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetMerchantnumber'>
+				                           <div class="form-group mb5">
+				                                <label>帳號</label>
+				                                <span class="ml10">{$vo.merchantnumber}</span>
+				                                <input type="hidden" value="{$vo.id}" name="setId">
+				                            </div>
+				                            <div class="form-group mb5">                
+				                                <label >交易密碼</label>
+				                                <input type="text" name="setCode" class="form-control">
+				                            </div>
+				                            
+				                             <div class="form-group mb5">                
+				                                <label >備註</label>
+				                                <input type="text" name="setRemark" value="{$vo.remark}" class="form-control">
+				                             </div>
+				                            <div class="clearfix">
+				                                <button type="submit" name ="okbtn" class="btn btn-primary float-right btn-style">確認修改</button>
+				                            </div>
+				                        </form>
+				                    </div>
+				                    
+                                </td>
+							</tr>
+                        </VOLIST>
+                        
+                        </tbody>
+                    </table>
+         		</div>  	 	
+	      </div>
+<include file="Common:footer"/> 
+

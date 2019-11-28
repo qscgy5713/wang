@@ -1,0 +1,62 @@
+<include file="Common:header"/>
+	<div id="content" class="content m-l-0">
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+				
+				<ul class="nav nav-tabs nav-tabs-inverse">
+					<VOLIST name="gameDataArray" id="vo">
+						<IF condition="$i eq 1">
+							<li class="nav-item">
+								<a href="#{$vo.gameCode}Div" data-toggle="tab" class="nav-link active">
+									<span class="d-sm-none f-s-13">{$vo.gameName}</span>
+									<span class="d-sm-block d-none">{$vo.gameName}</span>
+								</a>
+							</li>
+						<ELSE/>
+							<li class="nav-item">
+								<a href="#{$vo.gameCode}Div" data-toggle="tab" class="nav-link">
+									<span class="d-sm-none f-s-13">{$vo.gameName}</span>
+									<span class="d-sm-block d-none">{$vo.gameName}</span>
+								</a>
+							</li>
+						</IF>
+						
+					</VOLIST>
+				</ul>
+				
+				<div class="tab-content">
+					<VOLIST name="gameDataArray" id="vo">
+						<IF condition="$i eq 1">
+							<div class="tab-pane show active" id="{$vo.gameCode}Div">
+								<div class="table-responsive">
+									<iframe id="" style="width: 100%;min-height: 550px;" src="__APP__/{$Think.MODULE_NAME}/eachGameDetail&gameCode={$vo.gameCode}&memberId={$memberId}&agentTree={$agentTree}&startTime={$startTime}&endTime={$endTime}" frameborder="0" scrolling="auto"></iframe>
+								</div>
+							</div>
+						<ELSE/>
+							<div class="tab-pane fade" id="{$vo.gameCode}Div">
+								<div class="table-responsive">
+									<iframe id="" style="width: 100%;min-height: 550px;" src="__APP__/{$Think.MODULE_NAME}/eachGameDetail&gameCode={$vo.gameCode}&memberId={$memberId}&agentTree={$agentTree}&startTime={$startTime}&endTime={$endTime}" frameborder="0" scrolling="auto"></iframe>
+								</div>
+							</div>	
+						</IF>
+					</VOLIST>
+				</div>
+			</div>
+		</div>
+	</div>
+<include file="Common:footer"/>
+
+<script>
+$(function(){
+	datetimePicker("startTime","endTime","endTime","startTime");
+});
+function formTime(startTime,endTime){
+	$("#startTime").val(startTime);
+	$("#endTime").val(endTime);
+	$("#formInquire").submit();
+}
+function goPage(pageNumber){
+	$("#pageNumber").val(pageNumber);
+	$("#formInquire").submit();
+}
+</script>

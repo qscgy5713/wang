@@ -1,0 +1,1464 @@
+<?php
+
+class GameSaModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'http://api.sa-gaming.net/api/api.aspx';  //'http://api.eval.sa-gaming.net/api/api.aspx';
+  //protected $cfg_client_url = 'http://yl.sa-api.net/app.aspx';  //'http://www.eval.sa-gaming.net/app.aspx';
+  protected $cfg_secret_key = 'B7583C32C943425694AFAF3A23EA3B27';  //'F5C7F82C5C284796BB53D4AD3A2B1DB6';
+  protected $cfg_md5_key = 'GgaIMaiNNtg';  //'GgaIMaiNNtg';
+  protected $cfg_des_key = 'g9G16nTs';  //'g9G16nTs';
+  //protected $cfg_lobby = 'caishenyule';  //A717
+  //protected $cfg_hash_key = 'Pr7S@t6G!Q_z=YnM';
+
+  const SA_HASH_KEY = 'Pr7S@t6G!Q_z=YnM';
+
+  const SA_LOBBY = 'wukong1';
+  const SA_CLIENT_URL = 'http://yl.sa-api.net/app.aspx';
+
+  const SA_ERROR_MSG_ID_ON_SUCCESS = 0;
+  const SA_CONNECTION_TIMEOUT_MS = 10000;
+  const SA_REQUEST_TIMEOUT_MS = 15000;
+  const SA_IS_DEBUGGING = false;
+  const SA_BOOL_TRUE_STR = 'true';
+  const SA_WIN_LOSS_TYPE_BOTH = 0;
+  const SA_WIN_LOSS_TYPE_WIN = 1;
+  const SA_WIN_LOSS_TYPE_LOSS = 2;
+  const SA_DEFAULT_CURRENCY_TYPE = 'TWD';
+  const SA_DEFAULT_LANGUAGE_CODE = 'zh_TW';
+
+  //protected $checkKeyInst = null;
+  //protected $desInst = null;
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+    //$this->checkKeyInst = new CheckKey($argCheckKeyHashKey);
+    //$this->desInst = new SA_DES($argDesKey,$argDesIv);
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['currency_type'] 3位貨幣代碼(非必須). 預設=TWD
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'currency_type' => array('required'=>0, 'default'=>self::SA_DEFAULT_CURRENCY_TYPE),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'RegUserInfo';
+    $checkKey = $this->_getCheckKey();
+    $arrParams = array(
+      'Checkkey'=>$checkKey,
+      'Username'=>$_user_name,
+      'CurrencyType'=>$_currency_type
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return true;
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} (Code {$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['language'] 語系代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'currency_type' => array('required'=>0, 'default'=>self::SA_DEFAULT_CURRENCY_TYPE),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'LoginRequest';
+    $checkKey = $this->_getCheckKey();
+    $arrParams = array(
+      'Checkkey'=>$checkKey,
+      'Username'=>$_user_name,
+      'CurrencyType'=>$_currency_type
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Token','DisplayName');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return array(
+        'Token'=>$resp['Token'],
+        'DisplayName'=>$resp['DisplayName'],
+      );
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'GetUserStatusDV';
+    $arrParams = array(
+      'Username'=>$_user_name,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Balance');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      $bal = $resp['Balance'];
+      return $bal;
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'DebitBalanceDV';
+    $checkKey = $this->_getCheckKey();
+    $time = $this->_getSignatureTime();
+    $orderId = "OUT{$time}{$_user_name}";
+    $arrParams = array(
+      'Username'=>$_user_name,
+      'Checkkey'=>$checkKey,
+      'OrderId'=>$orderId,
+      'DebitAmount'=>$_amount,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username','Balance','DebitAmount','OrderId');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return array(
+        'Username'=>$resp['Username'],
+        'Balance'=>$resp['Balance'],
+        'DebitAmount'=>$resp['DebitAmount'],
+        'OrderId'=>$resp['OrderId'],
+      );
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'CreditBalanceDV';
+    $checkKey = $this->_getCheckKey();
+    $time = $this->_getSignatureTime();
+    $orderId = "IN{$time}{$_user_name}";
+    $arrParams = array(
+      'Username'=>$_user_name,
+      'Checkkey'=>$checkKey,
+      'OrderId'=>$orderId,
+      'CreditAmount'=>$_amount,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username','Balance','CreditAmount','OrderId');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return array(
+        'Username'=>$resp['Username'],
+        'Balance'=>$resp['Balance'],
+        'CreditAmount'=>$resp['CreditAmount'],
+        'OrderId'=>$resp['OrderId'],
+      );
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['user_name'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['user_name'] 查詢的用戶名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'user_name' => array('required'=>0,),
+    );
+
+    //Dbgr::preout($arrDatas);
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $beginTime = strtotime($_begin_datetime);
+    $endTime = strtotime($_end_datetime);
+    //Dbgr::preout($beginTime);
+    //Dbgr::preout($endTime);
+    $nowTime = time();
+    if ($beginTime > $endTime) {
+      $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02');  //begin date(time) is larger than end date(time)
+      return false;
+    }
+    $limit = 24;
+    $limitUnit = 'hours';
+    if (($endTime-$beginTime) > (60*60*$limit)) {
+      $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03');  //date(time) interval exceeds the limit
+      return false;
+    }
+    $method = 'GetAllBetDetailsForTimeIntervalDV';
+    $checkKey = $this->_getCheckKey();
+    $arrParams = array(
+      'Checkkey'=>$checkKey,
+      'FromTime'=>$_begin_datetime,
+      'ToTime'=>$_end_datetime,
+    );
+    //Dbgr::preout($arrParams);
+    if (isset($_user_name) && strlen($_user_name)) {
+      $arrParams['Username']=$_user_name;
+    }
+    $resp = $this->_sendRequest($method,$arrParams);
+
+    //Dbgr::preout($resp);
+    $arrEssentialKeys = array('BetDetailList');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      if (sizeof($resp['BetDetailList']['BetDetail'])) {
+        if (array_key_exists('BetTime', $resp['BetDetailList']['BetDetail']))  {
+          //一維特殊處理
+          return array(
+            0 => $resp['BetDetailList']['BetDetail']
+          );
+        }
+      }
+      return $resp['BetDetailList']['BetDetail'];
+    } else {
+      var_dump($this->responseArr);
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04');  //CURL 結果為不成功
+        var_dump($this->curlError);
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05');  //回應中必要的KEY不存在
+      } else {
+        $argErr = strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06') . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_gameResult   遊戲結果
+   * @param detail_hostId       遊戲代號
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + gameTypeStr     遊戲名稱
+   * + round           局號
+   * + gameId?         桌號
+   * + betTypeStr      投注
+   * + stateStr        注單狀態
+   * + payoutTime      派彩時間
+   * + sb_html         有格式的子注單. 無用.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+    $arrBets = array();
+
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $bet_id = $bet['detail_id'];
+        $detail_bettingMoney = $bet['detail_bettingMoney'];
+        $detail_gameResult = $bet['detail_gameResult'];
+        $detail_hostId = $bet['detail_hostId'];
+
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        $PayoutTime = $arrBetContents['PayoutTime'];
+        $GameType = $arrBetContents['GameType'];
+        $GameID = $arrBetContents['GameID'];
+        $Round = $arrBetContents['Round'];
+        $BetType = $arrBetContents['BetType'];
+        $Set = $arrBetContents['Set'];
+        $BetSource = $arrBetContents['BetSource'];
+        $State = $arrBetContents['State'];
+        $Detail = $arrBetContents['Detail'];
+        //$arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+
+        $bet['gameId'] = $GameID;
+        $bet['round'] = $Round;
+        $bet['payoutTime'] = $PayoutTime;
+
+        //$BetSourceStr = $this->getBetSourceNameById($BetSource);
+        $HostStr = $this->getHostNameById($detail_hostId);
+        $GameTypeStr = $this->getGameNameByCode($GameType);
+        $bet['gameTypeStr'] = $GameTypeStr;
+        $BetTypeStr = $this->getBetNameById($GameType, $BetType);
+        if (strpos($GameTypeStr,'百家樂')!==false) {  //只針對百家樂類做著色
+          //著色結果
+          $arrRes = explode(' (',$detail_gameResult);  //ex.'閒 (莊2點:黑桃10,梅花Q,方塊2;閒5點:方塊5,梅花J,方塊K)'
+          if (sizeof($arrRes) > 1) {
+            $winnerStr = $arrRes[0];
+            $pointsStr = $arrRes[1];
+            if (strpos($winnerStr,'閒')!==false) {$winnerStr = "<div class=\"ab-res-winner-player\">{$winnerStr}</div>";}
+            elseif (strpos($winnerStr,'莊')!==false) {$winnerStr = "<div class=\"ab-res-winner-banker\">{$winnerStr}</div>";}
+            elseif (strpos($winnerStr,'和')!==false) {$winnerStr = "<div class=\"ab-res-winner-none\">{$winnerStr}</div>";}
+
+            $pointsStr = str_replace('閒',"<div class=\"ab-res-points-player\">閒</div>",$pointsStr);
+            $pointsStr = str_replace('莊',"<div class=\"ab-res-points-banker\">莊</div>",$pointsStr);
+            $bet['detail_gameResult'] = "{$winnerStr} ({$pointsStr}";
+          }
+          //著色投注
+          $bettingStr = $BetTypeStr;
+          if (strpos($bettingStr,'閒')!==false) {$bettingStr = "<div class=\"ab-betting-bac-player\">{$bettingStr}</div>";}
+          elseif (strpos($bettingStr,'莊')!==false) {$bettingStr = "<div class=\"ab-betting-bac-banker\">{$bettingStr}</div>";}
+          elseif (strpos($bettingStr,'和')!==false) {$bettingStr = "<div class=\"ab-betting-bac-none\">{$bettingStr}</div>";}
+          $bet['betTypeStr'] = $bettingStr;
+        }
+
+        if ($detail_bettingMoney == 0) {
+          //$Effective = 0;
+          $StateStr = "<div class=\"ab-state-refused\">退回</div>";  //退回
+        } else {
+          if (strlen($PayoutTime) >= 10) {
+            if ($State) {
+              $StateStr = "<div class=\"ab-state-payout\">已派彩</div>"; //已派彩
+            } else {
+              $StateStr = "<div class=\"ab-state-failed\">投注失敗(01)</div>";  //投注失敗(01)
+            }
+          } else {
+            if ($State) {
+              $StateStr = "尚未派彩";
+            } else {
+              $StateStr = "<div class=\"ab-state-failed\">投注失敗(02)</div>";  //投注失敗(02)
+            }
+          }
+        }
+        $bet['stateStr'] = $StateStr;
+        //if (strpos($bet['stateStr'],'退回')!==false) { $bet['stateStr'] = "<div class=\"ab-state-refused\">{$bet['stateStr']}</div>"; }
+        //if (strpos($bet['stateStr'],'已派彩')!==false) { $bet['stateStr'] = "<div class=\"ab-state-payout\">{$bet['stateStr']}</div>"; }
+       // if (strpos($bet['stateStr'],'投注失敗')!==false) { $bet['stateStr'] = "<div class=\"ab-state-failed\">{$bet['stateStr']}</div>"; }
+
+        $arrBets[$bet_id] = $bet;
+      }  //rowBetDetails foreach
+      return $arrBets;
+    } else {  //if ($argArrRowBetDetails)
+      return false;
+    }
+  }
+
+  /*
+   * 抓取區間內一用戶投注的詳細內容
+   * @param $data['user_name'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['user_name'] 查詢的用戶名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+    @method:  GetUserBetItemDV
+    @desc:    Retrieve a list of bet record of a user within 7 days
+  */
+  public function getUserBetItem($arrDatas, &$argErr) {
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'offset' => array('required'=>0,'default'=>0),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+    $beginTime = strtotime($_begin_datetime);
+    $endTime = strtotime($_end_datetime);
+    $nowTime = time();
+    if ($beginTime > $endTime) {
+      $arrError = array(
+        'errorCode'=>-9910,
+        'errorMsg'=> "begin date(time) is bigger than end date(time)"
+      );
+      return $arrError;
+    }
+    $limit = 9;
+    $limitUnit = 'days';
+    if (($nowTime-$beginTime) > (60*60*24*$limit)) {
+      $arrError = array(
+        'errorCode'=>-9911,
+        'errorMsg'=> "begin date(time) exceeds the day(time) limit:"."{$limit} {$limitUnit}"
+      );
+      return $arrError;
+    }
+    $method = 'GetUserBetItemDV';
+    $arrParams = array(
+      'Username'=>$_user_name,
+      'FromTime'=>$_begin_datetime,
+      'ToTime'=>$_end_datetime,
+      'Offset'=>$_offset,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username','FromTime','ToTime','Offset','More','ItemCount','UserBetItemList');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      $resp['More'] = strtolower($resp['More'])=='true';
+      return $resp;
+    } else {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      return false;
+    }
+  }
+
+
+  //============雜七雜八轉換函數
+
+
+
+  //解析HostID成為中文遊戲名稱(ex. 317=>'互動百家樂3')
+  public function getHostNameById($argHostId) {
+    $arrHostIdName = array(
+      301=>'百家樂 1',302=>'百家樂 2',303=>'百家樂 3',305=>'百家樂 5',306=>'百家樂 6',307=>'百家樂 7',308=>'百家樂 8',309=>'百家樂 9',310=>'百家樂 10',311=>'百家樂 11',315=>'互動百家樂 1',316=>'互動百家樂 2',317=>'互動百家樂 3',318=>'互動百家樂 5',330=>'輪盤',331=>'骰寶',332=>'番攤',340=>'龍虎',401=>'電子遊藝',402=>'小遊戲',501=>'48彩',
+    );
+    if (array_key_exists($argHostId,$arrHostIdName)) {
+      $hostName = $arrHostIdName[$argHostId];
+      return $hostName;
+    } else {
+      return false;
+    }
+  }
+
+  public function getBetNameById($argGameTypeCode,$argBetTypeId) {
+    switch ($argGameTypeCode) {
+      case 'bac': //Baccarat
+        return $this->getBaccaratBetNameById($argBetTypeId);
+        break;
+      case 'lottery': // Lotto 48/Lotto 48 Novelty Bet
+        return $this->getLottoBetNameById($argBetTypeId);
+        break;
+      case 'rot': // Roulette
+        return $this->getRRBetNameById($argBetTypeId);
+        break;
+      case 'ftan': // Fan Tan
+        return $this->getFTBetNameById($argBetTypeId);
+        break;
+      case 'dtx': // Dragon Tiger
+        return $this->getDTBetNameById($argBetTypeId);
+        break;
+      case 'sicbo': // Sicbo
+        return $this->getSBBetNameById($argBetTypeId);
+        break;
+
+      case 'slot': // Slot Game
+        return 'getBetNameById.XXXXX';
+        break;
+      case 'minigame': // Mini game
+        return 'getBetNameById.YYYYY';
+        break;
+    }
+  }
+
+  public function parsePokerSuit($argCode) {
+    $arrNames = array('1'=>'黑桃','2'=>'紅心','3'=>'梅花','4'=>'方塊');
+    return $arrNames[$argCode];
+  }
+  public function parsePokerRank($argCode) {
+    $arrNames = array(
+      '1'=>'A',
+      '2'=>'2',
+      '3'=>'3',
+      '4'=>'4',
+      '5'=>'5',
+      '6'=>'6',
+      '7'=>'7',
+      '8'=>'8',
+      '9'=>'9',
+      '10'=>'10',
+      '11'=>'J',
+      '12'=>'Q',
+      '13'=>'K'
+    );
+    return $arrNames[$argCode];
+  }
+  //百家
+  public function bacParseResultMsg(&$argArrResultDetails) {
+    $resStr = '';
+    $arrNames = array(
+      'BRTie'=>'和','BRPlayerWin'=>'閒赢','BRBankerWin'=>'莊赢','BRPlayerPair'=>'閒對','BRBankerPair'=>'莊對','BRSPlayerPointOdd'=>'閒點單','BRSBankerPointOdd'=>'莊點單','BRSTotalPointOdd'=>'總點單','BRSPlayerPointEven'=>'閒點雙','BRSBankerPointEven'=>'莊點雙','BRSTotalPointEven'=>'總點雙','BRSPlayerPointSmall'=>'閒點小','BRSBankerPointSmall'=>'莊點小','BRSTotalPointSmall'=>'總點小','BRSPlayerPointBig'=>'閒點大','BRSBankerPointBig'=>'莊點大','BRSTotalPointBig'=>'總點大','BRSPlayerCardSmall'=>'閒牌小','BRSBankerCardSmall'=>'莊牌小','BRSTotalCardSmall'=>'總牌小','BRSPlayerCardBig'=>'閒牌大','BRSBankerCardBig'=>'莊牌大','BRSTotalCardBig'=>'總牌大','BRSSTie'=>'超級六和','BRSSPlayerWin'=>'超級六閒赢','BRSSBankerWin'=>'超級六莊赢','BRSSPlayerPair'=>'超級六閒對','BRSSBankerPair'=>'超級六莊對','BRSSSuperSix'=>'超級六','BRSTie'=>'超級百家樂和','BRSPlayerWin'=>'超級百家樂閒赢','BRSBankerWin'=>'超級百家樂莊赢','BRSPlayerPair'=>'超級百家樂閒對','BRSBankerPair'=>'超級百家樂莊對','BRPlayerNatural'=>'閒例牌','BRBankerNatural'=>'莊例牌','BRSPlayerNatural'=>'超級百家樂閒例牌','BRSBankerNatural'=>'超級百家樂莊例牌','BRSSPlayerNatural'=>'超級六閒例牌','BRSSBankerNatural'=>'超級六莊例牌',
+    );
+    foreach ($argArrResultDetails as $rKey=>$rVal) {
+      if (array_key_exists($rKey,$arrNames) && ($rVal=='true')) {
+        if (strlen($resStr)) {$resStr.=',';}
+        $resStr .= $arrNames[$rKey];
+      }
+    }
+    return $resStr;
+  }
+  //龍虎
+  public function dtxParseResultMsg(&$argArrResultDetails) {
+    $resStr = '';
+    $arrNames = array(
+      'DTRTie'=>'和局',
+      'DTRPlayerWin'=>'龍赢',
+      'DTRBankerWin'=>'虎赢',
+    );
+    foreach ($argArrResultDetails as $rKey=>$rVal) {
+      if (array_key_exists($rKey,$arrNames) && ($rVal=='true')) {
+        if (strlen($resStr)) {$resStr.=',';}
+        $resStr .= $arrNames[$rKey];
+      }
+    }
+    return $resStr;
+  }
+  //骰寶
+  public function sicboParseResultMsg(&$argArrResultDetails) {
+    $resStr = '';
+    $arrNames = array(
+      'SRBigSmall'=>array('0'=>'圍骰','1'=>'大','2'=>'小'),
+      'SROddEven'=>array('0'=>'圍骰','1'=>'單','2'=>'­ 雙'),
+      'SRTripleArmyOne'=>'三軍 1','SRTripleArmyTwo'=>'三軍 2','SRTripleArmyThree'=>'三軍 3','SRTripleArmyFour'=>'三軍 4','SRTripleArmyFive'=>'三軍 5','SRTripleArmySix'=>'三軍 6',
+      'SRTriple'=>array('0'=>'NA','1'=>'圍骰1','2'=>'圍骰2','3'=>'圍骰3','4'=>'圍骰4','5'=>'圍骰5','6'=>'圍骰6'),
+      'SRAllTriple'=>'全骰',
+      'SRPoint'=>array('0'=>'NA','4'=>'點數4','5'=>'點數5','6'=>'點數6','7'=>'點數7','8'=>'點數8','9'=>'點數9','10'=>'點數10','11'=>'點數11','12'=>'點數12','13'=>'點數13','14'=>'點數14','15'=>'點數15','16'=>'點數16','17'=>'點數17'),
+      'SRLongOneTwo'=>'長牌 1 2','SRLongOneThree'=>'長牌1 3','SRLongOneFour'=>'長牌1 4','SRLongOneFive'=>'長牌1 5','SRLongOneSix'=>'長牌1 6','SRLongTwoThree'=>'長牌2 3','SRLongTwoFour'=>'長牌2 4','SRLongTwoFive'=>'長牌2 5','SRLongTwoSix'=>'長牌2 6','SRLongThreeFour'=>'長牌3 4','SRLongThreeFive'=>'長牌3 5','SRLongThreeSix'=>'長牌3 6','SRLongFourFive'=>'長牌4 5','SRLongFourSix'=>'長牌4 6','SRLongFiveSix'=>'長牌5 6',
+      'SRShort'=>array('0'=>'NA','1'=>'短牌1','2'=>'短牌2','3'=>'短牌3','4'=>'短牌4','5'=>'短牌5','6'=>'短牌6'),
+      'SROddEvenCombination'=>array('0'=>'三全單','1'=>'兩單一雙','2'=>'兩雙一單','3'=>'三全雙'),
+      'SR_1_2_3_4'=>'1 2 3 4','SR_2_3_4_5'=>'2 3 4 5','SR_2_3_5_6'=>'2 3 5 6','SR_3_4_5_6'=>'3 4 5 6',
+      'SRCombination'=>array('0'=>'NA','1'=>'112','2'=>'113','3'=>'114','4'=>'115','5'=>'116','6'=>'221','7'=>'223','8'=>'224','9'=>'225','10'=>'226','11'=>'331','12'=>'332','13'=>'334','14'=>'335','15'=>'336','16'=>'441','17'=>'442','18'=>'443','19'=>'445','20'=>'446','21'=>'551','22'=>'552','23'=>'553','24'=>'554','25'=>'556','26'=>'661','27'=>'662','28'=>'663','29'=>'664','30'=>'665','31'=>'126','32'=>'135','33'=>'234','34'=>'256','35'=>'346','36'=>'123','37'=>'136','38'=>'145','39'=>'235','40'=>'356','41'=>'124','42'=>'146','43'=>'236','44'=>'245','45'=>'456','46'=>'125','47'=>'134','48'=>'156','49'=>'246','50'=>'345')
+    );
+    foreach ($argArrResultDetails as $rKey=>$rVal) {
+      $temp = '';
+      if (is_array($arrNames[$rKey])) {
+        $temp = $arrNames[$rKey][$rVal];
+        if (strlen($resStr)) {$resStr.=',';}
+        $resStr .= $temp;
+      } else {
+        if ($rVal=='true') {
+          $temp = $arrNames[$rKey];
+          if (strlen($resStr)) {$resStr.=',';}
+          $resStr .= $temp;
+        }
+      }
+    }
+    return $resStr;
+  }
+  //翻攤
+  public function ftanParseResultMsg(&$argArrResultDetails) {
+    $resStr = '';
+    $arrNames = array(
+      'FTROdd'=>'單','FTREven'=>'雙','FTRZhengOne'=>'1 正','FTRZhengTwo'=>'2 正','FTRZhengThree'=>'3 正','FTRZhengFour'=>'4 正','FTRFanOne'=>'1 番','FTRFanTwo'=>'2 番','FTRFanThree'=>'3 番','FTRFanFour'=>'4 番','FTROneNimTwo'=>'1念2','FTROneNimThree'=>'1念3','FTROneNimFour'=>'1念4','FTRTwoNimOne'=>'2念1','FTRTwoNimThree'=>'2念3','FTRTwoNimFour'=>'2念4','FTRThreeNimOne'=>'3念1','FTRThreeNimTwo'=>'3念2','FTRThreeNimFour'=>'3念4','FTRFourNimOne'=>'4念1','FTRFourNimTwo'=>'4念2','FTRFourNimThree'=>'4念3','FTRKwokOneTwo'=>'12角','FTRKwokOneFour'=>'14角','FTRKwokTwoThree'=>'23角','FTRKwokThreeFour'=>'34角','FTROneTongTwoThree'=>'23一通','FTROneTongTwoFour'=>'24一通','FTROneTongThreeFour'=>'34一通','FTRTwoTongOneThree'=>'13二通','FTRTwoTongOneFour'=>'14二通','FTRTwoTongThreeFour'=>'34二通','FTRThreeTongOneTwo'=>'12三通','FTRThreeTongOneFour'=>'14三通','FTRThreeTongTwoFour'=>'24三通','FTRFourTongOneTwo'=>'12四通','FTRFourTongOneThree'=>'13四通','FTRFourTongTwoThree'=>'23四通','FTRChunOneTwoThree'=>'123中','FTRChunOneTwoFour'=>'124中','FTRChunOneThreeFour'=>'134中','FTRChunTwoThreeFour'=>'234中',
+    );
+    foreach ($argArrResultDetails as $rKey=>$rVal) {
+      if (array_key_exists($rKey,$arrNames) && ($rVal=='true')) {
+        if (strlen($resStr)) {$resStr.=',';}
+        $resStr .= $arrNames[$rKey];
+      }
+    }
+    return $resStr;
+  }
+  //輪盤
+  public function rotParseResultMsg(&$argArrResultDetails) {
+    $resStr = '';
+    $arrNames = array(
+      //'RRZero'=>'0',
+      //'RROne'=>'1',
+      //'RRTwo'=>'2',
+      //'RRThree'=>'3',
+      //'RRFour'=>'4',
+      //'RRFive'=>'5',
+      //'RRSix'=>'6',
+      //'RRSeven'=>'7',
+      //'RREight'=>'8',
+      //'RRNine'=>'9',
+      //'RRTen'=>'10',
+      //'RREleven'=>'11',
+      //'RRTwelve'=>'12',
+      //'RRThirteen'=>'13',
+      //'RRForteen'=>'14',
+      //'RRFifthteen'=>'15',
+      //'RRSixteen'=>'16',
+      //'RRSeventeen'=>'17',
+      //'RREighteen'=>'18',
+      //'RRNineteen'=>'19',
+      //'RRTwenty'=>'20',
+      //'RRTwentyOne'=>'21',
+      //'RRTwentyTwo'=>'22',
+      //'RRTwentyThree'=>'23',
+      //'RRTwentyFour'=>'24',
+      //'RRTwentyFive'=>'25',
+      //'RRTwentySix'=>'26',
+      //'RRTwentySeven'=>'27',
+      //'RRTwentyEight'=>'28',
+      //'RRTwentyNine'=>'29',
+      //'RRThirty'=>'30',
+      //'RRThirtyOne'=>'31',
+      //'RRThirtyTwo'=>'32',
+      //'RRThirtyThree'=>'33',
+      //'RRThirtyFour'=>'34',
+      //'RRThirtyFive'=>'35',
+      //'RRThirtySix'=>'36',
+      'RRSet1'=>'第一列 (1~12)','RRSet2'=>'第二列 (13~24)','RRSet3'=>'第三列 (25~36)','RRRow1'=>'第一行 (1~34)','RRRow2'=>'第二行 (2~35)','RRRow3'=>'第三行 (3~36)','RR1To18'=>'小','RR19To36'=>'大','RROdd'=>'單','RREven'=>'雙','RRRed'=>'紅','RRBlack'=>'黑',
+    );
+    foreach ($argArrResultDetails as $rKey=>$rVal) {
+      if (array_key_exists($rKey,$arrNames) && ($rVal=='true')) {
+        if (strlen($resStr)) {$resStr.=',';}
+        $resStr .= $arrNames[$rKey];
+      }
+    }
+    return $resStr;
+  }
+  //彩票
+  public function lotteryParseResultMsg(&$argArrResultDetails) {
+    $resStr = '';
+    $arrNames = array(
+      'LRExtraNumberOddEven'=>array('0'=>'單','1'=>'雙'),
+      'LRExtraNumberBigSmall'=>array('0'=>'大','1'=>'小'),
+      'LRExtraNumberColor'=>array('0'=>'紅','1'=>'藍','2'=>'綠'),
+    );
+    foreach ($argArrResultDetails as $rKey=>$rVal) {
+      $temp = '';
+      if (is_array($arrNames[$rKey])) {
+        $temp = $arrNames[$rKey][$rVal];
+        if (strlen($resStr)) {$resStr.=',';}
+        $resStr .= $temp;
+      } else {
+        if ($rVal=='true') {
+          $temp = $arrNames[$rKey];
+          if (strlen($resStr)) {$resStr.=',';}
+          $resStr .= $temp;
+        }
+      }
+    }
+    return $resStr;
+  }
+
+  public function getGameResultByCode($argGameTypeCode,$argArrGameResult, $argIsDebug=false) {
+    //echo "<hr/>getGameResultByCode(argGameTypeCode={$argGameTypeCode})::argArrGameResult = ";
+    if ($argIsDebug) {//Dbgr::preout($argArrGameResult);}
+
+    switch ($argGameTypeCode) {
+      //百家
+      case 'bac': //Baccarat
+        $firstSeg = '';
+        $secondSeg = '';
+        $fpPlayerSeg = '';
+        $fpBankerSeg = '';
+        $arrGameResult = $argArrGameResult['BaccaratResult'];
+/*
+  public function parsePokerSuit($argCode) {
+    $arrNames = array(
+      '1'=>'黑桃',
+      '2'=>'紅心',
+      '3'=>'梅花',
+      '4'=>'方塊'
+    );
+    return $arrNames[$argCode];
+  }
+  public function parsePokerRank($argCode) {
+    $arrNames = array(
+      '1'=>'A',
+      '2'=>'2',
+      '3'=>'3',
+      '4'=>'4',
+      '5'=>'5',
+      '6'=>'6',
+      '7'=>'7',
+      '8'=>'8',
+      '9'=>'9',
+      '10'=>'10',
+      '11'=>'J',
+      '12'=>'Q',
+      '13'=>'K'
+    );
+    return $arrNames[$argCode];
+  }
+ */
+        $arr = array('PlayerCard1','PlayerCard2','PlayerCard3');
+        $arrRanksTreatAsTen = array('10','K','Q','J');
+        $playerPoint = 0;
+        $bankerPoint = 0;
+        foreach ($arrGameResult as $rKey=>$rVal) {
+          //echo "rKey={$rKey},";
+          if (in_array ($rKey,$arr)) {
+            $suit = $this->parsePokerSuit($rVal['Suit']);
+            $rank = $this->parsePokerRank($rVal['Rank']);
+            if (strlen($fpPlayerSeg)) {$fpPlayerSeg.=',';}
+            $fpPlayerSeg .= "{$suit}{$rank}";
+            if (in_array(strtoupper($rank),$arrRanksTreatAsTen)) {
+              $playerPoint += 10;
+            } else {
+              if (strtoupper($rank)=='A') {  //Ace is taken as 1
+                $playerPoint += 1;
+              } else {
+                $playerPoint += intval($rank);
+              }
+            }
+          }
+        }
+        $playerPoint = ($playerPoint%10);
+
+        $arr = array('BankerCard1','BankerCard2','BankerCard3');
+        foreach ($arrGameResult as $rKey=>$rVal) {
+          //echo "rKey={$rKey},";
+          if (in_array ($rKey,$arr)) {
+            $suit = $this->parsePokerSuit($rVal['Suit']);
+            $rank = $this->parsePokerRank($rVal['Rank']);
+            if (strlen($fpBankerSeg)) {$fpBankerSeg.=',';}
+            $fpBankerSeg .= "{$suit}{$rank}";
+            if (in_array(strtoupper($rank),$arrRanksTreatAsTen)) {
+              $bankerPoint += 10;
+            } else {
+              if (strtoupper($rank)=='A') {  //Ace is taken as 1
+                $bankerPoint += 1;
+              } else {
+                $bankerPoint += intval($rank);
+              }
+            }
+          }
+        }
+        $bankerPoint = ($bankerPoint%10);
+
+        $winnerStr = '';
+        if ($playerPoint == $bankerPoint) {
+          $winnerStr = '和';
+        } elseif ($playerPoint > $bankerPoint) {
+          $winnerStr = '閒';
+        } elseif ($playerPoint < $bankerPoint) {
+          $winnerStr = '莊';
+        }
+        $firstSeg = "{$winnerStr} (閒{$playerPoint}點:{$fpPlayerSeg};莊{$bankerPoint}點:{$fpBankerSeg})";
+        //$secondSeg = $this->bacParseResultMsg($arrGameResult['ResultDetail']);
+        //return "{$firstSeg} ({$secondSeg})";
+        return "{$firstSeg}";
+        break;
+      //彩票
+      case 'lottery': // Lotto 48/Lotto 48 Novelty Bet
+        $firstSeg = '';
+        $secondSeg = '';
+        $arrGameResult = $argArrGameResult['LotteryResult'];
+
+        $firstSeg = $arrGameResult['LotteryResult'];
+        //$secondSeg = $this->lotteryParseResultMsg($arrGameResult['ResultDetail']);
+        //return "{$firstSeg} ({$secondSeg})";
+        return "{$firstSeg}";
+        break;
+      //輪盤
+      case 'rot': // Roulette
+        $firstSeg = '';
+        $secondSeg = '';
+        $arrGameResult = $argArrGameResult['RouletteResult'];
+
+        $firstSeg = $arrGameResult['Point'];
+        //$secondSeg = $this->rotParseResultMsg($arrGameResult['ResultDetail']);
+        //return "{$firstSeg} ({$secondSeg})";
+        return "{$firstSeg}";
+        break;
+      //翻攤
+      case 'ftan': // Fan Tan
+        $firstSeg = '';
+        $secondSeg = '';
+        $arrGameResult = $argArrGameResult['FantanResult'];
+
+        $firstSeg = $arrGameResult['Point'];
+        //$secondSeg = $this->ftanParseResultMsg($arrGameResult['ResultDetail']);
+        //return "{$firstSeg} ({$secondSeg})";
+        return "{$firstSeg}";
+        break;
+        break;
+      //龍虎
+      case 'dtx': // Dragon Tiger
+        $firstSeg = '';
+        $secondSeg = '';
+        $fpPlayerSeg = '';
+        $fpBankerSeg = '';
+        $arrGameResult = $argArrGameResult['DragonTigerResult'];
+
+        $arr = array('DragonCard');
+        foreach ($arrGameResult as $rKey=>$rVal) {
+          if (in_array ($rKey,$arr)) {
+            $suit = $this->parsePokerSuit($rVal['Suit']);
+            $rank = $this->parsePokerRank($rVal['Rank']);
+            if (strlen($fpPlayerSeg)) {$fpPlayerSeg.=',';}
+            $fpPlayerSeg .= "{$suit}{$rank}";
+          }
+        }
+        $arr = array('TigerCard');
+        foreach ($arrGameResult as $rKey=>$rVal) {
+          if (in_array ($rKey,$arr)) {
+            $suit = $this->parsePokerSuit($rVal['Suit']);
+            $rank = $this->parsePokerRank($rVal['Rank']);
+            if (strlen($fpBankerSeg)) {$fpBankerSeg.=',';}
+            $fpBankerSeg .= "{$suit}{$rank}";
+          }
+        }
+        $firstSeg = "龍:{$fpPlayerSeg}; 虎:{$fpBankerSeg}";
+        //$secondSeg = $this->dtxParseResultMsg($arrGameResult['ResultDetail']);
+        //return "{$firstSeg} ({$secondSeg})";
+        return "{$firstSeg}";
+        break;
+      //骰寶
+      case 'sicbo': // Sicbo
+        $firstSeg = '';
+        $secondSeg = '';
+        $fpPlayerSeg = '';
+        $arrGameResult = $argArrGameResult['SicboResult'];
+
+        $arr = array('Dice1','Dice2','Dice3');
+        foreach ($arrGameResult as $rKey=>$rVal) {
+          if (in_array ($rKey,$arr)) {
+            if (strlen($fpPlayerSeg)) {$fpPlayerSeg.=',';}
+            $fpPlayerSeg .= $rVal;
+          }
+        }
+        $firstSeg = "{$fpPlayerSeg}";
+        //$secondSeg = $this->sicboParseResultMsg($arrGameResult['ResultDetail']);
+        //return "{$firstSeg} ({$secondSeg})";
+        return "{$firstSeg}";
+        break;
+
+      //電子遊戲
+      case 'slot': // Slot Game
+        return 'getResultByCode.slot';
+        break;
+      //迷你遊戲
+      case 'minigame': // Mini game
+        return 'getResultByCode.minigame';
+        break;
+      //其他
+      default:
+        return false;
+        break;
+        }
+      }
+  }
+
+
+  /*
+    getXXBetTypeById(betTypeId)=>betName
+    解析betTypeId成為BetType中文字串
+  */
+
+  //百家
+  public function getBaccaratBetNameById($argBetTypeId) {
+    $arrBetTypeIdName = array(
+       0=>'和',1=>'閒',2=>'莊',3=>'閒對',4=>'莊對',5=>'閒點單',6=>'莊點單',7=>'總點單',8=>'閒點雙',9=>'莊點雙',10=>'總點雙',11=>'閒點小',12=>'莊點小',13=>'總點小',14=>'閒點大',15=>'莊點大',16=>'總點大',17=>'閒牌小',18=>'莊牌小',19=>'總牌小',20=>'閒牌大',21=>'莊牌大',22=>'總牌大',25=>'超級六和',26=>'超級六閒赢',27=>'超級六莊赢',28=>'超級六閒對',29=>'超級六莊對',30=>'超級六',31=>'超級百家樂和',32=>'超級百家樂閒赢',33=>'超級百家樂莊赢',34=>'超級百家樂閒對',35=>'超級百家樂莊對',36=>'閒例牌',37=>'莊例牌',38=>'超級百家樂閒例牌',39=>'超級百家樂莊例牌',40=>'超級六閒例牌',41=>'超級六莊例牌',
+    );
+    if (array_key_exists($argBetTypeId,$arrBetTypeIdName)) {
+      $betTypeName = $arrBetTypeIdName[$argBetTypeId];
+      return $betTypeName;
+    } else {
+      return false;
+    }
+  }
+
+  //48彩
+  public function getLottoBetNameById($argBetTypeId) {
+    $arrBetTypeIdName = array(
+       0=>'單式 (6 個號碼)',1=>'复式 (多於6個號碼)',2=>'膽拖',3=>'特別號碼 1',4=>'特別號碼 2',5=>'特別號碼 3',6=>'特別號碼 4',7=>'特別號碼 5',8=>'特別號碼 6',9=>'特別號碼 7',10=>'特別號碼 8',11=>'特別號碼 9',12=>'特別號碼 10',13=>'特別號碼 11',14=>'特別號碼 12',15=>'特別號碼 13',16=>'特別號碼 14',17=>'特別號碼 15',18=>'特別號碼 16',19=>'特別號碼 17',20=>'特別號碼 18',21=>'特別號碼 19',22=>'特別號碼 20',23=>'特別號碼 21',24=>'特別號碼 22',25=>'特別號碼 23',26=>'特別號碼 24',27=>'特別號碼 25',28=>'特別號碼 26',29=>'特別號碼 27',30=>'特別號碼 28',31=>'特別號碼 29',32=>'特別號碼 30',33=>'特別號碼 31',34=>'特別號碼 32',35=>'特別號碼 33',36=>'特別號碼 34',37=>'特別號碼 35',38=>'特別號碼 36',39=>'特別號碼 37',40=>'特別號碼 38',41=>'特別號碼 39',42=>'特別號碼 40',43=>'特別號碼 41',44=>'特別號碼 42',45=>'特別號碼 43',46=>'特別號碼 44',47=>'特別號碼 45',48=>'特別號碼 46',49=>'特別號碼 47',50=>'特別號碼 48',51=>'特碼單',52=>'特碼雙',53=>'特碼大',54=>'特碼小',55=>'特碼紅',56=>'特碼蓝',57=>'特碼绿',
+    );
+    if (array_key_exists($argBetTypeId,$arrBetTypeIdName)) {
+      $betTypeName = $arrBetTypeIdName[$argBetTypeId];
+      return $betTypeName;
+    } else {
+      return false;
+    }
+  }
+
+  //輪盤
+  public function getRRBetNameById($argBetTypeId) {
+    $arrBetTypeIdName = array(
+        0=>'0', 1=>'1', 2=>'2', 3=>'3', 4=>'4', 5=>'5', 6=>'6', 7=>'7', 8=>'8', 9=>'9',10=>'10',11=>'11',12=>'12',13=>'13',14=>'14',15=>'15',16=>'16',17=>'17',18=>'18',19=>'19',20=>'20',21=>'21',22=>'22',23=>'23',24=>'24',25=>'25',26=>'26',27=>'27',28=>'28',29=>'29',30=>'30',31=>'31',32=>'32',33=>'33',34=>'34',35=>'35',36=>'36',37=>'0,1',38=>'0,2',39=>'0,3',40=>'1,2',41=>'1,4',42=>'2,3',43=>'2,5',44=>'3,6',45=>'4,5',46=>'4,7',47=>'5,6',48=>'5,8',49=>'6,9',50=>'7,8',51=>'7,10',52=>'8,9',53=>'8,11',54=>'9,12',55=>'10,11',56=>'10,13',57=>'11,12',58=>'11,14',59=>'12,15',60=>'13,14',61=>'13,16',62=>'14,15',63=>'14,17',64=>'15,18',65=>'16,17',66=>'16,19',67=>'17,18',68=>'17,20',69=>'18,21',70=>'19,20',71=>'19,22',72=>'20,21',73=>'20,23',74=>'21,24',75=>'22,23',76=>'22,25',77=>'23,24',78=>'23,26',79=>'24,27',80=>'25,26',81=>'25,28',82=>'26,27',83=>'26,29',84=>'27,30',85=>'28.29',86=>'28,31',87=>'29,30',88=>'29,32',89=>'30,33',90=>'31,32',91=>'31,34',92=>'32,33',93=>'32,35',94=>'33,36',95=>'34,35',96=>'35,36',97=>'0,1,2',98=>'0,2,3',99=>'1,2,3',100=>'4,5,6',101=>'7,8,9',102=>'10,11,121',103=>'13,14,15',104=>'16,17,18',105=>'19,20,21',106=>'22,23,24',107=>'25,26,27',108=>'28,29,30',109=>'31,32,33',110=>'34,35,36',111=>'1,2,4,5',112=>'2,3,5,6',113=>'4,5,7,8',114=>'5,6,8,9',115=>'7,8,10,11',116=>'8,9,11,12',117=>'10,11,13,14',118=>'11,12,14,15',119=>'13,14,16,17',120=>'14,15,17,18',121=>'16,17,19,20',122=>'17,18,20,21',123=>'19,20,22,23',124=>'20,21,23,24',125=>'22,23,25,26',126=>'23,24,26,27',127=>'25,26,28,29',128=>'26,27,29,30',129=>'28,29,31,32',130=>'29,30,32,33',131=>'31,32,34,35',132=>'32,33,35,36',133=>'1,2,3,4,5,6',134=>'4,5,6,7,8,9',135=>'7,8,9,10,11,12',136=>'10,11,12,13,14,15',137=>'13,14,15,16,17,18',138=>'16,17,18,19,20,21',139=>'19,20,21,22,23,24',140=>'22,23,24,25,26,27',141=>'25,26,27,28,29,30',142=>'28,29,30,31,32,33',143=>'31,32,33,34,35,36',144=>'第一列 (1~12)',145=>'第二列 (13~24)',146=>'第三列 (25~36)',147=>'第一行 (1~34)',148=>'第二行 (2~35)',149=>'第三行 (3~36)',150=>'1~18 (小)',151=>'19~36 (大)',152=>'單',153=>'雙',154=>'紅',155=>'黑',156=>'0,1,2,3',
+    );
+    if (array_key_exists($argBetTypeId,$arrBetTypeIdName)) {
+      $betTypeName = $arrBetTypeIdName[$argBetTypeId];
+      return $betTypeName;
+    } else {
+      return false;
+    }
+  }
+
+  //翻攤
+  public function getFTBetNameById($argBetTypeId) {
+    $arrBetTypeIdName = array(
+       0=>'單',1=>'雙',2=>'1 正',3=>'2 正',4=>'3 正',5=>'4 正',6=>'1 番',7=>'2 番',8=>'3 番',9=>'4 番',10=>'1念2',11=>'1念3',12=>'1念4',13=>'2念1',14=>'2念3',15=>'2念4',16=>'3念1',17=>'3念2',18=>'3念4',19=>'4念1',20=>'4念2',21=>'4念3',22=>'12角',23=>'14角',24=>'23角',25=>'34角',26=>'23一通',27=>'24一通',28=>'34一通',29=>'13二通',30=>'14二通',31=>'34二通',32=>'12三通',33=>'14三通',34=>'24三通',35=>'12四通',36=>'13四通',37=>'23四通',38=>'123中',39=>'124中',40=>'134中',41=>'234中',
+    );
+    if (array_key_exists($argBetTypeId,$arrBetTypeIdName)) {
+      $betTypeName = $arrBetTypeIdName[$argBetTypeId];
+      return $betTypeName;
+    } else {
+      return false;
+    }
+  }
+
+  //龍虎
+  public function getDTBetNameById($argBetTypeId) {
+    $arrBetTypeIdName = array(
+       0=>'和',1=>'龍',2=>'虎',
+    );
+    if (array_key_exists($argBetTypeId,$arrBetTypeIdName)) {
+      $betTypeName = $arrBetTypeIdName[$argBetTypeId];
+      return $betTypeName;
+    } else {
+      return false;
+    }
+  }
+
+  //骰寶
+  public function getSBBetNameById($argBetTypeId) {
+    $arrBetTypeIdName = array(
+        0=>'小', 1=>'大', 2=>'單', 3=>'雙', 4=>'三軍1', 5=>'三軍2', 6=>'三軍3', 7=>'三軍4', 8=>'三軍5', 9=>'三軍6',10=>'圍一',11=>'圍二',12=>'圍三',13=>'圍四',14=>'圍五',15=>'圍六',16=>'全圍',17=>'4點',18=>'5點',19=>'6點',20=>'7點',21=>'8點',22=>'9點',23=>'10點',24=>'11點',25=>'12點',26=>'13點',27=>'14點',28=>'15點',29=>'16點',30=>'17點',31=>'骰點 1 2',32=>'骰點 1 3',33=>'骰點 1 4',34=>'骰點 1 5',35=>'骰點 1 6',36=>'骰點 2 3',37=>'骰點 2 4',38=>'骰點 2 5',39=>'骰點 2 6',40=>'骰點 3 4',41=>'骰點 3 5',42=>'骰點 3 6',43=>'骰點 4 5',44=>'骰點 4 6',45=>'骰點 5 6',46=>'骰點 1',47=>'骰點 2',48=>'骰點 3',49=>'骰點 4',50=>'骰點 5',51=>'骰點 6',52=>'三全單',53=>'兩單一雙',54=>'兩雙一單',55=>'三全雙',56=>'1 2 3 4',57=>'2 3 4 5',58=>'2 3 5 6',59=>'3 4 5 6',60=>'112',61=>'113',62=>'114',63=>'115',64=>'116',65=>'221',66=>'223',67=>'224',68=>'225',69=>'226',70=>'331',71=>'332',72=>'334',73=>'335',74=>'336',75=>'441',76=>'442',77=>'443',78=>'445',79=>'446',80=>'551',81=>'552',82=>'553',83=>'554',84=>'556',85=>'661',86=>'662',87=>'663',88=>'664',89=>'665',90=>'126',91=>'135',92=>'234',93=>'256',94=>'346',95=>'123',96=>'136',97=>'145',98=>'235',99=>'356',100=>'124',101=>'146',102=>'236',103=>'245',104=>'456',105=>'125',106=>'134',107=>'156',108=>'246',109=>'345',
+    );
+    if (array_key_exists($argBetTypeId,$arrBetTypeIdName)) {
+      $betTypeName = $arrBetTypeIdName[$argBetTypeId];
+      return $betTypeName;
+    } else {
+      return false;
+    }
+  }
+
+  //GameType
+  public function getGameNameByCode($argGameCode) {
+    $arrGameNames = array(
+      'bac'=>'百家樂',
+      'dtx'=>'龍虎',
+      'sicbo'=>'骰寶',
+      'ftan'=>'番攤',
+      'rot'=>'輪盤',
+      'slot'=>'電子遊藝',
+      'lottery'=>'48彩/48彩其他玩法',
+      'minigame'=>'小遊戲',
+    );
+    if (array_key_exists($argGameCode,$arrGameNames)) {
+      $gameName = $arrGameNames[$argGameCode];
+      return $gameName;
+    } else {
+      return false;
+    }
+  }
+
+  //BetSource
+  public function getBetSourceNameById($argTypeId) {
+    $arrNames = array(
+      2=>'網頁版',
+      3=>'網頁版多台',
+      4=>'API',
+      8=>'手機應用程式',
+      16=>'移動網頁版(HTML5)',
+    );
+    if (array_key_exists($argTypeId,$arrNames)) {
+      $name = $arrNames[$argTypeId];
+      return $name;
+    } else {
+      return false;
+    }
+  }
+
+
+	//--------------------非通用函數--------------------
+
+  /* send request */
+  protected function _sendRequest($argMethod,$argArrParams) {
+    $time = $this->_getSignatureTime();
+    //$time = '20160628161913';
+    $qs = $this->_getQueryString($argMethod, $time, $argArrParams);
+    //$qs = 'method=RegUserInfo&Key=F5C7F82C5C284796BB53D4AD3A2B1DB6&Time=20160628161913&Checkkey=1aaedc180b17e58e&Username=uneon2k&CurrencyType=TWD';
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::qs={$qs}<br/>";
+    $signature =$this->_getSignature($qs,$time);
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::signature={$signature}<br/>";
+    $desInst = new SA_DES($this->cfg_des_key);
+    $encipheredQs = $desInst->encipherDES($qs);
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::encipheredQs={$encipheredQs}<br/>";
+    $encipheredQs = rawurlencode($encipheredQs);
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::rawurlencode(encipheredQs)={$encipheredQs}<br/>";
+    $postFieldStr = "q={$encipheredQs}&s={$signature}";
+    $curlHeaderOptStr = array(
+      //'Content-Type: multipart/form-data; boundary=' . $delimiter,
+      'Content-Type:application/x-www-form-urlencoded',
+      'Content-Length:' . strlen($postFieldStr)
+    );
+    $res = $this->_httpPost(
+      $this->cfg_base_url,
+      $postFieldStr,
+      $curlHeaderOptStr
+    );
+    if ($res !== false) {
+      $arrJsonRes = $this->_xml2Json($res);
+      $this->responseArr = null;
+      $this->responseArr = $arrJsonRes;
+      return $arrJsonRes;
+    }
+    return false;
+  }
+
+  /* get formatted time for signature */
+  protected function _getSignatureTime() {
+    $time = date('YmdHis');
+    return $time;
+  }
+
+  /* perform HTTP GET request and grab the response */
+  protected function _httpPost($argUrl,$argPostFieldStr=null,$argHeader=null) {
+    if (strlen($argUrl)) {
+      if ($argHeader===null) {
+        $argHeader = array(
+          'Content-Type:application/x-www-form-urlencoded',
+          'Content-Length:' . strlen($argPostFieldStr)
+        );
+      }
+      $ch = curl_init();
+      curl_setopt_array(
+        $ch,
+        array(
+          CURLOPT_URL=>$argUrl,
+          CURLOPT_RETURNTRANSFER=>1,
+          //CURLOPT_SSL_VERIFYPEER=>false,
+          CURLOPT_HTTPHEADER=>$argHeader,
+          CURLOPT_CONNECTTIMEOUT_MS=>self::SA_CONNECTION_TIMEOUT_MS,
+          CURLOPT_TIMEOUT_MS=>self::SA_REQUEST_TIMEOUT_MS,
+          CURLOPT_POSTFIELDS=>$argPostFieldStr,
+          CURLOPT_POST=>1
+         )
+      );
+      $response = curl_exec($ch);
+      if (curl_errno($ch)) {
+        $this->curlError = array(
+          'curl_error' => curl_error($ch),
+          'curl_errno' => curl_errno($ch),
+        );
+      } else {
+        $this->curlError = null;
+      }
+      //Dbgr::preout($response);
+      //Dbgr::preout($curlError);
+      //var_dump($response);
+      //var_dump(curl_error($ch));
+      if (self::SA_IS_DEBUGGING) var_dump($response);
+      //var_dump($response);
+      //echo 'curl_error=';var_dump($argCurlError);
+      curl_close($ch);
+      return $response;
+    } else {
+      //curl_close($ch);
+      return false;
+    }
+  }
+
+  protected function _xml2Json($xml) {
+    $this->_normalizeSimpleXML(simplexml_load_string($xml),$result);
+    //return json_encode($result);
+    return $result;
+  }
+
+  protected function _normalizeSimpleXML($obj,&$result) {
+    $data = $obj;
+    if (is_object($data)) {
+      $data = get_object_vars($data);
+    }
+    if (is_array($data)) {
+      foreach ($data as $key=>$value) {
+        $res = null;
+        $this->_normalizeSimpleXML($value,$res);
+        if (($key == '@attributes') && ($key)) {
+          $result = $res;
+        } else {
+          $result[$key] = $res;
+        }
+      }
+    } else {
+      $result = $data;
+    }
+  }
+
+  /* 傳回checkKey */
+  protected function _getCheckKey() {
+    //$checkKeyInst = new CheckKey($argCheckKeyHashKey);
+    //return $checkKeyInst->getCheckKey();
+    return '123';
+  }
+
+  /* get query string (QS) */
+  protected function _getQueryString($argMethod, $argTime, $argArrParams) {
+    $res = "method={$argMethod}";
+    $res .= "&Key={$this->cfg_secret_key}";
+    $res .= "&Time={$argTime}";
+    foreach ($argArrParams as $aKey=>$aVal) {
+      if (strlen($res)) {$res.='&';}
+      $res .= "{$aKey}={$aVal}";
+    }
+    return $res;
+  }
+
+  /* get signature */
+  protected function _getSignature($argQs, $argTime) {
+    //$time = $this->_getSignatureTime();
+    $fullStr = $argQs . $this->cfg_md5_key . $argTime . $this->cfg_secret_key;
+    if (self::SA_IS_DEBUGGING) echo "getSignature::fullStr={$fullStr}<br/>";
+    return hash('md5',$fullStr);
+  }
+
+  /* check if the response of request is successful or not */
+  protected function _checkResp(&$argRawResponse,$argArrEssentialKeys=null) {
+    if ($argRawResponse !== false) {
+      $errorMsgId = $argRawResponse['ErrorMsgId'];
+      $errorMsg = $argRawResponse['ErrorMsg'];
+      if ($errorMsgId == self::SA_ERROR_MSG_ID_ON_SUCCESS) {
+        if (($argArrEssentialKeys !== null)&&(is_array($argArrEssentialKeys))) {
+          $essKeyPassed = true;
+          $lackKeyStr = '';
+          foreach ($argArrEssentialKeys as $eKeyVal) {
+            if (!array_key_exists($eKeyVal,$argRawResponse)) {
+              if (strlen($lackKeyStr)) {$lackKeyStr .= ',';}
+              $lackKeyStr .= $eKeyVal;
+              $essKeyPassed = false;
+            }
+          }
+          if ($essKeyPassed===true) {
+            return true;
+          } else {
+            $arrError = array(
+              'errorCode'=>-9901,
+              'errorMsg'=> "essential key(s) does not exists in response array (e9901),lacks: {$lackKeyStr}"
+            );
+            return $arrError;
+          }
+        } else {
+          return true;
+        }
+      } else {
+        $arrError = array(
+          'errorCode'=>$errorMsgId,
+          'errorMsg'=> $errorMsg
+        );
+        return $arrError;
+      }
+    } else {
+      $arrError = array(
+        'errorCode'=>'-9900',
+        'errorMsg'=> 'send post request failed (e9900)'
+      );
+      return $arrError;
+    }
+  }
+
+}
+
+if (!defined('CHECKKEY_CLASS')) {
+  define('CHECKKEY_CLASS',true);
+  define('CHECKKEY_MAX_LENGTH',16);
+  define('CHECKKEY_SLICE_BEGIN_POS',8);
+  define('CHECKKEY_PADDING_CHAR','|');
+  define('CHECKKEY_MAX_VERIFY_SECONDS',900);
+  class CheckKey {
+    protected $aesKey;
+    //----------------------
+    public function __construct($argKey) {
+      $this->aesKey = $argKey;
+    }
+    //----------------------
+    public function verifyCheckKey($argHash) {
+      $nowTime = time()-CHECKKEY_MAX_VERIFY_SECONDS;
+      $passed = false;
+      //echo "<br/>hash = $argHash";
+      for ($i=0; $i < CHECKKEY_MAX_VERIFY_SECONDS*2; ++$i) {
+        $text = $nowTime + $i;
+        $ck = $this->getCheckKey($text);
+        //echo "<br/>[{$i}] text=$text, ck=$ck";
+        if ($ck==$argHash) {
+          $passed = true;
+          break;
+        }
+      }
+      return $passed;
+    }
+    //----------------------
+    protected function getTimeForCheckKey($argText='') {
+      if (!strlen($argText)) {
+        $argText = time();
+      }
+      return $this->aesKey . $argText;
+    }
+    //----------------------
+    public function getCheckKey($argText='') {
+      $text = $this->getTimeForCheckKey($argText);
+      return substr(
+        hash('sha256',$text),
+        CHECKKEY_SLICE_BEGIN_POS,
+        CHECKKEY_MAX_LENGTH
+      );
+    }
+  }
+}
+
+if (!defined('SA_DES_CLASS')) {
+  define('SA_DES_CLASS',true);
+  class SA_DES {
+    protected $key;
+    protected $iv;
+    //----------------------
+    public function __construct( $key, $iv=0 ) {
+      $this->key = $key;
+      if( $iv == 0 ) {
+        $this->iv = $key;
+      } else {
+        $this->iv = $iv;
+      }
+    }
+    //----------------------
+    public function encipherDES($str) {
+      $size = mcrypt_get_block_size ( MCRYPT_DES, MCRYPT_MODE_CBC);
+      $str = $this->pkcs5Pad ( $str, $size );
+      return
+        base64_encode(
+          mcrypt_encrypt(
+            MCRYPT_DES,
+            $this->key,
+            $str,
+            MCRYPT_MODE_CBC,
+            $this->iv
+          )
+        );
+    }
+    //----------------------
+    protected function pkcs5Pad($text, $blocksize) {
+      $pad = $blocksize - (strlen ( $text ) % $blocksize);
+      return $text . str_repeat ( chr ( $pad ), $pad );
+    }
+  }
+}

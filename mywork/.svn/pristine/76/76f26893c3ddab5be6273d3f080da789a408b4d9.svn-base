@@ -1,0 +1,55 @@
+<?php
+class CommonAgentOnlineModel extends AgentModel {
+    protected $tableName = "common_agent_online";
+    protected $tableId = "online_id";
+    
+    public function setAgentOnlineData($data,&$err=""){
+        if(empty($data['agent_id']) && $data['agent_id'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['agent_identity']) && $data['agent_identity'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        switch ($data['agent_identity']){
+            case 1://代理
+                $sql = "INSERT INTO `{$this->tableName}`(
+                            `agent_id`,`agent_account`,`agent_identity`,`online_createTime`,`online_modifyTime`,
+                            `online_ip`,`online_os`,`online_url`
+                        ) VALUES (
+                            '{$data['agent_id']}','{$data['agent_account']}','{$data['agent_identity']}','{$data['online_createTime']}','{$data['online_modifyTime']}',
+                            '{$data['online_ip']}','{$data['online_os']}','{$data['online_url']}'
+                        ) ON DUPLICATE KEY UPDATE
+                            `online_createTime` = VALUES(`online_createTime`),`online_modifyTime` = VALUES(`online_modifyTime`),
+                           `online_ip` = VALUES(`online_ip`),`online_os` = VALUES(`online_os`),`online_url` = VALUES(`online_url`)";
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                    return false;
+                }
+                break;
+            case 2://子帳號
+                $sql = "INSERT INTO `{$this->tableName}`(
+                            `agent_id`,`agent_account`,`sub_id`,`sub_account`,`agent_identity`,`online_createTime`,`online_modifyTime`,
+                            `online_ip`,`online_os`,`online_url`
+                        ) VALUES (
+                            '{$data['agent_id']}','{$data['agent_account']}','{$data['sub_id']}','{$data['sub_account']}',
+                            '{$data['agent_identity']}','{$data['online_createTime']}','{$data['online_modifyTime']}',
+                            '{$data['online_ip']}','{$data['online_os']}','{$data['online_url']}'
+                        ) ON DUPLICATE KEY UPDATE
+                            `online_createTime` = VALUES(`online_createTime`),`online_modifyTime` = VALUES(`online_modifyTime`),
+                           `online_ip` = VALUES(`online_ip`),`online_os` = VALUES(`online_os`),`online_url` = VALUES(`online_url`)";
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+                    return false;
+                }
+                break;
+            default:
+                $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+                return false;
+                break;
+        }
+    }
+}

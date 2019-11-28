@@ -1,0 +1,16 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameQtMenuModel extends AgentModel {
+    protected $tableName = "game_qt_menu";
+    
+    public function getGameChNameDataById($data){
+        
+        $sql = "SELECT `game_name_ch`
+                FROM `{$this->tableName}`
+                WHERE `game_id` = '{$data['game_id']}'";
+        $return = $this->cacheQuery($sql,600);
+        return $return[0]['game_name_ch'];
+    }
+}

@@ -1,0 +1,101 @@
+<?php
+class CommonAgentLoginLogModel extends AgentModel {
+    protected $tableName = "common_agent_login_log";
+    protected $tableId = "loginLog_id";
+    public function getAgentLoginLogData($data,&$err=""){
+        if(empty($data["agent_tree"]) && $data["agent_tree"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a 
+                WHERE (`loginLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+                ORDER BY `loginLog_createTime` DESC;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得登入狀態
+     * 登入狀態 0登入失敗 1登入成功
+     */
+    public function getAgentLoginLogStatusStr($data){
+        $returnStr = "";
+        switch ($data){
+            case "0":
+                $returnStr = "登入失敗";
+                break;
+            case "1":
+                $returnStr = "登入成功";
+                break;
+            default:
+                $returnStr = "";
+                break;
+        }
+        return $returnStr;
+    }
+    
+    /*
+     * 新增  資料
+     */
+    public function addvData($data,&$err=""){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得總筆數
+     */
+    public function getTotalAgentLoginLogNumber($data, &$err = ""){
+        if(empty($data["agent_tree"]) && $data["agent_tree"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}` a 
+                WHERE (`loginLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+                ORDER BY `loginLog_createTime` DESC;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     *  搜索分頁資料 
+     */
+    public function getAgentLoginLogNumberData($data, &$err=""){
+        if(empty($data["agent_tree"]) && $data["agent_tree"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+
+        $sql = "SELECT * FROM `{$this->tableName}` a 
+                WHERE (`loginLog_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+                ORDER BY `loginLog_createTime` DESC{$pageSql};";
+        $return = $this->query($sql);
+        
+        return $return;
+    }
+}

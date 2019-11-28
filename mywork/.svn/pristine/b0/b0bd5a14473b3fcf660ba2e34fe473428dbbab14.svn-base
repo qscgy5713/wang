@@ -1,0 +1,178 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+					
+				<form class="mb-10" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+        
+					<div class="row">
+						
+						<div class="row col-lg-6 col-xl-4 pr-0 pl-0 mr-0 ml-0 mb-5 pl-15">
+		                  
+		                  <div class="col-2 pr-5 pl-5">
+		                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="今日" onClick="formTime('{$today}','{$today}')"/>
+		                  </div>
+		                 
+		                  <div class="col-2 pr-5 pl-5">
+		                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="昨日" onClick="formTime('{$yesterday}','{$yesterday}')"/>
+		                  </div>
+		                  
+		                  <div class="col-2 pr-5 pl-5">
+		                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="明日" onClick="formTime('{$tomorrow}','{$tomorrow}')"/>
+		                  </div>
+		                  
+		                  <div class="col-2 pr-5 pl-5">
+		                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="本週" onClick="formTime('{$thisWeekA}','{$thisWeekB}')"/>
+		                  </div>
+		                  
+		                  <div class="col-2 pr-5 pl-5">
+		                    <input class="btn btn-secondary btn-shadow-1 time-btn-rwd-p" style="width:100%;" type="button" value="上週" onClick="formTime('{$lastWeekA}','{$lastWeekB}')"/>
+		                  </div>
+						</div>
+		                
+						<div class="row col-lg-6 col-xl-4 pr-5 pl-5 mr-0 ml-0 mb-5">
+		                  <div class="col-5 p-0">
+		                    <input id="startTime" name="startTime" type="text" class="form-control text-center" style="width:100%;" value="{$startTime}"/>
+		                  </div>
+		                  <div class="col-2 text-center p-0"><label class="p-5 mt-5">至</label></div>
+		                  <div class="col-5 p-0">
+		                    <input id="endTime"   name="endTime" type="text" class="form-control text-center" style="width:100%;" value="{$endTime}"/>
+		                  </div>
+						</div>
+						
+						
+		                  
+						<div class="row col-lg-6 col-xl-2 pr-5 pl-5 mr-0 ml-0 mb-5">
+		                  
+		                  <div class="col-md-6 col-sm-12 col-12 pl-0 pr-0 mt-3">
+		                   
+		                    <input class="btn btn-secondary btn-shadow-1 pr-0 pl-0" style="width:100%;" type='submit' value='查詢'>
+		                    
+		                    
+		                  </div>
+						</div>
+						
+					</div>
+				</form>
+					<div class="tab-content">
+						<div class="tab-pane active" id="">
+							<div class="table-responsive">
+								<table class="table table-bordered table-striped table-vertical-middle">
+									<thead>
+									  <tr style="background-color: rgba(102, 102, 102, 0.43137254901960786);">
+									   	 <td colspan="1" class="fw-800 tex-black">總計</td>
+									   	 <th class="tex-black">{$gameTotalBettingMoney}</th>
+										 <th>{$gameTotalSurplus}</th>
+										 <th class="tex-black">{$gameTotalEffective}</th>
+										 <th class="tex-black">{$gameTotalBetNumber}</th>
+								   	  </tr>
+					                  <tr>
+					                  <!-- <th>序</th> -->
+		                            	<th>遊戲名稱</th>
+		                            	<th>投注金額</th>
+		                            	<th>輸贏金額</th>
+		                            	<th>有效注額</th>
+		                            	<th>注單數量</th>
+		                              </tr>
+				                	</thead>
+									<tbody>
+					                	<VOLIST name="gameShowArray" id="vo" empty="$gameShowEmpty">
+			                            	<tr class="bservise">
+			                            		<!--<td>{$i}</td>-->
+												<td>
+													<form class="mb-0" method="post" action='__APP__/{$Think.MODULE_NAME}/oneGameMemberDetail'>
+														<input type="hidden" name="startTIme" value="{$startTime}"/>
+														<input type="hidden" name="endTime" value="{$endTime}"/>
+														<input type="hidden" name="gameCode" value="{$vo.game_code}"/>
+														<input class="btn btn-secondary loading gameBtnWidth" type="submit" value="{$key}"/>
+													</form>
+												</td>
+												<td>{$vo.allBettingMoney}</td>
+												<IF condition='$vo.allSurplus lt 0'>
+													<td style='color:red;'>{$vo.allSurplus}</td>
+												<ELSE/>
+													<td style='color:green;'>{$vo.allSurplus}</td>
+												</IF>
+												<td>{$vo.allEffective}</td>
+												<td>{$vo.allBetNumber}</td>
+			                            	</tr>
+			                             </VOLIST>
+			                        </tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					
+				</div>
+		</section>
+
+<include file="Common:footer"/>
+<!-- 時間選擇器 -->
+<script src="__CSS__/timepicker/jquery-ui-timepicker-addon.js"></script>
+<script>
+//設定中文語系
+
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+
+jQuery(document).ready(function (){
+	jQuery.datepicker.regional['zh-TW']={
+	   dayNames:["星期日","星期一","星期二","星期三","星期四","星期五","星期六"],
+	   dayNamesMin:["日","一","二","三","四","五","六"],
+	   monthNames:["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"],
+	   monthNamesShort:["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"],
+	   prevText:"上月",
+	   nextText:"次月",
+	   weekHeader:"週"
+	};
+	datetimePicker("startTime","endTime","endTime","startTime");
+	jQuery.datepicker.setDefaults(jQuery.datepicker.regional['zh-TW']);
+});
+function formTime(startTime,endTime){
+	jQuery("#startTime").val(startTime);
+	jQuery("#endTime").val(endTime);
+	jQuery("#formInquire").submit();
+}
+function datetimePicker(time1, onCloseTime1, time2, onCloseTime2){
+	jQuery( "#"+time1 ).datepicker({
+		dateFormat: "yy-mm-dd",
+   	 	maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+      	onClose: function( selectedDate ) {
+        	jQuery( "#"+onCloseTime1 ).datepicker( "option", "minDate", selectedDate );
+        }
+   });
+    
+    jQuery( "#"+time2 ).datepicker({
+    	dateFormat: "yy-mm-dd",
+   	 	maxDate: "+0",
+        changeMonth: true,
+        numberOfMonths: 1,
+        onClose: function( selectedDate ) {
+            $( "#"+onCloseTime2 ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+}
+
+</script>

@@ -1,0 +1,112 @@
+<?php
+/**
+ * 遊戲控制
+ */
+class GameControlOptionsAction extends AdminAction
+{
+	//首頁
+	public function index()
+	{
+		$GameInfo = D('GameInfo');
+		$return = $GameInfo->getAllGameCodeData(); //取得遊戲資訊
+		$showArray = array();
+		$FieldChange = array(
+			'game_id' => 'id',
+			'game_code' => 'code',
+			'game_name' => 'gameName',
+			'game_popup' => 'popup',
+			'game_reportEnabled' => 'reportEnabled',
+			'game_ratioException' => 'ratioException',
+			'game_riskcontrolEnabled' => 'riskcontrolEnabled',
+			'game_htmlPopup' => 'htmlPopup',
+		);
+		// var_dump($return);die;
+		$showStr = '';
+		foreach ($return as $key => $value) {
+			foreach ($FieldChange as $key1 => $value1) {
+				switch ($key1) {
+					case 'game_name':
+						$gameNameArray = json_decode($value[$key1], true);
+						$showStr = $gameNameArray[$_COOKIE['think_language']];
+						break;
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		$this->assign('showArray', $showArray);
+		$this->display();
+	}
+	//ajax 開關
+	public function ajaxSwitch(){
+		$request = $this->getRequest();
+		switch ($request['className']) {
+			case 'popStop':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_popup' => 'no',
+				);
+				break;
+			case 'popStart':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_popup' => 'yes',
+				);
+				break;
+			case 'repStop':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_reportEnabled' => '0',
+				);
+				break;
+			case 'repStart':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_reportEnabled' => '1',
+				);
+				break;
+			case 'ratStop':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_ratioException' => '0',
+				);
+				break;
+			case 'ratStart':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_ratioException' => '1',
+				);
+				break;
+			case 'riskStop':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_riskcontrolEnabled' => '0',
+				);
+				break;
+			case 'riskStart':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_riskcontrolEnabled' => '1',
+				);
+				break;
+			case 'htmlPopStop':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_htmlPopup' => '0',
+				);
+				break;
+			case 'htmlPopStart':
+				$data = array(
+					'game_code' => $request['code'],
+					'game_htmlPopup' => '1',
+				);
+				break;
+			default:
+				break;
+		}
+		$GameInfo = D('GameInfo');
+		$return = $GameInfo->switchGameInfoByCode($data);
+	}
+}

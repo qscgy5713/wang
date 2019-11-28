@@ -1,0 +1,88 @@
+<?php 
+class CommonMemberNoteModel extends AdminModel{
+	protected $tableName = "common_member_note";
+	/*
+	 * 取得後台頁面
+	 * 頁面管理使用 
+	 */
+	public function getCommonMemberNoteData(){
+		$sql = "SELECT * FROM `{$this->tableName}`";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+
+	/*
+	 * 新增後台頁面類別
+	 */
+	public function addCommonMemberNoteData($data){
+		$sql = "INSERT INTO `{$this->tableName}`";
+		$keysql = "";
+		$valuesql = "";
+
+		foreach ($data as $key => $value) {
+			if(empty($keysql)){
+				$keysql = "(`{$key}`";
+			} else {
+				$keysql = ",`{$key}`";
+			}
+
+			if(empty($valuesql)){
+				$valuesql = "('{$value}'";
+			} else {
+				$valuesql = ",'{$value}'";
+			}
+		}
+
+		$sql .= $keysql . ") VALUES " . $valuesql . ");";
+		$return = $this->execute($sql);
+
+		return $return;
+	}
+	/*
+	 * 修改 後台頁面 資料
+	 * 使用後台頁面ID 
+	 */
+	public function setCommonMemberNoteData($data){
+		if(empty($data['member_id']) && $data['member_id'] !== '0'){
+			return false;
+		}
+
+		$sql = "";
+		foreach ($data as $key => $value) {
+			if($key == 'member_id'){continue;}
+			if(empty($sql)){
+				$sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+			} else {
+				$sql .= ",`{$key}` = '{$value}'";
+			}
+		}
+
+		$sql .= "WHERE `member_id` = '{$data['member_id']}'";
+		$return = $this->execute($sql);
+
+		return $return;
+	}
+	/*
+	 * 清除 表格資料 資料
+	 * 使用後台頁面ID  
+	 */
+	public function delCommonMemberNoteData($data){
+		if(empty($data['member_id']) && $data['member_id'] !== '0'){
+			return false;
+		}
+
+		$sql = "";
+		foreach ($data as $key => $value) {
+			if($key == 'member_id'){continue;}
+			if(empty($sql)){
+				$sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+			} else {
+				$sql .= ",`{$key}` = '{$value}'";
+			}
+		}
+
+		$sql .= "WHERE `member_id` = '{$data['member_id']}'";
+		$return = $this->execute($sql);
+	}
+}

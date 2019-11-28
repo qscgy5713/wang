@@ -1,0 +1,78 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<header class="text-center mb-30">
+					<h2 class="mb-20 mt-20">四星彩加碼送點數</h2>
+					<h2 class="mb-20 mt-20">三萬點數等你拿</h2>
+					<div class="responsibility_title"><i class="fa fa-gift responsibility-icon-style"></i></div>	
+				</header>
+				<div class="row">
+					<div class="col-12">
+						<div class="alert alert-default mb-30"><!-- DEFAULT -->
+							<strong>活動時間：每星期一至六，每日20:31後儲值會員，計算為隔天。</strong><BR>
+							<strong>活動辦法：單次儲值3000點，系統自動贈送四星彩號碼一組，儲值6000點四星彩號碼2組，以此類推。</strong><BR>
+							<strong>領獎方式：得獎人將固定於星期日早上01:00發送要中獎人寄送資料，得獎人需在星期日24:00前傳回<span class="text-warning">【中獎人需加入客服LINE，如未加入LINE傳回寄送地址者喪失中獎資格】</span>於星期一統一寄送及發放點數。</strong><BR>
+							
+							<br>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:none;" class="text-danger">好禮一&nbsp;&nbsp;對中四星彩4碼全中，贈送財神點數3萬點。</li>
+		                        <li style="list-style:none;" class="text-danger">好禮二&nbsp;&nbsp;對中四星彩末3碼，贈送財神點數3000點數。</li>
+		                        <li style="list-style:none;" class="text-danger">好禮三  &nbsp;&nbsp;對中四星彩末2碼，贈送王品西堤餐卷乙張。</li>
+		                    </ul>
+							<BR>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">當日20:30前 儲值之會員，系統即隨機贈送當天當期4位數號碼，20:30後<span class="text-warning">系統即 贈送隔天之4位數號碼</span>。系統將隨機選號傳給您個人，會員能在會員中心四星彩內查詢。</li>
+		                        <li style="list-style:decimal;" >四星彩官方開獎時間為星期一至六每天晚上20:30開始開獎，實際開獎時間一切依台彩公布為準。因星期日不開獎，於星期六20:30後儲值之會員，贈送之號碼皆統一在星期一對獎。</li>
+		                        <li style="list-style:decimal;">中獎人4個號碼全中，只能選4個號碼全中獎項，2或3碼獎項無法兌換，中獎人中末3碼，只能領取末3碼獎項，末2碼獎項無法兌換。</li>
+		                        <li style="list-style:decimal;">中獎人只限一個星期託售一次即可申請領獎資格。（星期六20:30~下星期六20:30為一星期）</li>
+		                        <li style="list-style:decimal;">本活動計算限有效押碼，六合彩跟無風險投注及免傭投注皆不算有效押碼。</li>
+		                    </ul>
+		                    <BR>
+							<strong>注意事項：</strong>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">同一帳戶/家庭/電話號碼/儲值地點/銀行帳戶/相似或同一IP位置/共享電腦/網路環境， 僅限申請一次。</li>
+		                        <li style="list-style:decimal;" >本娛樂城有權單方面決定會員是否利用彩金進行異常或無風險投注對會員行為作出嚴格監控，發現有任何違背、欺騙或利用規則與條款進行非法獲利的會員，本娛樂城有權終止會員登入，跟暫停使用本網站，和沒收彩金及盈利的權利無須通知。</li>
+		                        <li style="list-style:decimal;">為避免對文字的理解差異或活動如有任何異動，本娛樂城有權在任何時間，修改、暫停或取消優惠活動。並保有四星彩活動的最終解釋及更改權利。</li>
+		                    </ul>
+		                    <strong>※本活動計算限有效押碼，無風險投注及免傭投注皆不算入有效押碼。</strong><br>
+		                    <strong>※無風險投注包括（在百家樂同時投注莊家和閒家，輪盤、骰寶及其他相似投注法同時投注【黑、紅】，【單、雙】，【大、小】等）。</strong>
+					   </div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		if("{$isLogin}" == "true"){
+			var menu_RWD_h = jQuery('.menu_RWD').height();
+			 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+		}else{
+			jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":10+"px"});
+		}
+		
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+
+jQuery(document).ready(function(){
+	jQuery( ".clip_logo" ).hide();
+});
+</script>

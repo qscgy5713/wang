@@ -1,0 +1,361 @@
+<?php
+/*
+ * 會員四星彩
+ */
+class CommonEventLottofourMemberNumberModel extends AdminModel {
+    protected $tableName = "common_event_lottofour_memberNumber";
+    protected $tableId = "memberNumber_id";
+    
+    protected $lottofourMoney = 3000;//多少金額 產生一筆
+    protected $everydayEndTime = '20:29:59';
+    
+    protected $eventId = 1;
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    public function getAllLottofourMemberNumberDataByTime($data,&$err=""){
+        if(empty($data['startTime']) && $data['startTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['endTime']) && $data['endTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}');";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得狀態值
+     */
+    public function getLottofourMemberNumberStatusStr($data){
+        $return = "";
+        switch($data){
+            case 0:
+                $return = "未開獎";
+                break;
+            case 1:
+                $return = "未中獎";
+                break;
+            case 2:
+                $return = "已中獎";
+                break;
+        }
+        return $return;
+    }
+    /*
+     * 傳入會員ID
+     * 儲值ID
+     * 儲值金額
+     * 自動算產生幾筆四星彩
+     */
+    public function addLottofourMemberNumberData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['recharge_id']) && $data['recharge_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['recharge_money']) && $data['recharge_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $data['event_id'] = $this->eventId;//活動ID
+        
+        $number = floor($data['recharge_money'] / $this->lottofourMoney);
+        $data['event_createTime'] = time();
+        //判斷開獎日期是否為隔天
+        if(date("w") == 6){
+            if($data['event_createTime'] > strtotime(date('Y-m-d '.$this->everydayEndTime))){
+                $data['memberNumber_lotterTime'] = strtotime("+2 day",strtotime(date('Y-m-d')));
+            } else {
+                $data['memberNumber_lotterTime'] = strtotime(date('Y-m-d'));
+            }
+        } else if(date("w") == 0){
+            $data['memberNumber_lotterTime'] = strtotime("+1 day",strtotime(date('Y-m-d')));
+        } else {
+            if($data['event_createTime'] > strtotime(date('Y-m-d '.$this->everydayEndTime))){
+                $data['memberNumber_lotterTime'] = strtotime("+1 day",strtotime(date('Y-m-d')));
+            } else {
+                $data['memberNumber_lotterTime'] = strtotime(date('Y-m-d'));
+            }
+        }
+        
+        for($i = 1;$i<=$number;$i++){
+            $data['memberNumber_number'] = $i;
+            $data['memberNumber_lottofour'] = $this->getRandStr(4);
+            //新增 四星彩
+            $sql = "INSERT INTO `{$this->tableName}` ";
+            $keysql = "";
+            $valuesql = "";
+            foreach ($data as $key => $value) {
+                if(empty($keysql)){
+                    $keysql = " (`{$key}`";
+                } else {
+                    $keysql .= ",`{$key}`";
+                }
+                if(empty($valuesql)){
+                    $valuesql = " ('{$value}'";
+                } else {
+                    $valuesql .= ",'{$value}'";
+                }
+            }
+            $sql .= $keysql.") VALUES ".$valuesql.");";
+            
+            $return = $this->query($sql);
+            if($return === false){
+                $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+                return false;
+            }
+        }
+    }
+    
+    /*
+     * 取得 會員四星彩 資料筆數
+     */
+    public function getTotalNumberMemberNumberData($data,&$err = ""){
+        if(empty($data['startTime']) && $data['startTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['endTime']) && $data['endTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}');";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 會員四星彩 資料
+     * 搜尋會員四星彩使用
+     */
+    public function getLottofourMemberNumberData($data,&$err = ""){
+        if(empty($data['startTime']) && $data['startTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+
+        if(empty($data['endTime']) && $data['endTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+
+        $pageStrat = ($data["page"]["pageNumber"] - 1) * $data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT " . $pageStrat . "," . $pageEnd;
+        
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                WHERE (`event_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                ORDER BY `event_createTime` DESC {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 會員四星彩 單筆資料
+     * 查詢單筆四星彩使用
+     */
+    public function getLottofourMemberNumberDataById($data,&$err = ""){
+        if(empty($data['memberNumber_id']) && $data['memberNumber_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `memberNumber_id` = '{$data['memberNumber_id']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+            return false;
+        }
+        return $return[0];
+    }
+    protected function getRandStr($len)//驗證碼使用
+    {
+        $chars = array(
+            "0", "1", "2","3", "4", "5", "6", "7", "8", "9"
+        );
+        $charsLen = count($chars) - 1;
+        shuffle($chars);
+        $output = "";
+        for ($i=0; $i<$len; $i++)
+        {
+            $output .= $chars[mt_rand(0, $charsLen)];
+        }
+        return $output;
+    }
+    /*
+     * 對電子錢包上點
+     * 新增四星彩帳變紀錄
+     * 四星彩紀錄 給獎完成
+     */
+    public function setLottofourMemberNumberDataByIdUseGiveMoney($data,&$err=""){
+        if(empty($data['memberNumber_id']) && $data['memberNumber_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['admin_id']) && $data['admin_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if(empty($data['event_money']) && $data['event_money'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        //var_dump($data);
+        $eventMoney = $data['event_money'];
+        $memberNumberId = $data['memberNumber_id'];
+        $memberId = $data['member_id'];
+        $adminId = $data['admin_id'];
+        $agentId = $data['agent_id'];
+        $agentTree = $data['agent_tree'];
+        $agentRatio = $data['ratio_tree'];
+        $memberNumberModifyTime = $data['memberNumber_modifyTime'];
+        $eventStatus = $data['event_status'];
+        
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        //事務處理開始
+        $this->startTrans();
+        
+        //讀取 會員電子錢包    鎖表   開始
+        $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$memberId}'
+                FOR UPDATE;";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if(empty($return[0])){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        //讀取 會員電子錢包   鎖表   結束
+        $memberWalletDataArray = $return[0];//會員錢包資料
+        
+        $walletLogBefore = $memberWalletDataArray["wallet_money"];
+        $walletLogAfter = $walletLogBefore + $eventMoney;
+        
+        //對電子錢包 加款 開始
+        $data = array(
+            "member_id" => $memberId,
+            "wallet_money" => $eventMoney,
+            "wallet_totalRecharge" => 0
+        );
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_07"));
+            return false;
+        }
+        //對電子錢包 加款 結束
+        
+        //新增帳變紀錄 開始
+        $CommonMemberWalletLog = D("CommonMemberWalletLog");
+        $data = array(
+            "member_id" => $memberId,
+            "agent_id" => $agentId,
+            "agent_tree" => $agentTree,
+            "ratio_tree" => $agentRatio,
+            "walletLog_operating" => 1,//1點數增加 2點數減少
+            "walletLog_type" => 4,//帳變類型 1儲值表 2託售表 3.轉移表  4活動表 5退水表 6其他分類
+            "walletLog_type_class"=>1,//type=4 1四星彩給獎 2儲值贈點給獎 
+            "walletLog_item_id" => $memberNumberId,//單號
+            "walletLog_money" => (int)$eventMoney,
+            "walletLog_before" => (int)$walletLogBefore,
+            "walletLog_after" => (int)$walletLogAfter,
+            "walletLog_main" => "四星彩獎;自動上點;錢包;加款",
+            "walletLog_ip" => $ip,
+            "walletLog_createTime" => $nowTime
+        );
+        $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        $walletLogId = $return;
+        //新增帳變紀錄 結束
+        
+        //修改 會員四星彩 資料 開始
+        $data = array(
+            "memberNumber_id" => $memberNumberId,
+            "admin_id"=> $adminId,
+            "event_money"=> (int)$eventMoney,
+            "memberNumber_modifyTime"=> $memberNumberModifyTime,
+            "walletLog_id"=> $walletLogId,
+            "event_status"=>$eventStatus
+        );
+        $return = $this->setLottofourMemberNumberDataById($data,$err);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            return false;
+        }
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_08"));
+            return false;
+        }
+        //修改 會員四星彩 資料 結束
+        $this->commit();//事務處理成功
+        return true;
+    }
+    public function setLottofourMemberNumberDataById($data,&$err = ""){
+        if(empty($data['memberNumber_id']) && $data['memberNumber_id'] !== 0){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'memberNumber_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `memberNumber_id` = '{$data['memberNumber_id']}'";
+        
+        $return = $this->execute($sql);
+        if($return === false){//否，顯示錯誤
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+    }
+}

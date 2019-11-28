@@ -1,0 +1,52 @@
+<?php
+/*
+ * 會員免費影城
+ */
+class CommonMemberMovieModel extends MemberModel {
+    /*
+     * 取得影城連結
+     */
+    public function getMovieKey(){
+        //取得會員帳號
+        $member_account = $_SESSION['Member']['account'];
+        //取得會員上級
+        $member_agnet = $_SESSION['Member']['agent'];
+        //取得現在時間
+        $todayTime = date('Y-m-d H:i:s');
+        //用 MemberModel 內的加密函數  AESencode(會員帳號.'&'.會員上級."&as5168&".現在時間);
+        $key = $this->movieAESencode($member_account.'&'.$member_agnet."&as5168&".$todayTime);
+        //將加密的字串 用 urlencode 包裝
+        $key = urlencode($key);
+        return $key;
+    }
+    /*
+     * AES加密
+     */
+    protected function movieAESencode($value){
+        $hash_string = 'as5168';
+        $hash = hash('SHA384', $hash_string, true);
+        $app_cc_aes_key = substr($hash, 0, 32);
+        $app_cc_aes_iv = substr($hash, 32, 16);
+        $padding = 16 - (strlen($value) % 16);
+        $value .= str_repeat(chr($padding), $padding);
+        $encrypt = mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $app_cc_aes_key, $value, MCRYPT_MODE_CBC, $app_cc_aes_iv);
+        $encrypt_text = base64_encode($encrypt);
+        return $encrypt_text;
+    }
+    /*
+     * AES解密
+     */
+    protected function AESdecode($value){
+        $hash_string = 'as5168';
+        $hash = hash('SHA384', $hash_string, true);
+        $app_cc_aes_key = substr($hash, 0, 32);
+        $app_cc_aes_iv = substr($hash, 32, 16);
+        
+        $encrypt = base64_decode($value);
+        
+        $data = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $app_cc_aes_key, $encrypt, MCRYPT_MODE_CBC, $app_cc_aes_iv);
+        $padding = ord($data[strlen($data) - 1]);
+        $decrypt_text = substr($data, 0, -$padding);
+        return $decrypt_text;
+    }
+}

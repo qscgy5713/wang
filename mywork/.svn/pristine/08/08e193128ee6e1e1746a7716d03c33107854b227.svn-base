@@ -1,0 +1,121 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+
+      	<div class="container pt20 pb50 bg-min-height" >
+            <div class="row">
+                <div class="col-md-12 mb40">
+                
+	                    <h2 class="text-center">註冊財神娛樂賬戶</h2> 
+	                    <p class="text-center">
+	                        	註冊財神娛樂賬戶，您將領略到前所未有的博彩體驗。如果您已擁有財神娛樂賬戶，則可以在此登錄
+	                    </p>
+	                    <hr>
+	                 <ul class="nav  tabs-circle-icon justify-content-center" role="tablist">
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link " href="#t7" id="am-s1-link" aria-controls="home" role="tab" data-toggle="tab" aria-selected="true"> 
+				         		<i class="ti-mobile"></i>
+				         		<h4 class="mt5 font15">驗證手機</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation" >
+				         <a class="nav-link active show" href="#t8" id="am-s2-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false" > 
+				         		<i class="ti-lock"></i>
+				         		<h4 class="mt5 font15">輸入驗證碼</h4>
+				         </a>
+				        </li>
+				        
+				        <li class="nav-item text-center" role="presentation">
+				         <a class="nav-link" href="#t9" id="am-slast-link" aria-controls="profile" role="tab" data-toggle="tab" aria-selected="false"> 
+				         		<i class="ti-check"></i>
+				         		<h4 class="mt5 font15">完成註冊</h4>
+				         </a>
+				        </li>
+				    </ul> 
+			        <div class="tab-content mt10">
+			        <!-- 驗證手機 -->
+                        <div role="tabpanel" class="tab-pane fade " id="t7">
+                        	<div class="col-md-6 mr-auto ml-auto">
+                        		<div id="am-s3-divNotComepleteS2" class="wow  fadeInUp animated text-center RegistPage_border" data-wow-duration="1.5s" data-wow-delay=".2s" 
+                            		 style=" animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	 驗證手機已完成，<br>請繼續輸入驗證碼
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s2-link').click();">繼續</button>
+		                        </div>
+                        	</div>
+                        </div>
+                        <!-- /驗證手機 -->
+                        
+                        <!-- 輸入驗證碼 -->
+                        <div role="tabpanel" class="tab-pane fade active show" id="t8">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            
+                        		<div id="am-s2-divComeplete" class=" smart-wrap">
+			            			<div class="smart-forms smart-container mt5">
+						                <form method="post" action='__APP__/RegistPage/formRegistCheck' action="smart-form/contact/php/smartprocess.php" id="am-frmRegister" novalidate="novalidate">
+						                    <div class="form-body">
+						                    	<input type="hidden" id="am-s2-hidMemberId" value="" />
+												<input type="hidden" id="am-s2-hidMemberPass" value="" />
+												<input type="hidden" id="am-s2-hidMemberPhone" value="" />
+												<input type="hidden" id="am-s2-hidMemberMail" value="" />
+												<input type="hidden" id="am-s2-hidPhoneVerifyCode" value="" />
+												
+						                        <div class="section">
+						                        	<h6>手機號碼{$addPhone}</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" id="am-s2-phone" readonly="readonly" name="addPhone" value="{$addPhone}" class="gui-input" placeholder="請輸入手機號碼">
+						                                <span class="field-icon"><i class="ti-mobile"></i></span>  
+						                            </label>
+						                        </div><!-- end section -->
+						                        
+						                        <div class="section">
+						                        	<h6>輸入驗證碼</h6>
+						                            <label class="field prepend-icon">
+						                                <input type="text" id="am-s2-verifyCode" data-minlength="6" maxlength="6" 
+						                                       name="addVerificationCode" class="gui-input" placeholder="請輸入驗證碼">
+						                                <span class="field-icon"><i class="ti-lock"></i></span>
+						                            </label>
+						                            <small id="emailHelp" class="form-text text-muted">請於10分鐘內輸入驗證碼</small>
+						                        </div><!-- end section -->
+						                        
+						                      
+						                       <div class="result"></div><!-- end .result  section --> 
+						                                                                                                                    
+						                    </div><!-- end .form-body section -->
+						                    <div class="form-footer text-center">
+						                        <button type="submit" id="am-s2-confirm" class="btn btn-outline-primary mb5">確認註冊</button>
+						                        <button type="button" id="am-s2-cancel" onclick="location.href='index.php';" class="btn btn-outline-primary mb5">取消</button>
+						                    </div><!-- end .form-footer section -->
+						                    
+						                    <div class="alert alert-info" role="alert">
+								              	驗證碼已傳送至您的手機，請等待接收驗證碼並輸入
+								            </div>
+						                </form>
+						            </div><!-- end .smart-forms section -->
+			        			</div><!-- end .smart-wrap section -->
+                        	</div>
+                        </div>
+                        <!-- /輸入驗證碼 -->
+                        
+                        <!-- 註冊完成 -->
+                        <div role="tabpanel" class="tab-pane fade" id="t9">
+                            <div class="col-md-6 mr-auto ml-auto">
+                            
+		                        <div id="am-s3-divNotComepleteS2" class="wow  fadeInUp animated text-center RegistPage_border" data-wow-duration="1.5s" data-wow-delay=".2s" 
+                            		 style="visibility: visible; animation-duration: 1.5s; animation-delay: 0.2s; animation-name: fadeInUp;">
+		                            <p class="mb0 mt10">
+		                               	 尚未輸入手機驗證碼，<br>請至步驟2輸入驗證碼後按下『確認註冊』
+		                            </p>
+		                            <button type="button" class="btn btn-info mt10 mb10 btn-3d" onclick="$('#am-s2-link').click();">返回</button>
+		                        </div>
+                            	
+                        	</div>
+                        </div>  
+                        <!--/註冊完成 -->                       
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+ <include file="Common:footer"/>

@@ -1,0 +1,202 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+
+
+
+		<section id="agentJoinSection" class="userpersonal-bg-style" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+
+				<div class="row">
+						<!-- FORM -->
+						<div class="col-md-8 rwd-m-b">
+
+							<ul class="process-steps nav nav-justified">
+								<li class="nav-item pb-0">
+									<a class="nav-link active" href="#pill-pr-1" id="pill-pr-1-a" data-toggle="tab">1</a>
+									<h5>{$Think.lang.PointWithdraw1}</h5>
+								</li>
+								<li class="nav-item pb-0">
+									<a class="nav-link" href="#pill-pr-2" id="pill-pr-2-a" data-toggle="tab">2</a>
+									<h5>{$Think.lang.PointWithdraw2}</h5>
+								</li>
+							</ul>
+
+
+							<div class="tab-content pt-0">
+								<div class="tab-pane active" id="pill-pr-1">
+									<div class="card card-default mt-15">
+										<div class="card-block">
+
+											<form id="applyForm" name="applyForm" method="post" action='__APP__/PointWithdraw/formPointRecharge' onclick="return false">
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointWithdraw3}</label>
+														<input type="text" name="" readonly="readonly" value="{$Think.lang.PointWithdraw4}{$memberWallet}{$Think.lang.PointWithdraw5}" class="form-control">
+
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointWithdraw6}</label>
+														<input type="text" name="addWithdraw" placeholder="{$Think.lang.PointWithdraw7}" autocomplete="off" class="form-control">
+														<small>{$Think.lang.PointWithdraw8}</small>
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointWithdraw9}</label>
+														<select id="addCode" name="addCode" disabled class="form-control pointer required">
+									                    	<VOLIST name="bankCodeArray" id="bank">
+										                    	<option value="{$bank.bankcode_code}">{$bank.bankcode_code} - {$bank.bankcode_name}</option>
+										                    </VOLIST>
+									                    </select>
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<label>{$Think.lang.PointWithdraw10}</label>
+														<input type="text" name="emailaddress" value="{$bankAccount}" readonly class="form-control">
+
+													</div>
+												</div>
+												<!--
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<a data-toggle="modal" onclick="openmodal('myModalLabel')" href="#" class="btn btn-3d btn-secondary"><i class="fa fa-question-circle-o"></i>流程教學</a>
+													</div>
+												</div>
+
+												<div id="myModalLabel" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none; padding-right: 17px;">
+													<div class="modal-dialog modal-dialog-m2">
+														<div class="modal-content">
+
+															<div class="modal-header modal-bg pr-30">
+																<button type="button" class="close-style" data-dismiss="modal" ><span aria-hidden="true">×</span></button>
+
+																<h4 class="modal-title tex-black" id="">託售流程</h4>
+															</div>
+
+
+															<div class="modal-body modal-body-bg">
+																<img style="width: 100%;" src="__CSS__/images/sp_sellProcess.jpg">
+															</div>
+
+															<div class="modal-footer modal-bg">
+												             	<button type="button" class="btn btn-sm btn-dark closeBtn" data-dismiss="modal">確定</button>
+															</div>
+														</div>
+													</div>
+												</div>-->
+
+												<div class="row">
+													<div class="col-md-6 col-sm-6 m-auto">
+														<button type="button" onclick="location.href='index.php';" class="btn btn-secondary btn-shadow-1">{$Think.lang.Cancel}</button>
+						              					<button type="submit" id="btnok" name="btnok" class="btn btn-secondary btn-shadow-1">{$Think.lang.PointWithdraw11}</button>
+													</div>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane fade" id="pill-pr-2">
+									<div class="card card-default mt-15 wow fadeInUp animated" data-wow-delay="0.3s" style="visibility: visible; animation-delay: 0.3s; animation-name: fadeInUp;">
+										<div class="card-block">
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<i class="fa fa-exclamation responsibility-icon-style text-center"></i>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-6 col-sm-6 m-auto mt-20 mb-20">
+													<label class="text-center">{$Think.lang.PointWithdraw12}<br>{$Think.lang.PointWithdraw13}</label>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-md-3 col-sm-3 m-auto text-center">
+													<button type="button" id="am-s1-confirm" class="btn btn-secondary btn-shadow-1" onclick="$('#pill-pr-1-a').click();" >{$Think.lang.Return}</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- /FORM -->
+
+						<!-- INFO -->
+						<div class="col-md-4">
+							<h4>{$Think.lang.CompletionItem1}</h4>
+							<hr>
+							<ul class="fs-14 pl-20">
+		                        <li style="list-style:decimal;">{$Think.lang.CompletionItem2}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.CompletionItem3}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.CompletionItem4}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.CompletionItem5}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.CompletionItem6}</li>
+		                        <li style="list-style:decimal;">{$Think.lang.CompletionItem7}</li>
+		                    </ul>
+						</div>
+						<!-- /INFO -->
+
+				</div>
+			</div>
+		</section>
+
+<include file="Common:footer"/>
+<script>
+jQuery(document).ready(mobileChange);
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	//算畫面高度
+	if("{$isMobile}" == "1"){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	}
+}
+function openmodal(id){
+	//alert(id);
+	jQuery('#'+id).modal('show')
+}
+jQuery(document).ready(function(){
+	//$("#addCode").select2();
+	var bankCode = '{$bankCode}';
+	//alert(bankCode);
+	jQuery("#addCode").find("option[value = "+bankCode+"]").attr("selected",true);
+
+	//確認託售
+	 $("button[name='btnok']").click(function(){
+		 var addWithdraw = $("input[name='addWithdraw']").val(); //託售點數
+		 var memberWallet = "{$memberWallet}";//電子錢包
+
+		 if(parseInt(addWithdraw) < 1000){
+			 alert("{$Think.lang.PointWithdraw8}");
+			 return false;
+		 }
+
+		 if (parseInt(memberWallet) < parseInt(addWithdraw)){
+			 alert("{$Think.lang.PointWithdraw14}");
+			 return false;
+		 }
+		 jQuery("#loader-bg").show();
+		 document.applyForm.submit();
+	 });
+})
+
+</script>
+
+

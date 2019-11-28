@@ -1,0 +1,464 @@
+<?php
+/*
+ * uc8手機電子 遊戲明細 (返水)
+ */
+class GameUc8DetailModel extends AdminModel {
+    protected $tableName = "game_uc8_detail";
+    protected $tableId = "detail_id";
+    protected $gameCode = "Uc8";
+    
+    protected $timeName = "detail_createTime";//detail_orderDate
+    
+    protected function getMonth($monthOne){
+        //$monthOne = date('Y-m-01 00:00:00'); //本月第一天
+        $year=date('Y');
+        $month=date('m');
+        $datetime = date('Y-m-d H:i:s');
+        //少一個月的計算
+        if($month == 1){
+            $month = 12;
+            $year = $year - 1;
+        } else {
+            $month = $month - 1;
+        }
+        $returnArray = array(
+            'year'=>$year,
+            'month'=>$month
+        );
+        return $returnArray;
+    }
+    /*
+     * 取得 會員 明細返水資料
+     */
+    public function getMemberBackWater($data){
+        if(empty($data['gameClass_id']) && $data['gameClass_id'] !== '0'){
+            return false;
+        }
+        $monthOne = date('Y-m-01 00:00:00'); //本月第一天
+        $returnArray = $this->getMonth($monthOne);
+        $year = $returnArray['year'];
+        $month = $returnArray['month'];
+        
+        $sql = "SELECT
+                    GROUP_CONCAT(`detail_id`) AS AllId,a.`member_id` as memberId,a.`member_account` as memberAccount,`agent_id`,`agent_tree`,`ratio_tree`,
+                    SUM(`detail_effective`) AS AllEffective,b.`decimalPoint_money`,c.*
+                FROM `{$this->tableName}` a
+                LEFT OUTER JOIN `common_member_backWater_decimalPoint` b ON (a.`member_id` = b.`member_id`)
+                LEFT OUTER JOIN `common_member_waterRank_level` c
+                    ON (
+                        a.`member_id` = c.`member_id`
+                        AND c.`gameClass_id` = '{$data['gameClass_id']}'
+                        AND c.`level_year` = '{$year}'
+                        AND c.`level_month` = '{$month}'
+                        )
+                WHERE
+                    `detail_isBackWater` = 0
+                AND `detail_effective` > 0
+                AND `detail_needBackWater` = 1 
+                GROUP BY a.`member_id`,`agent_tree`,`ratio_tree`;";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 返水程序
+     * @param array $memberWaterArray
+     * @param string $err
+     */
+    public function programBackWater($memberWaterArray,&$err=""){
+        //傳送 返水金額 $memberWaterArray['backWaterMoney']
+        
+        $CommonMemberWallet = D("CommonMemberWallet");
+        $CommonMemberBackwaterDecimalpoint = D("CommonMemberBackwaterDecimalpoint");
+        $CommonMemberBackwaterLog = D("CommonMemberBackwaterLog");
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        foreach($memberWaterArray AS $key => $value){
+            echo "===============================================================<BR>";
+            echo $value['memberAccount']." 返水開始<BR>";
+            //var_dump($value);continue;
+            //紀錄返水LOG logData array
+            $logData = array(
+                "member_id"=>$value['memberId'],
+                "member_account"=>$value['memberAccount'],
+                "game_id"=>$value['game_id'],
+                "backWaterLog_type"=>1,
+                "backWaterLog_createTime"=>time(),
+                "backWaterLog_money"=>$value['backWaterMoney'],
+                "backWaterLog_decimalPoint"=>$value['decimalPoint_money'],
+                "backWaterLog_betDetails"=>json_encode($value['betDetails']),
+            );
+            //事務處理開始
+            $this->startTrans();
+            if((int)$value['backWaterMoney'] != 0){
+                //讀取 會員電子錢包    鎖表   開始
+                $sql = "SELECT * FROM `common_member_wallet`
+                WHERE `member_id` = '{$value['memberId']}'
+                FOR UPDATE;";
+                $return = $this->query($sql);
+                if($return === false){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                if(empty($return[0])){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount']." ".L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                $memberWalletDataArray = $return[0];//會員錢包資料
+                
+                $walletLogBefore = $memberWalletDataArray["wallet_money"];
+                $walletLogAfter = $walletLogBefore + $value['backWaterMoney'];
+                
+                //對電子錢包 加款 開始
+                $data = array(
+                    "member_id" => $value['memberId'],
+                    "wallet_money" => (int)$value['backWaterMoney']
+                );
+                $return = $CommonMemberWallet->setWalletDataByAdditionMoney($data,$err);
+                if($return === false){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                if($return !== 1){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                //對電子錢包 加款 結束
+                
+                //對會員返水上點
+                //寫入會員帳變資料
+                //新增帳變紀錄 開始
+                $CommonMemberWalletLog = D("CommonMemberWalletLog");
+                $data = array(
+                    "member_id" => $value['memberId'],
+                    "agent_id" => $value['agent_id'],
+                    "agent_tree"=> $value['agent_tree'],
+                    "ratio_tree"=> $value['ratio_tree'],
+                    "walletLog_operating" => 1,//1點數增加 2點數減少
+                    "walletLog_type" => 5,//帳變類型  1儲值表 2託售表 3轉移表 4活動表 5退水表 6其他分類
+                    "walletLog_type_class"=>1,
+                    "walletLog_item_id" => $value['game_id'],//遊戲ID
+                    "walletLog_money" => (int)$value['backWaterMoney'],
+                    "walletLog_before" => (int)$walletLogBefore,
+                    "walletLog_after" => (int)$walletLogAfter,
+                    "walletLog_main" => $value['game_name'].";返水;自動上點;錢包;加款",
+                    "walletLog_ip" => $ip,
+                    "walletLog_createTime" => $nowTime
+                );
+                $return = $CommonMemberWalletLog->addWalletLogData($data,$err);
+                if($return === false){
+                    $this->rollback();//事務處理失敗 回退
+                    var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+                    $logData['backWaterLog_status'] = 0;
+                    $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+                    $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                    continue;
+                }
+                $walletLogId = $return;
+                //新增帳變紀錄 結束
+            }
+            
+            //修改已返水注單
+            $idExpArray = explode(",",$value['AllId']);
+            $return = $this->setBetsWaterReturned($idExpArray);
+            if($return === false){
+                $this->rollback();//事務處理失敗 回退
+                var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));
+                $logData['backWaterLog_status'] = 0;
+                $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+                $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                continue;
+            }
+            //事務結束
+            echo "返水成功<BR>";
+            $this->commit();//事務處理成功
+            
+            //修改剩餘會員小數 $memberWaterArray['decimalPoint_money']
+            $data = array(
+                "member_id" => $value['memberId'],
+                "decimalPoint_money"=>$value['decimalPoint_money'],
+            );
+            $return = $CommonMemberBackwaterDecimalpoint->setMemberDecimalPoint($data,$err);
+            if($return === false){
+                var_dump("會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+                $logData['backWaterLog_status'] = 0;
+                $logData['backWaterLog_errMessage'] = "會員返水失敗 帳號:".$value['memberAccount'].L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+                $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+                continue;
+            }
+            //紀錄返水 成功 LOG
+            $logData['backWaterLog_status'] = 1;
+            $CommonMemberBackwaterLog->addBackWaterLogData($logData);
+        }
+    }
+    /**
+     * 修改會員 反水狀態 標記已反水
+     * 傳入訂單ID 陣列
+     */
+    public function setBetsWaterReturned($data){
+        
+        $idStr = "";
+        foreach($data as $key => $value){
+            if(!empty($idStr)){
+                $idStr .= ",";
+            }
+            $idStr .= "'{$value}'";
+        }
+        $sql = "UPDATE `{$this->tableName}` SET `detail_isBackWater` = 1
+                WHERE `{$this->tableId}` IN ({$idStr})";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return true;
+    }
+    /**
+     * 計算會員返水階層 計算洗碼
+     * 傳入 會員id 陣列
+     * data['gameClassId'] 遊戲分類id
+     * data['gameClassShowName'] 遊戲類別名稱
+     * data['memberIdArray'] 會員ID陣列
+     */
+    public function setMemberWaterrankLevel($data,&$err=""){
+        $gameClassId = $data['gameClassId'];
+        $gameClassShowName = $data['gameClassShowName'];
+        $memberIdArray = $data['memberIdArray'];
+        $gameId = $data['gameId'];
+        
+        //取得遊戲分類的分類洗碼 開始
+        $sql = "SELECT * FROM `common_game_waterrank`
+                WHERE `gameClass_id` = '{$gameClassId}'
+                ORDER BY `waterRank_effective` DESC";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));//取得 遊戲分類的分類洗碼 失敗
+            return false;
+        }
+        $waterRankArray = $return;//遊戲洗碼階層
+        //取得遊戲分類的分類洗碼 結束
+        
+        $datetime = date('Y-m-d H:i:s');
+        $year=date('Y');
+        $month=date('m');
+        $day=date('d');
+        
+        $monthOne = date('Y-m-01 00:00:00'); //本月第一天
+        $monthLast = date("Y-m-d 23:59:59", strtotime('+1 month -1 days', strtotime($monthOne)));
+        
+        
+        //取得 明細 資料 開始
+        $memberIdStr = "";
+        foreach($memberIdArray as $value){
+            if(!empty($memberIdStr)){
+                $memberIdStr .= ",";
+            }
+            $memberIdStr .= "'{$value}'";
+        }
+        
+        $monthOne = strtotime($monthOne);
+        $monthLast = strtotime($monthLast);
+        //(`{$this->timeName}` BETWEEN '{$monthOne}' AND '{$monthLast}') AND
+        //AND (`detail_isBackWater` = '1')
+        $sql = "SELECT a.`member_id`,a.`member_account`,
+                    sum(`detail_effective`) AS effective_effective,
+                    count(*) AS effective_number
+                FROM `{$this->tableName}` a
+                WHERE (`{$this->timeName}` BETWEEN '{$monthOne}' AND '{$monthLast}')
+                    AND (a.`member_id` IN ({$memberIdStr}))
+                    AND (`detail_isBackWater` = '1')
+                GROUP BY a.`member_id`";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));//取得 會員明細 失敗
+            return false;
+        }
+        $detailArray = $return;
+        
+        //取得 明細 資料 結束
+        
+        $memberWaterRankArray = array();
+        foreach($detailArray AS $value){
+            $memberWaterRankArray[$value['member_id']] = $value;
+            $memberWaterRankArray[$value['member_id']]['gameClass_id'] = $gameClassId;
+            $memberWaterRankArray[$value['member_id']]['gameClass_showName'] = $gameClassShowName;
+            $memberWaterRankArray[$value['member_id']]['game_id'] = $gameId;
+            $memberWaterRankArray[$value['member_id']]['level_year'] = $year;
+            $memberWaterRankArray[$value['member_id']]['level_month'] = $month;
+            $memberWaterRankArray[$value['member_id']]['effective_effective'] = floor($value['effective_effective']);
+            $memberWaterRankArray[$value['member_id']]['effective_modifyTime'] = time();
+        }
+        $CommonMemberWaterrankEffective = D("CommonMemberWaterrankEffective");
+        foreach($memberWaterRankArray AS $key=>$value){
+            $return = $CommonMemberWaterrankEffective->getMemberEffectiveData($value,$err);
+            if($return === false){
+                var_dump($err);
+                continue;
+            }
+            if(empty($return['member_id'])){
+                $return = $CommonMemberWaterrankEffective->addMemberEffectiveData($value,$err);
+                if($return === false){
+                    var_dump($err);
+                    continue;
+                }
+            } else {
+                $data = array(
+                    "member_id"=>$value['member_id'],
+                    "game_id"=>$value['game_id'],
+                    "level_year"=>$value['level_year'],
+                    "level_month"=>$value['level_month'],
+                    "effective_effective"=>$value['effective_effective'],
+                    "effective_number"=>$value['effective_number'],
+                    "effective_modifyTime"=>$value['effective_modifyTime'],
+                );
+                $return = $CommonMemberWaterrankEffective->setMemberEffectiveData($data,$err);
+                if($return === false){
+                    var_dump($err);
+                    continue;
+                }
+            }
+        }
+        //取得會員 洗碼 計算資料 開始
+        $sql = "SELECT a.`member_id`,
+                    sum(`effective_effective`) AS totalEffective,
+                    b.`level_id`,b.`waterRank_serial`
+                FROM `common_member_waterRank_effective` a
+                LEFT OUTER JOIN `common_member_waterRank_level` b
+                    ON (
+                        a.`member_id` = b.`member_id`
+                        AND a.`gameClass_id` = b.`gameClass_id`
+                        AND a.`level_year` = b.`level_year`
+                        AND a.`level_month` = b.`level_month`
+                        )
+                WHERE (a.`member_id` IN ({$memberIdStr}))
+                    AND a.`gameClass_id` = '{$gameClassId}'
+                    AND a.`level_year` = '{$year}'
+                    AND a.`level_month` = '{$month}'
+                GROUP BY a.`member_id`";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return false;
+        }
+        $effectiveTotalArray = $return;
+        //取得會員 洗碼 計算資料 結束
+        
+        $CommonMemberWaterrankLevel = D("CommonMemberWaterrankLevel");
+        //判斷是否 要 升階層
+        foreach($effectiveTotalArray AS $value){
+            foreach($waterRankArray AS $rankValue){
+                if($value['totalEffective'] > $rankValue['waterRank_effective']){
+                    if(empty($value['waterRank_serial'])){//如果會員階層資料為空  新增會員資料
+                        $data = array(
+                            "member_id" => $value['member_id'],
+                            "member_account" => $value['member_account'],
+                            "gameClass_id" => $gameClassId,
+                            "waterRank_id" => $rankValue['waterRank_id'],
+                            "waterRank_serial" => $rankValue['waterRank_serial'],
+                            "waterRank_waterRate" => $rankValue['waterRank_waterRate'],
+                            "level_year" => $year,
+                            "level_month" => $month,
+                            "level_modifyTIme" => time()
+                        );
+                        //var_dump($data);
+                        $return = $CommonMemberWaterrankLevel->addMemberWaterRankData($data);
+                    } else {//如果有階層資料 比對 是否 需要升階層
+                        if($value['waterRank_serial'] != $rankValue['waterRank_serial']){//階層 不相等 修改會員階層資料
+                            $data = array(
+                                "level_id"=>$value['level_id'],
+                                "waterRank_id" => $rankValue['waterRank_id'],
+                                "waterRank_serial"=>$rankValue['waterRank_serial'],
+                                "waterRank_waterRate" => $rankValue['waterRank_waterRate'],
+                                "level_modifyTIme" => time()
+                            );
+                            //var_dump($data);
+                            $return = $CommonMemberWaterrankLevel->setMemberWaterRankData($data);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
+    public function addMemberDetail($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        $detail_createTime = $data["detail_createTime"];
+        $detail_bettingMoney = $data["detail_bettingMoney"];
+        $detail_surplus = $data["detail_surplus"];
+        $detail_effective = $data["detail_effective"];
+        
+        $sql = "SELECT * FROM `common_member` a
+                JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`)
+                JOIN `common_agent_ratio` c ON (a.`agent_id` = c.`agent_id`)
+                WHERE a.`member_id` = '{$data['member_id']}';";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = "讀取資料庫失敗!";
+            return false;
+        }
+        if(empty($return[0]['member_id'])){
+            $err = "無此會員帳號，或是會員代理無佔成!";
+            return false;
+        }
+        $data = array(
+            'member_id' => $return[0]['member_id'],
+            'member_account' => $return[0]['member_account'],
+            'agent_id' => $return[0]['agent_id'],
+            'agent_account' => $return[0]['agent_account'],
+            'agent_tree' => $return[0]['agent_tree'],
+            'ratio_tree' => $return[0]['ratio_tree'],
+            'detail_createTime' => $detail_createTime,
+            'detail_bettingMoney' => $detail_bettingMoney,
+            'detail_surplus' => $detail_surplus,
+            'detail_effective' => $detail_effective,
+        );
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = "讀取資料庫失敗!";
+            return false;
+        }
+        $insertId = $this->getLastInsertId();
+        if($insertId) {
+            return $insertId;
+        }
+        return $return;
+    }
+}

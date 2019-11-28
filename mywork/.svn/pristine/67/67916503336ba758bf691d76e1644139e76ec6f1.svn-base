@@ -1,0 +1,246 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+		<div class="row">
+			<div class="col-md-12">
+				<ul class="nav nav-tabs nav-tabs-inverse">
+					<VOLIST name="showArray" id="vo">
+						<li class="nav-item"><a id="{$key}" href="#default-tab-{$key}" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">{$key}</span></a></li>
+					</VOLIST>
+				</ul>
+
+				<div class="tab-content">
+					<VOLIST name="showArray" id="vo">
+						<div class="tab-pane fade" id="default-tab-{$key}">
+							<div class="table-responsive">
+								<table id="" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>遊戲ID</th>
+											<th>遊戲代號</th>
+											<th>排序</th>
+											<th>遊戲名稱</th>
+											<th>維護公告</th>
+											<th>開關</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="vo" id="vo1">
+				                        	<tr>
+											    <td>{$vo1.gameId}</td>
+												<td>{$vo1.gameCode}</td>
+												<td>
+													<if condition="$vo1.gameOrder gt 1">
+														<form id="sortupagent{$vo1.gameId}" class="div-style" method="post" action="__APP__/FeaturesManage/formSortFeaturesManage">
+															<input type="hidden" value="upSort" name="className">
+															<input type="hidden" value="{$vo1.gameClassId}" name="sortId">
+															<input type="hidden" value="{$vo1.gameOrder}" name="orderSort">
+															<a onclick="submit('sortupagent{$vo1.gameId}')" href="#">
+															<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon"></i>
+															</a>
+														</form>
+													<else/>
+														<form class="div-style">
+															<a href="#">
+																<i class="fas fa-arrow-alt-circle-right fa-rotate-270 sort-icon sort-icon-hide"></i>
+															</a>
+														</form>
+													</if>
+													{$vo1.gameOrder}
+													<if condition="$vo1.gameClassId eq '1'">
+														<if condition="$vo1.gameOrder lt $showCount[1]">
+															<form id="sortdownback{$vo1.gameId}" class="div-style" method="post" action="__APP__/FeaturesManage/formSortFeaturesManage">
+							                                	<input type="hidden" value="downSort" name="className">
+																<input type="hidden" value="{$vo1.gameClassId}" name="sortId">
+							                                	<input type="hidden" value="{$vo1.gameOrder}" name="orderSort">
+							                                	<a onclick="submit('sortdownback{$vo1.gameId}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.gameClassId eq '2'">
+														<if condition="$vo1.gameOrder lt $showCount[2]">
+															<form id="sortdownback{$vo1.gameId}" class="div-style" method="post" action="__APP__/FeaturesManage/formSortFeaturesManage">
+							                                	<input type="hidden" value="downSort" name="className">
+																<input type="hidden" value="{$vo1.gameClassId}" name="sortId">
+							                                	<input type="hidden" value="{$vo1.gameOrder}" name="orderSort">
+							                                	<a onclick="submit('sortdownback{$vo1.gameId}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.gameClassId eq '3'">
+														<if condition="$vo1.gameOrder lt $showCount[3]">
+															<form id="sortdownback{$vo1.gameId}" class="div-style" method="post" action="__APP__/FeaturesManage/formSortFeaturesManage">
+							                                	<input type="hidden" value="downSort" name="className">
+																<input type="hidden" value="{$vo1.gameClassId}" name="sortId">
+							                                	<input type="hidden" value="{$vo1.gameOrder}" name="orderSort">
+							                                	<a onclick="submit('sortdownback{$vo1.gameId}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+													<if condition="$vo1.gameClassId eq '4'">
+														<if condition="$vo1.gameOrder lt $showCount[4]">
+															<form id="sortdownback{$vo1.gameId}" class="div-style" method="post" action="__APP__/FeaturesManage/formSortFeaturesManage">
+							                                	<input type="hidden" value="downSort" name="className">
+																<input type="hidden" value="{$vo1.gameClassId}" name="sortId">
+							                                	<input type="hidden" value="{$vo1.gameOrder}" name="orderSort">
+							                                	<a onclick="submit('sortdownback{$vo1.gameId}')" href="#">
+							                                	<i class="fas fa-arrow-alt-circle-right fa-rotate-90 sort-icon"></i>
+																</a>
+															</form>
+														</if>
+													</if>
+												</td>
+												<td>{$vo1.gameName}</td>
+												<td><a onclick="openmodal('{$key+1}message')"><i class="far fa-file-alt icon-size"></i></i></a></td>
+
+												<if condition="$vo1.gameEnable eq '啟用中'">
+													<td style="color:#28a745;" id="{$vo1.gameId}gameEnable">{$vo1.gameEnable}</td>
+												<else/>
+													<td style="color:#ff0021;" id="{$vo1.gameId}gameEnable">{$vo1.gameEnable}</td>
+												</if>
+
+												<td>
+													<a onclick="openmodal('{$key+1}')"><i class="fas fa-wrench fa-fw icon-size"></i></a>
+													<if condition="$vo1.gameEnable eq '啟用中'">
+														<form id="tostop{$vo1.gameId}" class="div-style form-vertical-align" method="post" action="__APP__/FeaturesManage/formSetFeaturesManageEnable">
+															<input type="hidden" value="{$vo1.gameId}" name="setGameId">
+															<input type="hidden" value="{$vo1.gameEnable}" name="setGameEnable">
+															<div class="switcher">
+															  <input type="checkbox" id="switcher_checkbox_{$vo1.gameId}" checked onclick="submitAjax('formInquireTostop','{$vo1.gameId}','stopId')">
+															  <label for="switcher_checkbox_{$vo1.gameId}" class="switchbtn"></label>
+															</div>
+														</form>
+													<else/>
+														<form id="Tostart{$vo1.gameId}" class="div-style form-vertical-align" method="post" action="__APP__/FeaturesManage/formSetFeaturesManageEnable">
+															<input type="hidden" value="{$vo1.gameId}" name="setGameId">
+															<input type="hidden" value="{$vo1.gameEnable}" name="setGameEnable">
+															<div class="switcher">
+															  <input type="checkbox" id="switcher_checkbox_{$vo1.gameId}" onclick="submitAjax('formInquireTostart','{$vo1.gameId}','startId')">
+															  <label for="switcher_checkbox_{$vo1.gameId}" class="switchbtn"></label>
+															</div>
+														</form>
+													</if>
+													<div class="modal fade" id="{$key+1}" style="display: none;">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<h4 class="modal-title">{$vo1.gameName}</h4>
+																	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+																</div>
+
+																<form method="post" action='__APP__/FeaturesManage/formAddFeaturesManage'>
+																	<input type="hidden" value="{$vo1.gameId}" name="setId">
+																	<div class="modal-body">
+																		 <div class="form-group row m-b-15">
+																			<label class="col-md-4 col-sm-4 col-form-label">維護公告 :</label>
+																			<div class="col-md-12 col-sm-12">
+																				<textarea class="form-control" rows="15%" class="defendMessage" name="setText">{$vo1.defendMessage}</textarea>
+																			</div>
+																		 </div>
+																	</div>
+																	<div class="modal-footer">
+																		<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+																		<button type="submit" name="addbtn" class="btn btn-info f-s-15">確認修改</button>
+																	</div>
+																</form>
+															</div>
+														</div>
+													</div>
+													<div class="modal fade" id="{$key+1}message" style="display: none;">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<h4 class="modal-title">維護公告</h4>
+																	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+																</div>
+																<div class="modal-body">
+																	 <div class="form-group row m-b-15">
+																		<div class="col-md-12 col-sm-12">
+																			{$vo1.defendMessage}
+																		</div>
+																	 </div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</td>
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</VOLIST>
+				</div>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script type="text/javascript">
+$(document).ready(function(){
+	$("#體育").addClass( "active show" );
+	$("#default-tab-體育").addClass( "active show" );
+
+	$(".defendMessage").css("overflow","hidden").bind("keydown keyup", function(){
+           $(this).height('0px').height($(this).prop("scrollHeight")+"px");
+       }).keydown();
+});
+function submit(formId){
+	 $("#"+formId).submit();
+}
+function submitAjax(mod_id,vo_id,mode_id){
+	$("#switcher_checkbox_"+vo_id).attr("disabled",true);
+	if(mod_id == 'formInquireTostop'){
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{stopId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+		    	$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+     			$("#"+vo_id+"gameEnable").html('關閉中').css('color','#ff0021');
+     			$("#switcher_checkbox_"+vo_id).attr('onclick','submitAjax("formInquireTostart","'+vo_id+'","startId")');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	} else if(mod_id == 'formInquireTostart'){
+		$.ajax({
+			type:"POST",
+			url:"__URL__/ajaxSwitch",
+			data:{startId:vo_id,mode_id:mode_id},
+		    dataType: "text",
+		    success:function(data){
+		    	$("#switcher_checkbox_"+vo_id).attr("disabled",false);
+				$("#"+vo_id+"gameEnable").html('啟用中').css('color','#28a745');
+				$("#switcher_checkbox_"+vo_id).attr('onclick','submitAjax("formInquireTostop","'+vo_id+'","stopId")');
+		    },
+			error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	}
+}
+function openmodal(modal_id){
+	// alert(modal_id);
+	$('#'+modal_id).modal('show');
+}
+function submit(formId){
+	 $("#"+formId).submit();
+}
+</script>

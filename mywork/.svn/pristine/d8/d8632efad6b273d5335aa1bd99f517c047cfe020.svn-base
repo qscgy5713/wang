@@ -1,0 +1,678 @@
+<?php
+class RebateEventAction extends MemberAction {
+    protected $storegift = false;//儲值送點數　活動
+    protected $storegift_eventId = 0;
+    protected $storegift_money = 1000;
+
+    protected $experience_eventId = 0;
+    protected $experience_money = 300;
+    protected $experience_auto = 1;//是否自動上點 0不自動上點 1自動上點
+
+    protected $reversal_eventId = 0;//翻本金
+    protected $reversal_money = 888;
+    protected $reversal_limitMoney = 100;
+    protected $reversal_limitSurplus = 10000;
+
+    protected $baccaratWinning_eventId = 0;//連贏
+    protected $baccaratWinning_money = 0;//如果活動金額為0 代表由客服輸入
+
+    protected $formEnabled = false;
+    protected $eventEnabled = false;
+
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        if(empty($_SESSION['Member']['id'])){
+            return;
+        } else {
+            $this->formEnabled = true;//代表會員有登入 可開放功能
+        }
+    }
+    //TODO:優惠活動 手機板
+    public function index(){
+        $this->display();
+    }
+    /*
+     * 體驗金送300頁面
+     */
+    public function experiencePage(){
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => 'experience',
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//資料庫錯誤
+            $this->display();
+            return;
+        }
+        if($return['event_enabled'] === '0'){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//活動尚未開放
+            $this->display();
+            return;
+        }
+        $CommonEventExperience = D("CommonEventExperience");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id']
+        );
+        $return = $CommonEventExperience->checkEventExperienceDataById($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//資料庫錯誤
+            $this->display();
+            return;
+        }
+        if(!empty($return['memberCount'])){
+            $this->assign("eventEnabled","false");
+            //$this->assign("eventErrMessage","您已領取過體驗金。");//您已領取過體驗金。
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//您已領取過體驗金。
+            $this->display();
+            return;
+        }
+
+        $this->assign("eventEnabled","true");
+        $this->display();
+    }
+    /*
+     * 體驗金送300功能
+     */
+    public function formExperience(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => 'experience',
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//此活動已關閉。
+        }
+        if($return['event_enabled'] === '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//此活動已關閉。
+        } else {
+            $this->experience_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+
+        $CommonEventExperience = D("CommonEventExperience");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id']
+        );
+        $return = $CommonEventExperience->checkEventExperienceDataById($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//資料庫錯誤。
+        }
+        if($return['memberCount'] == 1){//已申請過
+            //檢查活動狀態
+            $data = array(
+                'member_id' => $_SESSION['Member']['id']
+            );
+            $return = $CommonEventExperience->getEventExperienceDataById($data);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//資料庫錯誤。
+            }
+            switch ($return['event_status']){
+                case 0://訂單處理中
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//活動訂單處理中，請稍後。
+                    break;
+                case 1://訂單已取消
+                    //先刪除 在執行新增
+                    $data = array(
+                        'member_id' => $_SESSION['Member']['id']
+                    );
+                    $return = $CommonEventExperience->delEventExperienceDataById($data);
+                    if($return === false){
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//已申請過此活動 E001
+                    }
+                    break;
+                case 2://訂單已贈點
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_08')));//已申請過此活動 E002
+                    break;
+                default:
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_09')));//狀態碼錯誤，請重新登入。
+                    break;
+            }
+        }
+        switch($this->experience_auto){
+            case 0://不自動上點
+                $data = array(
+                    'event_id' => $this->experience_eventId,
+                    'member_id' => $_SESSION['Member']['id'],
+                    'agent_id' =>$_SESSION['Member']['agentId'],
+                    'agent_tree' =>$_SESSION['Member']['agentTree'],
+                    'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+                    'event_status' =>'0',//0未處理
+                    'event_money'=>$this->experience_money,
+                    'event_createTime' =>time(),
+                    'event_ip'=>get_ip_inet_pton(getIp())
+                );
+                $return = $CommonEventExperience->addEventData($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+                break;
+            case 1://自動上點
+                $CommonEvent = D("CommonEvent");
+                $data = array(
+                    'event_id' => $this->experience_eventId,
+                    'member_id' => $_SESSION['Member']['id'],
+                    'agent_id' =>$_SESSION['Member']['agentId'],
+                    'agent_tree' =>$_SESSION['Member']['agentTree'],
+                    'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+                    'event_status' =>'2',//已增點
+                    'event_money'=>$this->experience_money,
+                    'admin_id'=> 0, //0 系統
+                );
+                $return = $CommonEvent->addEventDataByIdUseGiveMoney($data,$err);
+                if($return === false){
+                    $this->error($err);
+                }
+                $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//申請成功，已發送體驗金至小牛錢包。
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_10')));//auto碼錯誤，請重新登入。
+                break;
+        }
+    }
+    //TODO:首充1000送1000頁面
+    public function storeGiftPage(){
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => 'storegift',
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            $this->display();
+            return;
+        }
+        if($return['event_enabled'] === '0'){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            $this->display();
+            return;
+        }
+        $CommonMember = D("CommonMember");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id']
+        );
+        $return = $CommonMember->getMemberStoreGiftDatabyId($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+            $this->display();
+            return;
+        }
+        if($return['wallet_totalRecharge'] == 0){
+            //未充值過會員
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+            $this->display();
+            return;
+        }
+        if(!empty($return['info_id']) && $return['event_status'] == 2){
+            //申請成功過會員
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+            $this->display();
+            return;
+        }
+        if(!empty($return['info_id']) && $return['event_status'] == 0){
+            //申請成功過會員
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+            $this->display();
+            return;
+        }
+
+        $this->assign("eventEnabled","true");
+        $this->display();
+    }
+    //TODO:首充1000送1000功能
+    public function formStoreGift(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => 'storegift',
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//此活動已關閉。
+        }
+        if($return['event_enabled'] === '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//此活動已關閉。
+            return;
+        } else {
+            $this->storegift_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+        $CommonMember = D("CommonMember");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id']
+        );
+
+        $return = $CommonMember->getMemberStoreGiftDatabyId($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//請先登入會員帳號!
+            return;
+        }
+        if($return['wallet_totalRecharge'] == '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//您未充值，無法參加此活動!
+            return;
+        }
+        if(!empty($return['storegift_id']) && $return['event_status'] == 2){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//您已申請過此活動!
+            return;
+        }
+        if(!empty($return['storegift_id']) && $return['event_status'] == 0){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//您訂單處理中，請稍後!
+            return;
+        }
+
+        $CommonEventStoregift = D("CommonEventStoregift");
+        $data = array(
+            'event_id' => $this->storegift_eventId,
+            'member_id' => $_SESSION['Member']['id'],
+            'agent_id' =>$_SESSION['Member']['agentId'],
+            'agent_tree' =>$_SESSION['Member']['agentTree'],
+            'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+            'event_status' =>'0',
+            'event_money'=>$this->storegift_money,
+            'event_createTime' =>time(),
+            'event_ip'=>get_ip_inet_pton(getIp())
+        );
+        $return = $CommonEventStoregift->checkEventStoregiftDataById($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_07')));//資料庫錯誤。
+            return;
+        }
+        switch ($return['memberCount']) {
+            case '0':
+                $return = $CommonEventStoregift->addEventStoregiftData($data);
+                break;
+            case '1':
+                $return = $CommonEventStoregift->setEventStoregiftData($data);
+                break;
+            default:
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+                break;
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+    }
+    //TODO:翻本金888頁面
+    public function reversalPage(){
+        $CommonEvent = D("CommonEvent");
+        $eventCode = 'emergencymoney';
+        $data = array(
+            "event_code" => $eventCode,
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        if($return['event_enabled'] === '0'){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        } else {
+            $this->reversal_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+        if($_SESSION['Member']['money'] > $this->reversal_limitMoney){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+
+        $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+        $thisMonthA = date('Y-m-d',$tsThisMonth);
+        $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+
+        $data = array(
+            "event_code" => $eventCode,
+            "member_id"=>$_SESSION['Member']['id'],
+            "startTime"=>strtotime($thisMonthA),
+            "endTime"=>strtotime($thisMonthB)
+        );
+        $return = $CommonEvent->getMemberEventData($data,$err);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",$err);
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        if(!empty($return) || (count($return) != 0)){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+
+        //讀取會員是否 本月 輸一萬點 (六和館除外)
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameCodeData();
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        $jumpGameCodeArray = array("Xbs","Og","Rtg","Gg");
+        $gameCodeArray = array();
+        foreach($return AS $key => $value){
+            if(in_array($value['game_code'],$jumpGameCodeArray)){
+                continue;
+            }
+            $gameCodeArray[$key] = $value['game_code'];
+        }
+
+        $data = array(
+            "member_id"=>$_SESSION['Member']['id'],
+            "startTime"=>strtotime($thisMonthA),
+            "endTime"=>strtotime($thisMonthB),
+            "gameCodeArray" => $gameCodeArray
+        );
+        $return = $GameInfo->getMemberGameSurplusDataByMemberId($data,$err);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",$err);
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        if(empty($return['allSurplus'])){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        if($return['allSurplus'] > $this->reversal_limitSurplus){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+
+        cookie($eventCode,'2','expire=7200&prefix=event_');//1無法申請 2可以申請
+        $this->assign("eventEnabled","true");
+        $this->display();
+    }
+    //TODO:翻本金888功能
+    public function formReversal(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $eventCode = 'emergencymoney';
+        if(!isset($_COOKIE['event_'.$eventCode]) || $_COOKIE['event_'.$eventCode] != 2){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//資格不符，無法申請此活動!
+        }
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => $eventCode,
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//讀取活動失敗
+        }
+        if($return['event_enabled'] === '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//活動已關閉
+        } else {
+            $this->reversal_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+
+        $data = array(
+            'event_code' => $eventCode,
+            'event_id' => $this->reversal_eventId,
+            'member_id' => $_SESSION['Member']['id'],
+            'agent_id' =>$_SESSION['Member']['agentId'],
+            'agent_tree' =>$_SESSION['Member']['agentTree'],
+            'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+            'event_status' =>'0',
+            'event_money'=>$this->reversal_money,
+            'event_createTime' =>time(),
+            'event_ip'=>get_ip_inet_pton(getIp())
+        );
+        $return = $CommonEvent->addMemberEventData($data,$err);
+        if($return === false){
+            $this->error($err);//活動已關閉
+        }
+
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+    }
+    //TODO:百家樂連贏頁面
+    public function baccaratWinningPage(){
+        $CommonEvent = D("CommonEvent");
+        $eventCode = 'baccaratwinning';
+        $data = array(
+            "event_code" => $eventCode,
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        if($return['event_enabled'] === '0'){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        } else {
+            $this->reversal_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+
+        $data = array(
+            "event_code" => $eventCode,
+            "member_id"=>$_SESSION['Member']['id'],
+            "startTime"=>strtotime(date('Y-m-d 00:00:00',time())),
+            "endTime"=>strtotime(date('Y-m-d 23:59:59',time()))
+        );
+        $return = $CommonEvent->getMemberEventData($data,$err);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",$err);
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        if(!empty($return) || (count($return) != 0)){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+            cookie($eventCode,'1','expire=7200&prefix=event_');//1無法申請 2可以申請
+            $this->display();
+            return;
+        }
+        cookie($eventCode,'2','expire=7200&prefix=event_');//1無法申請 2可以申請
+        $this->assign("eventEnabled","true");
+        $this->display();
+    }
+    //TODO:百家樂連贏功能
+    public function formBaccaratWinning(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $eventCode = 'baccaratwinning';
+        if(!isset($_COOKIE['event_'.$eventCode]) || $_COOKIE['event_'.$eventCode] != 2){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//資格不符，無法申請此活動!
+        }
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => $eventCode,
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//讀取活動失敗
+        }
+        if($return['event_enabled'] === '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//活動已關閉
+        } else {
+            $this->baccaratWinning_eventId = $return['event_id'];
+            //如果要加上 贈點金額 修改 加在這邊
+        }
+        $data = array(
+            'event_code' => $eventCode,
+            'event_id' => $this->baccaratWinning_eventId,
+            'member_id' => $_SESSION['Member']['id'],
+            'agent_id' =>$_SESSION['Member']['agentId'],
+            'agent_tree' =>$_SESSION['Member']['agentTree'],
+            'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+            'event_status' =>'0',
+            'event_money'=>$this->baccaratWinning_money,
+            'event_createTime' =>time(),
+            'event_ip'=>get_ip_inet_pton(getIp())
+        );
+        $return = $CommonEvent->addMemberEventData($data,$err);
+        if($return === false){
+            $this->error($err);//活動已關閉
+        }
+
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+    }
+
+    //TODO:四星彩頁面
+    public function lottoFourPage(){
+        $this->display();
+    }
+
+    //TODO:電子返水頁面
+    public function backWaterElectronicPage(){
+        if($this->formEnabled){
+            $this->getMemberWaterPageData('4');
+        }
+
+        $this->display();
+    }
+
+    //TODO:體育返水頁面
+    public function backWaterSportsPage(){
+
+        if($this->formEnabled){
+            $this->getMemberWaterPageData('1');
+        }
+
+        $this->display();
+    }
+
+    //TODO:真人返水頁面
+    public function backWaterRealityPage(){
+        if($this->formEnabled){
+            $this->getMemberWaterPageData('2');
+        }
+        $this->display();
+    }
+    /*
+     * 取得會員返水頁面資料
+     */
+    protected function getMemberWaterPageData($gameClass_id){
+
+        $thisYear = intval(date('Y'));
+        $thisMonth = intval(date('m'));
+
+        //搜尋本月 階層 總洗碼 開始
+        $CommonMemberWaterrankEffective = D("CommonMemberWaterrankEffective");
+        $data = array(
+            'member_id' => $_SESSION['Member']['id'],
+            'gameClass_id' => $gameClass_id,
+            'level_year' => $thisYear,
+            'level_month' => $thisMonth,
+        );
+        $return = $CommonMemberWaterrankEffective->getMemberEffectiveData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $CommonGameWaterrank = D('CommonGameWaterrank');
+        if(empty($return)){
+            $thisEffective = 0;//本月洗碼
+            $startEffective = 0;//開始有效投注
+            $startLevel = 1;//開始級別
+            $data = array(
+                'gameClass_id' => $gameClass_id,
+                'waterRank_serial' => '2'
+            );
+        } else {
+            $thisEffective = $return['allEffective'];//本月洗碼
+            $startEffective = $return['waterRank_effective'];//開始有效投注
+            $startLevel = $return['waterRank_serial'];//開始級別
+            $data = array(
+                'gameClass_id' => $gameClass_id,
+                'waterRank_serial' => ++$return['waterRank_serial']
+            );
+        }
+        $return = $CommonGameWaterrank->getGameWaterrankData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $endEffective = $return['waterRank_effective'];//結束有效投注
+        $endLevel = $return['waterRank_serial'];//結束級別
+        $percentageEffective = ceil(intval($thisEffective)/intval($endEffective)*100);//本月總%數
+        //搜尋本月 階層 總洗碼 結束
+
+        //計算上個月  階層 總洗碼 開始
+        if($thisMonth == 1){
+            $lastYear = $thisYear - 1;
+            $lastMonth = 12;
+        } else {
+            $lastYear = $thisYear;
+            $lastMonth = $thisMonth - 1;
+        }
+        $data = array(
+            'member_id' => $_SESSION['Member']['id'],
+            'gameClass_id' => $gameClass_id,
+            'level_year' => $lastYear,
+            'level_month' => $lastMonth
+        );
+        $return = $CommonMemberWaterrankEffective->getMemberEffectiveData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        if(empty($return)){
+            //代表無返水過
+            $lastEffective = 0;//上月 有效投注
+            $lastLevel = 1;//上月級別
+        } else {
+            $lastEffective = $return['allEffective'];//上月 有效投注
+            $lastLevel = $return['waterRank_serial'];//上月級別
+        }
+
+        $this->assign('thisMonth',$thisMonth);
+        $this->assign('lastEffective',$lastEffective);//上月 有效投注
+        $this->assign('lastLevel',$lastLevel);//上月級別
+
+        $this->assign('startEffective',$startEffective);//開始有效投注
+        $this->assign('startLevel',$startLevel);//開始級別
+        $this->assign('endEffective',$endEffective);//結束有效投注
+        $this->assign('endLevel',$endLevel);//結束級別
+        $this->assign('thisEffective',$thisEffective);//本月洗碼
+        $this->assign('percentageEffective',$percentageEffective);//本月總%數
+
+    }
+
+}

@@ -1,0 +1,79 @@
+<?php
+/*
+ * 遊戲資訊
+ */
+class GameInfoModel extends AdminModel {
+    protected $tableName = "game_info";
+    protected $tableId = "game_id";
+    /*
+     * 取得 遊戲返水 資料
+     */
+    public function getGameInfoData($data){
+        if(empty($data['game_code']) && $data['game_code'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT *
+                FROM `{$this->tableName}` a
+                LEFT OUTER JOIN `common_game_waterRank` c ON (a.`gameClass_id` = c.`gameClass_id`)
+                WHERE `game_code` = '{$data['game_code']}'
+                AND `waterRank_serial` = '{$data['waterRank_serial']}';";
+        $return = $this->query($sql);
+        if($return === false || empty($return)){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 遊戲名稱 前台使用 12秒暫存
+     */
+    public function getAllGameNameData(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->cacheQuery($sql,12);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 遊戲資料 BY FeaturesManage功能管理使用
+     */
+    public function getAllGameInfoDataByManage(){
+        $sql = "SELECT * FROM `game_class` a
+                JOIN `{$this->tableName}` b ON (a.`gameClass_id` = b.`gameClass_id`)
+                ORDER BY a.`gameClass_id`,b.`game_id` ASC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        
+        return $return;
+    }
+
+    /*
+     * 修改 FeaturesManage 開關功能
+     */
+    public function setFeaturesManageEnableById($data){
+        if(empty($data['game_id']) && $data['game_id'] !== 0){
+            return false;
+        }
+
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'game_id'){continue;}
+
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+
+            $sql .= "WHERE `game_id` = '{$data['game_id']}';";
+
+            $return = $this->query($sql);
+
+            return $return;
+        }
+    }
+}

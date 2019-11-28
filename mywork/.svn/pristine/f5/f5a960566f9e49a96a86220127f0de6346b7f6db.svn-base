@@ -1,0 +1,176 @@
+<?php
+class ForgetPageAction extends MemberAction {
+    //TODO:4.忘記帳密頁
+    public function index(){
+        $this->display();
+    }
+    //TODO:4.1忘記帳密功能
+    public function formRemeber(){
+        //使用 common.php filterStr($data) 公用函數 過濾 取得會員輸入的註冊電話
+        $request = $this->getRequest();
+        if(isset($_SESSION['Forget']['errNumber']) && $_SESSION['Forget']['errNumber'] > 3){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//本日已達忘記帳密上限。
+            return false;
+        }
+        if(isset($_SESSION['Forget']['check_word']) != $request['checkword']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//驗證碼不正確。
+            return false;
+        }
+        if(empty($request['phone']) || !preg_match('/^09([0-9]{8})$/', $request['phone'])){//驗證是否為電話
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//輸入的電話號碼格式不正確，請重新輸入。
+            return false;
+        }
+        $_SESSION['Forget']['check_word'] = ''; //比對成功清除
+        if(isset($_SESSION['Forget']['errNumber'])){
+            $_SESSION['Forget']['errNumber']++;
+        } else {
+            $_SESSION['Forget']['errNumber'] = 1;
+        }
+        //$this->checkKostmsLimit('forget');//檢查簡訊限制
+        $data = array(
+            "member_phone"=>$request['phone']
+        );
+        $return = $this->checkMemberPhoneDataByPhone($data);
+        if ($return === false) {//無此電話 顯示錯誤訊息
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//無此電話註冊會員，請重新輸入。
+            return false;
+        }
+        switch ($request['phone']){
+            case '0900000000':
+                $_SESSION['Forget']['VerificationCode'] = "888987";
+                $_SESSION['Forget']['Phone'] = $request['phone'];
+                break;
+            default:
+                $_SESSION['Forget']['VerificationCode'] = $this->GetRandStr(6);
+                $_SESSION['Forget']['Phone'] = $request['phone'];
+                $smbody = $_SESSION['Forget']['VerificationCode'];
+                $KotsmsInfo = D("KotsmsInfo");
+                $data = array(
+                    "code" => "forget", //Code
+                    "phone" => $_SESSION['Forget']['Phone'], //電話
+                    "main" => array(
+                        "verificationCode" => $_SESSION['Forget']['VerificationCode']
+                    )
+                );
+                $return = $KotsmsInfo->sendKostms($data,$err);
+                if($return === false){
+                    $this->error($err);
+                    return false;
+                }
+                break;
+        }
+        $this->assign("memberPhone",$_SESSION['Forget']['Phone']);
+        $this->display();
+    }
+    public function formRemeberCheck(){
+        //使用 common.php filterStr($data) 公用函數 過濾 取得會員輸入的註冊電話
+        $request = $this->getRequest();
+        if(!isset($request['forgetVerificationCode']) || (empty($request['forgetVerificationCode']) && $request['forgetVerificationCode'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//驗證碼為空
+        }
+
+        if($request['forgetVerificationCode'] !== $_SESSION['Forget']['VerificationCode']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//手機驗證碼不符，請重新輸入。
+        }
+        $CommonMember = D("CommonMember");
+        $data = array(
+            "member_phone"=>$_SESSION['Forget']['Phone']
+        );
+        $return = $CommonMember->getMemberDataByAccount($data,$err);
+        if($return === false){
+            $this->error($err);//確認密碼錯誤。
+        }
+        if($return['member_id'] === NULL){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//無此帳號
+        }
+        $_SESSION['Forget']['id'] = $return["member_id"];
+        $this->assign("memberPhone",$_SESSION['Forget']['Phone']);
+        $this->assign("memberAccount",$return["member_account"]);
+        $this->display();
+    }
+    public function setRemeberMemberData(){
+        //使用 common.php filterStr($data) 公用函數 過濾 取得會員輸入的註冊電話
+        $request = $this->getRequest();
+        if(!isset($_SESSION['Forget']['id']) || (empty($_SESSION['Forget']['id']) && $_SESSION['Forget']['id'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//非法操作
+        }
+        if(!isset($request['newPassword']) || (empty($request['newPassword']) && $request['newPassword'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//新密碼為空
+        }
+        //檢查 兩次新密碼 是否正確 。
+        if(!($request['newPassword'] === $request['new2Password'])){
+            //否，回傳顯示 確認密碼錯誤。
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//確認密碼錯誤。
+        }
+        $CommonMember = D("CommonMember");
+        //取得 新密碼 MD5加密
+        $newPassword = $CommonMember->getMd5Password($request['newPassword']);
+        $data = array(
+            "member_id" => $_SESSION['Forget']['id'],
+            "member_password" => $newPassword
+        );
+        //修改會員密碼
+        $return = $CommonMember->setMemberById($data);
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//修改密碼失敗
+        }
+        //是，顯示成功訊息
+        //var_dump("修改密碼成功，下次登入請使用新密碼登入");
+        $this->assign("successMessage","修改密碼成功，下次登入請使用新密碼登入。");
+        $this->display();
+        //$this->assign("jumpUrl","__APP__/MemberIndex/index");
+        //$this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改密碼成功，下次登入請使用新密碼登入。
+    }
+    /**
+     * 顯示圖片
+     */
+    public function captcha(){
+
+        //設置定義為圖片
+        ob_clean();
+        header("Content-type: image/jpeg");
+        $this->imgcode(5,120,30);//設置產生驗證碼圖示的參數 imgcode($nums,$width,$high) $nums 生成驗證碼個數 $width 圖片寬 $high 圖片高
+    }
+    /**
+     * 建立圖片
+     */
+    protected function imgcode($nums,$width,$high) {
+
+        //去除了數字0和1 字母小寫o和l，大寫O,I ;為了避免辨識不清楚
+        //$str = "23456789ABCDEFGHJKLMPQRSTUBWXYZ";
+        $str = "23456789";
+        $code = '';
+        for ($i = 0; $i < $nums; $i++) {
+            $code .= $str[mt_rand(0, strlen($str)-1)];
+        }
+
+        $_SESSION['Forget']['check_word'] = $code;
+
+        //建立圖示，設置寬度及高度與顏色等等條件
+        $image = imagecreate($width, $high);
+        $black = imagecolorallocate($image, mt_rand(0, 200), mt_rand(0, 200), mt_rand(0, 200));
+        $border_color = imagecolorallocate($image, 201, 195, 204);
+        $background_color = imagecolorallocate($image, 235, 236, 237);
+
+        //建立圖示背景
+        imagefilledrectangle($image, 0, 0, $width, $high, $background_color);
+
+        //建立圖示邊框
+        imagerectangle($image, 0, 0, $width-1, $high-1, $border_color);
+
+        //在圖示布上隨機產生大量躁點
+        for ($i = 0; $i < 300; $i++) {
+            imagesetpixel($image, rand(0, $width), rand(0, $high), $black);
+        }
+
+        $strx = rand(3, 8);
+        for ($i = 0; $i < $nums; $i++) {
+            $strpos = rand(1, 6);
+            imagestring($image, 5, $strx, $strpos, substr($code, $i, 1), $black);
+            $strx += rand(20, 28);
+        }
+
+        imagejpeg($image);
+        imagedestroy($image);
+    }
+}

@@ -1,0 +1,11 @@
+<?php
+/**
+ *
+ */
+class EventLottoFourPageAction extends EventAction
+{
+    //TODO:四星彩頁面
+    public function index(){
+        $this->display();
+    }
+}

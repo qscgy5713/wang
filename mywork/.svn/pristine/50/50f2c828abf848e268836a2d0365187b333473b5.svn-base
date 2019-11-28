@@ -1,0 +1,197 @@
+<!-- menu -->
+<div id="header" class="navbar-toggleable-md clearfix header-md transparent transparent-m sticky b-0 disable-uppercase shadow-after-3-m header-m hidden-sm-down">
+
+	<!-- TOP NAV -->
+	<header id="topNav">
+		<div class="container">
+
+			<!-- Mobile Menu Button -->
+			<button class="btn btn-mobile" data-toggle="collapse" data-target=".nav-main-collapse">
+				<i class="fa fa-bars"></i>
+			</button>
+			
+			<!-- Logo -->
+			<a class="logo float-left" href="__APP__/MemberIndex/index">
+				<img src="__CSS__/images/index_logo_red.png" alt="" />
+				<img src="__CSS__/images/index_logo_red.png" alt="" />
+			</a>
+			<!-- 
+				Top Nav 
+			-->
+			<div class="navbar-collapse collapse float-right nav-main-collapse">
+				<nav class="nav-main">
+					<ul id="topMain" class="nav nav-pills nav-main nav-hover-animate nav-animate-fadeIn">
+					
+						<li class="dropdown" onclick="showMenu('sports');"><!-- HOME -->
+							<a class="dropdown-toggle" href="#">
+								體育
+							</a>
+							<div class="row menu-row">
+								<ul id="sports" class="dropdown-menu">
+									<li style=" background-image: url(__CSS__/images/menu-img/bgYsb.jpg);"><!-- 鑫寶 -->
+										<a href="__APP__/GameSB/gameEnter" class="p-0">
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlYsb.png">
+										</a>
+									</li>
+									<li style=" background-image: url(__CSS__/images/menu-img/bgBl.jpg);"><!-- 平博 -->
+										<a href="__APP__/GamePA/gameEnter" class="p-0">
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlBl.png">
+										</a>
+									</li>
+									<li style=" background-image: url(__CSS__/images/menu-img/bgBl.jpg);"><!-- sp體育 -->
+										<a href="__APP__/GameSP/gameEnter" class="p-0">
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlBl.png">
+										</a>
+									</li>
+								</ul>
+							</div>
+							
+						</li>
+						<li class="dropdown" onclick="showMenu('realPerson');"><!-- PORTFOLIO -->
+							<a class="dropdown-toggle" href="#">
+								真人娛樂
+							</a>
+							
+							<div class="row menu-row" style=" background-image: url(__CSS__/images/menu-img/real_bg.jpg);">
+								<ul id="realPerson" class="dropdown-menu">
+									<li>
+										<a href="__APP__/GameDG/gameEnter" class="p-0"><!-- 夢幻 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlBg.png">
+										</a>
+									</li>
+									<li>
+										<a href="__APP__/GameSA/gameEnter" class="p-0"><!-- 沙龍 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlDg.png">
+										</a>
+									</li>
+									<li>
+										<a href="__APP__/GameAB/gameEnter" class="p-0"><!-- 歐博 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlAllbet_Repair.png">
+										</a>
+									</li>
+									<li>
+										<a href="#" class="p-0"><!-- 東方 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlDg.png">
+										</a>
+									</li>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('bingo');"><!-- ABOUT -->
+							<a class="dropdown-toggle" href="#">
+								彩票賓果
+							</a>
+							<div class="row menu-row" style=" background-image: url(__CSS__/images/menu-img/real_bg.jpg);">
+								<ul id="bingo" class="dropdown-menu">
+									<li>
+										<a href="__APP__/GameBJ/gameEnter" class="p-0"><!-- 北京 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlBg.png">
+										</a>
+									</li>
+									<li>
+										<a href="__APP__/GameXBS/gameEnter" class="p-0"><!-- 六合彩 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlDg.png">
+										</a>
+									</li>
+									<li>
+										<a href="__APP__/GameBG/gameEnter" class="p-0"><!-- 賓果 -->
+											<img class="girl_image mr-0" src="__CSS__/images/menu-img/girlAllbet_Repair.png">
+										</a>
+									</li>
+								</ul>
+							</div>
+						</li>
+						<li class="dropdown" onclick="showMenu('electron');"><!-- CONTACT -->
+							<a class="dropdown-toggle" href="#">
+								電子遊戲
+							</a>
+							<div class="row menu-row menu-row-electron">
+								<ul id="electron" class="dropdown-menu">
+									<div class="row d-flex slot_bg">
+										<li>
+											<a href="__APP__/GameRTG/gameMenu" class=""><!-- RTG -->
+												<img class="mr-0" src="__CSS__/images/menu-img/gameAg.jpg">
+											</a>
+										</li>
+										<li>
+											<a href="__APP__/GameBNG/gameMenu" class=""><!-- 博狗 bng -->
+												<img class="mr-0" src="__CSS__/images/menu-img/gameBbin.jpg">
+											</a>
+										</li>
+										<li>
+											<a href="__APP__/GameQT/gameMenu" class=""><!-- 電子 QT -->
+												<img class="mr-0" src="__CSS__/images/menu-img/gameBg.jpg">
+											</a>
+										</li>
+										<li>
+											<a href="__APP__/GameUC8/gameMenu" class=""><!-- 手機電子 UC8 -->
+												<img class="mr-0" src="__CSS__/images/menu-img/gameBg.jpg">
+											</a>
+										</li>
+										<li>
+											<a href="#" class=""><!-- 捕魚 -->
+												<img class="mr-0" src="__CSS__/images/menu-img/gameBg.jpg">
+											</a>
+										</li>
+									</div>
+							    </ul>
+							</div>
+						</li>
+						
+						<li class="dropdown" onclick="showMenu('rebateEvent');">
+							<a class="dropdown-toggle" href="#">
+								優惠活動
+							</a>
+							<div class="row menu-row menu-row-rebateEvent">
+								<ul id="rebateEvent" class="dropdown-menu">
+									<div class="row d-flex">
+										<li>
+											<a href="#" class="">
+												<img class="mr-0" src="__CSS__/images/menu-img/menu_offer1.png">
+											</a>
+										</li>
+										<li>
+											<a href="#" class="">
+												<img class="mr-0" src="__CSS__/images/menu-img/menu_offer2.png">
+											</a>
+										</li>
+										<li>
+											<a href="#" class="">
+												<img class="mr-0" src="__CSS__/images/menu-img/menu_offer3.png">
+											</a>
+										</li>
+										<li>
+											<a href="#" class="">
+												<img class="mr-0" src="__CSS__/images/menu-img/menu_offer4.png">
+											</a>
+										</li>
+										
+									</div>
+							    </ul>
+							</div>
+						</li>
+						<li><!-- BLOG -->
+							<a href="pack-photography-blog-list.html">
+								代理加盟
+							</a>
+						</li>
+						
+					</ul>
+
+				</nav>
+			</div>
+
+		</div>
+	</header>
+	<!-- /Top Nav -->
+	<div id="clickLightbox" class="click_lightbox" style="display: none;" onclick="showMenu('clickLightbox');"></div>
+</div>
+<!-- rwd 三角形logo -->
+<if condition='$isLogin eq "false"'>
+<div class="container clip_logo hidden-lg-up">
+	<!-- Logo -->
+	<a href="#" class="logo float-left">
+		<img class="clip_img" src="__CSS__/images/index_logo_red.png">
+	</a>
+</div>
+</if>

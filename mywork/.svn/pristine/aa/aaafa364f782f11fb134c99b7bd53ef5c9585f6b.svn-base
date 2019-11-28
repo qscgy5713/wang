@@ -1,0 +1,756 @@
+<?php
+
+class GameRtgModel extends ApiModel
+{
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  const RTG_BASE_URL = 'https://cms.rtgintegrations.com';
+  const RTG_AGENT = 'xngamingpredapi';
+  const RTG_AGENT_KEY = '01271aef02';
+  const RTG_LOBBY_LUAGE = 'CN'; // EN, CN, TH, JA  
+
+  protected $token = null;//api token 字串
+  protected $startArray = array();//api start 回傳陣列
+  protected $agentId = null;// 代理商的系統ID
+
+  const RTG_DEFAULT_REQUEST_METHOD = 'GET';
+  const RTG_CURL_CONNECTTIMEOUT_MS = 8000;
+  const RTG_CURL_TIMEOUT_MS = 28000;
+ 
+  const RTG_DEFAULT_FIRST_NAME = 'test';
+  const RTG_DEFAULT_LAST_NAME = 'test';
+  const RTG_DEFAULT_EMAIL = 'test@test.com';
+  const RTG_DEFAULT_GENDER = 'Male';
+  const RTG_DEFAULT_BIRTHDATE = '1990-01-01T23:00';
+  const RTG_DEFAULT_COUNTRY_ID = 'TW';
+  const RTG_DEFAULT_CURRENCY = 'TWD';
+  const RTG_DEFAULT_LUAGE = 'zh-CN';
+  const RTG_TRANSFER_SUCCESS_CODE = 'OK';
+  const RTG_REPORT_DEFAULT_PAGE_SIZE = 50;
+
+  protected $RTG_CURL_DATAS = array(
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_CONNECTTIMEOUT_MS => self::RTG_CURL_CONNECTTIMEOUT_MS ,
+        CURLOPT_TIMEOUT_MS => self::RTG_CURL_TIMEOUT_MS,
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+  //--------------------通用函數--------------------
+	/**
+	 * 註冊新會員
+	 * @param $data['account'] 會員帳號
+   * @param $data['currency'] 貨幣(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+      $err = '無法取得token';
+      return false;
+    }
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+      $err = 'API啟動時發生錯誤';
+      return false;
+    }
+    $this->agentId = $this->startArray['agentId'];
+
+    $apiMethod = 'PUT';
+    $action = 'api/player';
+
+    $apiUrl = self::RTG_BASE_URL."/{$action}";
+    $apiArrData = array(
+      'agentId' => $this->agentId,
+      'username' => $account,
+      'firstName' => self::RTG_DEFAULT_FIRST_NAME,
+      'lastName' => self::RTG_DEFAULT_LAST_NAME,
+      'email' => self::RTG_DEFAULT_EMAIL,
+      'gender' => self::RTG_DEFAULT_GENDER,
+      'birthdate' => self::RTG_DEFAULT_BIRTHDATE,
+      'countryId' => self::RTG_DEFAULT_COUNTRY_ID,
+      'currency' => self::RTG_DEFAULT_CURRENCY,
+    );
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $dataInJson = json_encode($apiArrData);
+
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $this->RTG_CURL_DATAS[CURLOPT_POST] = true;
+
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $dataInJson, $err);
+    if($result === false){
+      return false;
+    }
+    else {
+      $rs_array = json_decode($result, TRUE);
+      if(!isset($rs_array['errorCode'])){
+        return true;
+      } else {
+        // 開立帳號失敗
+        $err = $rs_array['message'];
+        return false;
+      }
+    }
+  }
+
+	/**
+	 * 會員登入
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+    
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+      $err = '無法取得token';
+      return false;
+    }
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+      $err = 'API啟動時發生錯誤';
+      return false;
+    }
+    $this->agentId = $this->startArray['agentId'];
+
+    $apiMethod = 'POST';
+    $action = "api/launcher/lobby";
+    $apiUrl = self::RTG_BASE_URL."/{$action}";
+
+    $apiArrData = array(
+      'player' => array(
+        'playerLogin' => $account,
+        //agentId' => $this->agentId,//無須此參數
+      ),
+      'locale' => self::RTG_DEFAULT_LUAGE,
+      'language' => self::RTG_LOBBY_LUAGE,
+      'isDemo' => false
+    );
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $dataInJson = json_encode($apiArrData);
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $this->RTG_CURL_DATAS[CURLOPT_POST] = true;
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $dataInJson, $err);
+    if($result === false){
+      return false;
+    }
+    else {
+      $rs_array = json_decode($result, TRUE);
+      if(!isset($rs_array['errorCode'])){
+        return $rs_array['instantPlayUrl'];
+      } else {
+        // 找不到玩家
+        $err = $rs_array['message'];
+        return false;
+      }
+    }
+  }
+
+	/**
+	 * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+      $err = '無法取得token';
+      return false;
+    }
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+      $err = 'API啟動時發生錯誤';
+      return false;
+    }
+    $this->agentId = $this->startArray['agentId'];
+
+    $apiMethod = 'POST';
+    $action = 'api/wallet';
+    $apiUrl = self::RTG_BASE_URL."/{$action}";
+    $apiArrData = array(
+      'agentId' => $this->agentId,
+      'playerLogin' => $account,
+    );
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $dataInJson = json_encode($apiArrData);
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $this->RTG_CURL_DATAS[CURLOPT_POST] = true;
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $dataInJson, $err);
+    if($result === false){
+      return false;
+    }
+    else {
+      $rs_array = json_decode($result, TRUE);
+      if(!isset($rs_array['error'])) {
+        return $rs_array;
+      }
+      else {
+        // 找不到玩家
+        $err = $rs_array['error'];
+        return false;
+      }
+    }
+  }
+
+	/**
+	 * 下點(提款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(Bool). API未提供餘額所以無法回傳餘額。
+	 */
+	public function withdrawMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'trans_id' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+      $err = '無法取得token';
+      return false;
+    }
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+      $err = 'API啟動時發生錯誤';
+      return false;
+    }
+    $this->agentId = $this->startArray['agentId'];
+
+    $amount = doubleval($amount) + 0.0;
+
+    $apiMethod = 'POST';
+    $action = "api/wallet/withdraw/{$amount}";
+    $apiUrl = self::RTG_BASE_URL."/{$action}";
+
+    $apiArrData = array(
+      'agentId' => $this->agentId,
+      'playerLogin' => $account,
+    );
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $dataInJson = json_encode($apiArrData);
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $this->RTG_CURL_DATAS[CURLOPT_POST] = true;
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $dataInJson, $err);
+    if($result === false){
+      return false;
+    }
+    else {
+      $rs_array = json_decode($result, TRUE);
+      if($rs_array['errorMessage'] === "OK" && $rs_array['errorCode'] === "False"){
+        return true;
+      } else {
+        // 找不到玩家
+        $err = $rs_array['message'];
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['account'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 訂單號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(Bool). API未提供餘額所以無法回傳餘額。
+   */
+	public function rechargeMemberBalance($data, &$err = null) {
+    $arrKeys = array(
+      'account' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'trans_id' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+      $err = '無法取得token';
+      return false;
+    }
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+      $err = 'API啟動時發生錯誤';
+      return false;
+    }
+    $this->agentId = $this->startArray['agentId'];
+
+    $amount = doubleval($amount) + 0.0;
+
+    $apiMethod = 'POST';
+    $action = "api/wallet/deposit/{$amount}";
+    $apiUrl = self::RTG_BASE_URL."/{$action}";
+
+    $apiArrData = array(
+      'agentId' => $this->agentId,
+      'playerLogin' => $account,
+    );
+    if (isset($trans_id) && !empty($trans_id)) {
+      $apiArrData['trackingOne'] = $trans_id;
+    }
+
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $dataInJson = json_encode($apiArrData);
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $this->RTG_CURL_DATAS[CURLOPT_POST] = true;
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $dataInJson, $err);
+    if($result === false){
+      return false;
+    }
+    else {
+      $rs_array = json_decode($result, TRUE);
+      if($rs_array['errorMessage'] === "OK" && $rs_array['errorCode'] === "False"){
+        return true;
+      } else {
+        // 找不到玩家
+        $err = $rs_array['message'];
+        return false;
+      }
+    }
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+	 */
+	public function getGameRecord($data, &$err = null) {
+    $arrKeys = array(
+      'startTime' => array('required'=>1,),
+      'endTime' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $data) ) {
+        $temp = "{$dk}";
+        $$temp = $data[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+      $err = '無法取得token';
+      return false;
+    }
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+      $err = 'API啟動時發生錯誤';
+      return false;
+    }
+    $this->agentId = $this->startArray['agentId'];
+
+    $startTimeInFormat = date('c', strtotime($startTime));
+    $endTimeInFormat = date('c', strtotime($endTime));
+
+    $apiMethod = 'POST';
+    $action = "api/report/playergame";
+    $apiUrl = self::RTG_BASE_URL."/{$action}";
+
+    $apiArrData = array(
+      'params' => array(
+        'agentId' => $this->agentId,
+        'fromDate' => $startTimeInFormat,
+        'toDate' => $endTimeInFormat,
+      ),
+    );
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $dataInJson = json_encode($apiArrData);
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $this->RTG_CURL_DATAS[CURLOPT_POST] = true;
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $dataInJson, $err);
+    if($result === false){
+      return false;
+    } else {
+      $rs_array = json_decode($result, TRUE);
+      if(!isset($rs_array['error'])) { 
+        return $rs_array['items'];
+      } else {
+        $err = $rs_array['error'];
+        return false;
+      }
+    }
+  }
+  //--------------------PUBLIC 非通用函數--------------------
+  /**
+   * 取得可用於API操作的token
+   * @return 結果成功傳回字串, 失敗傳回 false
+   */
+  public function getToken(&$err = null) {
+      if(empty($this->token)){
+          $apiUrl = self::RTG_BASE_URL.'/api/start/token';
+          $apiMethod = 'GET';
+          $apiCurlDatas = $this->RTG_CURL_DATAS;
+          $apiArrData = array(
+              'username' => self::RTG_AGENT,
+              'password' => self::RTG_AGENT_KEY,
+          );
+          $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+          if($result === false){
+              return false;
+          }
+          else {
+              $rs_array = json_decode($result, TRUE);
+              if(isset($rs_array['error'])) { // 取得API token 資料發生錯誤
+                  $err = $rs_array['error'];
+                  return false;
+              }
+              return $rs_array['token'];
+          }
+      } else {
+          return $this->token;
+      }
+  }
+
+  /**
+   * Start (启动) 是提供使用API时的参数。它将根据“ Token (认证令牌)”使用的用户返回信息
+   *  $token 取得的token
+   * @return 相關參數(array)
+   */
+  public function apiStart($token, &$err = null) {
+      if(!empty($this->startArray)){
+          return $this->startArray;
+      }
+      $apiArrHeader = array(
+          "Authorization: {$token}",
+          "Content-Type: application/json",
+      );
+      
+      $apiUrl = self::RTG_BASE_URL.'/api/start';
+      $apiMethod = 'GET';
+      $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+      $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+      
+      $apiCurlDatas = $this->RTG_CURL_DATAS;
+      $apiArrData = array();
+      
+      
+      $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+      if($result === false){
+          return false;
+      } else {
+          $rs_array = json_decode($result, TRUE);
+          if(isset($rs_array['error'])) { // 取得API token 資料發生錯誤
+              $err = $rs_array['error'];
+              return false;
+          } else {
+              return $rs_array;
+          }
+      }
+  }
+
+  /**
+   * Game Strings (游戏字串): 根据地区/语言提供与游戏相关信息
+   * @return 相關參數(array)
+   */
+  public function getGameStrings(&$err = null) {
+    $apiUrl = self::RTG_BASE_URL.'/api/gamestrings';
+    $apiMethod = 'GET';
+
+    $apiArrData = array(
+      'locale' => self::RTG_DEFAULT_LUAGE,
+    );
+    
+    $this->token = $this->getToken();
+    if ($this->token === false) {
+        $err = '無法取得token';
+        return false;
+    }
+    /*
+    $this->startArray = $this->apiStart($this->token);
+    if($this->startArray  === false){
+        $err = 'API啟動時發生錯誤';
+        return false;
+    }*/
+
+    $apiArrHeader = array(
+      "Authorization: {$this->token}",
+      "Content-Type: application/json",
+    );
+
+    $this->RTG_CURL_DATAS[CURLOPT_CUSTOMREQUEST] = $apiMethod;
+    $this->RTG_CURL_DATAS[CURLOPT_HTTPHEADER] = $apiArrHeader;
+    $apiCurlDatas = $this->RTG_CURL_DATAS;
+    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+    if($result === false){
+      return false;
+    } else {
+        $rs_array = json_decode($result, TRUE);
+        $arraya = array();
+        foreach($rs_array as $key => $value){
+            $arraya[$value['gameId']] = $value['name'];
+        }
+        var_dump($arraya);exit();
+        if(count($rs_array) > 1){
+            return $rs_array;
+        } else {
+            $err = '無法取得遊戲字串';
+            return false;
+        }
+    }
+  }
+  
+  public function getGameStringsArray(&$err = null) {
+      $gameStrArray = array(
+        1179651 => "埃及艳后",
+        1179653 => "金胡子",
+        1179654 => "凯撒帝国",
+        1179663 => "人鱼女王",
+        1179664 => "乡下佬",
+        1179672 => "梦幻花园",
+        1179674 => "阿拉丁的愿望",
+        1179675 => "深海遨游",
+        1179681 => "古希臘英雄",
+        1179685 => "Penguin Power",
+        1179692 => "恶棍郊狼",
+        1179693 => "鲁道夫的复仇",
+        1179698 => "金矿探索",
+        1179700 => "暴龙",
+        1179709 => "德州大亨",
+        1179710 => "龙卷风",
+        1179714 => "淘气或乖乖",
+        1179727 => "吸血伯爵",
+        1179732 => "驯鹿鲁道夫",
+        1179769 => "农村人家",
+        1179770 => "幸运 8",
+        1179771 => "海狸伐木先生",
+        1179773 => "尼斯湖水怪",
+        1179779 => "忍者星",
+        1179790 => "幽灵船",
+        1179795 => "海洋生物",
+        1179796 => "貴族富豪",
+        1179797 => "郊外野餐",
+        1179798 => "模特梦",
+        1179802 => "足球狂热",
+        1179804 => "伏都巫术",
+        1179805 => "圣诞风骚女",
+        1179807 => "The Three Stooges Brideless Groom",
+        1179809 => "警匪追逐",
+        1179810 => "自由式摔跤",
+        1179811 => "幸运 6",
+        1179813 => "女巫温妮",
+        1179814 => "缤纷圣诞",
+        1179816 => "永恒的爱",
+        1179817 => "财神到",
+        1179818 => "Big Bopper",
+        1179819 => "超级 6",
+        1179820 => "古代战士",
+        1179821 => "梦幻花园 II",
+        1179822 => "魔幻猫熊",
+        1179823 => "桑巴日落",
+        1179825 => "梦幻之星",
+        1179826 => "女巫的秘方",
+        1179828 => "冰雪风暴",
+        1179830 => "甜蜜 16 岁",
+        1179836 => "财富水族箱",
+        1179837 => "伏藏龙",
+        1179838 => "秘密符号",
+        1179839 => "皮纳塔狂欢",
+        1179840 => "阿萨神域",
+        1179841 => "龙珠",
+        1179842 => "宝石天堂",
+        1179843 => "完美宠物",
+        1179846 => "警匪追逐2",
+        1179847 => "功夫鸡",
+        1179848 => "女巫温妮 2",
+        1179858 => "The Three Stooges® II",
+        1179861 => "奇妙圣诞!",
+        1179862 => "三喜临门",
+        1179868 => "福气",
+        1179869 => "一路抢到底",
+        1179870 => "霓虹上海",
+        1179871 => "迷你特攻队",
+        1179872 => "北派功夫",
+        1179873 => "里奇·瓦伦斯™La Bamba",
+        1179874 => "墨西哥摔角 2",
+        1179876 => "熊猫黄金",
+        1179877 => "秘密丛林",
+        1179879 => "彩虹",
+        1179880 => "僵尸",
+        1179881 => "奇珍异宝",
+        1179883 => "火龙特务",
+        1179884 => "星尘",
+        1179885 => "三 国 争 霸",
+        1179886 => "天地元素",
+        1179887 => "远古神兽",
+        1179888 => "渔民乐",
+        1179889 => "武则天",
+        1179890 => "顽皮女孩 / 漂亮女孩 III",
+        1179892 => "毛毛大冒险",
+        1179893 => "猪满冠",
+        1179894 => "雪碧人鱼失落之宝藏",
+        1179895 => "西部喜双逢",
+        1179901 => "开心鬼派对",
+        2162689 => "捕鱼",
+        2228225 => "夺宝小灵猴"
+      );
+      return $gameStrArray;
+  }
+}

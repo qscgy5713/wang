@@ -1,0 +1,73 @@
+<include file="Common:header"/>
+<include file="Common:menu"/>
+
+      <section class="main-container padding-bottom-clear md-main-container">
+
+        <!-- section -->
+        <!-- ================ -->
+        <section class="light-gray-bg pv-30 pt-11 padding-bottom-clear clearfix light-gray-bg-m">
+        <div class="container"><div class="row"><include file="Common:marquee"/></div></div>
+        
+        
+          <div class="container">
+          	<div class="main col-md-12">
+              <!-- page-title start -->
+              <!-- ================ -->
+              <h1 class="page-title text-white">線上客服</h1>
+              <div class="separator-2"></div>
+              <!-- page-title end -->
+            </div>
+          	
+            <div class="row">
+              <div class="col-6 col-lg-3 ml-auto">
+                <div class="pv-15 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon default-bg circle text-d9415a icon-OnlineService"><i class="lhic icomoon icon-telemarketer md-footer-i"></i></span>
+                  <h3 class="text-white">線上客服</h3>
+                  <div class="separator clearfix text-d9415a"></div>
+                  <p>&nbsp;</p>
+                  <a class="a-color" href="https://daw.duokebo.com/webchat/chat.aspx?siteid=378206" target="_blank">GO<i class="pl-1 fa fa-angle-double-right"></i></a>
+                </div>
+              </div>
+              <div class="col-6 col-lg-3 mr-auto">
+                <div class="pv-15 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon text-d9415a"><a href="https://line.me/ti/p/Fr4ZCOyKEw"><img alt="" src="__CSS__/images/file-read-38.jpg" width="100%" ></a></span>
+                  <h3 class="text-white">LINE</h3>
+                  <div class="separator clearfix text-d9415a"></div>
+                  <p class="text-white">ID:wkg66com</p>
+                  <a class="a-color" href="https://line.me/ti/p/Fr4ZCOyKEw" target="_blank">GO<i class="pl-1 fa fa-angle-double-right"></i></a>
+                </div>
+              </div>
+              
+              <!-- <div class="col-md-3 ">
+                <div class="pv-15 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-diamond"></i></span>
+                  <h3 class="text-white">微信</h3>
+                  <div class="separator clearfix text-d9415a"></div>
+                  <p class="text-white">ID: yes5168net</p>
+                  <a class="a-color" href="http://weixin.qq.com/r/j7rVzQPEjF7zrUeu9__d" target="_blank">GO<i class="pl-1 fa fa-angle-double-right"></i></a>
+                </div>
+              </div>
+              <div class="col-md-3 ">
+                <div class="pv-15 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-diamond"></i></span>
+                  <h3 class="text-white">QQ</h3>
+                  <div class="separator clearfix text-d9415a"></div>
+                  <p class="text-white">ID: 2338465380</p>
+                  <a class="a-color" href="#" >GO<i class="pl-1 fa fa-angle-double-right"></i></a>
+                </div>
+              </div> -->
+              
+              
+              
+              
+            </div>
+            
+            
+          </div>
+        </section>
+        <!-- section end -->
+        
+        
+      </section>
+       
+<include file="Common:footer"/>

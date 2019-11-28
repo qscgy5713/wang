@@ -1,0 +1,317 @@
+<include file="Common:header"/>
+<include file="Common:menu"/>
+      <!-- 輪播圖 start -->
+      <!-- ================ -->
+      <if condition='$isLogin eq "true"'>
+      	<div class="show-lg show-md hidden-sm-down">
+      <else/>
+      	<div class="show-lg show-md">
+      </if>
+      
+      		<div class="banner clearfix">
+
+		        <div id="slider-banner-fullscreen" class="hc-slideshow hc-slideshow--fullscreen carousel slide carousel-fade" data-ride="carousel" data-interval="9000" data-wrap="true">
+		
+		          <ol class="carousel-indicators hidden-sm-down">
+		            <li data-target="#slider-banner-fullscreen" data-slide-to="0" class="active"></li>
+		            <li data-target="#slider-banner-fullscreen" data-slide-to="1"></li>
+		            <li data-target="#slider-banner-fullscreen" data-slide-to="2"></li>
+		          </ol>
+		
+		          <div class="carousel-inner">
+		            <div class="carousel-item active">
+		              <div class="fullscreen-slide">
+		              	<div class="background-image" style="background-image:url('__CSS__/images/tbg1-1.jpg');"></div>
+		               
+		                <!--<img class="background-image" src="__CSS__/images/tbg1.jpg" alt="slidebg1" data-bgposition="center top"  data-bgrepeat="no-repeat" data-bgfit="cover"  class="rev-slidebg">-->
+		                
+		                <!-- 
+		                <div class="background-image-overlay"></div>
+		                <div class="container">
+		                  <div class="hc-slideshow-caption hc-slideshow-caption--large p-3 text-center w-100">
+		                    <h1 class="text-white text-capitalize animated fadeInDown hc-animation-delay-1000">The Project</h1>
+		                    <p class="animated fadeInUp hc-animation-delay-1250">Lorem ipsum dolor sit amet, consectetur adipisicing elit. <br class="d-none d-sm-inline"> Possimus dolore odio alias nisi minus ad consequatur <br class="d-none d-sm-inline"> quod exercitationem voluptate int.</p>
+		                    <a href="#" class="btn radius-50 btn-dark btn-xl animated fadeInLeft hc-animation-delay-1500">Read More <i class="pl-2 fa fa-arrow-right"></i></a>
+		                  </div>
+		                </div> -->
+		                
+		              </div>
+		            </div>
+		            <div class="carousel-item">
+		              <div class="fullscreen-slide">
+		              	<div class="background-image" style="background-image:url('__CSS__/images/tbg3-1.jpg');"></div>
+		               
+		                <!--<img class="background-image" src="__CSS__/images/tbg1.jpg" alt="slidebg1" data-bgposition="center top"  data-bgrepeat="no-repeat" data-bgfit="cover"  class="rev-slidebg">-->
+		                
+		                <!-- 
+		                <div class="background-image-overlay"></div>
+		                <div class="container">
+		                  <div class="hc-slideshow-caption hc-slideshow-caption--large p-3 text-center w-100">
+		                    <h1 class="text-white text-capitalize animated fadeInDown hc-animation-delay-1000">The Project</h1>
+		                    <p class="animated fadeInUp hc-animation-delay-1250">Lorem ipsum dolor sit amet, consectetur adipisicing elit. <br class="d-none d-sm-inline"> Possimus dolore odio alias nisi minus ad consequatur <br class="d-none d-sm-inline"> quod exercitationem voluptate int.</p>
+		                    <a href="#" class="btn radius-50 btn-dark btn-xl animated fadeInLeft hc-animation-delay-1500">Read More <i class="pl-2 fa fa-arrow-right"></i></a>
+		                  </div>
+		                </div> -->
+		                
+		              </div>
+		            </div>
+		            <div class="carousel-item">
+		              <div class="fullscreen-slide">
+		                 <div class="background-image" style="background-image:url('__CSS__/images/tbg2.jpg');"></div> 
+		                <!--<img class="background-image" src="__CSS__/images/tbg2.jpg" 
+		                alt="slidebg1" data-bgposition="center top"  
+		                data-bgrepeat="no-repeat" data-bgfit="cover"  class="rev-slidebg">-->
+		                
+		                <!-- 
+		                <div class="background-image-overlay"></div>
+		                <div class="container">
+		                  <div class="hc-slideshow-caption hc-slideshow-caption--large p-3 text-center w-100">
+		                    <h1 class="text-white text-capitalize animated fadeInDown hc-animation-delay-1000">Slide Title</h1>
+		                    <p class="animated fadeInUp hc-animation-delay-1250">Fugit tenetur ullam sequi, explicabo doloribus id numquam <br class="d-none d-sm-inline"> repudiandae velit doloremque eveniet a, qui veritatis <br class="d-none d-sm-inline"> int quod exercitationem voluptate.</p>
+		                    <a href="#" class="btn radius-50 btn-dark btn-xl animated fadeInLeft hc-animation-delay-1500">Contact Us <i class="pl-2 fa fa-envelope-o"></i></a>
+		                  </div>
+		                </div> -->
+		                
+		              </div>
+		            </div>
+		            
+		
+		            <a class="carousel-control carousel-control-prev hidden-sm-down" href="#slider-banner-fullscreen" role="button" data-slide="prev">
+		              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+		              <span class="carousel-control-text">Previous</span>
+		            </a>
+		            <a class="carousel-control carousel-control-next hidden-sm-down" href="#slider-banner-fullscreen" role="button" data-slide="next">
+		              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+		              <span class="carousel-control-text">Next</span>
+		            </a>
+		          </div>
+		        </div>
+		
+		      </div>
+      </div>
+      
+      
+      <!-- 輪播圖 end -->
+
+      <div id="page-start"></div>
+
+        <!-- .footer start -->
+        <!-- ================ -->
+        <if condition='$isLogin eq "true"'>
+              <div class="footer md-login hidden-lg-up" style="background-image:url('Public/TP02/images/bg-1.jpg');">
+                <div class="container">
+	          		<div class="row pt-22 hidden-lg-up">
+	          			<include file="Common:marquee"/>
+	          			<div class="col-6 mt-18">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius mb-15 bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a href="__APP__/MemberIndex/sportsHall">
+			                  	<i class="icomoon icomoon-style icon-cphysical-education"></i>
+			                  	<h4 class="text-white">體育</h4>
+			                  </a>
+			                </div>
+	          			</div>
+	          			<div class="col-6 mt-18">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius mb-15 bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a href="__APP__/MemberIndex/realityHall">
+			                  	<i class="icomoon icomoon-style icon-clive"></i>
+			                  	<h4 class="text-white">真人娛樂</h4>
+			                  </a>
+			                  
+			                </div>
+	          			</div>
+	          		</div>
+          		
+	          		<div class="row hidden-lg-up">
+	          			<div class="col-6">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius mb-15 bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a href="__APP__/MemberIndex/electronicHall">
+			                  	<i class="icomoon icomoon-style icon-celectronic-games"></i>
+			                  	<h4 class="text-white">電子遊戲</h4>
+			                  </a>
+			                </div>
+	          			</div>
+	          			<div class="col-6">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius mb-15 bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a href="__APP__/MemberIndex/lotteryHall">
+			                  	<i class="icomoon icomoon-style icon-clottery"></i>
+			                  	<h4 class="text-white">彩票賓果</h4>
+			                  </a>
+			                </div>
+	          			</div>
+	          		</div>
+          		
+	          		<div class="row hidden-lg-up">
+	          			<div class="col-4">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a href="#">
+				                  <span class="icon default-bg circle text-d9415a icon-style"><i class="fa fa-mobile-phone" style="font-size: 48px;"></i></span>
+				                  <h4 class="text-white font-size-16">APP下載</h4>
+			                  </a>
+			                </div>
+	          			</div>
+	          			<div class="col-4">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius mb-15 bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a href="__APP__/MemberCenter/index">
+				                  <span class="icon default-bg circle text-d9415a icon-style"><i class="fa fa-bar-chart"></i></span>
+				                  <h4 class="text-white font-size-16">點數紀錄</h4>
+			                  </a>
+			                </div>
+	          			</div>
+	          			<div class="col-4">
+	          				<div class="pv-10 ph-10 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall bordered-border-radius mb-15 bordered-m hc-shadow-m" 
+	          				data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+			                  <a id="Login-movie-phone" href="#">
+				                  <span class="icon default-bg circle text-d9415a icon-style"><i class="icomoon icon-video-camera"></i></span>
+				                  <h4 class="text-white font-size-16">免費影城</h4>
+			                  </a>
+			                </div>
+	          			</div>
+	          		</div>
+	          	</div>
+	          </div>
+            <else/>
+            
+            <div class="footer md-login md-footer-bg hidden-lg-up" style="padding-top: 1px; min-height: 500px;">
+              <div class="container">
+	            <div class="row hidden-lg-up">
+	            	<include file="Common:marquee"/>
+	            	<div class="col-lg-12 pt-10">
+		          		<form method="post" action='__APP__/MemberIndex/formLogin' id="formLogin" class="login-form margin-clear">
+		                   <div class="form-group has-feedback">
+		                   <!-- <label class="control-label">帳號</label> -->
+		                     
+		                     <input type="text" class="form-control" name="account" id="account_phone" placeholder="請輸入帳號">
+		                     <i class="fa fa-user form-control-feedback"></i>
+		                   </div>
+		                   <div class="form-group has-feedback">
+		                   <!-- <label class="control-label">密碼</label> -->
+		                     
+		                     <input type="password" class="form-control" name="password" id="password_phone" placeholder="請輸入密碼">
+		                     <i class="fa fa-lock form-control-feedback"></i>
+		                   </div>
+		                   
+		                   <div class="form-check">
+		                 	 <div class="checkbox">
+			                    <input class="form-check-input" type="checkbox" checked="checked">
+			                    <label class="form-check-label">
+			                     	我同意<a data-toggle="modal" onclick="openmodal('myModalLabel')"class="popup-content" href="#">會員條款</a>
+			                    </label>
+			                 </div>
+		                   </div>
+		                   
+		                   <div class="modal fade" id="myModalLabel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+				                <div class="modal-dialog modal-dialog-m" role="document">
+				                  <div class="modal-content">
+				                    <div class="modal-header">
+				                      <h4 class="modal-title" id="myModalLabel">會員條款</h4>
+				                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+				                    </div>
+				                    <include file="Common:MemberCondition"/> 
+				                    <div class="modal-footer">
+				                      <button type="button" class="btn btn-sm btn-dark" data-dismiss="modal">Close</button>
+				                      
+				                    </div>
+				                  </div>
+				                </div>
+				             </div>
+							                  
+		                   <div class="has-feedback text-center">
+		                   		<button type="button" name="btnok" style="width: 100%;" class="btn btn-d9415a btn-sm">登入</button>
+		                   </div>
+		                   
+		                   <div class="row">
+		                      <div class="col-6">
+		                      	<a class="btn btn-d9415a btn-sm" style="width: 100%;" href="__APP__/ForgetPage/index.html">忘記帳號/密碼</a>
+		                  	  </div>
+		                  	  <div class="col-6">
+		                  	  	<a class="btn btn-d9415a btn-sm" style="width: 100%;" href="__APP__/RegistPage/index.html">會員註冊</a>
+		                  	  </div>
+		                   </div>
+		                  
+		                 </form>
+		          	</div>
+	          	</div>
+	          	</div>
+	          	</div>
+             </if>
+        
+          	
+        <div class="footer md-login md-footer-bg hidden-sm-down">
+          <div class="container">
+          
+            <div class="footer-inner hidden-sm-down">
+              <div class="row">
+              
+                <div class="col-lg-4">
+                  <div class="footer-content">
+                    <div class="logo-footer"><img class="md-img" style="margin-bottom: 5px;width: 33%;" id="logo-footer" src="__CSS__/images/woknLogo200X70.png" alt=""></div>
+                    <div class="row">
+                      <div class="col-lg-12">
+                        <p>悟空娛樂是註冊於菲律賓Manila的合法公司。在進行網站註冊或遊戲前， 請確保您已滿18周歲並且遵循當地法律法規。</p>
+                          <a href="__APP__/MemberCenter/contactService" 
+                          class="btn btn-outline-danger btn-lg">點擊投訴</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-lg-4">
+                  <div class="footer-content">
+                    <h4 class="title text-d9415a"><i class="fa fa-search pr-10"></i> 使用幫助</h4>
+                    <nav class="mb-20">
+                      <ul class="nav flex-column list-style-icons">
+                        <li class="nav-item"><a onclick="setHome();" class="nav-link" href="#"><i class="fa fa-chevron-circle-right"></i> 設為首頁</a></li>
+                        <li class="nav-item"><a onclick="window.open('http://www.teamviewer.com/zhTW/','_tvwer');" class="nav-link" href="#"><i class="fa fa-chevron-circle-right"></i> 遠端協助</a></li>
+                        <li class="nav-item"><a onclick="window.open('https://www.microsoft.com/zh-tw/download/details.aspx?id=30653','_dotnew4');" class="nav-link" href="#"><i class="fa fa-chevron-circle-right"></i> .NET下載</a></li>
+                        <li class="nav-item"><a onclick="window.open('https://get.adobe.com/flashplayer/','_flash');" class="nav-link" href="#"><i class="fa fa-chevron-circle-right"></i> Flash下載</a></li>
+                        <li class="nav-item"><a onClick="window.location.reload(true);" class="nav-link" href="#"><i class="fa fa-chevron-circle-right"></i>清除暫存</a></li>
+                      </ul>
+                    </nav>
+                    
+                  </div>
+                </div>
+                
+                 <div class="col-lg-4">
+                  <div class="footer-content">
+                    <h4 class="title text-d9415a"><i class="fa fa-search pr-10"></i> 線上客服</h4>
+                    <nav class="mb-20">
+                      <ul class="nav flex-column list-style-icons">
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="window.open('https://line.me/R/ti/p/Gfuob6TlgG', '_blank');"><i class="fa fa-chevron-circle-right"></i> LINE&nbsp;&nbsp;&nbsp;ID: yes5168net</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="window.open('http://weixin.qq.com/r/j7rVzQPEjF7zrUeu9__d', '_blank');"><i class="fa fa-chevron-circle-right"></i>微信&nbsp;&nbsp;&nbsp;ID: yes5168net</a></li>
+                        <li class="nav-item"><a class="nav-link" href="components-buttons.html"><i class="fa fa-chevron-circle-right"></i>QQ&nbsp;&nbsp;&nbsp;ID: 2338465380</a></li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div> 
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- .footer end -->
+ <include file="Common:footer"/>
+ <script>
+ function openmodal(id){
+		//alert(id);
+		$('#'+id).modal('show')
+	}
+ $(document).ready(function(){
+	 $("button[name='btnok']").click(function() {
+			var account_phone = $("#account_phone").val();
+			var password_phone = $("#password_phone").val();
+			//alert(account_phone);
+			//alert(password_phone);
+			if(account_phone == "" || password_phone == ""){
+				alert("請輸入帳號或密碼!");
+				return;
+			}
+			
+			$("#formLogin").submit();
+			});
+	});
+ </script>

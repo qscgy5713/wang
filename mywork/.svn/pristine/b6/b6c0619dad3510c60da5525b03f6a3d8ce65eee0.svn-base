@@ -1,0 +1,388 @@
+<?php
+class MemberIndexAction extends MemberAction {
+    protected $waitTimeArray = array(30,60,180,300,600,1800,3600);
+    protected $gameLastArray = array(
+        "GameSB" => array(
+            "href" => "gameEnter"
+            
+        ),
+    );
+    protected $gameEnterArray = array(
+        "GameSB"=>"gameEnter",
+        "GamePA"=>"gameEnter",
+        "GameSP"=>"gameEnter",
+        "GameBJ"=>"gameEnter",
+        "GameXBS"=>"gameEnter",
+        "GameBG"=>"gameEnter",
+        "GameAB"=>"gameEnter",
+        "GameSA"=>"gameEnter",
+        "GameDG"=>"gameEnter",
+        "GameOG"=>"gameEnter",
+        "GameBNG"=>"gameMenu",
+        "GameQT"=>"gameMenu",
+        "GameUC8"=>"gameEnter",
+    );
+    protected $gameCNNameArray = array(
+        "GameSB"=>"鑫寶體育",
+        "GamePA"=>"平博體育",
+        "GameSP"=>"SP體育",
+        "GameBJ"=>"北京賽車",
+        "GameXBS"=>"香港六合",
+        "GameBG"=>"小牛賓果",
+        "GameAB"=>"歐博真人",
+        "GameSA"=>"沙龍真人",
+        "GameDG"=>"夢幻真人",
+        "GameOG"=>"東方真人",
+        "GameBNG"=>"博狗電子",
+        "GameQT"=>"QT電子",
+        "GameUC8"=>"手機電子",
+    );
+    protected $gamePopUpArray = array(
+        "GameSB"=>"yes",
+        "GamePA"=>"yes",
+        "GameSP"=>"yes",
+        "GameBJ"=>"yes",
+        "GameXBS"=>"yes",
+        "GameBG"=>"yes",
+        "GameAB"=>"no",
+        "GameSA"=>"no",
+        "GameDG"=>"no",
+        "GameOG"=>"no",
+        "GameBNG"=>"no",
+        "GameQT"=>"no",
+        "GameUC8"=>"yes",
+    );
+
+    //TODO:1.首頁
+    public function index(){
+        $this->assign('noLoad','1');
+        $this->getCarousel();//輪播圖
+        if($this->isMemberLogin()){
+            $this->getClientAnnouncement();//全版公告
+            
+            if(isMobile()){
+                $showGameArray = array();
+                $soonGameArray=unserialize($_COOKIE["soonGameArray"]);
+                foreach ($soonGameArray AS $key => $value){
+                    $showGameArray[$key]['href'] = $value."/".$this->gameEnterArray[$value];
+                    $showGameArray[$key]['gameCode'] = $value;
+                    $showGameArray[$key]['cnName'] = $this->gameCNNameArray[$value];
+                    $showGameArray[$key]['popUp'] = $this->gamePopUpArray[$value];
+                }
+                if(empty($showGameArray)){
+                    $this->assign("showGameArrayCount",'0');
+                } else {
+                    for($i=0;$i<4;$i++){
+                        if(!isset($showGameArray[$i])){
+                            $showGameArray[$i]['href'] = "0";
+                            $showGameArray[$i]['cnName'] = "0";
+                            $showGameArray[$i]['popUp'] = "0";
+                        }
+                    }
+                }
+                $this->assign("showGameArray",$showGameArray);
+            }
+            
+        }
+        $this->display();
+    }
+    //體育大廳
+    public function sportsHall(){
+        $this->isMemberLoginReturnIndex();
+        $this->display();
+    }
+    //真人大廳
+    public function realityHall(){
+        $this->isMemberLoginReturnIndex();
+        $this->display();
+    }
+    //彩票大廳
+    public function lotteryHall(){
+        $this->isMemberLoginReturnIndex();
+        $this->display();
+    }
+    //電子大廳
+    public function electronicHall(){
+        $this->isMemberLoginReturnIndex();
+        $this->display();
+    }
+    public function test(){
+        $request = $this->getRequest();
+        if($request['test'] == 'aaa123'){
+            $_SESSION['Error']['loginCount'] = 0;
+        }
+    }
+
+    //TODO:1.1登入功能
+    public function formLogin(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的帳號、密碼
+        $request = $this->getRequest();
+        //檢查是否有 account 傳入 並且不為空
+        if(!isset($request['account']) || empty($request['account'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//帳號為空，請重新輸入帳號
+        }
+        if(($_SESSION['Error']['loginCount']-3) > 6){
+            $errNumber = 6;
+        } else {
+            $errNumber = $_SESSION['Error']['loginCount']-3;
+        }
+        if(isset($_SESSION['Error']['loginCount']) && $_SESSION['Error']['loginCount'] >= 3){
+            if(!empty($_SESSION['Error']['loginWaitTime'])){
+                if((time() - $_SESSION['Error']['loginWaitTime']) >= $this->waitTimeArray[$errNumber]){
+                    $_SESSION['Error']['loginWaitTime'] = "";
+                } else {
+                    $time = (int)$this->waitTimeArray[$errNumber] + (int)$_SESSION['Error']['loginWaitTime'] - time();
+                    $this->assign("reciprocalNumber",$time);
+                    $this->error("登入錯誤超過".$_SESSION['Error']['loginCount']."次，請".$time."後在重試！");
+                }
+            }
+        }
+
+        if(($_SESSION['Error']['loginCount']-2) > 6){
+            $errNumber = 6;
+        } else {
+            $errNumber = $_SESSION['Error']['loginCount']-2;
+        }
+
+        $CommonMember = D("CommonMember");
+        //使用帳號 或  電話登入
+        $data = array(
+            "member_account" => $request['account'], //傳入的帳號
+            "member_phone" => $request['account'] //傳入的電話
+        );
+        //從 CommonMemberModel getMemberData 取得會員資訊
+        $return = $CommonMember->getMemberDataByAccount($data);
+        if ($return === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //檢查 是否 有此帳號
+        if(!isset($return['member_id'])){
+            if(isset($_SESSION['Error']['loginCount'])){
+                $_SESSION['Error']['loginCount'] = $_SESSION['Error']['loginCount'] + 1;
+            } else {
+                $_SESSION['Error']['loginCount'] = 1;
+            }
+            $loginErrMsg = "錯誤次數".$_SESSION['Error']['loginCount']."次";
+            if($_SESSION['Error']['loginCount'] >= 3){
+                $loginErrMsg .= "，封鎖".$this->waitTimeArray[$errNumber]."秒";
+            }
+            $_SESSION['Error']['loginWaitTime'] = time();
+            $this->assign("reciprocalNumber",$this->waitTimeArray[$errNumber]);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).$loginErrMsg);
+        }
+        //從 CommonMemberModel getMd5Password($password) 傳入密碼 取得加密後的密碼 做比對
+        $password = strtolower($request['password']);
+        $password = $CommonMember->getMd5Password($password);
+        //檢查 密碼 是否正確 。
+        if(!($return['member_password'] === $password)){
+            $ip = getIp();
+            $ip = get_ip_inet_pton($ip);
+            $nowTime = time();//取得現在時間戳
+            $CommonMemberLoginLog = D("CommonMemberLoginLog");
+            $data = array(
+                "member_id" => $return['member_id'],
+                "member_account" => $return['member_account'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"密碼錯誤;輸入密碼;".$request['password'],
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => get_os(),
+                "loginLog_url" => get_url()
+            );
+            $return = $CommonMemberLoginLog->addMemberLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            //否，回傳顯示 帳號、密碼錯誤。
+            if(isset($_SESSION['Error']['loginCount'])){
+                $_SESSION['Error']['loginCount'] = $_SESSION['Error']['loginCount'] + 1;
+            } else {
+                $_SESSION['Error']['loginCount'] = 1;
+            }
+            $loginErrMsg = "錯誤次數".$_SESSION['Error']['loginCount']."次";
+            if($_SESSION['Error']['loginCount'] >= 3){
+                $loginErrMsg .= "，封鎖".$this->waitTimeArray[$errNumber]."秒";
+            }
+            $_SESSION['Error']['loginWaitTime'] = time();
+            $this->assign("reciprocalNumber",$this->waitTimeArray[$errNumber]);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')).$loginErrMsg);
+        }
+        $_SESSION['Error']['loginCount'] = 0;
+        $_SESSION['Error']['loginWaitTime'] = "";
+        //將會員資料 存入SESSION。
+        $_SESSION['Member']['id'] = $return['member_id'];
+        $_SESSION['Member']['account'] = $return['member_account'];
+        $_SESSION['Member']['phone'] = $return['member_phone'];
+        $_SESSION['Member']['status'] = $return['member_status'];
+        $_SESSION['Member']['agentId'] = $return['agent_id'];
+        $_SESSION['Member']['agentAccount'] = $return['agent_account'];
+        $_SESSION['Member']['agentTree'] = $return['agent_tree'];
+        $_SESSION['Member']['agentRatio'] = $return['ratio_tree'];
+        $_SESSION['Member']['checkMemberTime'] = time();//重讀會員資料時間
+        $_SESSION['Member']['loginTime'] = time();//會員登入時間
+
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $nowTime = time();//取得現在時間戳
+        $os = get_os();
+        $url = get_url();
+
+        $CommonMemberLoginLog = D("CommonMemberLoginLog");
+        if($this->isMemberLosePower()){
+            unset($_SESSION['Member']);
+            $data = array(
+                "member_id" => $return['member_id'],
+                "member_account" => $return['member_account'],
+                "loginLog_status"=>0,
+                "loginLog_errMessage"=>"會員停權;無法登入",
+                "loginLog_createTime" => $nowTime,
+                "loginLog_ip" => $ip,
+                "loginLog_os" => $os,
+                "loginLog_url" => $url
+            );
+            $return = $CommonMemberLoginLog->addMemberLoginLogData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));
+        }
+        //是
+        //新增登入LOG
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "member_account" => $_SESSION['Member']['account'],
+            "loginLog_status"=>1,
+            "loginLog_createTime" => $nowTime,
+            "loginLog_ip" => $ip,
+            "loginLog_os" => $os,
+            "loginLog_url" => $url
+        );
+        $CommonMemberLoginLog->addMemberLoginLogData($data,$err);
+
+        $CommonMemberOnline = D("CommonMemberOnline");
+        $data = array(
+            "member_id"=>$_SESSION['Member']['id']
+        );
+        $return = $CommonMemberOnline->getMemberOnlineDataById($data,$err);
+        if ($return === false) {
+            //$this->error($err);
+        }
+        if(empty($return['member_id'])){
+            $data = array(
+                "member_id"=>$_SESSION['Member']['id'],
+                "member_account"=>$_SESSION['Member']['account'],
+                "agent_id"=>$_SESSION['Member']['agentId'],
+                "agent_account"=>$_SESSION['Member']['agentAccount'],
+                "online_createTime"=>$nowTime,
+                "online_year" => date("Y",$nowTime),
+                "online_month" => date("m",$nowTime),
+                "online_day" => date("d",$nowTime),
+                "online_hour" => date("H",$nowTime),
+                "online_modifyTime"=>$nowTime,
+                "online_ip"=>$ip,
+                "online_os"=>$os,
+                "online_url"=>$url
+            );
+            $return = $CommonMemberOnline->addMemberOnlineData($data,$err);
+            if ($return === false) {
+                $this->error($err);
+            }
+        } else {
+            $onlineDate = $return['online_year'].'-'.str_pad($return['online_month'],2,'0',STR_PAD_LEFT).'-'.str_pad($return['online_day'],2,'0',STR_PAD_LEFT).'-'.str_pad($return['online_hour'],2,'0',STR_PAD_LEFT);
+            $nowDate = date('Y-m-d-H', $nowTime);
+            if($onlineDate === $nowDate){
+                $data = array(
+                    "member_id"=>$_SESSION['Member']['id'],
+                    "online_createTime"=>$nowTime,
+                    "online_year" => date("Y",$nowTime),
+                    "online_month" => date("m",$nowTime),
+                    "online_day" => date("d",$nowTime),
+                    "online_hour" => date("H",$nowTime),
+                    "online_modifyTime"=>$nowTime
+                );
+                $return = $CommonMemberOnline->setMemberOnlineDataById($data,$err);
+            } else {
+                $data = array(
+                    "member_id"=>$_SESSION['Member']['id'],
+                    "member_account"=>$_SESSION['Member']['account'],
+                    "agent_id"=>$_SESSION['Member']['agentId'],
+                    "agent_account"=>$_SESSION['Member']['agentAccount'],
+                    "online_createTime"=>$_SESSION['Member']['loginTime'],
+                    "online_year" => date("Y",$nowTime),
+                    "online_month" => date("m",$nowTime),
+                    "online_day" => date("d",$nowTime),
+                    "online_hour" => date("H",$nowTime),
+                    "online_modifyTime"=>$nowTime,
+                    "online_ip"=>$ip,
+                    "online_os"=>$os,
+                    "online_url"=>$url
+                );
+                $return = $CommonMemberOnline->addMemberOnlineData($data, $err);
+            }
+        }
+        cookie('upOnlineTime',$nowTime);
+
+        $uid = $CommonMember->getMd5Password($nowTime); //把時間戳 變成 uid
+        $_SESSION['Member']['login_uid'] = $uid;
+        $_SESSION['Member']['uid'] = $uid;
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "member_uid" => $_SESSION['Member']['login_uid'],
+            "member_lastLoginTime" => $nowTime,
+            "member_lastLoginIp" => $ip
+        );
+        //修改會員 uid
+        $return = $CommonMember->setMemberById($data);
+        if ($return === false) {
+            unset($_SESSION['Member']);
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));
+        }
+        //轉跳頁面，登入後首頁。
+        redirect(__APP__.'/MemberIndex/index');
+    }
+    //TODO:1.2輪播圖
+    protected function getCarousel(){
+        //從 CommonCarouselModel getCarouselData() 取得輪播圖 資料
+    }
+    //TODO:全版公告
+    protected function getClientAnnouncement(){
+        //從 CommonAnnouncementModel getClientAnnouncementData() 取得前台跑馬燈資料
+        if(!isset($_COOKIE['client_AnnouncementBool'])){
+            //沒有預設的 AnnouncementBool
+            cookie('AnnouncementBool','1','expire=7200&prefix=client_');
+        }
+        $CommonAnnouncement = D("CommonAnnouncement");
+        $return = $CommonAnnouncement->getClientAnnouncementData();
+        if (array($return) === false) {
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+
+        if(count($return) == 0){
+            $this->assign("announcementBool","0");
+        } else {
+            if($_COOKIE['client_AnnouncementBool'] === '2'){
+                $this->assign("announcementBool","2");
+            } else {
+                $this->assign("announcementBool","1");
+            }
+        }
+        $this->assign("announcementArray",$return);
+        cookie('AnnouncementBool','2','expire=7200&prefix=client_');
+    }
+    public function setAnnouncementAjax(){
+        $request = $this->getRequest();
+        if($request['announcementBool'] === '2'){
+            cookie('AnnouncementBool','2','expire=7200&prefix=client_');
+            return;
+        }
+    }
+    //TODO:7.2用戶登出
+    public function logout(){
+        //清除會員資料 SESSION
+        $this->clearMemberData();//清除會員資料
+        //顯示你已登出，重新導回首頁
+        redirect(__APP__.'/MemberIndex/index');
+    }
+
+
+}

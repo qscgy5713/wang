@@ -1,0 +1,194 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+ <section class="main-container padding-bottom-clear md-main-container">
+ 	<div class="container bg-color pt-2">
+ 		<div class="row">
+ 		<include file="Common:marquee"/>
+ 			<div class="main col-lg-12">
+				<h2 class="mt-4 text-white">註冊悟空娛樂賬戶</h2>
+				<h6 class="text-white">
+					註冊悟空娛樂賬戶，您將領略到前所未有的博彩體驗。如果您已擁有悟空娛樂賬戶，則可以在此登錄
+				</h6>
+			 	<div class="separator-2"></div>
+			 		
+			 		<div class="process">
+			 		
+				 		<div class="row">
+	                  		<div class="col-md-6 mr-auto ml-auto">
+	                  			<!-- Nav tabs -->
+				                <ul class="nav nav-pills" role="tablist">
+					                <li class="nav-item">
+					                   <a class="nav-link active show" href="#pill-pr-1" id="pill-pr-1-a" role="tab" data-toggle="tab" title="Step 1" aria-selected="true"><i class="fa fa-dot-circle-o pr-1"></i> 驗證手機</a>
+					                </li>
+					                <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-2" id="pill-pr-2-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>輸入驗證碼</a>
+					               </li>
+					               <li class="nav-item">
+					                   <a class="nav-link" href="#pill-pr-3" id="pill-pr-3-a" role="tab" data-toggle="tab" title="Step 2" aria-selected="false"><i class="fa fa-dot-circle-o pr-1"></i>完成註冊</a>
+					               </li>
+		                		</ul>	
+		                		
+		                		<!-- Tab panes -->
+			                <div class="tab-content clear-style">
+			                
+			                  <div class="tab-pane active" id="pill-pr-1">
+	                  			 <form method="post" action='__APP__/RegistPage/formRegist' id="formRegist">
+					                <fieldset>
+					                
+					                  <div class="form-group">
+						                  <label for="inputDanger1">手機號碼</label>
+						                  <input type="text" name="addPhone" class="form-control" id="inputDanger1" placeholder="請輸入手機號碼">
+						                  <div id="checkPhone" class="invalid-feedback">電話長度不為10碼!</div>
+						                  <div class="valid-feedback">電話號碼可以使用!</div>
+						              </div>
+						              
+					                  <div class="form-group">
+					                    <label for="disabledTextInput">會員密碼</label>
+					                    <input type="password" name="addPassword" id="disabledTextInput" class="form-control" placeholder="請輸入登入密碼">
+					                  	<div class="warning-feedback" style="display: block;">密碼長度應界於6~20位之間</div>
+					                  </div>
+					                  
+					                  <div class="form-group">
+					                    <label for="disabledSelect">確認密碼</label>
+					                    <input type="password" id="disabledTextInput" name="addCheckPassword" class="form-control" placeholder="請再次輸入登入密碼">
+					                    
+					                  </div>
+					                  
+					                  <div class="form-check">
+					                  	<div class="checkbox">
+						                    <input class="form-check-input" type="checkbox" checked="checked">
+						                    <label class="form-check-label">
+						                     	我同意<a data-toggle="modal" onclick="openmodal('myModalLabel')"class="popup-content" href="#">會員條款</a>
+						                    </label>
+						                 </div>
+					                  </div>
+					                  
+					                  <div class="modal fade" id="myModalLabel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+						                <div class="modal-dialog modal-dialog-m" role="document">
+						                  <div class="modal-content">
+						                    <div class="modal-header">
+						                      <h4 class="modal-title" id="myModalLabel">會員條款</h4>
+						                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+						                    </div>
+						                    <include file="Common:MemberCondition"/> 
+						                    <div class="modal-footer">
+						                      <button type="button" class="btn btn-sm btn-dark" data-dismiss="modal">Close</button>
+						                      
+						                    </div>
+						                  </div>
+						                </div>
+						              </div>
+					                  
+					                  <button type="button" id="am-s1-confirm" onclick="location.href='index.php';" class="btn btn-outline-danger loading">取消</button>
+						              <button type="button" id="btnok" name="btnok" class="btn btn-outline-danger">確定</button>
+						              
+						              <div class="separator-2"></div>
+							              <div class="form-group">
+						              		<p>
+						              			點擊“驗證手機”， 即表示您同意並願意遵守悟空娛樂<a href="#" data-toggle="modal" onclick="openmodal('myModalLabel')" class="alert-link">用戶協議</a>和<a href="#" data-toggle="modal" onclick="openmodal('myModalLabel')" class="alert-link">隱私條款</a>
+						              		</p>
+							              </div>
+					                </fieldset>
+					              </form>
+			                  </div>
+			                  
+			                  <div class="tab-pane" id="pill-pr-2">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">尚未要求取得手機驗證碼，<br>請至步驟1選擇後按下『確定』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger loading" onclick="$('#pill-pr-1-a').click();" >返回</button>
+					                </div>
+			                  </div>
+			                  
+			                  <div class="tab-pane" id="pill-pr-3">
+					                <div class="pv-30 ph-20 hc-item-box bordered hc-shadow text-center hc-element-invisible animated hc-element-visible fadeInDownSmall" data-animation-effect="fadeInDownSmall" data-effect-delay="100">
+					                  <span class="icon default-bg circle text-d9415a"><i class="fa fa-exclamation"></i></span>
+					                  <h6 class="text-white">尚未要求取得手機驗證碼，<br>請至步驟1選擇後按下『確定』</h6>
+					                  <div class="separator clearfix text-d9415a"></div>
+					                  <p>&nbsp;</p>
+					                  <button type="button" id="am-s1-confirm" class="btn btn-outline-danger loading" onclick="$('#pill-pr-1-a').click();" >返回</button>
+					                </div>
+			                  </div>
+			                  
+			                  
+			                </div>
+	                  	</div>
+			         </div>
+		          </div>
+			</div>
+ 		</div>
+ 	</div>
+ </section>
+<include file="Common:footer"/>
+<script>
+$( "input[name='addPhone']" ).change(function() {
+	var addPhone = $("input[name='addPhone']").val();
+	if(addPhone == '0900000000'){
+		$("input[name='addPhone']").removeClass();
+		$("input[name='addPhone']").addClass("form-control is-valid");
+		//$("#checkPhone").css("color","green");
+    	//$("#checkPhone").html("電話號碼可以使用!");
+		return;
+	}
+	//alert(addPhone.length);return;
+	if(addPhone.length == 10){
+		$.ajax({
+			 type:"POST",
+			 url:"__URL__/ajaxCheckMemberPhone",
+			 data:{addPhone:addPhone},
+		     dataType: "text",
+		     success:function(data){
+		    	 //alert(data);
+		        if(data == true){
+		        	$("input[name='addPhone']").removeClass();
+		        	$("input[name='addPhone']").addClass("form-control is-valid");
+		        	//$("#checkPhone").css("color","green");
+		        	//$("#checkPhone").html("電話號碼可以使用!");
+		        } else {
+		        	$("input[name='addPhone']").removeClass();
+		        	$("input[name='addPhone']").addClass("form-control is-invalid");
+		        	//$("#checkPhone").css("color","red");
+		        	$("#checkPhone").html(data);
+		        }
+		     },
+			 error:function(){
+				alert("網路連線錯誤，請檢查您的網路狀況。");
+			}
+		});
+	} else {
+		$("input[name='addPhone']").removeClass();
+		$("input[name='addPhone']").addClass("form-control is-invalid");
+		//$("#checkPhone").css("color","red");
+		//$("#checkPhone").html("電話長度不為10碼!");
+	}
+});
+function openmodal(id){
+	//alert(id);
+	$('#'+id).modal('show')
+}
+$(document).ready(function(){
+	$( "#btnok" ).click(function() {
+		var addPhone = $("input[name='addPhone']").val();
+		var addPassword = $("input[name='addPassword']").val();
+		var addCheckPassword = $("input[name='addCheckPassword']").val();
+		if(addPhone.length != 10){
+			alert("電話長度不為10碼!");
+			return;
+		}
+		if(addPassword != addCheckPassword){
+			alert("請重新輸入確認密碼!");
+			return;
+		}
+		if(addPassword.length <= 5){
+			alert("密碼長度應界於6~20位之間");
+			return;
+		}
+		$("#loader-bg").show();
+		$("#loader-text").show();
+		$("#formRegist").submit();
+		});
+});
+</script>
+                  

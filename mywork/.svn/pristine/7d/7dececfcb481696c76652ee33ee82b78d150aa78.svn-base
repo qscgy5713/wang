@@ -1,0 +1,178 @@
+<?php
+class PointCenterAction extends MemberAction {
+    protected function _initialize() {
+        parent::_initialize();
+        $this->isMemberLoginShowErr();
+    }
+    //TODO:11.點數中心
+    public function index(){
+        $gameArray = $this->getMemberInfo();//讀取 會員各館 資料
+        //取得會員錢包資料 開始
+        $memberWallet = $this->getMemberWalletMoney();
+        //取得會員錢包資料 結束
+        
+        $this->assign('memberWallet', $memberWallet);//會員電子錢包
+        $this->assign('gameArray', $gameArray);
+        $jsonGameArray = json_encode($gameArray);//給 javascript 遊戲名稱陣列
+        $this->assign('jsonGameArray', $jsonGameArray);
+        
+        $this->display();
+    }
+    //TODO:11.1 
+    public function formPointRecharge(){
+        
+    }
+    
+    
+    //取得會員遊戲餘額
+    public function ajaxMemberGameBalance(){
+        $request = $this->getRequest();
+        if(!isset($request['gameName']) || empty($request['gameName'])){
+            $returnArray = array(
+                "return" => 0,
+                "err" => L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))
+            );
+            $this->ajaxReturn(array_to_json($returnArray));
+        }
+        
+        $data = array(
+            "game_name" => $request['gameName']
+        );
+        //$return = rand(0,1500);
+        $return = $this->getMemberBalance($data,$err);
+        if($return === false){
+            $returnArray = array(
+                "return" => 0,
+                "err" => $err
+            );
+            $this->ajaxReturn(array_to_json($returnArray));
+        }
+        $returnArray = array(
+            "return" => 1,
+            "memberBalance" => floor($return)//去除小數
+        );
+        $this->ajaxReturn(array_to_json($returnArray));
+    }
+    
+    //取得會員錢包金額
+    public function ajaxMemberWallet(){
+        //取得會員錢包資料 開始
+        $memberWallet = $this->getMemberWalletMoney();
+        //取得會員錢包資料 結束
+        
+        $returnArray = array(
+            "return" => 1,
+            "memberWallet" => $memberWallet
+        );
+        $returnJson = array_to_json($returnArray);
+        $this->ajaxReturn($returnJson);
+    }
+    //建立會員遊戲帳號
+    public function addMemberGameAccount(){
+        $request = $this->getRequest();
+        if(!isset($request['addGameName']) || empty($request['addGameName'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $data = array(
+            "game_name" => $request['addGameName']
+        );
+        $return = $this->createMember($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    
+    //遊戲餘額 全額 轉回 電子錢包
+    public function setGameBalanceTransferWallet(){
+        $request = $this->getRequest();
+        if(!isset($request['setGameName']) || empty($request['setGameName'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        //檢查是否當前開放的遊戲館
+        
+        //取得遊戲餘額 開始
+        $data = array(
+            "game_name" => $request['setGameName']
+        );
+        $return = $this->getMemberBalance($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        $memberBalance = $return;
+        //取得遊戲餘額 結束
+        if($memberBalance != 0){
+            $data = array(
+                "transferMoney" => $memberBalance,
+                "gameName" => $request['setGameName']
+            );
+            $return = $this->gameBalanceTransferWallet($data,$err);
+            if($return === false){
+                $this->error($err);
+                return false;
+            }
+        }
+        $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+    }
+    
+    
+    //讀取 會員各館 資料
+    protected function getMemberInfo(){
+        
+        $GameInfo = D("GameInfo");
+        $return = $GameInfo->getAllGameNameData();
+        if($return === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取菜單失敗，請重新登入
+        }
+        $gameArray = array();
+        $i = 0;
+        foreach ($return as $key => $value){
+            if(count($gameArray[$value['gameClass_showName']]) == 0){
+                $i = 0;
+            }
+            $data = array(
+                "gameCode"=>$value['game_code'],
+                "gameName"=>$value['game_name'],
+                "gameEnabled"=>$value['game_enabled'],
+                "accountBool" => false
+            );
+            $gameArray[$value['gameClass_showName']][ucfirst($value['game_code'])] = $data;
+        }
+        //var_dump($gameArray);exit();
+        
+        
+        foreach ($gameArray as $gameClass => $classArray){
+            foreach ($classArray as $gameCode => $gameBool){
+                if($gameBool['gameEnabled'] == 0){
+                    continue;
+                }
+                //讀取 會員資料
+                $MemberInfo = D("Game".$gameCode."MemberInfo");
+                $data = array(
+                    "member_id" => $_SESSION["Member"]["id"]
+                );
+                $return = $MemberInfo->getMemberInfoDataByMemberId($data,$err);
+                if($return === false){
+                    //資料庫錯誤
+                    return false;
+                }
+                if(!empty($return["info_id"])){
+                    $gameArray[$gameClass][$gameCode]["accountBool"] = true;
+                    /*
+                    $data = array(
+                       "game_name" => $gameCode
+                    );
+                    $return = $this->getMemberBalance($data,$err);
+                    if($return === false){
+                        $gameArray[$gameClass][$gameCode]["getBalanceBool"] = false;
+                        $gameArray[$gameClass][$gameCode]["errMessage"] = $err;
+                    } else {
+                        $gameArray[$gameClass][$gameCode]["balance"] = $return;
+                    }*/
+                }
+            }
+        }
+        //var_dump($gameArray);exit();
+        return $gameArray;
+    }
+}

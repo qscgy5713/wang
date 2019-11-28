@@ -1,0 +1,81 @@
+<?php
+/*
+ * 會員反水每月階層
+ */
+class CommonMemberWaterrankLevelModel extends AdminModel {
+    protected $tableName = "common_member_waterRank_level";
+    protected $tableId = "level_id";
+    
+    public function getMemberWaterRankData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_year']) && $data['level_year'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                  AND `level_year` = '{$data['member_id']}'
+                  AND `level_month` = '{$data['level_month']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = "資料庫錯誤";
+            return false;
+        }
+        return $return[0];
+    }
+    
+    public function setMemberWaterRankData($data,&$err=""){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    
+    public function addMemberWaterRankData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_year']) && $data['level_year'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = "資料庫失敗!";
+            return false;
+        }
+    }
+}

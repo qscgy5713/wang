@@ -1,0 +1,34 @@
+<?php
+/*
+ * API錯誤紀錄
+ */
+class CommonCurlErrModel extends MemberModel {
+    protected $tableName = "common_curl_err";
+    protected $tableId = "curlErr_id";
+    /*
+     * 新增 API錯誤 資料
+     */
+    public function addCurlErrData($data,&$err = ""){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+}

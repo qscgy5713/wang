@@ -1,0 +1,112 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameQtMenuModel extends MemberModel {
+    /*
+     * 取得 遊戲菜單資料 資料
+     * 遊戲菜單使用
+     */
+    public function getGameQtMenuData(){
+        $sql = "SELECT
+                    provider, game_id, UPPER(game_type) AS game_type, is_support_demo, game_name_en, game_name_ch, note, game_name
+                FROM `game_qt_menu`
+                WHERE
+                    `support_desktop`= 1
+                    AND `is_active`=1
+                ORDER BY
+                    game_type,
+		            game_name_en;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 遊戲菜單資料 資料
+     * 測試使用
+     */
+    public function getGameQtMenuDataUseTestQt(){
+        $sql = "SELECT
+                    *
+                FROM `game_qt_menu`;";
+        $return = $this->query($sql);
+        return $return;
+    }
+
+    /*
+     * 更新QT的遊戲菜單
+     */
+    public function renewGameMenu($data){
+
+        $gameIdArray = explode(",",$data['gameIdStr']);
+        $enGameArray = explode(",",$data['enGameNameStr']);
+        $chGameArray = explode(",",$data['chGameNameStr']);
+        $gameTypeArray = explode(",",$data['gameTypeStr']);
+
+        //var_dump(count($gameIdArray),count($enGameArray),count($chGameArray),count($gameTypeArray));exit();
+
+        $setTypeStr = $data['setTypeStr'];
+
+
+        foreach($gameIdArray AS $key => $value){
+
+            $exploadArray = explode("-",$value);
+
+            $provider = $exploadArray[0];//provider
+            $game_id = $value;//game_id
+            $enGameName = $enGameArray[$key];//英文名稱
+            $chGameName = $chGameArray[$key];//中文名稱
+
+
+            $sql = "SELECT * FROM `game_qt_menu`
+                    WHERE `game_id` = '{$game_id}';";
+            $return = $this->query($sql);
+            if($return === false){
+                var_dump($chGameName."更新失敗");
+                continue;
+            }
+            if(!empty($return[0])){
+
+                $TryStrpos=strpos($return[0]['game_type'],$setTypeStr);
+                if(!($TryStrpos === false)){
+                    var_dump($return[0]['game_name_ch']." 跳過!");
+                } else {
+
+                    $newGameType = $return[0]['game_type'].$setTypeStr;
+                    $sql = "UPDATE `game_qt_menu` SET `game_type` = '{$newGameType}' WHERE `game_id` = '{$game_id}'";
+                    $return = $this->query($sql);
+                    if($return === false){
+                        var_dump($chGameName."更新失敗");
+                    } else {
+                        var_dump($chGameName."更新成功");
+                    }
+                }
+                continue;
+            }
+
+            $enGameName = str_replace("'","\'",$enGameName);
+
+            $gameType = $gameTypeArray[$key];
+            $gameType = trim($gameType);
+            $gameType = preg_replace('/\s(?=)/', '', $gameType);
+            $gameType = strtoupper($gameType);
+
+            $TryStrpos=strpos($gameType,'REEL');
+            if(!($TryStrpos === false)){
+                $gameType = "CASINO/SLOT/".$gameType.";".$setTypeStr;
+            }
+            $TryStrpos=strpos($gameType,'TABLE');
+            if(!($TryStrpos === false)){
+                $gameType = "CASINO/TABLEGAME/OTHER;".$setTypeStr;
+            }
+
+            $sql = "INSERT INTO `game_qt_menu` VALUES ('".$provider."', '".$game_id."', '".$enGameName."', '".$chGameName."', '1', '0', '1', '1', '1', '[\"en_US\",\"th_TH\",\"zh_CN\",\"vi_VN\",\"ru_RU\"]', '[\"CNY\",\"JPY\",\"THB\",\"MYR\",\"INR\",\"HKD\",\"USD\",\"KRW\",\"IDR\",\"TWD\",\"RUB\",\"EUR\",\"MMK\",\"VND\"]', '0', '1', null, '".$gameType."');";
+            $return = $this->query($sql);
+            if($return === false){
+                var_dump($chGameName."新增失敗");
+                exit();
+            } else {
+                var_dump($chGameName."新增成功");
+            }
+        }
+    }
+}

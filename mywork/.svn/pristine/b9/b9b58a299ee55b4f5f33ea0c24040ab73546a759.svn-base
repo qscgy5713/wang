@@ -1,0 +1,67 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+		
+		
+		
+		<section id="agentJoinSection" style="background:url(__CSS__/images/userpersonal_bg.jpg);">
+			<div class="container mt-30">
+				<div class="row">
+					<div class="col-md-3 m-auto mr-0">
+						<div class="box-icon box-icon-center box-icon-round box-icon-transparent box-icon-large box-icon-content mb-20">
+							<div class="box-icon-title">
+								<i class="icomoon icon-telemarketer lhic"></i>
+								<h2>線上客服</h2>
+							</div>
+							<p>&nbsp;<br><a class="btn btn-secondary btn-shadow-1 mt-10" href="https://daw.duokebo.com/webchat/chat.aspx?siteid=378206" target="_blank">GO</a></p>
+						</div>
+					</div>
+					
+					<div class="col-md-3 m-auto ml-0">
+						<div class="box-icon box-icon-center box-icon-round box-icon-transparent box-icon-large box-icon-content mb-20">
+							<div class="box-icon-title">
+								<i class="line-img-bg"><a href="https://line.me/ti/p/Fr4ZCOyKEw"><img alt="" src="__CSS__/images/file-read-38.jpg" width="100%" ></a></i>
+								<h2>LINE</h2>
+							</div>
+							<p>ID:wkg66com<br><a class="btn btn-secondary btn-shadow-1 mt-10" href="https://line.me/ti/p/Fr4ZCOyKEw" target="_blank">GO</a></p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+			
+<include file="Common:footer"/>
+<script>
+
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	var topBar_h = jQuery('#topBar').height();
+	var header_h = jQuery('#header').height();
+	
+	//算畫面高度
+	if(isMobile()){
+		var menu_RWD_h = jQuery('.menu_RWD').height();
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":menu_RWD_h+"px"});
+	}else{
+		 jQuery("#agentJoinSection").css({"min-height":h-7+"px","padding-top":topBar_h+header_h+"px"});
+	} 
+}
+//偵測是否為行動裝置
+function isMobile() {
+
+  try{ document.createEvent("TouchEvent"); return true; }
+
+  catch(e){ return false;}
+
+}
+</script>
+
+
+			

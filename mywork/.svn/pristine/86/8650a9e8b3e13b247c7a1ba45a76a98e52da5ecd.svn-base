@@ -1,0 +1,42 @@
+<div class="col-2  admin-menu">
+     <div style="margin-bottom: 88px;">
+            <div class="user">
+                 <div class="user__info">
+                     <img class="user__img" src="__CSS__/images/8.jpg" alt="">
+                     <div>
+                         <div class="user__name mb10">{$agentAccount}</div>
+	                         <form method="post" action='__APP__/Agent/logout'>
+			                 	<button type="submit" class="btn btn-info mb5 agent-btn-p">登出</button>   
+			                 </form>
+	                     </div>
+                 </div>
+
+             </div>
+            
+            <!-- <VOLIST name="marqueeArray" id="marquee">
+			<div class="mq-item">{$marquee.marquee_text}</div>
+		</VOLIST> -->
+		<div>
+			<ul class="navigation">
+				 <foreach name="showPageArray" item="showPageVal">
+				    <h4 class="text-white">{$key}</h4>
+				    
+				     <foreach name="showPageVal" item="PageVal">
+					     <li class="admin-li-bg">
+			                  <a class="text-white" href="__APP__/{$PageVal.actionName}/index">
+			                   <i class="ti-credit-card"></i> 
+			                 	 {$PageVal.showName}
+			                  </a>
+		                 </li>
+	                 </foreach>
+	                 <hr style="border-top: 1px solid #f8f9fa59;">
+				</foreach> 
+				
+             </ul>
+		</div>
+     </div><!--/col-->
+             
+</div>
+
+
+

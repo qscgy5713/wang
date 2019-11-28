@@ -1,0 +1,190 @@
+<?php
+/*
+ * 會員信件
+ */
+class CommonMemberMailModel extends MemberModel {
+    protected $tableName = "common_member_mail";
+    protected $tableId = "mail_id";
+
+    protected $ip = "";
+
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $this->ip = $ip;
+    }
+
+    /*
+     * 取得 會員信件 資料筆數
+     */
+    public function getTotalNumberMailData($data,&$err = ""){
+
+        $sql = "SELECT count(*) AS totalNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `mail_createTime` > '{$data['mail_createTime']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+
+    /*
+     * 取得 會員 未讀 信件筆數
+     */
+    public function getUnreadNumberMailData($data,&$err = ""){
+
+        $sql = "SELECT count(*) AS unreadNumber FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                AND `mail_createTime` > '{$data['mail_createTime']}'
+                AND `mail_status` = '0';";
+        $return = $this->cacheQuery($sql,1);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        return $return[0];
+    }
+
+    /*
+     * 取得 會員信件 資料
+     */
+    public function getMemberMailData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $pageStrat = ($data["page"]["pageNumber"]-1)*$data["page"]["number"];
+        $pageEnd = $data["page"]["number"];
+        $pageSql = " LIMIT ".$pageStrat.",".$pageEnd;
+
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}' AND `mail_createTime` > '{$data['mail_createTime']}' ORDER BY `mail_status` ASC, `mail_createTime` DESC
+                {$pageSql};";
+                $return = $this->query($sql);
+                if($return === false){
+                    $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_02"));
+                    return false;
+                }
+                return $return;
+    }
+    /*
+     * 讀取信件狀態
+     */
+    public function getMailStatusStr($data){
+        $return = "";
+        switch($data){
+            case 0:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 1:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                break;
+            case 2:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                break;
+        }
+        return $return;
+    }
+    /*
+     * 讀取信件類型
+     */
+    public function getMailTypeStr($data){
+        $return = "";
+        switch($data){
+            case 0:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                break;
+            case 1:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                break;
+            case 2:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+                break;
+            case 3:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+                break;
+            case 4:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+                break;
+            case 5:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+                break;
+            case 6:
+                $return = L(strtoupper('STRING_' . __CLASS__ . '_' . __FUNCTION__ . '_07'));
+                break;
+            default:
+                $return = false;
+                break;
+        }
+        return $return;
+    }
+
+    /*
+     * 新增 會員信件
+     */
+    public function addMailData($data,&$err = ""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));//
+            return false;
+        }
+        if(empty($data['mail_main']) && $data['mail_main'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));//
+            return false;
+        }
+        /*
+         if(empty($data['mail_type']) && $data['mail_type'] !== 0){
+         $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));//
+         return false;
+         }*/
+        $data['mail_ip'] = $this->ip;
+        //新增 會員信件
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 修改 信件 資料
+     * 使用ID
+     * 前端 修改信件 狀態 (未讀改已讀)
+     */
+    public function setMailDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+}

@@ -1,0 +1,163 @@
+<?php
+/*
+ * 會員返水每月階層
+ */
+class CommonMemberWaterrankLevelModel extends AdminModel {
+    protected $tableName = "common_member_waterRank_level";
+    protected $tableId = "level_id";
+    /*
+     * 取得 總頁數 資料
+     * 後台 會員階層 頁面使用
+     */
+    public function getTotalNumberMemberWaterRankData($data){
+        if(empty($data['level_year']) && $data['level_year'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $whereSql = "";
+        if(!empty($data['member_account'])){
+            $whereSql = " AND `member_account` LIKE '%{$data['member_account']}%'";
+        }
+        
+        $sql = "SELECT COUNT(*) AS totalNumber
+                FROM `{$this->tableName}`
+                WHERE `level_year` = '{$data['level_year']}'
+                AND `level_month` = '{$data['level_month']}'
+                AND `gameClass_id` = '{$data['gameClass_id']}'
+                {$whereSql}
+                ORDER BY `waterRank_serial` DESC;";     
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得會員階層資料
+     * 後台 會員階層 頁面使用
+     */
+    public function getMemberWaterRankDataUseWaterLevel($data,&$err=""){
+        if(empty($data['level_year']) && $data['level_year'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        if(empty($data['gameClass_id']) && $data['gameClass_id'] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        
+        $whereSql = "";
+        if(!empty($data['member_account'])){
+            $whereSql = " AND a.`member_account` LIKE '%{$data['member_account']}%'";
+        }
+        
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT " . $pageStart . "," . $pageEnd;
+        
+        $sql = "SELECT sum(b.`effective_effective`) AS totalEffective,b.`member_account` as memberAccount,
+                b.`gameClass_showName` as gameClassShowName,a.* FROM `{$this->tableName}` a
+                JOIN `common_member_waterrank_effective` b 
+                ON (a.`member_id` = b.`member_id` AND a.`gameClass_id` = b.`gameClass_id` 
+                    AND a.`level_year` = b.`level_year` AND a.`level_month` = b.`level_month`)
+                WHERE a.`level_year` = '{$data['level_year']}'
+                AND a.`level_month` = '{$data['level_month']}'
+                AND a.`gameClass_id` = '{$data['gameClass_id']}'
+                {$whereSql}
+                GROUP BY a.`member_id`
+                ORDER BY `waterRank_serial` DESC
+                {$pageSql};";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得會員階層資料
+     * 處理返水 使用
+     */
+    public function getMemberWaterRankData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_year']) && $data['level_year'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `member_id` = '{$data['member_id']}'
+                  AND `level_year` = '{$data['member_id']}'
+                  AND `level_month` = '{$data['level_month']}';";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = "資料庫錯誤";
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 修改 會員返水階層
+     * 返水後 更新使用
+     */
+    public function setMemberWaterRankData($data,&$err=""){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 增加 會員階層 資料
+     */
+    public function addMemberWaterRankData($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_year']) && $data['level_year'] !== '0'){
+            return false;
+        }
+        if(empty($data['level_month']) && $data['level_month'] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){//否，顯示錯誤
+            $err = "資料庫失敗!";
+            return false;
+        }
+    }
+}

@@ -1,0 +1,14 @@
+<?php
+/**
+ * 電子返水頁面
+ */
+class EventBackWaterElectronicPageAction extends EventAction
+{
+	//TODO:電子返水頁面
+  public function index(){
+      if($this->formEnabled){
+          $this->getMemberWaterPageData('4');
+      }
+      $this->display();
+  }
+}

@@ -1,0 +1,101 @@
+<?php
+
+/**
+ * 活動管理
+ */
+class ActivityManagementAction extends AdminAction{
+	//TODO :活動管理首頁
+	public function index(){
+		$CommonEvent = D('CommonEvent');
+		$return = $CommonEvent->getEventDatafor();
+		// var_dump($return);die;
+		$showArray = array();
+		$FidleChange = array(
+			'event_id' => 'eventId',
+			'event_name' => 'eventName',
+			'event_enabled' => 'enabled',
+			'event_startTime' => 'eventStartTime',
+			'event_endTime' => 'eventEndTime',
+		);
+		$showStr = "";
+		foreach ($return as $key => $value) {
+			foreach ($FidleChange as $key1 => $value1) {
+				switch ($key1) {
+					case 'event_startTime':
+						if(empty($value[$key1])){
+							$showStr = "無時間";
+							break;
+						}
+						$showStr = date("Y-m-d H:i:s", $value[$key1]);
+						break;
+					case 'event_endTime':
+						if(empty($value[$key1])){
+							$showStr = "無時間";
+							break;
+						}
+						$showStr = date("Y-m-d H:i:s", $value[$key1]);
+						break;
+					default:
+						$showStr = $value[$key1];
+						break;
+				}
+				$showArray[$key][$value1] = $showStr;
+			}
+		}
+		// var_dump($showArray);die;
+		$this->assign('showArray', $showArray);
+		$this->display();
+	}
+	//修改活動管理
+	public function formSetStarToEnd(){
+		$request = $this->getRequest();
+		if(empty($request['setEventName']) && $data['setEventName'] !== 0){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))); //未輸入修改活動名稱
+		}
+		if(empty($request['setStartTime']) && $data['setStartTime'] !== 0){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'))); //未輸入修改活動開始時間
+		}
+		if(empty($request['setEndTime']) && $data['setEndTime'] !== 0){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'))); //未輸入修改活動結束時間
+		}
+		if(empty($request['setEventId']) && $data['setEventId'] !== 0){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'))); //無修改活動ID,洽請工程師
+		}
+		$CommonEvent = D('CommonEvent');
+		$data = array(
+			'event_id' => $request['setEventId'],
+			'event_name' => $request['setEventName'],
+			'event_startTime' => strtotime($request['setStartTime']),
+			'event_endTime' => strtotime($request['setEndTime']),
+		);
+		// var_dump($data);die;
+		$return = $CommonEvent->setEventData($data);
+		if($return === false){
+			$this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'))); //資料庫錯誤
+		}
+		$this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01'))); //修改成功
+	}
+	//TODO ajax開關
+	public function ajaxSwitch(){
+		$request = $this->getRequest();
+		$CommonEvent = D('CommonEvent');
+		switch ($request['mode_id']) {
+			case 'stopId':
+				$data = array(
+					'event_id' => $request['stopId'],
+					'event_enabled' => 0,
+				);
+				break;
+			case 'startId':
+				$data = array(
+					'event_id' => $request['startId'],
+					'event_enabled' => 1,
+				);
+				break;
+			default:
+				$this->error(L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"))); //資料庫錯誤
+				break;
+		}
+		$return = $CommonEvent->setEventData($data);
+	}
+}

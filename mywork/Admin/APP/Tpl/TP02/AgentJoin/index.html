@@ -1,0 +1,206 @@
+<include file="Common:header"/>
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+		<div class="col-lg-12 ui-sortable">
+			<!-- begin panel -->
+			<div class="panel panel-inverse">
+				<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+					<div class="panel-heading-btn">
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+					</div>
+					<h4 class="panel-title">代理加盟</h4>
+				</div>
+				<div class="alert alert-danger fade show text-center">
+					<button type="button" class="close" data-dismiss="alert">
+					<span aria-hidden="true">×</span>
+					</button>
+					未處理列表
+				</div>
+				<!-- begin panel-body -->
+				<div class="panel-body">
+							<!-- begin table-responsive -->
+					<div class="table-responsive">
+						<table id="NoHandleTable" class="table table-striped m-b-0">
+							<thead>
+								<tr>
+									<th>序</th>
+									<th>申請編號</th>
+									<th>狀態</th>
+									<th>申請人姓名</th>
+									<th>電話</th>
+									<th>其他聯絡方式</th>
+									<th>申請時間</th>
+									<th>申請人留言</th>
+									<th>操作</th>
+								</tr>
+							</thead>
+							<tbody>
+								<VOLIST name="NoHandleshowArray" id="vo" empty="$Unprocessed">
+		                        	<tr>
+			                        	<td>{$key+1}</td>
+										<td>{$vo.id}</td>
+										<td>{$vo.status}</td>
+										<td>{$vo.name}</td>
+										<td>{$vo.phone}</td>
+										<td>{$vo.contact}</td>
+										<td>{$vo.time}</td>
+										<td>{$vo.msg}</td>
+										<td>
+											<form class="div-style" method="post" action='__APP__/AgentJoin/formSetAgentJoin'>
+												<input type="hidden" value="{$vo.id}" name="setId">
+												<label>備註</label>
+												<input class="form-control-m m-b-5 div-style" type="text" name="setRemark">
+			                                	<button type="submit" class="btn btn-info p-5 m-r-5 m-b-5">存檔</button>
+			                                </form>
+		                                </td>
+									</tr>
+		                        </VOLIST>
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="main col-lg-12">
+		                  		<nav aria-label="Page navigation">
+					                <ul class="pagination justify-content-center">
+
+					                <if condition="$pageNumber-1 neq 0">
+					                  <li id="" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber=1">第一頁</a></li>
+					                  <li class="page-item">
+					                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber-1}" aria-label="Previous">
+					                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+					                      <span class="sr-only">Previous</span>
+					                    </a>
+					                  </li>
+					                 </if>
+
+					                  <volist name="pageArray" id="vo" >
+		                                <IF condition="$pageNumber eq $vo" >
+		                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+		                                <else/>
+		                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+		                                </IF>
+		                              </volist>
+
+					                  <if condition="$pageNumber+1 elt $totalPage ">
+						                  <li class="page-item">
+						                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber+1}" aria-label="Next">
+						                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+						                      <span class="sr-only">Next</span>
+						                    </a>
+						                  </li>
+						                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$totalPage}">最末頁</a></li>
+					                  </if>
+					                </ul>
+					            </nav>
+		                  </div>
+	                  </div>
+	               </if>
+			</div>
+		</div>
+
+		<div class="col-lg-12 ui-sortable">
+			<div class="panel panel-inverse">
+				<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+					<div class="panel-heading-btn">
+						<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+					</div>
+					<h4 class="panel-title">代理加盟</h4>
+				</div>
+				<div class="alert alert-info fade show text-center">
+					<button type="button" class="close" data-dismiss="alert">
+					<span aria-hidden="true">×</span>
+					</button>
+					已處理列表
+				</div>
+				<!-- begin panel-body -->
+				<div class="panel-body">
+					<div class="table-responsive">
+						<table id="HandleTable" class="table table-striped m-b-0">
+							<thead>
+								<tr>
+									<th>序</th>
+									<th>申請編號</th>
+									<th>狀態</th>
+									<th>申請人姓名</th>
+									<th>電話</th>
+									<th>其他聯絡方式</th>
+									<th>申請時間</th>
+									<th>申請人留言</th>
+									<th>處理備註</th>
+									<th>處理時間</th>
+									<th>處理帳號</th>
+								</tr>
+							</thead>
+							<tbody>
+								<VOLIST name="HandleshowArray" id="vo" empty="$processed">
+		                        	<tr>
+			                        	<td>{$key+1}</td>
+										<td>{$vo.id}</td>
+										<td>{$vo.status}</td>
+										<td>{$vo.name}</td>
+										<td>{$vo.phone}</td>
+										<td>{$vo.contact}</td>
+										<td>{$vo.time}</td>
+										<td>{$vo.msg}</td>
+										<td>{$vo.remark}</td>
+										<td>{$vo.resultTime}</td>
+										<td>{$vo.adminAccount}</td>
+									</tr>
+		                        </VOLIST>
+							</tbody>
+						</table>
+					</div>
+					<!-- end table-responsive -->
+				</div>
+				<!-- end panel-body -->
+
+				<if condition="$pageNumber neq ''">
+	                  <div class="row">
+		                  <div class="main col-lg-12">
+	                  		<nav aria-label="Page navigation">
+				                <ul class="pagination justify-content-center">
+
+				                <if condition="$pageNumber-1 neq 0">
+				                  <li id="" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber=1">第一頁</a></li>
+				                  <li class="page-item">
+				                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber-1}" aria-label="Previous">
+				                      <i aria-hidden="true" class="fa fa-angle-left pt10"></i>
+				                      <span class="sr-only">Previous</span>
+				                    </a>
+				                  </li>
+				                 </if>
+
+				                  <volist name="pageArray" id="vo" >
+	                                <IF condition="$pageNumber eq $vo" >
+	                                	<li id="{$vo}Page" class="page-item active"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+	                                <else/>
+	                                	<li id="{$vo}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$vo}">{$vo}</a></li>
+	                                </IF>
+	                              </volist>
+
+				                  <if condition="$pageNumber+1 elt $totalPage ">
+					                  <li class="page-item">
+					                    <a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$pageNumber+1}" aria-label="Next">
+					                      <i aria-hidden="true" class="fa fa-angle-right pt10"></i>
+					                      <span class="sr-only">Next</span>
+					                    </a>
+					                  </li>
+					                  <li id="{$totalPage}Page" class="page-item"><a class="page-link" href="__APP__/{$Think.MODULE_NAME}/index&pageNumber={$totalPage}">最末頁</a></li>
+				                  </if>
+				                </ul>
+				            </nav>
+		                  </div>
+	                  </div>
+                  </if>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+<include file="Common:footer"/>

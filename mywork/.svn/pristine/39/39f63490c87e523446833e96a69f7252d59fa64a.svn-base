@@ -1,0 +1,40 @@
+<?php
+/**
+ * 會員變更紀錄
+ */
+class CommonMemberOperateLogModel extends MemberModel{
+	protected $tableName = "common_member_operate_log";
+	/**
+	 * 檢視操作紀錄
+	 */
+	public function getMemberOperateLog(){
+		$sql = "SELECT * FROM `{$this->tableName}`";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+	/**
+	 * 新增 會員操作 紀錄
+	 */
+	public function addMemberOperateLogData($data){
+		$sql = "INSERT INTO `{$this->tableName}`";
+		$keySql = "";
+		$valSql = "";
+		foreach ($data as $key => $value) {
+			if(empty($keySql)){
+				$keySql = "(`{$key}`";
+			} else {
+				$keySql .= ",`{$key}`";
+			}
+			if(empty($valSql)){
+				$valSql = "('{$value}'";
+			} else {
+				$valSql .= ",'{$value}'";
+			}
+		}
+		$sql .= "{$keySql}) VALUES {$valSql})";
+		$return = $this->query($sql);
+
+		return $return;
+	}
+}

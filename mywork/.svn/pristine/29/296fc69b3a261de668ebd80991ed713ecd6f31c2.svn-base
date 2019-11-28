@@ -1,0 +1,14 @@
+
+
+<ul class="nav nav-tabs nav-top-border">
+	<li class="nav-item"><a class="nav-link loading" id="lottoRecords" href="__APP__/MemberCenter/lottoRecords" >{$Think.lang.CenterFourStart}</a></li>
+	<li class="nav-item"><a class="nav-link loading" id="bounsRecords" href="__APP__/MemberCenter/bounsRecords" >{$Think.lang.CenterBackWaterRecord}</a></li>
+	<li class="nav-item"><a class="nav-link loading" id="rechargeRecords" href="__APP__/MemberCenter/rechargeRecords" >{$Think.lang.CenterRechargeRecord}</a></li>
+	<li class="nav-item"><a class="nav-link loading" id="givenRecord" href="__APP__/MemberCenter/givenRecord" >{$Think.lang.CenterGiftPointRecord}</a></li>
+	<li class="nav-item"><a class="nav-link loading" id="eventRecord" href="__APP__/MemberCenter/eventRecord" >{$Think.lang.CenterActivityRecord}</a></li>
+	<li class="nav-item"><a class="nav-link loading" id="transferRecords" href="__APP__/MemberCenter/transferRecords" >{$Think.lang.CenterTransferRecord}</a></li>
+	<li class="nav-item"><a class="nav-link loading" id="withdrawRecords" href="__APP__/MemberCenter/withdrawRecords" >{$Think.lang.CenterSaleRecord}</a></li>
+
+</ul>
+
+

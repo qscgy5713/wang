@@ -1,0 +1,23 @@
+<?php
+class RebateEventAction extends MemberAction {
+    //TODO:6.優惠活動
+    public function index(){
+        $this->display();
+    }
+    //TODO:6.1優惠活動功能
+    public function getEvent(){
+        
+    }
+    //TODO:6.2首充1000送1000功能
+    public function formEvent01(){
+        
+    }
+    //TODO:6.3翻本金888功能
+    public function formEvent02(){
+        
+    }
+    //TODO:6.4百家樂連贏功能
+    public function formEvent03(){
+        
+    }
+}

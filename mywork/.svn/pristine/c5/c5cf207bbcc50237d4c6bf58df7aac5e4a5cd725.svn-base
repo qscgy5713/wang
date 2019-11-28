@@ -1,0 +1,114 @@
+<?php
+//影城腳本
+class ScriptMovieTokenAction extends ScriptAction {
+    
+    public function index(){
+        $request = $this->getRequest();
+        
+        $str = "請先登入小牛官網，登入後透過連結觀賞影城";
+        $ary=array('time'=>0,'message'=>$str,'mName'=>'');
+        
+        if(empty($request['token'])){
+            echo json_encode($ary);
+            exit();
+        }
+        $token = $request['token'];
+        
+        $TryStrpos=strpos($token,'%');
+        if($TryStrpos !== false){
+            $token = urldecode($token);
+        }
+        $token = $this->AESdecode($token);
+        $array = explode("&",$token);
+        
+        if(count($array) != 4){
+            echo json_encode($ary);
+            exit();
+        }
+        if($array[2] != "as5168" || $array[3] == ""){
+            echo json_encode($ary);
+            exit();
+        }
+        $member_name = $array[0];
+        $boss = $array[1];
+        $todaytime = date('Y-m-d H:i:s');
+        
+        $givemems = true;
+        $CommonMemberMovie = D("CommonMemberMovie");
+        $data = array(
+            "member_account" => $member_name,
+            "nowTime" => time()
+        );
+        $return = $CommonMemberMovie->getMemberMovieDataByAccount($data);
+        if($return === false){
+            echo json_encode($ary);
+            exit();
+        }
+        if(count($return) != 0){
+            $givemems = false;
+            $ary=array('time'=>$return['movie_endTime'],'message'=>'','mName'=>$return['member_account']);
+        }
+        
+        if($givemems){
+            $today = date("Y-m-d H:i:s",time());
+            $limitTime = strtotime("$today -1 day");
+            $CommonMemberMovie = D("CommonMemberMovie");
+            $data = array(
+                "member_account" => $member_name,
+                "limitTime" => $limitTime
+            );
+            $return = $CommonMemberMovie->getMemberLastBetTimeData($data);
+            if(empty($return[0]['maxBetTime'])){
+                $str = " 小牛會員您好，尚未有投注，投注後24小時內可無限制使用影城功能";
+                $ary=array('time'=>0,'message'=>$member_name.$str,'mName'=>$member_name);
+            } else {
+                
+                $newTime = date("Y-m-d H:i:s",time());
+                $newTime = strtotime("$newTime +1 day");
+                $data = array(
+                    "member_account" => $member_name, 
+                    "movie_startTime" => time(),
+                    "movie_endTime" => $newTime,
+                    "game_showName" => $return[0]['gameName'],
+                    "detail_createTime" => $return[0]['maxBetTime']
+                );
+                $return = $CommonMemberMovie->setMembermovieDataByAccount($data);
+                if($return === false){
+                    
+                }
+                $ary=array('time'=>$newTime,'message'=>'','mName'=>$member_name);
+            }
+        }
+        
+        echo json_encode($ary);
+        exit();
+    }
+    
+    
+    protected function AESencode($value){
+        $hash_string = 'as5168';
+        $hash = hash('SHA384', $hash_string, true);
+        $app_cc_aes_key = substr($hash, 0, 32);
+        $app_cc_aes_iv = substr($hash, 32, 16);
+        
+        $padding = 16 - (strlen($value) % 16);
+        $value .= str_repeat(chr($padding), $padding);
+        $encrypt = mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $app_cc_aes_key, $value, MCRYPT_MODE_CBC, $app_cc_aes_iv);
+        
+        $encrypt_text = base64_encode($encrypt);
+        return $encrypt_text;
+    }
+    protected function AESdecode($value){
+        $hash_string = 'as5168';
+        $hash = hash('SHA384', $hash_string, true);
+        $app_cc_aes_key = substr($hash, 0, 32);
+        $app_cc_aes_iv = substr($hash, 32, 16);
+        
+        $encrypt = base64_decode($value);
+        
+        $data = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $app_cc_aes_key, $encrypt, MCRYPT_MODE_CBC, $app_cc_aes_iv);
+        $padding = ord($data[strlen($data) - 1]);
+        $decrypt_text = substr($data, 0, -$padding);
+        return $decrypt_text;
+    }
+}

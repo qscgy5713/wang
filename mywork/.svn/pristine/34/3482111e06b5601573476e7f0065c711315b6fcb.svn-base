@@ -1,0 +1,43 @@
+<!-- <div class="col-1 mq-div-md pr-0 pl-0 hidden-lg-up">
+<i class="fa fa-volume-up pr-2 language-icon pv-3 pl-10" style="padding-bottom: 1px;"></i>
+</div>
+    
+<div class="col-11 pr-0 pl-0 mb-10">
+	<marquee class="mq-style mq-style-md hidden-lg-up" style="position: absolute;" direction="up" onmousemove="this.stop()" onmouseout="this.start()" scrolldelay="800">
+		<VOLIST name="marqueeArray" id="marquee">
+			<div class="mq-style-div" >
+				<a class="text-white font-size-16" href="#">
+				 	{$marquee.marquee_text} 
+				</a> 			
+			</div>
+		</VOLIST>
+	</marquee>
+</div>  -->
+
+<!-- <div class="col-12 pr-0 pl-0 mb-10 p-0 m-tb-0 m-0 pink-bg">
+    <div class=" white-bg">最新消息</div><div class="white-bg2"></div>
+    <div class="mq-style mq-pos" style="position: absolute;">
+	    <div class="mq-style-div"  id="marquee3">
+		      <VOLIST name="marqueeArray" id="vo2">
+					<a onclick="showModalMsg('myModal','{$vo.marquee_text}')" class="text-white font-size-15 ds-bl" href="#">
+							{$vo2.marquee_text} 
+					</a>
+			  </VOLIST>
+		</div>
+    </div>
+</div>  -->
+<div class="row hidden-lg-up">
+	<div class="col-12 d-flex" style="background-color: #9F2125;">
+		<i class="fa fa-bullhorn marquee-icon ml-8"></i>
+		<div class="mq-height">
+		<!-- onmousemove="this.stop()" onmouseout="this.start()" -->
+			<marquee behavior="scroll"  scrollamount="1" direction="up" style="display: contents;">
+				<span id="mq_contents">
+					<VOLIST name="marqueeArray" id="marquee">
+						 <div class="mq-item">{$marquee.marquee_text}</div> 
+					</VOLIST>
+				</span>
+			</marquee>
+		</div>
+	</div>
+</div>

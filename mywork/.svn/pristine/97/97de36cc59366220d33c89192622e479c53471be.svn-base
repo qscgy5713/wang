@@ -1,0 +1,47 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/> 
+<include file="Common:MemberCenterMenu"/>
+
+	<div class="row">
+		<div class="col-lg-12">
+           <div class="form-group">
+           		<form method="post" action='__APP__/MemberCenter/formService'>
+                 <label for="exampleSelect1">問題類型:</label>
+                 <select class="form-control select-style" id="exampleSelect1" name="mailTitle">
+                     <option value="會員資料">會員資料</option>
+                     <option value="遊戲帳號">遊戲帳號</option>
+                     <option value="儲值託售">儲值託售</option>
+                     <option value="紅利商城">紅利商城</option>
+                     <option value="優惠活動">優惠活動</option>
+                     <option value="其他問題">其他問題</option>
+                 </select>
+            </div>
+         </div>
+	  </div>
+	  
+      <div class="row">
+      	<div class="col-lg-12 mb40">
+              <div class="form-group">
+                <label for="exampleTextarea">問題內容:</label>
+                <textarea class="form-control" id="exampleTextarea" name="mailMain" rows="3"></textarea>
+              </div>
+           <p>* 問題內容最少須10個字。</p>
+           
+         </div>
+      </div>
+         
+      <div class="row">
+      	<div class="pl15">
+               <button type="submit" class="btn btn-primary mb5">送出</button>
+               <button type="button" class="btn btn-secondary mb5">Secondary</button>
+        </div>
+      </div>
+      </form>
+</div>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	//alert("{$actionName}");
+	$("#"+"{$actionName}").addClass("active");
+})
+</script> 

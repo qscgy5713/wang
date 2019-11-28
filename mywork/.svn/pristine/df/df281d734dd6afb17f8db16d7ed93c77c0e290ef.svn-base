@@ -1,0 +1,370 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+
+	<div id="content" class="content">
+
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+
+				<div class="panel panel-inverse">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">會員基本資料</h4>
+					</div>
+					<!-- end panel-heading -->
+						<div class="panel-body">
+								<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table id="memberTable" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>會員帳號</th>
+											<th>創建日期</th>
+											<th>電子錢包</th>
+											<th>最後登入</th>
+											<th>最後IP</th>
+											<th>最後儲值</th>
+											<th>銀行帳號</th>
+											<th>累積儲值</th>
+											<th>累積託售</th>
+											<th>總計</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="memberArray" id="vo">
+				                        	<tr>
+											    <td>{$vo.account}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.money}</td>
+												<td>{$vo.lastLoginTime}</td>
+												<td>{$vo.lastLoginIp}</td>
+												<td>{$vo.lastRechargeTime}</td>
+												<td>{$vo.bankCode}-{$vo.bankAccount}-{$vo.bankName}-{$vo.bankBranch}</td>
+												<td class="text-red">{$vo.totalRecharge}</td>
+												<td class="text-green">{$vo.totalWithdraw}</td>
+												<if condition="$vo.total gt 0">
+													<td class="text-red">{$vo.total}</td>
+												<else/>
+													<td class="text-green">{$vo.total}</td>
+												</if>
+												
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+				<ul class="nav nav-tabs nav-tabs-inverse">
+					<li class="nav-item">
+						<a href="#default-tab-1" data-toggle="tab" class="nav-link active show">
+							<span class="d-sm-none f-s-13">儲值紀錄</span>
+							<span class="d-sm-block d-none">儲值紀錄</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a href="#default-tab-2" data-toggle="tab" class="nav-link">
+							<span class="d-sm-none f-s-13">託售紀錄</span>
+							<span class="d-sm-block d-none">託售紀錄</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a href="#default-tab-3" data-toggle="tab" class="nav-link">
+							<span class="d-sm-none f-s-13">登入紀錄</span>
+							<span class="d-sm-block d-none">登入紀錄</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a href="#default-tab-4" data-toggle="tab" class="nav-link">
+							<span class="d-sm-none f-s-13">信件紀錄</span>
+							<span class="d-sm-block d-none">信件紀錄</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a href="#default-tab-5" data-toggle="tab" class="nav-link">
+							<span class="d-sm-none f-s-13">活動紀錄</span>
+							<span class="d-sm-block d-none">活動紀錄</span>
+						</a>
+					</li>
+				</ul>
+
+				<div class="tab-content">
+					<div class="tab-pane fade active show" id="default-tab-1">
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>單號</th>
+											<th>代理</th>
+											<th>會員帳號</th>
+											<th>儲值時間</th>
+											<th>金流</th>
+											<th>儲值方式</th>
+											<th>繳款代碼</th>
+											<th>儲值金額</th>
+											<th>儲值IP</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="rechargeArray" id="vo" empty="$rechargeEmpty">
+				                        	<tr>
+											    <td>{$vo.id}</td>
+											    <td>{$vo.agentAccount}</td>
+												<td>{$vo.account}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.cashflowName}</td>
+												<td>{$vo.cashflowShowName}</td>
+												<td>{$vo.paymentCode}</td>
+												<td>{$vo.money}</td>
+												<td>{$vo.ip}</td>
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+						</div>
+					</div>
+					<div class="tab-pane fade" id="default-tab-2">
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>單號</th>
+											<th>代理</th>
+											<th>會員帳號</th>
+											<th>託售時間</th>
+											<th>託售金額</th>
+											<th>託售IP</th>
+											<th>處理帳號</th>
+											<th>處理IP</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="withdrawArray" id="vo" empty="$withdrawEmpty">
+				                        	<tr>
+											    <td>{$vo.id}</td>
+											    <td>{$vo.agentAccount}</td>
+												<td>{$vo.account}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.money}</td>
+												<td>{$vo.ip}</td>
+
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="default-tab-3">
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+											<th>會員帳號</th>
+											<th>登入時間</th>
+											<th>登入IP</th>
+											<th>登入裝置</th>
+											<th>登入網址</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="loginArray" id="vo" empty="$loginEmpty">
+				                        	<tr>
+											    <td>{$i}</td>
+												<td>{$vo.account}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.ip}</td>
+												<td>{$vo.os}</td>
+												<td>{$vo.url}</td>
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="default-tab-4">
+						<div class="table-responsive">
+							<table id="" class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>test</th>
+										<th>test</th>
+										<th>test</th>
+										<th>test</th>
+										<th>test</th>
+										<th>test</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+										    <td>test</td>
+											<td>test</td>
+											<td>test</td>
+											<td>test</td>
+											<td>test</td>
+											<td>test</td>
+										</tr>
+		                        	</VOLIST>
+
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="default-tab-5">
+						<div class="table-responsive">
+							<table id="" class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+										<th>活動名稱</th>
+										<th>單號</th>
+										<th>會員帳號</th>
+										<th>狀態</th>
+										<th>申請時間</th>
+										<th>申請IP</th>
+										<th>活動金額</th>
+										<th>修改時間</th>
+										<th>操作帳號</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="eventArray" id="vo" empty="$eventEmpty">
+			                        	<tr>
+										    <td>{$i}</td>
+											<td>{$vo.eventName}</td>
+											<td>{$vo.id}</td>
+											<td>{$vo.memberAccount}</td>
+											<td>{$vo.status}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.ip}</td>
+											<td>{$vo.money}</td>
+											<td>{$vo.modifyTime}</td>
+											<td>{$vo.adminAccount}</td>
+										</tr>
+		                        	</VOLIST>
+
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-lg-12 ui-sortable">
+
+				<div class="panel panel-inverse">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle" data-click="panel-collapse">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+						</div>
+						<h4 class="panel-title">託售單資料</h4>
+					</div>
+					<!-- end panel-heading -->
+						<div class="panel-body">
+								<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table id="table1" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>託售單號</th>
+											<th>申請託售帳號</th>
+											<th>申請託售時間</th>
+											<th>申請託售IP</th>
+											<th>申請脫售點數</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="showArray" id="vo">
+				                        	<tr>
+											    <td>{$vo.id}</td>
+												<td>{$vo.memberAccount}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.ip}</td>
+												<td>{$vo.money}</td>
+											</tr>
+											<IF condition='$vo.risk eq "true"'>
+												<tr>
+													<td colspan='5' style='text-align:center;'>
+
+													</td>
+												</tr>
+											</IF>
+
+											<tr>
+												<td colspan='5' style='text-align:center;'>
+													<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetWithdrawProcess'>
+														<input type="hidden" value="{$vo.id}" name="setId">
+														<button type="submit" name="processButton" value="4" class="btn btn-info m-r-5 m-b-5">取消綁定</button>
+														<a href="#" onclick="openmodal('modal-dialog','{$vo.id}')" class="btn btn-info m-r-5 m-b-5" data-toggle="modal">取消訂單</a>
+														<button type="submit" name="processButton" value="2" class="btn btn-info m-r-5 m-b-5">完成訂單</button>
+													</form>
+												</td>
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+
+        <div class="modal fade" id="modal-dialog" style="display: none;">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title">取消訂單</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					</div>
+
+					<form method="post" action='__APP__/{$Think.MODULE_NAME}/formSetWithdrawProcess'>
+						<input type="hidden" value="" name="setId" id="setId">
+
+						<div class="modal-body">
+						   <div class="form-group row m-b-15">
+								<label class="col-md-4 col-sm-4 col-form-label">取消備註 :</label>
+								<div class="col-md-8 col-sm-8">
+									<textarea class="form-control" rows="3" name="setRemark"></textarea>
+								</div>
+						   </div>
+						</div>
+						<div class="modal-footer">
+							<a href="javascript:;" class="btn btn-info f-s-15" data-dismiss="modal">取消</a>
+							<button type="submit" name="processButton" value="3" class="btn btn-info f-s-15">確認</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+	</div>
+
+<include file="Common:footer"/>
+
+<script type="text/javascript">
+function openmodal(id, vo_id){
+	$('#setId').val(vo_id);
+	$('#'+id).modal('show');
+}
+</script>
+

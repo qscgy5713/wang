@@ -1,0 +1,13 @@
+<?php
+/**
+ * 接收Action
+ */
+class ReceiveAction extends CommonAction {
+    /**
+     * 初始化
+     */
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+    }
+}

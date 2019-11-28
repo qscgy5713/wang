@@ -1,0 +1,105 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div id="content" class="content">
+		<div class="row">
+			<div class="col-md-12">
+			<form id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+				<input type="hidden" id="selectClass" name="selectClass" value="Member">
+			</form>
+				<ul class="nav nav-tabs nav-tabs-inverse">
+					<if condition="$selectClass eq 'Member'">
+						<li id="select" class="nav-item active show"><a id="member" href="#default-tab-Member" onClick="submitForm('Member');" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">會員</span></a></li>
+					<else/>
+						<li class="nav-item"><a id="Member" href="#default-tab-Member" onClick="submitForm('Member');" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">會員</span></a></li>
+					</if>
+					
+					<if condition="$selectClass eq 'Agent'">
+						<li id="select" class="nav-item active show"><a id="Agent" href="#default-tab-Agent" onClick="submitForm('Agent');" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">代理</span></a></li>
+					<else/>
+						<li class="nav-item"><a id="Agent" href="#default-tab-Agent" onClick="submitForm('Agent');" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">代理</span></a></li>
+					</if>
+					
+					<if condition="$selectClass eq 'Admin'">
+						<li id="select" class="nav-item active show"><a id="Admin" href="#default-tab-Admin" onClick="submitForm('Admin');" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">公司</span></a></li>
+					<else/>
+						<li class="nav-item"><a id="Admin" href="#default-tab-Admin" onClick="submitForm('Admin');" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">公司</span></a></li>
+					</if>
+				</ul>
+				
+				<div class="tab-content">
+						<div class="tab-pane fade active show" id="default-tab-{$selectClass}">
+							<div class="table-responsive">
+								<table id="" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>序</th>
+											<th>登入帳號</th>
+											<th>登入時間</th>
+											<th>IP</th>
+											<th>瀏覽器/版本/裝置</th>
+											<th>連線時間</th>
+											<th>登入網址</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="showArray" id="vo">
+				                        	<tr>
+											    <td>{$key+1}</td>
+												<td>{$vo.Account}</td>
+												<td>{$vo.createTime}</td>
+												<td>{$vo.ip}</td>
+												<td>{$vo.os}</td>
+												<td>{$vo.onlineTime}</td>
+												<td>{$vo.url}</td>
+												<td>
+													<form method="post" action="__APP__/OnlineRecord/formGetOutId">
+														<input type="hidden" value="{$selectClass}" name="selectClass">
+														<input type="hidden" value="{$vo.agentId}" name="agentId">
+														<input type="hidden" value="{$vo.memberId}" name="memberId">
+														<input type="hidden" value="{$vo.onlineId}" name="onlineId">
+														<input type="hidden" value="{$vo.subId}" name="subId">
+														<input type="submit" value="踢除">
+													</form>
+												</td>
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+        
+        
+	</div>
+	
+	
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	$("#"+"其他部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+	
+	if($("#showtable tbody tr").length <= 1){
+    	//alert($("#test tbody tr").length);
+    	$("#showMessage").show()
+    }
+});
+function submitForm(tableName){
+	$("#select").removeClass("active show");
+	$("#selectClass").val(tableName);
+	$("#formInquire").submit();
+}
+</script>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Client首頁</title>
+</head>
+<body>
+	<h3>{$function_links}</h3>
+	<h1>{$api_name}</h1>
+	<h2>方法::【{$method_name}】</h2>
+	<h4>{$method_desc}</h4>
+	<hr/>
+	<p><strong>操作敘述</strong>: {$op_desc}</p>
+	<form action="__URL__/{$form_action}" method="post">
+		遊戲帳號: <input type="text" name="user_name" value="{$user_name}" /><br/>
+		遊戲密碼: <input type="text" name="password" value="{$password}" /><br/>
+		遊戲代碼: <select name="game_code">
+			<option value="101">捕鱼天下 (101)</option>
+			<option value="102">水果机 (102)</option>
+			<option value="103">单挑王 (103)</option>
+			<option value="104">金鲨银鲨 (104)</option>
+		</select><br/>
+		<button type="submit" name="go" value="1">GO!!!</button>
+	</form>
+	<hr/>
+	<h2>執行結果:</h2>
+
+	<IF condition="$op_result heq false">
+		<div style="margin:5px;padding:10px;border:1px solid #0c0;">
+			<PHP>var_dump($op_result);</PHP>
+			<IF condition="strlen($op_result2)"><PHP>
+				var_dump($op_result2);
+			</PHP></IF>
+		</div>
+	<ELSE/>
+		<IF condition="strlen($op_result)">
+			<strong>登入成功:</strong>
+			<a href="{$op_result}" target="_blank">{$op_result}</a>
+		<ELSE/>
+			<h3 style="color:#0a0;">請先執行以取得結果。</h3>
+		</IF>
+	</IF>
+</body>
+</html>

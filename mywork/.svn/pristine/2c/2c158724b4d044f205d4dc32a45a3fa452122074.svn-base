@@ -1,0 +1,26 @@
+<?php
+/*
+ * 會員返水小數點
+ */
+class CommonMemberBackwaterDecimalpointModel extends AdminModel {
+    protected $tableName = "common_member_backWater_decimalPoint";
+    protected $tableId = "member_id";
+    
+    public function setMemberDecimalPoint($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        
+        $sql = "INSERT INTO `common_member_backWater_decimalPoint`(
+                    `member_id`,`decimalPoint_money`
+                ) VALUES ('{$data['member_id']}','{$data['decimalPoint_money']}')
+                ON DUPLICATE KEY UPDATE
+                decimalPoint_money = '{$data['decimalPoint_money']}'
+                ";
+        $return = $this->query($sql);
+        
+        return $return;
+        
+        
+    }
+}

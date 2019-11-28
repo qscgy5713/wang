@@ -1,0 +1,457 @@
+<?php
+class GameAeModel extends ApiModel
+{
+	const AE_BASE_URL = 'https://api.avia-gaming.com';
+	const AE_API_KEY = 'dd8747385d8048058e4486079fa2221e';
+
+
+	const AE_DEFAULT_REQUEST_METHOD = 'POST';
+	const AE_CURL_CONNECTTIMEOUT_MS = 5000;
+	const AE_CURL_TIMEOUT_MS = 15000;
+  	const AE_TRANSFER_SUCCESS_CODE = '1';
+	const AE_ERROR_CODE = array(
+		'NOUSER' => '用戶不存在',
+		'BADNAME' => '用戶名不符合規則',
+		'BADPASSWORD' => '密码不符合规则',
+		'EXISTSUSER' => '用户名已经存在',
+		'BADMONEY' => '金额错误',
+		'BANORDER' => '订单号错误（不符合规则）',
+		'EXISTSORDER' => '订单号已经存在',
+		'TRANSFER_NO_ACTION' => '未指定转账动作',
+	);
+	protected $AE_CURL_DATA = array(
+      CURLOPT_CUSTOMREQUEST => self::AE_DEFAULT_REQUEST_METHOD,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_CONNECTTIMEOUT_MS => self::AE_CURL_CONNECTTIMEOUT_MS,
+      CURLOPT_TIMEOUT_MS => self::AE_CURL_TIMEOUT_MS,
+  	);
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+	/**
+	 * 註冊新會員
+	 * @param $data['account'] 會員帳號
+	 * @param $data['password'] 會員密碼
+   	 * @param &$err 盛裝錯誤(非必須)
+	 * @return 盤口(array)
+	 */
+	public function createMember($data, &$err = null){
+	    $arrKeys = array(
+	      'account' => array('required'=>1,),
+	      'password' => array('required'=>1,),
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01' . '必需的KEY不存在'));  //必需的KEY不存在
+				  return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $data[$dk];
+					}
+				}
+			}
+	    }
+	    $apiUrl = self::AE_BASE_URL . '/api/user/register';
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $apiArrData = array(
+	        'UserName' => $account,
+	        'password' => $password,
+		);
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    		return true;
+	    	}
+	    }
+	}
+	/**
+	 * 會員登入
+     * @param $data['account'] 會員帳號
+	 */
+	public function loginMember($data, &$err = null){
+	    $arrKeys = array(
+	      'account' => array('required'=>1,),
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01 必需的KEY不存在'));  //必需的KEY不存在
+					return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $dv['default'];
+					}
+				}
+			}
+		}
+
+	    $apiUrl = self::AE_BASE_URL . '/api/user/login';
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $apiArrData = array(
+	        'UserName' => $account,
+		);
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    		$url = $result['info']['Url'];
+	    		return $url;
+	    	}
+	    }
+    }
+
+	/**
+	 * 
+	 * 遊客
+     * @param $data['account'] 會員帳號
+	 */
+	public function loginGuest($data, &$err = null){
+	    $arrKeys = array(
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01 必需的KEY不存在'));  //必需的KEY不存在
+					return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $dv['default'];
+					}
+				}
+			}
+		}
+
+	    $apiUrl = self::AE_BASE_URL . '/api/user/guest';
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $apiArrData = array();
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    		$url = $result['info']['Url'];
+	    		return $url;
+	    	}
+	    }
+    }
+
+	/**
+	 * 取得會員餘額
+   * @param $data['account'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($data, &$err = null){
+	    $arrKeys = array(
+	      'account' => array('required'=>1,),
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_'.__CLASS__.'_'.__FUNCTION__.'_01 必需的KEY不存在'));  //必需的KEY不存在
+					return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $dv['default'];
+					}
+				}
+			}
+
+		}
+
+	   $apiUrl = self::AE_BASE_URL . '/api/user/balance';
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $apiArrData = array(
+	        'UserName' => $account,
+		);
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    		return $result['info']['Money'];
+	    	}
+	    }
+	}
+	/**
+	 * 上點
+	 * @param $data['account'] 會員帳號
+	 * @param $data['password'] 會員密碼
+   	 * @param &$err 盛裝錯誤(非必須)
+	 * @return 盤口(array)
+	 */
+	public function rechargeMemberBalance($data, &$err = null){
+	    $arrKeys = array(
+	      'account' => array('required'=>1,),
+	      'amount' => array('required'=>1,),
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01' . '必需的KEY不存在'));  //必需的KEY不存在
+				  return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $data[$dk];
+					}
+				}
+			}
+	    }
+	    $apiUrl = self::AE_BASE_URL . '/api/user/transfer';
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    for($i = 0; $i < 5; $i++){
+	    	$str .= chr(rand(97, 122));
+	    }
+	    $id = rand() . $str;
+	    $apiArrData = array(
+	        'UserName' => $account,
+	        'Money' => $amount,
+	        'Type' => 'IN',
+	        'ID' => $id,
+		);
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    		$re = array(
+	    			'mes' => $result['msg'],
+	    			'info' => $result['info']['ID'],
+	    		);
+	    		return true;
+	    	}
+	    }
+	}
+
+	/**
+	 * 下點
+	 * @param $data['account'] 會員帳號
+	 * @param $data['password'] 會員密碼
+   	 * @param &$err 盛裝錯誤(非必須)
+	 * @return 盤口(array)
+	 */
+	public function withdrawMemberBalance($data, &$err = null){
+	    $arrKeys = array(
+	      'account' => array('required'=>1,),
+	      'amount' => array('required'=>1,),
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01' . '必需的KEY不存在'));  //必需的KEY不存在
+				  return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $data[$dk];
+					}
+				}
+			}
+	    }
+	    $apiUrl = self::AE_BASE_URL . '/api/user/transfer';
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    for($i = 0; $i < 5; $i++){
+	    	$str .= chr(rand(97, 122));
+	    }
+	    $id = rand() . $str;
+	    $apiArrData = array(
+	        'UserName' => $account,
+	        'Money' => $amount,
+	        'Type' => 'OUT',
+	        'ID' => $id,
+		);
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    		$re = array(
+	    			'mes' => $result['msg'],
+	    			'info' => $result['info']['ID'],
+	    		);
+	    		return true;
+	    	}
+	    }
+	}
+	/**
+	 * 抓取注單報表
+     * @param $data['begin_datetime'] 起始日期時間
+     * @param $data['end_datetime'] 結束日期時間
+     * @param &$err 盛裝錯誤(非必須)
+     * @return 報表明細(array)
+	 */
+	public function getGameRecord($data, &$err = null) {
+		$arrKeys = array(
+	      'startTime' => array('required'=>1,),
+	      'endTime' => array('required'=>1,),
+	    );
+
+	    foreach ($arrKeys as $dk => $dv) {
+			//$dk = strtolower($dk);
+			$isKeyRequired = ($dv['required']==1);
+			if ( array_key_exists($dk, $data) ) {
+				$temp = "{$dk}";
+				$$temp = $data[$dk];
+			} else {
+				if ($isKeyRequired) {
+					$err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01' . '必需的KEY不存在'));  //必需的KEY不存在
+				  return false;
+				} else {
+					if ( array_key_exists('default', $dv) ) {
+					$temp = "{$dk}";
+					$$temp = $data[$dk];
+					}
+				}
+			}
+	    }
+	    $apiUrl = self::AE_BASE_URL . '/api/log/get';
+	    //$apiUrl = self::AE_BASE_URL . '/api/log/userreport'; //北京時間
+	    //$apiUrl = self::AE_BASE_URL . '/api/log/userreport0'; //美東時間
+	    $apiMethod = self::AE_DEFAULT_REQUEST_METHOD;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+
+	    $apiArrData = array(
+	        'Type' => 'UpdateAt',
+	        'StartAt' => $startTime,
+	        'EndAt' => $endTime,
+		);
+	    $apiArrHeader = array(
+	      "Authorization:" . self::AE_API_KEY,	      
+	    );
+	    $this->AE_CURL_DATA[CURLOPT_HTTPHEADER] = $apiArrHeader;
+	    $apiCurlDatas = $this->AE_CURL_DATA;
+	    $result = $this->sendRequest($apiUrl, $apiMethod, $apiCurlDatas, $apiArrData, $err);
+	    if($result === false){
+	    	return false;
+	    } else {
+	    	$result = json_decode($result, true);
+	    	if($result['success'] != self::AE_TRANSFER_SUCCESS_CODE && isset($result['info'])){
+	    		$strError = self::AE_ERROR_CODE[$result['info']['Error']];
+	    		$err = $result['msg'] . ' (' . $strError . ')';
+	    		return false;
+	    	} else {
+	    	    return $result['info']['list'];
+	    	}
+	    }
+	}
+
+}

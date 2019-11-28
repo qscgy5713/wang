@@ -1,0 +1,92 @@
+<?php
+
+class GameSbReportModel extends AgentModel {
+    protected $tableName = "game_sb_report";
+    protected $tableId = "report_sb_id";
+    
+    public function getReportData($data,&$err=""){
+        if(empty($data['agent_tree']) && empty($data['agent_tree'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        
+        $sql = "SELECT *,
+                    sum(`report_bettingMoney`) as allBettingMoney,
+                    sum(`report_surplus`) as allSurplus,
+                    sum(`report_effective`) as allEffective,
+                    sum(`report_betNumber`) as allBetNumber
+                FROM `{$this->tableName}`
+                WHERE (`report_orderDate` BETWEEN '{$data['report_createTime']['startTime']}' AND '{$data['report_createTime']['endTime']}')
+                AND `agent_tree` REGEXP '^{$data['agent_tree']}'
+                GROUP BY `member_id`,`agent_tree`,`ratio_tree`;";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        return $return;
+        
+    }
+    
+    public function addReportData($data,&$err=""){
+        if(empty($data['member_id']) && empty($data['member_account'])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $whereSql = "";
+        if(!empty($data['member_account'])){
+            $whereSql = "`member_account` = '{$data['member_account']}'";
+        }
+        if(!empty($data['member_id'])){
+            $whereSql = "`member_id` = '{$data['member_id']}'";
+        }
+        $sql = "SELECT * FROM `common_member` a 
+                JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`) 
+                JOIN `common_agent_ratio` c ON (a.`agent_id` = c.`agent_id`) 
+                WHERE {$whereSql}";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        //var_dump($return);exit();
+        if(empty($return[0])){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $data['member_id'] = $return[0]['member_id'];
+        $data['agent_id'] = $return[0]['agent_id'];
+        $data['agent_account'] = $return[0]['agent_account'];
+        $data['agent_tree'] = $return[0]['agent_tree'];
+        $data['ratio_tree'] = $return[0]['ratio_tree'];
+        
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        //新增成功 回傳ID
+        /*
+        $insertId = $this->getLastInsertId();
+        if($insertId === false) {
+            return false;
+        }*/
+    }
+}

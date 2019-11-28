@@ -1,0 +1,68 @@
+<?php
+//註冊驗證碼查詢
+class RegistVerificationCodeAction extends AdminAction {
+    
+    public function index(){
+        
+        $request = $this->getRequest();
+        
+        if(!isset($request['registPhone']) || empty($request['registPhone'])){
+            $this->assign("selectBool",false);
+            $this->display();
+            return;
+        }
+        
+        $KotsmsLog = D("KotsmsLog");
+        $data = array(
+            'registPhone' => $request['registPhone']
+        );
+        $return = $KotsmsLog->getRegisteredVerificationCodeData($data,$err);
+        if($return === false){
+            $this->error($err);
+        }
+        //使用欄位轉換 資料庫欄位
+        $FieldChange = array(
+            'log_createTime' => 'createTime',
+            'log_ip' => 'ip',
+            'log_phone' => 'phone',
+            'log_mainJson' => 'verificationCode',
+        );
+        $showStr = "";
+        $showArray = array();
+        foreach ($return as $key => $value) {
+            foreach ($FieldChange as $key1 => $value1) {
+                //欄位特別處理
+                switch ($key1){
+                    case 'log_createTime':
+                        $showStr = date('m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'log_ip':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    case 'log_mainJson':
+                        $mainArray = json_decode($value[$key1], true);
+                        $showStr = $mainArray['verificationCode'];
+                        break;
+                    default: //未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $showArray[$key][$value1] = $showStr;
+            }
+        }
+        
+        $addData = array(
+            'operateLog_class'=>5, //查詢簡訊驗證碼
+            'operateLog_objectId'=>'',
+            'operateLog_objectAccount'=>'',
+            'operateLog_main'=>$data,
+        );
+        $this->addAdminOperateLog($addData);
+        
+        $this->assign("selectBool",true);
+        $this->assign("registPhone",$request['registPhone']);
+        $this->assign("showArray",$showArray);
+        $this->assign("showEmpty", "<tr><td colspan='4' align='center'>無此電話註冊資料</td></tr>");
+        $this->display();
+    }
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<IF condition="$nextStartTime neq ''">
+			<meta http-equiv="refresh" content="12; url=__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}&MIS={$MIS}&gameCode={$gameCode}&startTime={$nextStartTime}&endTime={$nextEndTime}&allStartTime={$allStartTime}&allEndTime={$allEndTime}" />
+		</IF>
+		
+		<title>{$gameCode}GetReportProcess</title>
+	</head>
+	<body>
+		<h1>{$gameCode}GetReportProcess</h1>
+		<h2>update Time : <span style='color:blue;'>{$timeStr}</span></h2>
+		<BR>
+		<h2>狀態:{$status}</h2>
+		
+		<BR><BR><BR>
+		
+		<h3>統整數量:{$reportNumber} 筆</h3>
+		<h3>統整列表:</h3>
+		<table>
+			<tr>
+				<th>序</th>
+				<th>會員帳號</th>
+				<th>代理帳號</th>
+				<th>歸帳時間</th>
+				<th>投注金額</th>
+				<th>輸贏金額</th>
+				<th>洗碼金額</th>
+				<th>投注筆數</th>
+			</tr>
+			<VOLIST name="allReportArray" id="vo" empty="$allReportEmpty">
+				<tr>
+					<td>{$i}</td>
+					<td>{$vo.member_account}</td>
+					<td>{$vo.agent_account}</td>
+					<td>{$vo.report_orderDate}</td>
+					<td>{$vo.report_bettingMoney}</td>
+					<td>{$vo.report_surplus}</td>
+					<td>{$vo.report_effective}</td>
+					<td>{$vo.report_betNumber}</td>
+				</tr>
+			</VOLIST>
+		</table>
+		
+		
+		<h2>明細數量:{$detailNumber} 筆</h2>
+		<h2>明細列表:</h2>
+		<table>
+			<tr>
+				<th>序</th>
+				<th>訂單編號</th>
+				<th>會員帳號</th>
+				<th>代理帳號</th>
+				<th>歸帳時間</th>
+				<th>投注時間</th>
+				<th>投注金額</th>
+				<th>輸贏金額</th>
+				<th>洗碼金額</th>
+			</tr>
+			<VOLIST name="allDetailArray" id="vo" empty="$allDetailEmpty">
+				<tr>
+					<td>{$i}</td>
+					<td>{$vo.detail_id}</td>
+					<td>{$vo.member_account}</td>
+					<td>{$vo.agent_account}</td>
+					<td>{$vo.detail_orderDate}</td>
+					<td>{$vo.detail_createTime}</td>
+					<td>{$vo.detail_bettingMoney}</td>
+					<td>{$vo.detail_surplus}</td>
+					<td>{$vo.detail_effective}</td>
+				</tr>
+			</VOLIST>
+		</table>
+	</body>
+</html>

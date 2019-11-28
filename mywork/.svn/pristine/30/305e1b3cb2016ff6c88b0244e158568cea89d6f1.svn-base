@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta charset="utf-8">
+		<meta name="google" value="notranslate">
+	    <title>小牛遊戲-華人世界最佳遊戲品牌-x591.net</title>
+	    <!-- Favicon -->
+	    <script src="__CSS__/Smarty/HTML_BS4/assets/plugins/jquery/jquery-3.3.1.min.js"></script>
+	    <link rel="shortcut icon" type="image/x-icon" href="__CSS__/images/cow.ico">
+	    <meta name="keywords" content="小牛遊戲,小牛遊戲客服中心,小牛遊戲出款中心,小牛遊戲平台,小牛遊戲官網網址," />
+    	<meta name="description" content="小牛遊戲建置了海量的遊戲平台,不管是真人娛樂、電子遊戲、體育即時賽事，跟豐富的彩票遊戲,只要你想玩上小牛絕對超乎你的想像,滿足你的刺激體驗。" />
+		<!-- mobile settings -->
+		<meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=0" />
+		<!-- WEB FONTS : use %7C instead of | (pipe) -->
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600%7CRaleway:300,400,500,600,700%7CLato:300,400,400italic,600,700" rel="stylesheet" type="text/css" />
+		<!-- CORE CSS -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+		<!-- THEME CSS -->
+		<link href="__CSS__/Smarty/HTML_BS4/assets/css/essentials.css" rel="stylesheet" type="text/css" />
+		<link href="__CSS__/Smarty/HTML_BS4/assets/css/layout.css" rel="stylesheet" type="text/css" />
+	    <!-- 自己修改的css -->
+	    <link href="__CSS__/css/anna_css.css" rel="stylesheet">
+	</head>
+	<body>
+	<div id="loader-bg-page" class="loader-bg demo-3">
+		<div id="loader" class="container">
+			<section class="main pb-10 text-center pt-200" style="background:hsl(0, 0%, 0%);">
+				<img src="__CSS__/images/{$langStr}/loading.gif">
+			</section>
+		</div>
+	</div>
+		
+    </body>
+</html>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+	//alert(window.location.host);
+	//alert(window.location.search);
+	if(!(window.location.search.indexOf("xn") > -1)){
+		document.location.href = "/index.php";
+	}
+});
+</script>

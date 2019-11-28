@@ -1,0 +1,226 @@
+<?php
+/*
+ * 會員帳號
+ */
+class CommonMemberModel extends AdminModel {
+    protected $tableName = "common_member";
+    protected $tableId = "member_id";
+    /*
+     * 取得 會員 代理資料
+     */
+    public function getMemberAgentDataByMermberID($data){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`)
+                JOIN `common_agent_ratio` c ON (a.`agent_id` = c.`agent_id`)
+                WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 註冊充託
+     */
+    public function getMemberDataByAgentIdUseFirstDepositwithdraw($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_agent_tree` b ON (a.`agent_id` = b.`agent_id`)
+                WHERE (b.`agent_id` = '".$data['agent_id']."' OR b.`agent_boss` = '".$data['agent_id']."')
+                AND (`member_createTime` BETWEEN '{$data['member_createTime']['startTime']}'
+                AND '{$data['member_createTime']['endTime']}')
+                ORDER BY `member_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得會員各館帳號
+     */
+    public function getMemberAllGameAccount($data,&$err=""){
+        if(count($data['searchArray']) == 0){
+            return false;
+        }
+        
+        $sqlSelect = "";
+        $sqlLeft = "";
+        foreach($data['searchArray'] as $key => $value){
+            $gameCode = strtolower($value);
+            if(empty($sqlSelect)){
+                $sqlSelect = $gameCode.".`game_account` AS　".$gameCode."account";
+            } else {
+                $sqlSelect .= ",".$gameCode.".`game_account` AS　".$gameCode."account";
+            }
+            $sqlLeft .= "LEFT OUTER JOIN `game_".$gameCode."_member_info` ".$gameCode." ON (a.`member_id` = ".$gameCode.".`member_id`)";
+        }
+        $sql = "SELECT {$sqlSelect} FROM `common_member` a
+                {$sqlLeft}
+                WHERE a.`member_id` = '{$data['member_id']}'";
+        var_dump($sql);exit();              
+        
+    }
+    /*
+     * 取得會員錢包 使用會員帳號
+     */
+    public function getMemberWalletByAccount($data){
+        $sql = "SELECT * FROM `{$this->tableName}` a
+                JOIN `common_member_wallet` b ON (a.`member_id` = b.`member_id`)
+                WHERE `member_account` = '{$data["member_account"]}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得會員資料 使用於處理 託售單
+     */
+    public function getMemberDataUseProcessWithdraw($data,&$err=""){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT * FROM `common_member` a 
+                JOIN `common_member_wallet` b ON (a.`member_id` = b.`member_id`) 
+                JOIN `common_member_bankdata` c ON (a.`member_id` = c.`member_id`)
+                WHERE a.`member_id` = '".$data['member_id']."'
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 會員 資料
+     */
+    public function getMemberDataByAccount($data){
+        //$return = $this->where($where)->limit(1)->select();
+        if(isset($data['member_phone'])){
+            $sqlStr = " or `member_phone` = '".$data['member_phone']."' ";
+        }
+        $sql = "SELECT * FROM `common_member` 
+                WHERE `member_account` = '".$data['member_account']."'{$sqlStr}
+                LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 所有會員 資料
+     * 會員管理使用
+     */
+    public function getAllMemberData($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT * FROM `common_member`
+                WHERE `agent_id` = '".$data['agent_id']."' 
+                ORDER BY `member_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /*
+     * 取得 加密密碼MD5
+     */
+    public function getMd5Password($password){
+        return md5($password . C("HASH_KEY"));
+    }
+    /*
+     * 修改 會員 資料
+     */
+    public function setMemberById($data){
+        if(empty($data['member_id']) && $data['member_id'] !== 0){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'member_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_member` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 搜尋 會員 帳號
+     */
+    public function searchMemberByMemberAccount($data){
+        $sql = "SELECT `member_account`
+                FROM `{$this->tableName}`
+                WHERE `member_account` LIKE '{$data['member_acount']}%'
+                ORDER BY `member_createTime` DESC LIMIT {$data['limit']}";
+        $return = $this->query($sql);
+        die;
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    /**
+     * 踢除登入會員
+     */
+    public function getOutMemberLogin($data ,&$err = ""){
+        $sql = "UPDATE `common_member` SET `member_uid` = null 
+                WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        
+        return $return;
+    }
+    /*
+     * 取得 所有會員 總筆數
+     * 會員管理使用
+     */
+    public function getAllTotalMemberData($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            return false;
+        }
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `common_member`
+                WHERE `agent_id` = '{$data['agent_id']}' 
+                ORDER BY `member_createTime` DESC;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得 所有會員 分頁
+     * 會員管理使用
+     */
+    public function getAllMemberDataPageNumber($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== 0){
+            return false;
+        }
+        $whereSql = "";
+        if(!empty($data['member_account']) && $data['member_account'] !== '0'){
+            $whereSql = "AND `member_account` LIKE '{$data['member_account']}%'";
+        }
+        $startSql = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $endSql = $data['page']['number'];
+        $limitSql = " LIMIT {$startSql},{$endSql}";
+        $sql = "SELECT * FROM `common_member`
+                WHERE `agent_id` = '{$data['agent_id']}' {$whereSql}
+                ORDER BY `member_createTime` DESC {$limitSql};";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+}

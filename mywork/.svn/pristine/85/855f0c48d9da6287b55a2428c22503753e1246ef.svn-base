@@ -1,0 +1,77 @@
+<include file="Common:header"/> 
+<include file="Common:menu"/>
+<include file="Common:MemberCenterMenu"/>
+			
+	 		<div class="row">
+                <div class="col-lg-12 mb40">
+                    <h4 class="mb30"> 轉移紀錄</h4>  
+                    <table id="table1" class="table table-bordered">
+                       <thead>
+                            <tr>
+                            	<th>轉移單號</th>
+                            	<th>時間</th>
+                            	<th>轉移金額</th>
+                            	<th>狀態</th>
+                            	<th>轉出</th>
+                            	<th>轉入</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <VOLIST name="showArray" id="vo">
+                            	<tr>
+                            		<td>{$vo.id}</td>
+									<td>{$vo.createTime}</td>
+									<td>{$vo.money}</td>
+									<td>{$vo.status}</td>
+									<td>{$vo.from}</td>
+									<td>{$vo.to}</td>
+                            	</tr>
+                             </VOLIST>
+                             <tr><td id="showMessage" colspan="6" align="center" style="display:none;">無轉移紀錄</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <if condition="$pageNumber neq ''">
+              <div class="row">
+	            	<nav aria-label="Page navigation example" class="mb20 mr-auto ml-auto">
+	                     <ul class="pagination pagination-sm" id="mc-tblFourStar-selPage">
+	                     	<if condition="$pageNumber-1 neq 0"><!-- "$pageNumber-1 != 0" -->
+	                     		<li class="page-item">
+		                             <a class="page-link" href="__APP__/MemberCenter/transferRecords&pageNumber={$pageNumber-1}" aria-label="Previous">
+		                                 <span aria-hidden="true">«</span>
+		                                 <span class="sr-only">Previous</span>
+		                             </a>
+		                         </li>
+	                     	</if>
+	                        <for start="0" end="$totalPage">
+	                          	<if condition="$totalPage elt 5"><!-- "$totalPage < 5 " -->
+	                          		<li class="page-item"><a class="page-link" href="__APP__/MemberCenter/transferRecords&pageNumber={$i+1}">{$i+1}</a></li>
+	                          	</if>
+							</for>
+	                         <if condition="$pageNumber+1 elt $totalPage "><!-- "$pageNumber+1 <= $totalPage " -->
+	                         	<li class="page-item">
+		                             <a class="page-link" href="__APP__/MemberCenter/transferRecords&pageNumber={$pageNumber+1}" aria-label="Next">
+		                                 <span aria-hidden="true">»</span>
+		                                 <span class="sr-only">Next</span>
+		                             </a>
+	                         	</li> 
+	                         </if>
+	                     </ul>
+	                 </nav>
+	            </div>
+            </if>
+	 	</div>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+	//alert("{$actionName}");
+	$("#"+"{$actionName}").addClass("active");
+	if($("#table1 tbody tr").length <= 1){
+		//alert($("#test tbody tr").length);
+		$("#showMessage").show()
+	}
+})
+</script>

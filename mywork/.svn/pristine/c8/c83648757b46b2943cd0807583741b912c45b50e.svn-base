@@ -1,0 +1,707 @@
+<?php
+set_time_limit( 10 );
+class GameSaModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'http://api.sa-gaming.net/api/api.aspx';  //'http://api.eval.sa-gaming.net/api/api.aspx';
+  //protected $cfg_client_url = 'http://yl.sa-api.net/app.aspx';  //'http://www.eval.sa-gaming.net/app.aspx';
+  protected $cfg_secret_key = '316BB6C5EE35435C82DF15F430B357F6';  //'F5C7F82C5C284796BB53D4AD3A2B1DB6';
+  protected $cfg_md5_key = 'GgaIMaiNNtg';  //'GgaIMaiNNtg';
+  protected $cfg_des_key = 'g9G16nTs';  //'g9G16nTs';
+  //protected $cfg_lobby = 'caishenyule';
+  protected $cfg_hash_key = 'Pr7S@t6G!Q_z=YnM';
+
+  const SA_LOBBY = 'caishenyule';
+  const SA_CLIENT_URL = 'http://yl.sa-api.net/app.aspx';
+
+  const SA_ERROR_MSG_ID_ON_SUCCESS = 0;
+  const SA_CONNECTION_TIMEOUT_MS = 10000;
+  const SA_REQUEST_TIMEOUT_MS = 15000;
+  const SA_IS_DEBUGGING = false;
+  const SA_BOOL_TRUE_STR = 'true';
+  const SA_WIN_LOSS_TYPE_BOTH = 0;
+  const SA_WIN_LOSS_TYPE_WIN = 1;
+  const SA_WIN_LOSS_TYPE_LOSS = 2;
+  const SA_DEFAULT_CURRENCY_TYPE = 'TWD';
+  const SA_DEFAULT_LANGUAGE_CODE = 'zh_TW';
+
+  //protected $checkKeyInst = null;
+  //protected $desInst = null;
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+    //$this->checkKeyInst = new CheckKey($argCheckKeyHashKey);
+    //$this->desInst = new SA_DES($argDesKey,$argDesIv);
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['currency_type'] 3位貨幣代碼(非必須). 預設=TWD
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'currency_type' => array('required'=>0, 'default'=>self::SA_DEFAULT_CURRENCY_TYPE),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'RegUserInfo';
+    $checkKey = $this->_getCheckKey();
+    $arrParams = array(
+      'Checkkey'=>$checkKey,
+      'Username'=>$_user_name,
+      'CurrencyType'=>$_currency_type
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return true;
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} (Code {$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['language'] 語系代碼(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'currency_type' => array('required'=>0, 'default'=>self::SA_DEFAULT_CURRENCY_TYPE),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'LoginRequest';
+    $checkKey = $this->_getCheckKey();
+    $arrParams = array(
+      'Checkkey'=>$checkKey,
+      'Username'=>$_user_name,
+      'CurrencyType'=>$_currency_type
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Token','DisplayName');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return array(
+        'Token'=>$resp['Token'],
+        'DisplayName'=>$resp['DisplayName'],
+      );
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'GetUserStatusDV';
+    $arrParams = array(
+      'Username'=>$_user_name,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Balance');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      $bal = $resp['Balance'];
+      return $bal;
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'DebitBalanceDV';
+    $checkKey = $this->_getCheckKey();
+    $time = $this->_getSignatureTime();
+    $orderId = "OUT{$time}{$_user_name}";
+    $arrParams = array(
+      'Username'=>$_user_name,
+      'Checkkey'=>$checkKey,
+      'OrderId'=>$orderId,
+      'DebitAmount'=>$_amount,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username','Balance','DebitAmount','OrderId');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return array(
+        'Username'=>$resp['Username'],
+        'Balance'=>$resp['Balance'],
+        'DebitAmount'=>$resp['DebitAmount'],
+        'OrderId'=>$resp['OrderId'],
+      );
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['trans_id'] 交易號(非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'account' => 會員帳號,
+                'amount' => 數額,
+                'balance' => 交易後餘額,
+                'transid' => 交易號,
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $method = 'CreditBalanceDV';
+    $checkKey = $this->_getCheckKey();
+    $time = $this->_getSignatureTime();
+    $orderId = "IN{$time}{$_user_name}";
+    $arrParams = array(
+      'Username'=>$_user_name,
+      'Checkkey'=>$checkKey,
+      'OrderId'=>$orderId,
+      'CreditAmount'=>$_amount,
+    );
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('Username','Balance','CreditAmount','OrderId');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return array(
+        'Username'=>$resp['Username'],
+        'Balance'=>$resp['Balance'],
+        'CreditAmount'=>$resp['CreditAmount'],
+        'OrderId'=>$resp['OrderId'],
+      );
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	/**
+	 * 抓取注單報表
+   * @param $data['user_name'] 會員帳號
+   * @param $data['begin_datetime'] 起始日期時間
+   * @param $data['end_datetime'] 結束日期時間
+   * @param $data['user_name'] 查詢的用戶名稱 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+   * [GetAllBetDetailsForTimeIntervalDV]
+   * This web service will fetch bet details of lobby for a time interval maximum 24 hours. The
+   * frequency of the call should be made to this API 5 times per 5 minutes otherwise it will
+   * throw an error.
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'begin_datetime' => array('required'=>1,),
+      'end_datetime' => array('required'=>1,),
+      'user_name' => array('required'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $beginTime = strtotime($_begin_datetime);
+    $endTime = strtotime($_end_datetime);
+    $nowTime = time();
+    if ($beginTime > $endTime) {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //begin date(time) is larger than end date(time)
+      return false;
+    }
+    $limit = 24;
+    $limitUnit = 'hours';
+    if (($endTime-$beginTime) > (60*60*$limit)) {
+      $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //date(time) interval exceeds the limit
+      return false;
+    }
+    $method = 'GetAllBetDetailsForTimeIntervalDV';
+    $checkKey = $this->_getCheckKey();
+    $arrParams = array(
+      'Checkkey'=>$checkKey,
+      'FromTime'=>$_begin_datetime,
+      'ToTime'=>$_end_datetime,
+    );
+    if (isset($_user_name) && strlen($_user_name)) {
+      $arrParams['Username']=$_user_name;
+    }
+    $resp = $this->_sendRequest($method,$arrParams);
+    $arrEssentialKeys = array('BetDetailList');
+    $checkRespRes = $this->_checkResp($resp,$arrEssentialKeys);
+    if ($checkRespRes===true) {
+      $argErr = null;
+      return $resp['BetDetailList'];
+    } else {
+      if ($checkRespRes['errorCode']=='-9900') {  //curl error
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //CURL 結果為不成功
+      } elseif ($checkRespRes['errorCode']=='-9901') {  //essential key(s) not found
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //回應中必要的KEY不存在
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')) . ': ' . "{$checkRespRes['errorMsg']} ({$checkRespRes['errorCode']})";  //回傳結果為不成功
+      }
+      return false;
+    }
+	}
+
+	//--------------------非通用函數--------------------
+
+  /* send request */
+  protected function _sendRequest($argMethod,$argArrParams) {
+    $time = $this->_getSignatureTime();
+    //$time = '20160628161913';
+    $qs = $this->_getQueryString($argMethod, $time, $argArrParams);
+    //$qs = 'method=RegUserInfo&Key=F5C7F82C5C284796BB53D4AD3A2B1DB6&Time=20160628161913&Checkkey=1aaedc180b17e58e&Username=uneon2k&CurrencyType=TWD';
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::qs={$qs}<br/>";
+    $signature =$this->_getSignature($qs,$time);
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::signature={$signature}<br/>";
+    $desInst = new SA_DES($this->cfg_des_key);
+    $encipheredQs = $desInst->encipherDES($qs);
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::encipheredQs={$encipheredQs}<br/>";
+    $encipheredQs = rawurlencode($encipheredQs);
+    if (self::SA_IS_DEBUGGING) echo "sendRequest::rawurlencode(encipheredQs)={$encipheredQs}<br/>";
+    $postFieldStr = "q={$encipheredQs}&s={$signature}";
+    $curlHeaderOptStr = array(
+      //'Content-Type: multipart/form-data; boundary=' . $delimiter,
+      'Content-Type:application/x-www-form-urlencoded',
+      'Content-Length:' . strlen($postFieldStr)
+    );
+    $res = $this->_httpPost(
+      $this->cfg_base_url,
+      $postFieldStr,
+      $curlHeaderOptStr
+    );
+    if ($res !== false) {
+      $arrJsonRes = $this->_xml2Json($res);
+      $this->responseArr = null;
+      $this->responseArr = $arrJsonRes;
+      return $arrJsonRes;
+    }
+    return false;
+  }
+
+  /* get formatted time for signature */
+  protected function _getSignatureTime() {
+    $time = date('YmdHis');
+    return $time;
+  }
+
+  /* perform HTTP GET request and grab the response */
+  protected function _httpPost($argUrl,$argPostFieldStr=null,$argHeader=null) {
+    if (strlen($argUrl)) {
+      if ($argHeader===null) {
+        $argHeader = array(
+          'Content-Type:application/x-www-form-urlencoded',
+          'Content-Length:' . strlen($argPostFieldStr)
+        );
+      }
+      $ch = curl_init();
+      curl_setopt_array(
+        $ch,
+        array(
+          CURLOPT_URL=>$argUrl,
+          CURLOPT_RETURNTRANSFER=>1,
+          //CURLOPT_SSL_VERIFYPEER=>false,
+          CURLOPT_HTTPHEADER=>$argHeader,
+          CURLOPT_CONNECTTIMEOUT_MS=>SA_CONNECTION_TIMEOUT_MS,
+          CURLOPT_TIMEOUT_MS=>SA_REQUEST_TIMEOUT_MS,
+          CURLOPT_POSTFIELDS=>$argPostFieldStr,
+          CURLOPT_POST=>1
+         )
+      );
+      $response = curl_exec($ch);
+      if (curl_errno($ch)) {
+        $this->curlError = array(
+          'curl_error' => curl_error($ch),
+          'curl_errno' => curl_errno($ch),
+        );
+      } else {
+        $this->curlError = null;
+      }
+      //var_dump($response);
+      //var_dump(curl_error($ch));
+      if (self::SA_IS_DEBUGGING) var_dump($response);
+      //var_dump($response);
+      //echo 'curl_error=';var_dump($argCurlError);
+      curl_close($ch);
+      return $response;
+    } else {
+      //curl_close($ch);
+      return false;
+    }
+  }
+
+  protected function _xml2Json($xml) {
+    $this->_normalizeSimpleXML(simplexml_load_string($xml),$result);
+    //return json_encode($result);
+    return $result;
+  }
+
+  protected function _normalizeSimpleXML($obj,&$result) {
+    $data = $obj;
+    if (is_object($data)) {
+      $data = get_object_vars($data);
+    }
+    if (is_array($data)) {
+      foreach ($data as $key=>$value) {
+        $res = null;
+        $this->_normalizeSimpleXML($value,$res);
+        if (($key == '@attributes') && ($key)) {
+          $result = $res;
+        } else {
+          $result[$key] = $res;
+        }
+      }
+    } else {
+      $result = $data;
+    }
+  }
+
+  /* 傳回checkKey */
+  protected function _getCheckKey() {
+    $checkKeyInst = new CheckKey($argCheckKeyHashKey);
+    return $checkKeyInst->getCheckKey();
+  }
+
+  /* get query string (QS) */
+  protected function _getQueryString($argMethod, $argTime, $argArrParams) {
+    $res = "method={$argMethod}";
+    $res .= "&Key={$this->cfg_secret_key}";
+    $res .= "&Time={$argTime}";
+    foreach ($argArrParams as $aKey=>$aVal) {
+      if (strlen($res)) {$res.='&';}
+      $res .= "{$aKey}={$aVal}";
+    }
+    return $res;
+  }
+
+  /* get signature */
+  protected function _getSignature($argQs, $argTime) {
+    //$time = $this->_getSignatureTime();
+    $fullStr = $argQs . $this->cfg_md5_key . $argTime . $this->cfg_secret_key;
+    if (self::SA_IS_DEBUGGING) echo "getSignature::fullStr={$fullStr}<br/>";
+    return hash('md5',$fullStr);
+  }
+
+  /* check if the response of request is successful or not */
+  protected function _checkResp(&$argRawResponse,$argArrEssentialKeys=null) {
+    if ($argRawResponse !== false) {
+      $errorMsgId = $argRawResponse['ErrorMsgId'];
+      $errorMsg = $argRawResponse['ErrorMsg'];
+      if ($errorMsgId == self::SA_ERROR_MSG_ID_ON_SUCCESS) {
+        if (($argArrEssentialKeys !== null)&&(is_array($argArrEssentialKeys))) {
+          $essKeyPassed = true;
+          $lackKeyStr = '';
+          foreach ($argArrEssentialKeys as $eKeyVal) {
+            if (!array_key_exists($eKeyVal,$argRawResponse)) {
+              if (strlen($lackKeyStr)) {$lackKeyStr .= ',';}
+              $lackKeyStr .= $eKeyVal;
+              $essKeyPassed = false;
+            }
+          }
+          if ($essKeyPassed===true) {
+            return true;
+          } else {
+            $arrError = array(
+              'errorCode'=>-9901,
+              'errorMsg'=> "essential key(s) does not exists in response array (e9901),lacks: {$lackKeyStr}"
+            );
+            return $arrError;
+          }
+        } else {
+          return true;
+        }
+      } else {
+        $arrError = array(
+          'errorCode'=>$errorMsgId,
+          'errorMsg'=> $errorMsg
+        );
+        return $arrError;
+      }
+    } else {
+      $arrError = array(
+        'errorCode'=>'-9900',
+        'errorMsg'=> 'send post request failed (e9900)'
+      );
+      return $arrError;
+    }
+  }
+
+}
+
+if (!defined('CHECKKEY_CLASS')) {
+  define('CHECKKEY_CLASS',true);
+  define('CHECKKEY_MAX_LENGTH',16);
+  define('CHECKKEY_SLICE_BEGIN_POS',8);
+  define('CHECKKEY_PADDING_CHAR','|');
+  define('CHECKKEY_MAX_VERIFY_SECONDS',900);
+  class CheckKey {
+    protected $aesKey;
+    //----------------------
+    public function __construct($argKey) {
+      $this->aesKey = $argKey;
+    }
+    //----------------------
+    public function verifyCheckKey($argHash) {
+      $nowTime = time()-CHECKKEY_MAX_VERIFY_SECONDS;
+      $passed = false;
+      //echo "<br/>hash = $argHash";
+      for ($i=0; $i < CHECKKEY_MAX_VERIFY_SECONDS*2; ++$i) {
+        $text = $nowTime + $i;
+        $ck = $this->getCheckKey($text);
+        //echo "<br/>[{$i}] text=$text, ck=$ck";
+        if ($ck==$argHash) {
+          $passed = true;
+          break;
+        }
+      }
+      return $passed;
+    }
+    //----------------------
+    protected function getTimeForCheckKey($argText='') {
+      if (!strlen($argText)) {
+        $argText = time();
+      }
+      return $this->aesKey . $argText;
+    }
+    //----------------------
+    public function getCheckKey($argText='') {
+      $text = $this->getTimeForCheckKey($argText);
+      return substr(
+        hash('sha256',$text),
+        CHECKKEY_SLICE_BEGIN_POS,
+        CHECKKEY_MAX_LENGTH
+      );
+    }
+  }
+}
+
+if (!defined('SA_DES_CLASS')) {
+  define('SA_DES_CLASS',true);
+  class SA_DES {
+    protected $key;
+    protected $iv;
+    //----------------------
+    public function __construct( $key, $iv=0 ) {
+      $this->key = $key;
+      if( $iv == 0 ) {
+        $this->iv = $key;
+      } else {
+        $this->iv = $iv;
+      }
+    }
+    //----------------------
+    public function encipherDES($str) {
+      $size = mcrypt_get_block_size ( MCRYPT_DES, MCRYPT_MODE_CBC);
+      $str = $this->pkcs5Pad ( $str, $size );
+      return
+        base64_encode(
+          mcrypt_encrypt(
+            MCRYPT_DES,
+            $this->key,
+            $str,
+            MCRYPT_MODE_CBC,
+            $this->iv
+          )
+        );
+    }
+    //----------------------
+    protected function pkcs5Pad($text, $blocksize) {
+      $pad = $blocksize - (strlen ( $text ) % $blocksize);
+      return $text . str_repeat ( chr ( $pad ), $pad );
+    }
+  }
+}

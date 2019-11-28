@@ -1,0 +1,16 @@
+<?php
+/*
+ * 代理頁面
+ */
+class CommonAgentPageclassPageModel extends CommonModel {
+    /*
+     * 取得代理頁面
+     * 顯示 頁面 使用
+     */
+    public function getAgentPageDataUse(){
+        $sql = "SELECT * FROM `common_agent_pageclass_page`
+                WHERE `page_enabled` = '1' ORDER BY `page_order` ASC;";
+        $return = $this->cacheQuery($sql,600);
+        return $return;
+    }
+}

@@ -1,0 +1,43 @@
+<?php 
+class MemberNoteAction extends AdminAction{
+	//TODO: 主要頁面
+	public function index(){
+		$this->display();
+	}
+
+	//TODO: 儲值頁面
+	public function noteRecharge(){
+		
+	}
+
+	//TODO: 問題頁面
+	public function noteProblem(){
+
+	}
+
+	//TODO: 停權頁面
+	public function notoStop(){
+
+	}
+
+	//TODO: 處裡頁面
+	public function noteProcess(){
+
+	}
+
+	//TODO: 新增後台頁面
+	public function formAddMemberNote(){
+
+	}
+
+	//TODO: 修改後台頁面
+	public function formSetMemberNote(){
+
+	}
+
+	//TODO: 刪除後台頁面
+	public function formDelMemberNote(){
+
+	}
+
+}

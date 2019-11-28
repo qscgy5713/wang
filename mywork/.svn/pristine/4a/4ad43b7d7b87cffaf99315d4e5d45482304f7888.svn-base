@@ -1,0 +1,29 @@
+<!-- <div class="col-1 mq-div-md pr-0 pl-0 hidden-lg-up">
+<i class="fa fa-volume-up pr-2 language-icon pv-3 pl-10" style="padding-bottom: 1px;"></i>
+</div>
+    
+<div class="col-11 pr-0 pl-0 mb-10">
+	<marquee class="mq-style mq-style-md hidden-lg-up" style="position: absolute;" direction="up" onmousemove="this.stop()" onmouseout="this.start()" scrolldelay="800">
+		<VOLIST name="marqueeArray" id="marquee">
+			<div class="mq-style-div" >
+				<a class="text-white font-size-16" href="#">
+				 	{$marquee.marquee_text} 
+				</a> 			
+			</div>
+		</VOLIST>
+	</marquee>
+</div>  -->
+
+    
+<div class="col-12 pr-0 pl-0 mb-10 p-0 m-tb-0 m-0 pink-bg">
+    <div class=" white-bg">最新消息</div><div class="white-bg2"></div>
+    <div class="mq-style mq-pos" style="position: absolute;">
+	    <div class="mq-style-div"  id="marquee3">
+		      <VOLIST name="marqueeArray" id="vo2">
+					<a onclick="showModalMsg('myModal','{$vo.marquee_text}')" class="text-white font-size-15 ds-bl" href="#">
+							{$vo2.marquee_text} 
+					</a>
+			  </VOLIST>
+		</div>
+    </div>
+</div> 

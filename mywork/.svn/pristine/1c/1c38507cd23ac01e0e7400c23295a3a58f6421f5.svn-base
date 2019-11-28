@@ -1,0 +1,131 @@
+<?php
+class AgentJoinAction extends AdminAction {
+    //TODO: 代理加盟首頁
+    public function index(){
+        $CommonAgentAgentjoin = D("CommonAgentAgentjoin");
+        $return = $CommonAgentAgentjoin->getAgentjoinDataByNoHandle($err);
+        if($return === false){//否，顯示錯誤
+            $this->error($err);
+        }
+        $NoHandleshowArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "agentjoin_id"=>"id",
+            "agentjoin_status"=>"status",
+            "agentjoin_applyName"=>"name",
+            "agentjoin_applyPhone"=>"phone",
+            "agentjoin_applyContact"=>"contact",
+            "agentjoin_applyTime"=>"time",
+            "agentjoin_applyMsg"=>"msg",
+            "agentjoin_applyIp"=>"ip"
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'agentjoin_status'://開關  轉換 文字
+                        if($value[$key1] == 0){
+                            $showStr = "未處理";
+                            break;
+                        }
+                        $showStr = "已處理";
+                        break;
+                    case 'agentjoin_applyTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'agentjoin_applyIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $NoHandleshowArray[$key][$value1] = $showStr;
+            }
+        }
+        $return = $CommonAgentAgentjoin->getAgentjoinDataByHandle($err);
+        if($return === false){//否，顯示錯誤
+            $this->error($err);
+        }
+        $HandleshowArray = array();
+        //使用欄位轉換  資料庫欄位 => 輸出名稱
+        $FieldChange = array(
+            "agentjoin_id"=>"id",
+            "agentjoin_status"=>"status",
+            "agentjoin_applyName"=>"name",
+            "agentjoin_applyPhone"=>"phone",
+            "agentjoin_applyContact"=>"contact",
+            "agentjoin_applyTime"=>"time",
+            "agentjoin_applyMsg"=>"msg",
+            "agentjoin_applyIp"=>"ip",
+            "agentjoin_resultRemark"=>"remark",
+            "agentjoin_resultTime"=>"resultTime",
+            "admin_account"=>"adminAccount"
+            
+        );
+        $showStr = "";
+        foreach ($return as $key => $value){
+            foreach ($FieldChange as $key1 => $value1){
+                //欄位特別處理
+                switch ($key1){
+                    case 'agentjoin_status'://開關  轉換 文字
+                        if($value[$key1] == 0){
+                            $showStr = "未處理";
+                            break;
+                        }
+                        $showStr = "已處理";
+                        break;
+                    case 'agentjoin_applyTime'://建立時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'agentjoin_resultTime'://處理時間 時間戳 轉換 日期
+                        $showStr = date('Y-m-d H:i:s', $value[$key1]);
+                        break;
+                    case 'agentjoin_applyIp':
+                        $showStr = get_ip_inet_ntop($value[$key1]);//IP轉換可讀格式
+                        break;
+                    default://未做設定 正常顯示
+                        $showStr = $value[$key1];
+                        break;
+                }
+                $HandleshowArray[$key][$value1] = $showStr;
+            }
+        }
+        $this->assign("NoHandleshowArray",$NoHandleshowArray);
+        $this->assign("HandleshowArray",$HandleshowArray);
+        //讀取 代理加盟資料
+        $this->display();
+    }
+    //TODO: 修改代理加盟
+    public function formSetAgentJoin(){
+        //使用 common.php filterStr($data) 公用函數 過濾取得輸入的資料
+        $request = $this->getRequest();
+        //檢查是否有 Id 傳入 並且不為空
+        if(!isset($request['setId']) || (empty($request['setId']) && $request['stopId'] !== 0)){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//修改帳號為空，請重新登入。
+        }
+        $CommonAgentAgentjoin = D("CommonAgentAgentjoin");
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $data = array(
+            "agentjoin_id" => $request['setId'],
+            "admin_id" => $_SESSION['Admin']['id'], //管理帳號
+            "agentjoin_resultTime"=> $nowTime,
+            "agentjoin_resultIp" => $ip,
+            "agentjoin_resultRemark" => $request['setRemark'],
+            "agentjoin_status"=>1
+            
+        );
+        $return = $CommonAgentAgentjoin->setAgentjoinDataById($data,$err);
+        if($return === false){//否，顯示錯誤
+            $this->error($err);
+        }
+        //是，影響筆數為1，顯示成功訊息
+        if($return === 1){
+            $this->success(L(strtoupper('SECCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//權限不足或操作錯誤，請重新登入。
+    }
+}

@@ -1,0 +1,1148 @@
+<?php
+
+class GamePxModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+	protected $cfg_base_url = 'http://api.ppa765.com';
+	protected $cfg_key = '6ynhchbM9aHAwEu2aFp';
+	protected $cfg_secret = 'RCMh4Q5u4nic9GJsKDeM0wKk8jLmMGlXmMJyLYI';
+
+  const PX_RESPONSE_SUCCESS_CODE = 0;
+  const PX_ENCODE_ALGO = 'sha1';
+  const PX_CURL_CONNECTTIMEOUT_MS = 15000;
+  const PX_CURL_TIMEOUT_MS = 28000;
+  const PX_DEFAULT_REQUEST_METHOD = 'POST';
+  const PX_TIMEZONE_OFFSET = 8.0;
+
+  const ARR_PX_ACC_HIERARCHY = array(
+    1 => array('ACCBRANCH'),  //1:分公司 
+    2 => array('ACCSRMANAGER'),  //2:大總監 
+    3 => array('ACCMANAGER'),  //3:總監 
+    4 => array('ACCSRSTOCK'),  //4:大股東 
+    5 => array('ACCSTOCK'),  //5:股東 
+    6 => array('ACCGENERALAGENT'),  //6:總代理 
+    7 => array('ACCAGENT'),  //7:代理 
+    //98 => array('ACCSUBACCOUNT'),  //98:子帳號 
+    //99:會員
+  );
+
+  const ARR_GAME_TYPES = array(
+    1=>'一定位',2=>'二定位',3=>'三定位',4=>'四定位',5=>'一字現',6=>'二字現',7=>'三字現',8=>'四字現',9=>'合單雙',10=>'1-5球',11=>'雙面',12=>'豹子',13=>'順子',14=>'對子',15=>'半順',16=>'雜六',17=>'總合雙面',18=>'龍虎和',19=>'龍虎',20=>'第1-10名',21=>'冠亞和值',101=>'全車',102=>'特碼',103=>'台號',104=>'特尾三',105=>'二星',106=>'三星',107=>'四星',108=>'天碰二',109=>'天碰三',110=>'正碼特',111=>'三全中',112=>'三中二',113=>'二全中',114=>'二中特',115=>'特串',116=>'四全中',117=>'天碰四',118=>'五星',130=>'特單雙',131=>'特大小',132=>'特合單雙',133=>'特合大小',134=>'特尾大小',135=>'特大中小',136=>'合尾大小',137=>'總單雙',138=>'總大小',139=>'正碼1~6單雙',140=>'正碼1~6大小',141=>'總肖單雙',142=>'過關',143=>'色波',144=>'生肖',145=>'家禽野獸',146=>'正碼1~6色波',147=>'正碼1~6合單雙',148=>'半波',149=>'合肖',150=>'一肖',151=>'尾數',152=>'總肖',153=>'五不中',154=>'六不中',155=>'七不中',156=>'八不中',157=>'九不中',158=>'十不中',159=>'十一不中',160=>'十二不中',161=>'連肖2',162=>'連肖3',163=>'連肖4',164=>'連肖5',165=>'連尾2',166=>'連尾3',167=>'連尾4',168=>'連尾2不中',169=>'連尾3不中',170=>'連尾4不中',171=>'看漲/看跌',172=>'高回報看漲/看跌',173=>'觸及',174=>'不觸及',175=>'高回報一觸式期權',176=>'範圍期權',177=>'高回報範圍期權',178=>'30秒',179=>'60秒',180=>'2分鐘',181=>'5分鐘',182=>'10分鐘',183=>'15分鐘',184=>'20分鐘',185=>'30分鐘',186=>'和值',187=>'三軍',188=>'短牌',189=>'長牌',190=>'全骰',191=>'一般',192=>'電子遊戲廳  A',193=>'電子遊戲廳  B',194=>'歐博電子遊戲廳',195=>'電子遊戲廳  C-魚樂無窮遊戲',196=>'電子遊戲廳  D-空戰世紀遊戲',
+  );
+
+  const ARR_FASHIONS = array(
+    1=>'仟XXX',2=>'X佰XX',3=>'XX拾X',4=>'XXX個',5=>'仟佰XX',6=>'仟X拾X',7=>'仟XX個',8=>'X佰拾X',9=>'X佰X個',10=>'XX拾個',11=>'仟佰拾X',12=>'仟佰X個',13=>'仟X拾個',14=>'X佰拾個',16=>'仟佰XX',17=>'仟X拾X',18=>'仟XX個',19=>'X佰拾X',20=>'X佰X個',21=>'XX拾個',22=>'佰XX',23=>'X拾X',24=>'XX個',25=>'佰拾X',26=>'佰X個',27=>'X拾個',28=>'選1碼',29=>'選2碼',30=>'選3碼',31=>'選4碼',32=>'選5碼',33=>'選6碼',34=>'選7碼',35=>'選8碼',36=>'選9碼',37=>'全包',38=>'第一球',39=>'第二球',40=>'第三球',41=>'第四球',42=>'第五球',43=>'第六球',44=>'第七球',45=>'第八球',46=>'單雙',47=>'大小',48=>'龍虎',49=>'和',50=>'總和',51=>'單碰',52=>'連碰',53=>'柱碰',54=>'一比四',55=>'連柱碰',56=>'全車',57=>'雙星連碰柱',58=>'三星連碰柱',59=>'雙連碰',60=>'魔電',61=>'配比包牌',62=>'雙面包牌',63=>'套餐',64=>'正碼一',65=>'正碼二',66=>'正碼三',67=>'正碼四',68=>'正碼五',69=>'正碼六',70=>'１肖中',71=>'２肖中',72=>'３肖中',73=>'４肖中',74=>'５肖中',75=>'６肖中',76=>'７肖中',77=>'８肖中',78=>'９肖中',79=>'10肖中',80=>'11肖中',81=>'中',82=>'不中',83=>'膽拖',84=>'生肖對碰',85=>'尾數對碰',86=>'混合對碰',87=>'１肖不中',88=>'２肖不中',89=>'３肖不中',90=>'４肖不中',91=>'５肖不中',92=>'６肖不中',93=>'７肖不中',94=>'８肖不中',95=>'９肖不中',96=>'10肖不中',97=>'11肖不中',98=>'看漲',99=>'看跌',100=>'向上觸及',101=>'向下觸及',102=>'向上不觸及',103=>'向下不觸及',104=>'範圍內',105=>'範圍外',106=>'前三',107=>'中三',108=>'後三',109=>'XXXOO(4，5位)',110=>'OXXXO(1，5位)',111=>'冠軍',112=>'亞軍',113=>'第三名',114=>'第四名',115=>'第五名',116=>'第六名',117=>'第七名',118=>'第八名',119=>'第九名',120=>'第十名',121=>'普通百家樂',122=>'VIP百家樂',123=>'快速百家樂',124=>'競咪百家樂',125=>'骰寶',126=>'龍虎',127=>'輪盤',128=>'歐洲廳百家樂',129=>'歐洲廳輪盤',130=>'歐洲廳21點',131=>'聚寶百家樂',132=>'牛牛',133=>'炸金花',134=>'桌面遊戲',135=>'老虎機遊戲',136=>'P2P 對戰遊戲',137=>'迷你老虎機遊戲',138=>'迷你棋牌遊戲',139=>'桌面遊戲',140=>'老虎機遊戲',141=>'街機遊戲',142=>'對戰遊戲',143=>'老虎機遊戲',144=>'Casino 遊戲',145=>'魚樂無窮遊戲',146=>'空戰世紀遊戲',
+  );
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+  public static function getAccHierarchy($argDepth) {
+    $str = '';
+    foreach (self::ARR_PX_ACC_HIERARCHY as $hierarchy_num => $arrAcc) {
+      if (isset($argDepth) && ($hierarchy_num >= $argDepth)) {
+        break;
+      }
+      if (strlen($str)) {$str .= '$';}
+      $str .= "{$arrAcc[0]}#{$arrAcc[0]}#{$hierarchy_num}";
+    }
+    return $str;
+  }
+
+  public function getVerifier($argData, $argTimestamp) {
+    if (is_array($argData)) {
+      $argData['ts'] = $argTimestamp;
+      $str = '';
+      foreach ($argData as $dk => $dv) {
+        if (strlen($str)) {$str .= '&';}
+        $str .= "{$dk}={$dv}";
+      }
+    } else {
+      $str = $argData;
+      if (strlen($str)) {$str .= '&';}
+      $str .= "ts={$argTimestamp}";
+    }
+    $sig = $this->getVerifierSignature($str);
+    $argData['sig'] = $sig;
+    return json_encode($argData);
+  }
+
+  public function getVerifierSignature($argStr) {
+    $sig =  md5(
+      $this->_getApiKey().
+      $str.
+      $this->_getApiKey()
+    );
+    return $sig;
+  }
+
+	//--------------------通用函數--------------------
+
+	/**
+	 * getApiCallError
+	 * 取得最後一次API的呼叫錯誤。若最後一次呼叫結果成功，則將只有param (api呼叫參數)。
+	 * @return 最後一次API的呼叫錯誤(array/null)
+   *    status: 狀態 {pre_error, success, error, curl_error}。 
+   *				pre_error: 在送出請求前即發生錯誤; 
+   *				success: 操作成功 (取得符合預期的回應); 
+   *				error: 取得了預期之外的回應; 
+   *				curl_error: 嘗試了送出請求但是發生了curl 通訊錯誤。
+	 *    code: 解析過的回應代碼 (通常是官方)。
+	 *    msg: 解析過的回應訊息 (通常是官方)。
+	 *    param: ARRAY 呼叫的參數。
+	 *        url: 呼叫的目標網址。
+	 *        method: 呼叫方法 (POST, GET, PUT, DELETE...)。
+	 *        header: header欄位。可能不存在 (未使用時)。
+	 *        postfield: post欄位。可能不存在 (未使用時)。
+	 *        raw_response: 原始、未作任何解析處理的回應結果。
+	 */
+	public function getApiCallError() {
+		return $this->err;
+	}
+
+	/**
+	 * getApiCallCurlError
+	 * 取得最後一次呼叫API的Curl錯誤。若最後一次呼叫結果成功，則將得到null。
+	 * @return CURL錯誤(array/null)
+	 *    curl_errno: curl錯誤代碼(官方)
+	 *    curl_error: curl錯誤訊息(官方)
+	 */
+	public function getApiCallCurlError() {
+		return $this->curlError;
+	}
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+	 * @param $data['acc_hierarchy_num'] 帳號類型代碼
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果(bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null) {
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'acc_hierarchy_num' => array('required'=>0, 'default'=>99,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $stamp = $this->_getStamp();
+    $arrDataForSignature = array(
+      'Acc' => $_user_name,
+      'Stamp' => $stamp,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    $signature = $this->_getSignature($arrDataForSignature);
+
+    $arrParam = array();
+    $arrParam['Acc'] = $_user_name;
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Signature'] = $signature;
+
+    $ts = time();
+    $arrVerifier = array(
+      'hr_num' => $_acc_hierarchy_num,
+      'action' => 'register',
+    );
+    $veriStr = $this->getVerifier($arrVerifier, $ts);
+    $arrParam['Verifier'] = $veriStr;
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/Register";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['Code']) && ($result['Code']===self::PX_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['Code'];
+        $this->err['msg'] = null;  //'success';
+
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+        	$this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            1 => '[介接端]註冊驗證錯誤',
+            2 => '[遊戲端]註冊失敗',
+          );
+        	$errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+        	$this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+		$this->err['status'] = 'curl_error';
+		$this->err['code'] = $this->curlError['curl_errno'];
+		$this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲開啟參數(array)
+   *        PostHost: 網址。
+   *        PostData: 資料。
+	 */
+	public function loginMember($arrDatas, &$argErr = null) {
+
+    //錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $stamp = $this->_getStamp();
+    $defaultPageUrl = '';
+    $arrDataForSignature = array(
+      'Acc' => $_user_name,
+      'Page' => $defaultPageUrl,
+      'Stamp' => $stamp,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    //var_dump($arrDataForSignature);
+    $signature = $this->_getSignature($arrDataForSignature);
+
+    $arrParam = array();
+    $arrParam['Acc'] = $_user_name;
+    $arrParam['Page'] = $defaultPageUrl;
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Signature'] = $signature;
+
+    $ts = time();
+    $arrVerifier = array(
+      'action' => 'login',
+    );
+    $veriStr = $this->getVerifier($arrVerifier, $ts);
+    $arrParam['Verifier'] = $veriStr;
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/Login";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['Code']) && ($result['Code']===self::PX_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['Code'];
+        $this->err['msg'] = null;  //'success';
+
+        return array(
+          'PostData' => $result['PostData'],
+          'PostHost' => $result['PostHost'],
+        );
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+          $this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            1 => '[介接端]登入驗證失敗',
+            2 => '[遊戲端]登入驗證失敗',
+          );
+          $errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+          $this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+    $this->err['status'] = 'curl_error';
+    $this->err['code'] = $this->curlError['curl_errno'];
+    $this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額(number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null) {
+
+    //錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $arrParam = array();
+    $arrParam['Acc'] = $_user_name;
+    $stamp = $this->_getStamp();
+    $arrDataForSignature = array(
+      'Acc' => $_user_name,
+      'Stamp' => $stamp,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    $signature = $this->_getSignature($arrDataForSignature);
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Signature'] = $signature;
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/AgentPoint";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['Point'])) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = null;  //$result['Code'];
+        $this->err['msg'] = null;  //'success';
+
+        return $result['Point'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+          $this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            //1 => '[介接端]註冊驗證錯誤',
+            //2 => '[遊戲端]註冊失敗',
+          );
+          $errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+          $this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+    $this->err['status'] = 'curl_error';
+    $this->err['code'] = $this->curlError['curl_errno'];
+    $this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+  /**
+   * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(bool)
+   */
+  public function rechargeMemberBalance($arrDatas, &$argErr = null) {
+
+    //錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $stamp = $this->_getStamp();
+    $tid = 0;
+    $tmemo = 0;
+    $arrDataForSignature = array(
+      'Acc' => $_user_name,
+      'Stamp' => $stamp,
+      'Point' => $_amount,
+      'TID' => $tid,
+      'TMemo' => $tmemo,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    $signature = $this->_getSignature($arrDataForSignature);
+
+    $arrParam = array();
+    $arrParam['Acc'] = $_user_name;
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Point'] = $_amount;
+    $arrParam['TID'] = $tid;
+    $arrParam['TMemo'] = $tmemo;
+    $arrParam['Signature'] = $signature;
+
+    $ts = time();
+    $arrVerifier = array(
+      'action' => 'deposit',
+      'amount' => $_amount,
+    );
+    $veriStr = $this->getVerifier($arrVerifier, $ts);
+    $arrParam['Verifier'] = $veriStr;
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/Deposit";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['Code']) && ($result['Code']===self::PX_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['Code'];
+        $this->err['msg'] = null;
+
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+          $this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            1 => '[遊戲端]開分鎖定失敗',
+            2 => '[介接端]開分鎖定失敗',
+            3 => '[遊戲端]開分失敗',
+          );
+          $errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+          $this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+    $this->err['status'] = 'curl_error';
+    $this->err['code'] = $this->curlError['curl_errno'];
+    $this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(bool)
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null) {
+
+    //錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $stamp = $this->_getStamp();
+    $tid = 111;
+    $tmemo = 222;
+    $arrDataForSignature = array(
+      'Acc' => $_user_name,
+      'Stamp' => $stamp,
+      'Point' => $_amount,
+      //'TID' => $tid,
+      //'TMemo' => $tmemo,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    $signature = $this->_getSignature($arrDataForSignature);
+
+    $arrParam = array();
+    $arrParam['Acc'] = $_user_name;
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Point'] = $_amount;
+    //$arrParam['TID'] = $tid;
+    //$arrParam['TMemo'] = $tmemo;
+    $arrParam['Signature'] = $signature;
+
+    $ts = time();
+    $arrVerifier = array(
+      'action' => 'withdraw',
+      'amount' => $_amount,
+    );
+    $veriStr = $this->getVerifier($arrVerifier, $ts);
+    $arrParam['Verifier'] = $veriStr;
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/Withdraw";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['Code']) && ($result['Code']===self::PX_RESPONSE_SUCCESS_CODE)) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = $result['Code'];
+        $this->err['msg'] = null;
+
+        return true;
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+          $this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            1 => '[遊戲端]洗分鎖定失敗',
+            2 => '[介接端]洗分鎖定失敗',
+            3 => '[遊戲端]洗分失敗',
+          );
+          $errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+          $this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+    $this->err['status'] = 'curl_error';
+    $this->err['code'] = $this->curlError['curl_errno'];
+    $this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+  /**
+   * 抓取注單報表明細
+   * @param $data['user_name'] 會員帳號
+   * @param $data['game_id'] 遊戲編號(11:六合,12:大樂,13:539)
+   * @param $data['query_date'] 要查詢的日期 (只能一日, YYYY-MM-DD 格式)
+   * @param $data['group_id'] 遊戲數期號。非時彩帶0即可
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+[0]:int         // 下注編號
+[1]:string      // 下注日期
+[2]:string      // 下注帳號
+[3]:int         // 玩法類型編號
+[4]:int         // 玩法編號
+[5]:dynamic[]   // 下注詳細內容
+  [0]:string      // 下注內容
+  [1]:decimal     // 下注金額
+  [2]:decimal     // 中獎金額
+  [3]:decimal     // 賠率
+  [4]:decimal     // 退水金額
+   */
+  public function getGameRecord($arrDatas, &$argErr = null) {
+
+    //錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'query_date' => array('required'=>1,),
+      'game_id' => array('required'=>0, 'default'=>11,),
+      'group_id' => array('required'=>0, 'default'=>0,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $queryDateInFormat = date('Y/m/d', strtotime($_query_date));
+
+    $arrParam = array();
+    $arrParam['Acc'] = $_user_name;
+    $arrParam['GameID'] = $_game_id;
+    $arrParam['Day'] = $queryDateInFormat;
+    $arrParam['GroupID'] = $_group_id;
+    $stamp = $this->_getStamp();
+    $arrDataForSignature = array(
+      'Acc' => $_user_name,
+      'GameID' => $_game_id,
+      'Day' => $queryDateInFormat,
+      'GroupID' => $_group_id,
+      'Stamp' => $stamp,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    $signature = $this->_getSignature($arrDataForSignature);
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Signature'] = $signature;
+    //var_dump($arrParam);
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/Report2Query";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //var_dump($result);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['Data'])) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = null;  //$result['Code'];
+        $this->err['msg'] = null;  //'success';
+
+        return $result['Data'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+          $this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            //1 => '[介接端]註冊驗證錯誤',
+            //2 => '[遊戲端]註冊失敗',
+          );
+          $errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+          $this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+    $this->err['status'] = 'curl_error';
+    $this->err['code'] = $this->curlError['curl_errno'];
+    $this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 抓取注單報表總結
+   * @param $data['query_date'] 要查詢的日期 (只能一日, YYYY-MM-DD 格式)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 報表明細(array)
+   *
+[0]:string        // 會員帳號
+[1]:int            // 遊戲編號(11:六合,12:大樂,13:539)
+[2]:string        // 關盤時間
+[3]:int            // 下注筆數
+[4]:decimal     // (A)下注金額
+[5]:decimal     // (B)下注退水金額
+[6]:decimal     // (C)下注中獎金額
+[7]:decimal     // (AT)移轉金額
+[8]:decimal     // (BT)移轉退水金額
+[9]:decimal     // (CT)移轉中獎金額
+[10]:decimal    // (A0)系統商佔成金額
+[11]:decimal    // (B0)系統商佔成退水金額
+[12]:decimal    // (C0)系統商佔成中獎金額
+[13]:decimal    // (A1)第1階佔成金額
+[14]:decimal    // (B1)第1階佔成退水金額
+[15]:decimal    // (C1)第1階佔成中獎金額
+[16]:decimal    // (A2)第2階佔成金額
+[17]:decimal    // (B2)第2階佔成退水金額
+[18]:decimal    // (C2)第2階佔成中獎金額
+[19]:decimal    // (A3)第3階佔成金額
+[20]:decimal    // (B3)第3階佔成退水金額
+[21]:decimal    // (C3)第3階佔成中獎金額
+[22]:decimal    // (A4)第4階佔成金額
+[23]:decimal    // (B4)第4階佔成退水金額
+[24]:decimal    // (C4)第4階佔成中獎金額
+[25]:decimal    // (A5)第5階佔成金額
+[26]:decimal    // (B5)第5階佔成退水金額
+[27]:decimal    // (C5)第5階佔成中獎金額
+[28]:decimal    // (A6)第6階佔成金額
+[29]:decimal    // (B6)第6階佔成退水金額
+[30]:decimal    // (C6)第6階佔成中獎金額
+[31]:decimal    // (A7)第7階佔成金額
+[32]:decimal    // (B7)第7階佔成退水金額
+[33]:decimal    // (C7)第7階佔成中獎金額
+[34]:decimal    // (A8)第8階佔成金額
+[35]:decimal    // (B8)第8階佔成退水金額
+[36]:decimal    // (C8)第8階佔成中獎金額
+   */
+  public function getGameRecordSum($arrDatas, &$argErr = null) {
+
+    //錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+    $arrKeys = array(
+      'query_date' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+
+          //錯誤處理
+          $this->err['code'] = 'param_key_not_exist';
+          $this->err['msg'] = "Parameter lacks an essential key: {$dk}";
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $queryDateInFormat = date('Y/m/d', strtotime($_query_date));
+
+    $arrParam = array();
+    $arrParam['Date'] = $queryDateInFormat;
+    $stamp = $this->_getStamp();
+    $arrDataForSignature = array(
+      'Date' => $queryDateInFormat,
+      'Stamp' => $stamp,
+      'Key' => $this->_getApiKey(),
+      'Secret' => $this->_getApiSecret(),
+    );
+    $signature = $this->_getSignature($arrDataForSignature);
+    $arrParam['Stamp'] = $stamp;
+    $arrParam['Signature'] = $signature;
+
+    $url = $this->cfg_base_url.'/'.$this->_getApiKey()."/API/Gateway/ReportQuery";
+    $arrCurlParams = array();
+    $result = $this->_sendRequest($url, $arrParam, $arrCurlParams);
+
+    //錯誤處理
+    $this->err['param'] = $arrCurlParams;
+
+    if ($result!==false) {
+      if ($result && isset($result['List'])) {  //成功
+        $argErr = null;
+
+        //錯誤處理
+        $this->err['status'] = 'success';
+        $this->err['code'] = null;  //$result['Code'];
+        $this->err['msg'] = null;  //'success';
+
+        return $result['List'];
+      } else {  //失敗
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));  //回傳結果為不成功
+
+        //錯誤處理
+        $this->err['status'] = 'error';
+        if (isset($result['Code'])) {
+          $this->err['code'] = $result['Code'];
+          $arrErrMsgs = array(
+            //1 => '[介接端]註冊驗證錯誤',
+            //2 => '[遊戲端]註冊失敗',
+          );
+          $errMsg = self::__getStr($arrErrMsgs, $result['Code']);
+          $this->err['msg'] = $errMsg;
+        }
+
+        return false;
+      }
+    }
+
+    //錯誤處理
+    $this->err['status'] = 'curl_error';
+    $this->err['code'] = $this->curlError['curl_errno'];
+    $this->err['msg'] = $this->curlError['curl_error'];
+
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+  }
+
+  /**
+   * 取得解析過的人類可讀報表明細
+   * @param detail_id           注單ID
+   * @param member_id           會員ID
+   * @param member_account      會員帳號
+   * @param agent_id            代理ID
+   * @param agent_account       代理帳號
+   * @param agent_tree          代理樹
+   * @param ratio_tree          佔成樹
+   * @param detail_gameAccount  遊戲帳號
+   * @param detail_createTime   投注時間(timestamp)
+   * @param detail_orderDate    帳務日(timestamp)
+   * @param detail_bettingMoney 投注額
+   * @param detail_surplus      輸贏
+   * @param detail_effective    有效投注額
+   * @param detail_backWater    退水
+   * @param detail_isBackWater  是否已退水
+   * @param detail_dataInJson   主注單其餘資料(json格式@varchar)
+   * @param detail_subbetInJson 子注單資料(json格式@varchar). 無用.
+   *
+   * @return 報表明細(array). 回傳2d-array 基本上長得跟傳入差不多，但是多了以下的key
+   * + numSubbets        子注單數目
+   * + gameTypeStr       遊戲名稱
+   * + bet_numbers       投注
+   * + sb_html           有格式的子注單.
+   */
+  public function getReportRows($argArrRowBetDetails) {
+
+		//錯誤處理
+    $this->err = array();
+    $this->err['status'] = 'pre_error';
+
+
+    $arrBets = array();
+    if ($argArrRowBetDetails) {
+      foreach ($argArrRowBetDetails as $bi => $bet) {
+        $detail_id = $bet['detail_id'];
+        $arrBetContents = json_decode($bet['detail_dataInJson'], true);
+        $gameType = $arrBetContents['gameType'];
+        $fashion = $arrBetContents['fashion'];
+        $numSubbets = $arrBetContents['numSubbets'];
+
+        $arrSubbets = json_decode($bet['detail_subbetInJson'], true);
+
+        $gameTypeStr = self::__getStr(self::ARR_GAME_TYPES, $gameType);
+        $fashionStr = self::__getStr(self::ARR_FASHIONS, $fashion);
+
+        $bet['gameTypeStr'] = $gameTypeStr;
+        $bet['fashionStr'] = $fashionStr;
+        $bet['numSubbets'] = $numSubbets;
+
+        $sb_html = '';
+/*
+[5]:dynamic[]   // 下注詳細內容
+  [0]:string      // 下注內容
+  [1]:decimal     // 下注金額
+  [2]:decimal     // 中獎金額
+  [3]:decimal     // 賠率
+  [4]:decimal     // 退水金額
+*/
+        $n = 1;
+        foreach ($arrSubbets as $sk => $sv) {
+          $sbContent = $sv[0];
+          $sbAmount = $sv[1];
+          $sbWinAmount = $sv[2];
+          $sbOdd = $sv[3];
+          $sbWaterAmount = $sv[4];
+          $winAmountStr = '';
+          if (strlen($sbWinAmount)) {
+            $winAmountStr = "中獎【{$sbWinAmount}】。";
+          }
+          $nStr = '';
+          if (sizeof($arrSubbets) > 1) {
+            $nStr = "<div style=\"padding:3px 5px;background-color:#aFaFaF;color:#fff;margin:1px;font-size:14px;\">#{$n}</div>";
+          }
+          $sb_html .= <<<END
+<div style="padding:3px;margin:2px 3px;font-size:16px;border:1px solid #aaa;border-radius:3px;">
+ {$nStr}投注【{$sbContent}】x\${$sbAmount} @{$sbOdd}。{$winAmountStr}退水【{$sbWaterAmount}】
+</div>
+END;
+          $n += 1;
+        }
+        $bet['sb_html'] = $sb_html;
+        $arrBets[] = $bet;
+      }
+      return $arrBets;
+    } else {
+      return false;
+    }
+  }
+
+	//--------------------非通用函數--------------------
+
+  /* send request */
+  protected function _sendRequest($argUrl, $argArrData, &$argParams, $argMethod=self::PX_DEFAULT_REQUEST_METHOD) {
+
+    //錯誤處理
+    $argParams = array();
+
+    $method = strtoupper($argMethod);
+    $arrHeader = array();
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $method,  
+      CURLOPT_RETURNTRANSFER => true,  
+      //CURLOPT_SSL_VERIFYHOST => false,  
+      //CURLOPT_SSL_VERIFYPEER => false,  
+      CURLOPT_CONNECTTIMEOUT_MS => self::PX_CURL_CONNECTTIMEOUT_MS,  
+      CURLOPT_TIMEOUT_MS => self::PX_CURL_TIMEOUT_MS,  
+      CURLOPT_HTTPHEADER => $arrHeader,
+    );
+    if ( $method == 'GET') {  //GET
+      $dataStr = http_build_query($argArrData);
+      $url = "{$argUrl}?{$dataStr}";
+    } else {  //POST
+      $url = $argUrl;
+      $dataStr = http_build_query($argArrData);
+      $arrCurlDatas[CURLOPT_POST] = true;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $dataStr;
+
+      //錯誤處理
+    	$argParams['postfield'] = $dataStr;
+    }
+ 
+    //錯誤處理
+    $argParams['url'] = $url;
+    $argParams['method'] = $method;
+    $argParams['header'] = $arrHeader;
+
+    $ch = curl_init($url);
+    foreach ($arrCurlDatas as $cKey => $cVal ) {
+      curl_setopt($ch, $cKey, $cVal);
+    }
+    $result = curl_exec($ch);
+
+    //錯誤處理
+    $argParams['raw_response'] = $result;
+
+    //var_dump($queryStr);
+    //var_dump($arr);
+    //var_dump($url);
+    //var_dump($arrCurlDatas);
+    //var_dump($result);
+
+    if (curl_errno($ch)) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),    
+        'curl_errno' => curl_errno($ch),  );
+    } else {
+      $this->curlError = null;
+    }
+    curl_close($ch);
+
+    //var_dump($url);
+    //var_dump($arrCurlDatas);
+    //var_dump($result);
+    //var_dump($curlError);
+
+    if ($result !== false) {
+      $resultInAssoc = json_decode($result,true, 512, JSON_BIGINT_AS_STRING);  //decoded as assoc. array
+      //var_dump($resultInAssoc);
+      $this->responseArr = $resultInAssoc;
+      return $resultInAssoc;
+    } else {
+      //echo "sendRequest::curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+  /* get secret for every action */
+  protected function _getApiKey() {
+    return $this->cfg_key;
+  }
+
+  /* get key for every action */
+  protected function _getApiSecret() {
+    return $this->cfg_secret;
+  }
+
+  /* get signature for every action */
+  protected function _getSignature($argArrData) {
+    $str = '';
+    foreach ($argArrData as $dk => $dv) {
+      if (strlen($str)) {$str .= '&';}
+      $str .= "{$dv}";
+    }
+    //echo "::_getSignature.str = 【{$str}】";
+    $is_raw_output = false;
+    $signature = hash_hmac(
+      self::PX_ENCODE_ALGO,
+      $str,
+      $this->_getApiSecret(),
+      $is_raw_output
+    );
+    return $signature;
+  }
+
+  //由 1970/01/01 08:00:00 至目前時間(UTC)所經過 "毫秒數""
+  protected function _getStamp() {  //誤差不得高於300 sec
+    //return time();  //轉換為UTC
+    return (time() - (self::PX_TIMEZONE_OFFSET*60*60))*1000;  //轉換為UTC
+  }
+
+  //--------------------PRIVATE--------------------
+
+  private static function __getStr($argArr, $argIndex) {
+    if (isset($argArr[$argIndex])) {
+      return $argArr[$argIndex];
+    } else {
+      return "不明項目({$argIndex})";
+    }
+  }
+
+}

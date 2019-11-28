@@ -1,0 +1,187 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	
+	
+	<div id="content" class="content">
+		<h4> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME}  </h4>
+		<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<div class=" m-t-10">
+		    <select name="selectClass" class="form-control">
+			<if condition="$selectClass eq 'Member'">
+				<option selected value="Member">會員</option>
+			<else />
+				<option value="Member">會員</option>
+			</if>
+			<if condition="$selectClass eq 'Agent'">
+				<option selected value="Agent">代理</option>
+			<else />
+				<option value="Agent">代理</option>
+			</if>
+			 <if condition="$selectClass eq 'Admin'">
+				<option selected value="Admin">公司</option>
+			<else />
+				<option value="Admin">公司</option>
+			</if>
+			<if condition="$selectClass eq 'all'">
+				<option selected value="all">全顯示</option>
+			<else />
+				<option value="all">全顯示</option>
+			</if> 
+		</select>
+		<Br>
+		<input type='submit' value='查詢'  class="btn btn-info f-s-15"><Br><Br>
+		</div>
+	    
+	</form>
+		
+        <div class="row">
+        	<div class="col-lg-12 ui-sortable">
+				<!-- begin panel -->
+				<div class="panel panel-inverse" data-sortable-id="table-basic-7">
+					<!-- begin panel-heading -->
+					<div class="panel-heading ui-sortable-handle">
+						<div class="panel-heading-btn">
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-default" data-click="panel-expand"><i class="fa fa-expand"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-success" data-click="panel-reload"><i class="fa fa-redo"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning" data-click="panel-collapse"><i class="fa fa-minus"></i></a>
+							<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-danger" data-click="panel-remove"><i class="fa fa-times"></i></a>
+						</div>
+						<h4 class="panel-title">線上名單</h4>
+					</div>
+					<!-- end panel-heading -->
+					
+					<!-- begin panel-body -->
+					<div class="panel-body">
+								<!-- begin table-responsive -->
+						<div class="table-responsive">
+							<table class="table table-striped m-b-0">
+								<thead>
+									<tr>
+										<th>序</th>
+										<th>登入帳號</th>
+										<th>登入時間</th>
+										<th>IP</th>
+										<th>瀏覽器/版本/裝置</th>
+										<th>連線時間</th>
+										<th>登入網址</th>
+									</tr>
+								</thead>
+								<tbody>
+									<VOLIST name="showArray" id="vo">
+			                        	<tr>
+				                        	<td>{$key+1}</td>
+											<td>{$vo.Account}</td>
+											<td>{$vo.createTime}</td>
+											<td>{$vo.ip}</td>
+											<td>{$vo.os}</td>
+											<td>{$vo.onlineTime}</td>
+											<td>{$vo.url}</td>
+										</tr>
+			                        </VOLIST>
+								</tbody>
+							</table>
+						</div>
+						<!-- end table-responsive -->
+					</div>
+					<!-- end panel-body -->
+					
+					<div class="col-md-12 panel-body text-center">
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">1</button>
+							<button type="button" class="btn btn-white">2</button>
+							<button type="button" class="btn btn-white">3</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">4</button>
+							<button type="button" class="btn btn-white">5</button>
+							<button type="button" class="btn btn-white">6</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-white">7</button>
+						</div>
+					</div>
+				</div>
+				<!-- end panel -->
+			</div>
+        </div>
+	</div>
+	
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+</div>
+
+<include file="Common:footer"/>
+<script>
+
+
+$(document).ready(function(){
+	$("#add_btn").click(function(){
+		$('#modal-dialog').modal('show');
+	});
+	$("#"+"其他部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+
+
+</script>
+
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{$Think.MODULE_NAME}首頁</title>
+</head>
+
+<body>
+<span> Test {$Think.MODULE_NAME} {$Think.ACTION_NAME}  </span>
+<BR>
+
+	<form id="formInquire" method="get" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input type="hidden" name="s" value="{$Think.MODULE_NAME}/{$Think.ACTION_NAME}">
+		<select name="selectClass">
+			<if condition="$selectClass eq 'Member'">
+				<option selected value="Member">會員</option>
+			<else />
+				<option value="Member">會員</option>
+			</if>
+			<if condition="$selectClass eq 'Agent'">
+				<option selected value="Agent">代理</option>
+			<else />
+				<option value="Agent">代理</option>
+			</if>
+			 <if condition="$selectClass eq 'Admin'">
+				<option selected value="Admin">公司</option>
+			<else />
+				<option value="Admin">公司</option>
+			</if>
+			<if condition="$selectClass eq 'all'">
+				<option selected value="all">全顯示</option>
+			<else />
+				<option value="all">全顯示</option>
+			</if> 
+		</select>
+		<input type='submit' value='查詢'>
+	</form>
+	
+	<table>
+		<tr>
+			<th>序</th><th>登入帳號</th><th>登入時間</th><th>IP</th><th>瀏覽器/版本/裝置</th>
+			<th>連線時間</th><th>登入網址</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$key+1}</td>
+				<td>{$vo.Account}</td>
+				<td>{$vo.createTime}</td>
+				<td>{$vo.ip}</td>
+				<td>{$vo.os}</td>
+				<td>{$vo.onlineTime}</td>
+				<td>{$vo.url}</td>
+			</tr>
+		</VOLIST>
+	</table>
+</body>
+</html> -->

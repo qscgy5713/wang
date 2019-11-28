@@ -1,0 +1,79 @@
+<?php
+/*
+ * 會員錢包LOG
+ */
+class CommonMemberWalletLogModel extends AdminModel {
+    protected $tableName = "common_member_wallet_log";
+    protected $tableId = "walletLog_id";
+    
+    public function getMemberGivenData($data,&$err=""){
+        if(empty($data["groupBy"]) && $data["groupBy"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $joinSql = "";
+        $selectSql = "";
+        $typeSql = "";
+        switch ($data["walletLog_type"]){
+            case 4://活動表
+                $joinSql = "LEFT OUTER JOIN `common_event` c ON (a.`walletLog_type_class` = c.`event_id`)";
+                $selectSql .= "`event_name` as givenName";
+                $typeSql = "`walletLog_type` = '{$data["walletLog_type"]}'";
+                break;
+            case 5://返水表
+                $joinSql = "LEFT OUTER JOIN `game_info` d ON (a.`walletLog_type_class` = d.`game_id`)";
+                $selectSql .= "`game_name` as givenName";
+                $typeSql = "`walletLog_type` = '{$data["walletLog_type"]}'";
+                break;
+            default:
+                $typeSql = "`walletLog_type` = '4' OR `walletLog_type` = '5'";
+                break;
+        }
+        
+        $groupBy = "";
+        $agentWhereSql = "";
+        $agentWhereNotOwnSql = "";
+        switch ($data["groupBy"]){
+            case 'member_id'://自己代理的 會員
+                $selectSql = "";
+                $groupBy = "a.`member_id`";
+                $agentWhereSql = "a.`agent_id` = '{$data['agent_id']}'";
+                $selectSql .= "`member_account`,sum(`walletLog_money`) as allMoney,count(*) as allNumber";
+                break;
+            case 'agent_id'://代理
+                $selectSql = "";
+                $groupBy = "a.`agent_id`";
+                $agentWhereSql = "`agent_tree` REGEXP '^{$data['agent_tree']}'";
+                $agentWhereNotOwnSql = "AND (a.`agent_id` <> '{$data['agent_id']}')";
+                $selectSql .= "`agent_account`,sum(`walletLog_money`) as allMoney,count(*) as allNumber";
+                break;
+            case 'walletLog_type_class':
+                $groupBy = "`walletLog_type_class`";
+                $agentWhereSql = "`agent_tree` REGEXP '^{$data['agent_tree']}'";
+                $selectSql .= ",sum(`walletLog_money`) as allMoney,count(*) as allNumber";
+                break;
+            default:
+                $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+                return false;
+                break;  
+        }
+        //AND (`walletLog_createTime` BETWEEN '{$data["startTime"]}' AND '{$data["endTime"]}')
+        $sql = "SELECT 
+                    {$selectSql}
+                FROM `{$this->tableName}` a 
+                JOIN `common_member` b ON (a.`member_id` = b.`member_id`)
+                {$joinSql}
+                WHERE ({$typeSql})
+                
+                AND ({$agentWhereSql})
+                {$agentWhereNotOwnSql}
+                GROUP BY {$groupBy};";
+        //echo $sql;exit();
+        $return = $this->query($sql);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        return $return;
+    }
+}

@@ -1,0 +1,130 @@
+<?php
+/**
+ * 操作紀錄
+ */
+class OperatingRecordAction extends AdminAction{
+    protected $operatingRecord = 10; //分頁數
+    protected $pageMoreNmmber = 5; //一頁最多幾頁
+	//TODO : 操作紀錄首頁
+	public function index(){
+		$request = $this->getRequest();
+
+    $today = date('Y-m-d');
+    $startTime = $today.' 00:00:00';
+    $endTime = $today.' 23:59:59';
+
+    if(isset($request['startTime'])){
+        $startTime = $request['startTime'];
+    }
+    if(isset($request['endTime'])){
+        $endTime = $request['endTime'];
+    }
+
+    if(date('D') === 'Mon') {
+        $tsThisWeek = strtotime('today');
+    } else {
+        $tsThisWeek = strtotime('last monday');
+    }
+    $tsYesterday = strtotime('yesterday');
+    $tsLastMonth = strtotime('last month')-((60*60*24*(date('d')-1)));
+    $tsThisMonth = strtotime('this month')-((60*60*24*(date('d')-1)));
+    $lastWeekA = date('Y-m-d',$tsThisWeek-(60*60*24*7));
+    $lastWeekB = date('Y-m-d',$tsThisWeek-(60*60*24*1));
+    $thisWeekA = date('Y-m-d',$tsThisWeek+(60*60*24*0));
+    $thisWeekB = date('Y-m-d',$tsThisWeek+(60*60*24*6));
+    $yesterday = date('Y-m-d',$tsYesterday);
+    $lastMonthA = date('Y-m-d',$tsLastMonth);
+    $lastMonthB = date('Y-m-d',$tsLastMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m",strtotime($lastMonthA)),date("Y", strtotime($lastMonthA)))-1)));
+    $thisMonthA = date('Y-m-d',$tsThisMonth);
+    $thisMonthB = date('Y-m-d',$tsThisMonth+(60*60*24*(cal_days_in_month(CAL_GREGORIAN,date("m"),date("Y"))-1)));
+    $this->assign("startTime",$startTime);//查詢開始時間
+    $this->assign("endTime",$endTime);//查詢最後時間
+    $this->assign("today",$today);//今日
+    $this->assign("yesterday",$yesterday);//昨日
+    $this->assign("thisWeekA",$thisWeekA);//本週第一天
+    $this->assign("thisWeekB",$thisWeekB);//本週最後一天
+    $this->assign("lastWeekA",$lastWeekA);//上週第一天
+    $this->assign("lastWeekB",$lastWeekB);//上週最後一天
+    $this->assign("thisMonthA",$thisMonthA);//本月第一天
+    $this->assign("thisMonthB",$thisMonthB);//本月最後一天
+    $this->assign("lastMonthA",$lastMonthA);//上月第一天
+    $this->assign("lastMonthB",$lastMonthB);//上月最後一天
+
+		$InternalAdminOperateLog = D('InternalAdminOperateLog');
+
+		//製作分頁
+    if(empty($request['pageNumber'])){
+        $pageNumber = 1;
+    } else {
+        $pageNumber = $request['pageNumber'];
+    }
+    $data = array(
+	    "startTime" => strtotime($startTime),
+	    "endTime" => strtotime($endTime),
+    );
+		$return = $InternalAdminOperateLog->getAdminOperateLoggDataTotalNum($data);
+		if($return === false){
+      $this->error(L(strtoupper("ERROR_" . __CLASS__ . '_' . __FUNCTION__ . '_01')));//讀取筆數，失敗。
+    }
+		$totalNumber = $return['totalNumber']; //總比數
+		$totalPage = ceil($totalNumber / $this->operatingRecord); //總頁數
+		$pageArray = getPageArray($pageNumber, $totalPage, $this->pageMoreNmmber); //頁數陣列
+
+		$data = array(
+			"startTime" => strtotime($startTime),
+	    "endTime" => strtotime($endTime),
+	    "page" => array(
+	    	"pageNumber" => $pageNumber,
+	    	"number" => $this->operatingRecord,
+	    ),
+		);
+		$return = $InternalAdminOperateLog->getAdminOperateLogNumberData($data);
+		if($return === false){
+      $this->error(L(strtoupper("ERROR_" . __CLASS__ . '_' . __FUNCTION__ . '_02')));//讀取資料，失敗。
+    }
+
+    $showArray = array();
+    	//欄位轉換 資料庫欄位=>輸出名稱
+  	$FieldChange = array(
+			'operateLog_id' => 'operateLogId',
+			'admin_id' => 'adminId',
+			'admin_account' => 'adminAccount',
+			'operateLog_class' => 'operateLogClass',
+			'operateLog_objectId' => 'operateLogObjectId',
+			'operateLog_objectAccount' => 'operateLogObjectAccount',
+			'operateLog_main' => 'operateLogMain',
+			'operateLog_createTime' => 'operateLogCreateTime',
+			'operateLog_ip' => 'operateLogIp',
+			'operateLog_url' => 'operateLogUrl',
+  	);
+
+  	$showStr = "";
+  	foreach ($return as $key => $value) {
+  		foreach ($FieldChange as $key1 => $value1) {
+  			//欄位特別處裡
+  			switch ($key1) {
+          case 'operateLog_class':
+              $operateLog = $InternalAdminOperateLog->getOperateLogClassStr($value[$key1], $agent_account);
+              $showStr = $operateLog;
+              break;
+  				case 'operateLog_ip':
+  					$showStr = long2ip($value[$key1]);
+					break;
+					case 'operateLog_createTime': // 時戳 轉換 日期
+            $showStr = date('m-d H:i:s', $value[$key1]);
+            break;
+  				default: //未做設定 正常顯示
+  					$showStr = $value[$key1];
+  					break;
+  			}
+  			$showArray[$key][$value1] = $showStr;
+  		}
+  	}
+  	$this->assign('showArray', $showArray);
+    $this->assign("totalPage",$totalPage);//總頁數
+    $this->assign("pageNumber",$pageNumber);//目前的頁數
+    $this->assign("pageArray",$pageArray);//分頁陣列
+    $this->assign("showEmpty","<tr><td colspan='6' align='center'>無資料</td></tr>");
+  	$this->display();
+	}
+}

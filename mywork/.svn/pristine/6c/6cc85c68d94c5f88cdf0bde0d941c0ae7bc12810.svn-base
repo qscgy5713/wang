@@ -1,0 +1,71 @@
+<?php
+/*
+ * 儲值贈點
+ */
+class CommonEventStoregiftModel extends MemberModel {
+    protected $tableName = "common_event_storegift";
+    protected $tableId = "info_id";
+
+    /*
+     * 新增 儲值贈點單
+     */
+    public function addEventStoregiftData($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        //var_dump($sql);exit();
+        $return = $this->query($sql);
+        return $return;
+    }
+    /**
+     * 修改 儲值贈點單
+     */
+    public function setEventStoregiftData($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'member_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `member_id` = '{$data["member_id"]}'";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /**
+     * 確認 member_id 是否有重複
+     */
+    public function checkEventStoregiftDataById($data){
+        if(empty($data["member_id"]) && $data["member_id"] !== '0'){
+            return false;
+        }
+        $sql = "SELECT COUNT(*) AS memberCount FROM `{$this->tableName}` WHERE `member_id` = '{$data['member_id']}'";
+        $return = $this->query($sql);
+        if($return  === false){
+            return false;
+        }
+        return $return[0];
+    }
+
+}

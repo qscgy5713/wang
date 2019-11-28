@@ -1,0 +1,125 @@
+<?php
+/*
+ * 後台頁面分類
+ */
+class CommonAdminPageclassModel extends CommonModel {
+    protected $tableName = "common_admin_pageclass";
+    /*
+     * 取得後台頁面
+     * 顯示 頁面 使用
+     */
+    public function getAdminPageClassDataUse(){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `pageclass_enabled` = '1';";
+        $return = $this->cacheQuery($sql,600);
+        return $return;
+    }
+    /*
+     * 取得後台頁面
+     * 頁面管理 使用
+     */
+    public function getAdminPageClassDataByEnabled(){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `pageclass_enabled` = '1';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得後台頁面
+     * 頁面管理 使用
+     */
+    public function getAdminPageClassData(){
+        $sql = "SELECT * FROM `{$this->tableName}`;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 取得 後台頁面 分類的最大排序
+     * 頁面管理 使用
+     */
+    public function getMaxOrderData(){
+        $sql = "SELECT MAX(`pageclass_order`) as MaxOrder FROM `{$this->tableName}`;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 新增後台頁面類別
+     */
+    public function addAdminPageClassData($data){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改 後台頁面 資料
+     * 使用後台頁面ID
+     */
+    public function setAdminPageClassDataById($data){
+        if(empty($data['pageclass_id']) && $data['pageclass_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'pageclass_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `pageclass_id` = '{$data['pageclass_id']}'";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 後台頁面  資料
+     * 使用後台頁面ID
+     */
+    public function delAdminPageClassDataById($data){
+        if(empty($data['pageclass_id']) && $data['pageclass_id'] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `pageclass_id` = '".$data['pageclass_id']."';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 取得後台頁面 總筆數
+     */
+    public function getTotalNumberAdminPageClassData(){
+        $sql = "SELECT COUNT(*) AS totalNumber FROM `{$this->tableName}`;";
+        $return = $this->query($sql);
+        
+        return $return[0];
+    }
+    /*
+     * 搜索後台頁面 分頁
+     */
+    public function getAdminPageClassDataNumber($data){
+        $pageStart = ($data['page']['pageNumber'] - 1) * $data['page']['number'];
+        $pageEnd = $data['page']['number'];
+        $pageSql = " LIMIT {$pageStart},{$pageEnd}";
+        $sql = "SELECT * FROM `{$this->tableName}`{$pageSql};";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

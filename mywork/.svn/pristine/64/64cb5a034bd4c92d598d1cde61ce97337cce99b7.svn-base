@@ -1,0 +1,105 @@
+<?php
+/**首充1000送500頁面
+ *
+ */
+class EventStoreGiftPageAction extends EventAction
+{
+    //TODO:首充1000送1000前置
+    protected function _initialize(&$err=""){
+    	parent::_initialize();
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            "event_code" => $this->storegift_code,
+        );
+        $return = $CommonEvent->getOneEventData($data);
+        if($return === false || empty($return)){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if($return['event_enabled'] === '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        } else {
+            $this->storegift_eventId = $return['event_id'];
+        }
+        $CommonMember = D("CommonMember");
+        $data = array(
+            'member_id' => $this->memberId
+        );
+        $return = $CommonMember->getMemberStoreGiftDatabyId($data);
+        if($return === false){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        if($return['wallet_totalRecharge'] == 0){
+            //未充值過會員
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04'));
+            return false;
+        }
+        if(!empty($return['info_id']) && $return['event_status'] == 2){
+            //申請成功過會員
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05'));
+            return false;
+        }
+        if(!empty($return['info_id']) && $return['event_status'] == 0){
+            //申請成功過會員
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06'));
+            return false;
+        }
+        return true;
+    }
+    //TODO:首充1000送500頁面
+    public function storeGiftPage(){
+        $err = "";
+        $return = $this->_initialize($err);
+        if($return === false){
+            $this->assign("eventEnabled","false");
+            $this->assign("eventErrMessage",$err);
+        } else {
+            $this->assign("eventEnabled","true");
+        }
+        $this->display();
+    }
+    //TODO:首充1000送500功能
+    public function formStoreGift(){
+        if($this->formEnabled === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//請先登入會員。
+        }
+        $err = "";
+        $return = $this->_initialize($err);
+        if($return === false){
+            $this->error($err);
+        } else {
+            $CommonEventStoregift = D("CommonEventStoregift");
+            $data = array(
+                'event_id' => $this->storegift_eventId,
+                'member_id' => $this->memberId,
+                'agent_id' =>$_SESSION['Member']['agentId'],
+                'agent_tree' =>$_SESSION['Member']['agentTree'],
+                'ratio_tree' =>$_SESSION['Member']['agentRatio'],
+                'event_status' =>'0',
+                'event_money'=>$this->storegift_money,
+                'event_createTime' =>time(),
+                'event_ip'=>get_ip_inet_pton(getIp())
+            );
+            $return = $CommonEventStoregift->checkEventStoregiftDataById($data);
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//資料庫錯誤。
+                return;
+            }
+            switch ($return['memberCount']) {
+                case '0':
+                    $return = $CommonEventStoregift->addEventStoregiftData($data);
+                    break;
+                case '1':
+                    $return = $CommonEventStoregift->setEventStoregiftData($data);
+                    break;
+                default:
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));
+                    break;
+            }
+            $this->success(L(strtoupper('SUCCESS_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//申請成功，請稍等客服審核。
+        }
+    }
+
+}

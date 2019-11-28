@@ -1,0 +1,14 @@
+<?php
+class GivenRecordAction extends AgentAction {
+    //TODO:8 贈點記錄
+    public function index(){
+        
+        $CommonEvent = D("CommonEvent");
+        $data = array(
+            
+        );
+        $return = $CommonEvent->getAllEventData($data,$err);
+        
+        $this->display();
+    }
+}

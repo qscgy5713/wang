@@ -1,0 +1,54 @@
+<html>
+<body>
+	<form method="post" action="__APP__/DomainManage/formAddDomain">
+		新增網域 : <input type="text" name="addSite" value=""> 
+		<input type="submit" value="提交">
+	</form>
+	<table>
+		<tr>
+			<th>編號</th>
+			<th>網域名稱</th>
+			<th>是否啟用</th>
+			<th>建立時間</th>
+			<th>修改時間</th>
+			<th>操作</th>
+		</tr>
+		<VOLIST name="showArray" id="vo">
+			<tr>
+				<td>{$vo.domainId}</td>
+				<td>{$vo.domainSite}</td>
+				<td>{$vo.domainEnable}</td>
+				<td>{$vo.domainCreateTime}</td>
+				<td>{$vo.domainModifyTime}</td>
+				<td>
+					<form method="post" action="__APP__/DomainManage/formSetDomainEnabled">
+						<input type="hidden" value="{$vo.domainId}" name="setDomainId">
+						<input type="hidden" value="{$vo.domainEnable}" name="setEnabled">
+						<if condition="$vo.domainEnable eq '啟用中'">
+							<input type="submit" value="關閉">
+						<else/>
+							<input type="submit" value="啟用">
+						</if>
+					</form>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="5">
+					<form method="post" action="__APP__/DomainManage/formSetDomain">
+				修改網域 : <input type="text" name="setSite" value="{$vo.domainSite}">
+				<input type="hidden" name="setDomainId" value="{$vo.domainId}">
+				<input type="submit" value="提交">
+					</form>
+				</td>
+				<td>
+					<form method="post" action="__APP__/DomainManage/formDelDomain">
+						<input type="hidden" name="delDomainId" value="{$vo.domainId}">
+						<input type="submit" value="刪除">
+					</form>
+				</td>
+			</tr>
+			
+		</VOLIST>
+	</table>
+</body>
+</html>

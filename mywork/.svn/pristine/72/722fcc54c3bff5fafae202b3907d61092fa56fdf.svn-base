@@ -1,0 +1,43 @@
+<include file="Common:header"/>
+	<div id="wrapper">
+		<include file="Common:loginMenu"/>
+		<include file="Common:menuNoFixed"/>
+		<include file="Common:menuRwd"/>
+			<section id="gameBg" class="b-0 section-game-rwd" style="background-image: url(__CSS__/images/game_background.jpg);padding-top: 182px;">
+					<div class="container">
+						<ul class="nav nav-tabs nav-top-border game-ul-ts-rwd">
+							<li class="nav-item">
+								<a class="nav-link active" href="#tab" data-toggle="tab">
+					   				手機電子
+					   			</a>
+							</li>
+						</ul>
+						<div class="tab-content">
+							<div class="row">
+								<VOLIST name="gameMenuArray" id="vo" key="k">
+									<div class="col-lg-2 col-md-2 col-sm-2 col-width-rwd mb-10">
+										<a href="__APP__/{$Think.MODULE_NAME}/gameEnter" class="image-hover-zoom image-hover-overlay gameNewHtml">
+											<img class="img-fluid" src="__CSS__/images/uc8/{$vo.image_src}.png" alt="">
+										</a>
+										<p class="text-center mt-10 mb-10">{$vo.gameNameCn}</p>
+									</div>
+								</VOLIST>
+							</div>
+						</div>
+					</div>
+				</section>
+<include file="Common:footer"/>
+<script>
+$(".gameNewHtml").click(function(){
+	var gamehtml = window.open('__APP__/Common/loading&xn', 'gamePage');
+});
+jQuery(document).ready(mobileChange);  
+//resize event
+window.addEventListener('resize', function() {
+	mobileChange();
+}, false);
+function mobileChange() {
+	var h = jQuery(window).height();
+	jQuery("#gameBg").css("min-height",h+"px");
+}
+</script>

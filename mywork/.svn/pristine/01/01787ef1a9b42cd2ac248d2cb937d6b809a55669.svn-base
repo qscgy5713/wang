@@ -1,0 +1,71 @@
+ <include file="Common:header"/> 
+ <include file="Common:menu"/> 
+ 
+      	<div class="container pb50 bg-min-height height-size-667 height-size-731 height-size-812 height-size-823" >
+      		<div class="container">
+                <div class="row pb30">
+                    <div class="col-lg-4 col-md-6 mr-auto ml-auto col-sm-8">
+                        <h3 class="text-black text-center mb30">銀行綁定</h3>
+                        <form id="applyForm" name="applyForm" method="post" action='__APP__/BankcodeBinding/formBankcodeBinding'>
+                            <div class="form-group">
+	                            <label for="applyWay">銀行代號</label>
+	                            <select class="form-control" id="addCode" name="addCode">
+	                                <option value="004">臺灣銀行</option>
+	                                <option value="007">第一銀行</option>
+                            	</select>
+	                        </div>
+	                        
+	                        <div class="form-group">
+	                            <label for="applyName">銀行帳號</label>
+	                            <input type="text" id="addAccount" name="addAccount" class="form-control" placeholder="銀行帳號">
+	                        </div>
+	                        
+	                        <div class="form-group">
+	                            <label for="applyName">銀行戶名</label>
+	                            <input type="text" id="addAccountName" name="addName" class="form-control" placeholder="銀行戶名">
+	                        </div>
+	                        
+	                        <div class="form-group">
+	                            <label for="applyName">銀行分行</label>
+	                            <input type="text" id="addBranch" name="addBranch" class="form-control" placeholder="銀行分行">
+	                        </div>
+	                        
+                            <hr class="hr-color">
+                            <div class="text-center">
+                                <button type="submit" name="btnok" id="btnok" class="btn btn-outline-primary mb5">送出</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>    
+ <include file="Common:footer"/> 
+ <script>
+
+ $(document).ready(function(){
+		//送出
+		$("button[name='btnok']").click(function(){
+			var addAccount = $("input[name='addAccount']").val();//銀行帳號
+			var addName = $("input[name='addName']").val();//銀行戶名
+			var addBranch = $("input[name='addBranch']").val();//銀行分行
+			
+			addAccount = $.trim(addAccount);
+			addName = $.trim(addName);
+			addBranch = $.trim(addBranch);
+			
+			 if (addAccount == 0){
+				 alert("銀行帳號不可為空");
+				 return false;
+			 }
+			 if (addName == 0){
+				 alert("銀行戶名不可為空");
+				 return false;
+			 }
+			 if (addBranch == 0){
+				 alert("銀行分行不可為空");
+				 return false;
+			 }
+			
+		 })
+	});
+ </script>

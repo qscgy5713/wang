@@ -1,0 +1,511 @@
+<?php
+
+class GameXbsModel {
+  public $responseArr;
+  public $curlError;
+  public $err;
+
+  protected $cfg_base_url = 'http://apilt.king588.net';
+  protected $cfg_route = 'api_101';
+  protected $cfg_ag_url = 'http://ag.king588.net';
+  protected $cfg_enc_key = 'WGI@X9ENgpo138jL';  //同SP體育
+  protected $cfg_base_ag_name = 'G53999';  //彩球代理
+  protected $cfg_base_ag_pass = 'bbqq1234';  //彩球代理密碼
+  protected $cfg_base_super_ag_name = 'G';//總代理
+  protected $cfg_base_super_ag_pass = 'asdf15668';//總代理密碼
+
+  const XBS_ENCRYPTION_IV = 'm%2qQ7L&wfafUj&b';
+  const XBS_ACCOUNT_LEVEL_MEMBER = 1;
+  const XBS_ACCOUNT_LEVEL_AGENT = 2;
+  const XBS_ACCOUNT_LEVEL_DIRECTOR = 3;  //總代理
+  const XBS_RESPONSE_SUCCESS_CODE = 999;
+  const XBS_DEFAULT_REQUEST_METHOD = 'POST';
+  const XBS_DEFAULT_BET_ROW_PAGE_SIZE = 100;
+  const XBS_BET_TYPE_ALL = 0;  //玩法-所有
+
+	/*
+	 * 如果有初始化 可以設定在初始化中
+	 */
+	protected function _initialize() {
+		parent::_initialize();
+	}
+
+	//--------------------非通用函數--------------------
+
+	/**
+	 * 註冊新會員
+	 * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param $data['user_name'] 會員暱稱
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+	 * @return 結果 (bool)
+	 */
+	public function createMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+      'nickname' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name,),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'create';
+    $func = 'account';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $route = $this->cfg_route;
+    $url = "{$apiUrl}/{$route}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "nickname" => $_nickname,
+      "passwd" => $_password,
+      "up_acc" => $_agent,
+      "up_pwd" => $_agent_password,
+    );
+    //Dbgr::preout($data);
+    $arrColsNeedEnc = array(
+      'account', 'passwd','up_acc','up_pwd'
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::XBS_RESPONSE_SUCCESS_CODE)) {
+        return true;
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 會員登入
+   * @param $data['user_name'] 會員帳號
+   * @param $data['password'] 會員密碼
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 遊戲URL(string)
+	 */
+	public function loginMember($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'password' => array('required'=>1,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $func = 'login';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $route = $this->cfg_route;
+    $url = "{$apiUrl}/{$route}/{$func}";
+    $data = array(
+      "account" => $_user_name,
+      "passwd" => $_password,
+    );
+    $arrColsNeedEnc = array(
+      'account', 'passwd'
+    );
+    $arrRet['action'] = "{$url}";
+    $arrRet['data'] = 'post';
+
+    $result = $this->_sendRequest($arrRet['action'],$data,$arrColsNeedEnc);
+
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::XBS_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['PostHost'])) {
+          //$PostData = $result['data']['PostData'];
+          return $result['data'];
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 取得會員餘額
+   * @param $data['user_name'] 會員帳號
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 餘額 (number)
+	 */
+	public function getMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name,),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'read';
+    $func = 'points';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $route = $this->cfg_route;
+    $url = "{$apiUrl}/{$route}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "up_acc" => $_agent,
+      "up_pwd" => $_agent_password,
+    );
+    //Dbgr::preout($data);
+
+    $arrColsNeedEnc = array(
+      'account','up_acc','up_pwd'
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::XBS_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['point'])) {
+          $curntPoint = $result['data']['point'];
+          return $curntPoint;
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 下點(提款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+	 */
+	public function withdrawMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name,),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'sub';
+    $func = 'points';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $route = $this->cfg_route;
+    $url = "{$apiUrl}/{$route}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "Point" => $_amount,
+      //"track_id" => $argNote,  //optional
+      "up_acc" => $_agent,
+      "up_pwd" => $_agent_password
+    );
+    //Dbgr::preout($data);
+
+    $arrColsNeedEnc = array(
+      'account','up_acc','up_pwd'
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::XBS_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['point'])) {
+          $curntPoint = $result['data']['point'];
+          return $curntPoint;
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 上點(加款)
+   * @param $data['user_name'] 會員帳號
+   * @param $data['amount'] 數額
+   * @param $data['agent'] 代理帳號 (非必須)
+   * @param $data['agent_password'] 代理密碼 (非必須)
+   * @param &$err 盛裝錯誤(非必須)
+   * @return 結果(array)
+   *         array(
+                'amount' => 數額 (number),
+                'balance' => 交易後餘額 (number),
+              );
+   */
+	public function rechargeMemberBalance($arrDatas, &$argErr = null){
+    $arrKeys = array(
+      'user_name' => array('required'=>1,),
+      'amount' => array('required'=>1,),
+      'agent' => array('required'=>0,'default'=>$this->cfg_base_ag_name,),
+      'agent_password' => array('required'=>0,'default'=>$this->cfg_base_ag_pass,),
+    );
+
+    foreach ($arrKeys as $dk => $dv) {
+      $dk = strtolower($dk);
+      $isKeyRequired = ($dv['required']==1);
+      if ( array_key_exists($dk, $arrDatas) ) {
+        $temp = "_{$dk}";
+        $$temp = $arrDatas[$dk];
+      } else {
+        if ($isKeyRequired) {
+          $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));  //必需的KEY不存在
+          return false;
+        } else {
+          if ( array_key_exists('default', $dv) ) {
+            $temp = "_{$dk}";
+            $$temp = $dv['default'];
+          }
+        }
+      }
+    }
+
+    $act = 'add';
+    $func = 'points';
+    $argErr = null;
+    $apiUrl = $this->cfg_base_url;
+    $route = $this->cfg_route;
+    $url = "{$apiUrl}/{$route}/{$func}";
+    $data = array(
+      "act" => $act,
+      "account" => $_user_name,
+      "Point" => $_amount,
+      //"track_id" => $argNote,  //optional
+      "up_acc" => $_agent,
+      "up_pwd" => $_agent_password
+    );
+    //Dbgr::preout($data);
+
+    $arrColsNeedEnc = array(
+      'account','up_acc','up_pwd'
+    );
+    $result = $this->_sendRequest($url,$data,$arrColsNeedEnc);
+    if (!($result===false)) {
+      if ($result && isset($result['code']) && ($result['code']==self::XBS_RESPONSE_SUCCESS_CODE)) {
+        if (isset($result['data']['point'])) {
+          $curntPoint = $result['data']['point'];
+          return $curntPoint;
+        }
+      } else {
+        $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')).": ".$this->_produceError($result['code'],$result['msg']);
+        return false;
+      }
+    }
+    $argErr = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));  //CURL 結果為不成功
+    return false;
+	}
+
+	/**
+	 * 抓取注單報表
+   * XBS不提供明細抓取功能
+	 */
+	public function getGameRecord($arrDatas, &$argErr = null){
+    //...
+	}
+
+	//--------------------非通用函數--------------------
+
+  /* get aes key */
+  protected function _getEncKey() {
+    return $this->cfg_enc_key;
+  }
+
+  protected function _decrypt($encryptedData) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    $key = $this->_getEncKey();
+    $iv = self::XBS_ENCRYPTION_IV;
+    $initializationVectorSize = mcrypt_get_iv_size($cipher, $mode);
+
+    $data =  mcrypt__decrypt(
+        $cipher,
+        $key,
+        base64_decode($encryptedData),
+        $mode,
+        $iv
+    );
+    $pad = ord($data[strlen($data) - 1]);
+    return substr($data, 0, -$pad);
+  }
+
+  // 加密
+  protected function _encrypt($xml_data) {
+    $cipher = MCRYPT_RIJNDAEL_128;
+    $mode = MCRYPT_MODE_CBC;
+    $key = $this->_getEncKey();
+    $iv = self::XBS_ENCRYPTION_IV;
+    $blockSize = mcrypt_get_block_size($cipher, $mode);
+    $pad = $blockSize - (strlen($xml_data) % $blockSize);
+
+    return base64_encode(mcrypt_encrypt(
+        $cipher,
+        $key,
+        $xml_data . str_repeat(chr($pad), $pad),
+        $mode,
+        $iv
+    ));
+  }
+
+  /* produce error */
+  protected function _produceError($argErrorMsg, $argErrCode) {
+    return "{$argErrorMsg} (code {$argErrCode})";
+  }
+
+  /* send http request via curl and return its response in assoc array */
+  protected function _sendRequest($argUrl,$argArrData,$argArrColsNeedEnc,$argReturnOrgResp=false,$argMethod=self::XBS_DEFAULT_REQUEST_METHOD) {
+    $arrDatas = $argArrData;
+    foreach ($argArrColsNeedEnc as $cKey=>$cVal) {
+      if (array_key_exists($cVal,$argArrData)) {
+        //$enc = $this->_encrypt($argArrData[$cVal]);
+        //echo "enc({$argArrData[$cVal]}) = {$enc}, ";
+        $arrDatas[$cVal] = $this->_encrypt($arrDatas[$cVal]);
+      }
+    }
+    $queryStr = http_build_query($arrDatas);
+    $arrCurlDatas = array(
+      CURLOPT_CUSTOMREQUEST => $argMethod,
+      //CURLOPT_POSTFIELDS => $argArrData,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_CONNECTTIMEOUT_MS => 8000,
+      CURLOPT_TIMEOUT => 18000,
+      CURLOPT_HTTPHEADER => array(
+        //'Content-Type: text/html; charset=utf-8',
+      )
+    );
+    $url = "{$argUrl}?{$queryStr}";
+    if (strtoupper($argMethod) == 'POST') {
+      $url = $argUrl;
+      $arrCurlDatas[CURLOPT_POSTFIELDS] = $arrDatas;
+    } else {
+      //$url = $argUrl.'?account='.urlencode($arrDatas['account']).'&passwd='.urlencode($arrDatas['passwd']);
+    }
+    //echo "\$url={$url} <br/>";
+    //Dbgr::preout($arrDatas);
+
+    $ch = curl_init($url);
+    curl_setopt_array(
+      $ch,
+      $arrCurlDatas
+    );
+    $result = curl_exec($ch);
+    $curlError = curl_errno($ch);
+
+    //var_dump($argArrData);
+    //var_dump($url);
+    //var_dump($arrDatas);
+    //var_dump($result);
+    //var_dump($curlError);
+
+    if ($curlError) {
+      $this->curlError = array(
+        'curl_error' => curl_error($ch),
+        'curl_errno' => curl_errno($ch),
+      );
+    } else {
+      $this->curlError = null;
+    }
+
+    //echo "\$result={$result} <br/>";
+    curl_close($ch);
+    if ($result !== false) {
+      if ($argReturnOrgResp === false) {
+        $resultInAssoc = json_decode($result,true);  //decoded as assoc. array
+        $this->responseArr = $resultInAssoc;
+        return $resultInAssoc;
+      } else {
+        return $result;
+      }
+    } else {
+      //echo "\$curlError={$curlError} <br/>";
+      return false;
+    }
+  }
+
+}

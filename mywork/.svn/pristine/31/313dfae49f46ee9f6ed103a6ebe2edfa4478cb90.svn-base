@@ -1,0 +1,143 @@
+<?php
+/*
+ * 藍新金流資料
+ */
+class CashflowInfoNewebPayDataModel extends MemberModel {
+    protected $tableName = "cashflow_info_newebPayData";
+    protected $tableId = "newebPayData_id";
+    
+    /*
+     * 刪除  藍新商編 資料
+     * 使用ID
+     */
+    public function delMerchantnumberDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "DELETE FROM `{$this->tableName}`
+                WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 清除所有已啟用的
+     * 開關更改為0 關閉狀態
+     * 在啟用最新的
+     */
+    public function setNowMerchantnumberDataByNowId($data,&$err){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        //事務處理開始
+        $this->startTrans();
+        $sql = "UPDATE `{$this->tableName}` SET `newebPayData_enabled` = '0' WHERE `newebPayData_enabled` = '1';";
+        $return = $this->execute($sql);
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        if($return !== 1){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03'));
+            return false;
+        }
+        $this->commit();//事務處理成功
+        return true;
+    }
+    /*
+     * 修改 藍新商編 資料
+     * 使用ID
+     */
+    public function setMerchantnumberDataById($data){
+        if(empty($data["{$this->tableId}"]) && $data["{$this->tableId}"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "{$this->tableId}"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `{$this->tableName}` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `{$this->tableId}` = '{$data[$this->tableId]}';";
+        $return = $this->execute($sql);
+        return $return;
+    }
+    /*
+     * 新增 藍新商編 資料
+     */
+    public function addMerchantnumberData($data){
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    
+    /*
+     * 取得 藍新金流 所有資料
+     * 用於 藍新帳戶 管理
+     */
+    public function getNewebPayAllData(){
+        $sql = "SELECT * FROM `{$this->tableName}`;";
+        $return = $this->query($sql);
+        return $return;
+    }
+    
+    /*
+     * 取得 藍新金流 密碼
+     */
+    public function getNewebPayDataByMerchantnumber($data){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `newebPayData_merchantnumber` = '{$data['merchantnumber']}' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    
+    /*
+     * 取得 藍新金流資料 資料
+     */
+    public function getNewebPayData(){
+        $sql = "SELECT * FROM `{$this->tableName}`
+                WHERE `newebPayData_enabled` = '1' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        if(empty($return[0]['newebPayData_merchantnumber'])){
+            return false;
+        }
+        return $return[0];
+    }
+}

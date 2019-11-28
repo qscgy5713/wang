@@ -1,0 +1,82 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed page-with-wide-sidebar">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	
+	<div id="content" class="content">
+		<div class="row">
+			<div class="col-md-12">
+				<ul class="nav nav-tabs nav-tabs-inverse">
+					<VOLIST name="showArray" id="vo">
+						<li class="nav-item"><a id="{$key}" href="#default-tab-{$key}" data-toggle="tab" class="nav-link"><i class="fa fa-fw fa-lg fa-cogs"></i> <span class="d-none d-lg-inline">{$key}</span></a></li>
+					</VOLIST>
+				</ul>
+				
+				<div class="tab-content">
+					<VOLIST name="showArray" id="vo">
+						<div class="tab-pane fade" id="default-tab-{$key}">
+							<div class="table-responsive">
+								<table id="" class="table table-striped m-b-0">
+									<thead>
+										<tr>
+											<th>遊戲ID</th>
+											<th>遊戲代號</th>
+											<th>遊戲名稱</th>
+											<th>開關</th>
+											<th>操作</th>
+										</tr>
+									</thead>
+									<tbody>
+										<VOLIST name="vo" id="vo1">
+				                        	<tr>
+											    <td>{$vo1.gameId}</td>
+												<td>{$vo1.gameCode}</td>
+												<td>{$vo1.gameName}</td>
+												
+												<if condition="$vo1.gameEnable eq '啟用中'">
+													<td style="color:#28a745;">{$vo1.gameEnable}</td>
+												<else/>
+													<td style="color:#ff0021;">{$vo1.gameEnable}</td>
+												</if>
+													
+												<td>
+													<form method="post" action="__APP__/FeaturesManage/formSetFeaturesManageEnable">
+														<input type="hidden" value="{$vo1.gameId}" name="setGameId">
+														<input type="hidden" value="{$vo1.gameEnable}" name="setGameEnable">
+														<if condition="$vo1.gameEnable eq '啟用中'">
+															<input type="submit" class="btn btn-warning f-s-13 p-5 m-r-5 m-b-5" value="關閉">
+														<else/>
+															<input type="submit" class="btn btn-green f-s-13 p-5 m-r-5 m-b-5" value="啟用">
+														</if>
+													</form>
+												</td>
+											</tr>
+			                        	</VOLIST>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</VOLIST>
+				</div>
+			</div>
+		</div>
+        
+        
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="material-icons">keyboard_arrow_up</i></a>
+	</div>
+	
+<include file="Common:footer"/>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+	
+	$("#體育").addClass( "active show" );
+	$("#default-tab-體育").addClass( "active show" );
+	
+	$("#"+"系統部門").addClass("active");
+	$("#"+"{$Think.MODULE_NAME}").addClass("active");
+});
+</script>

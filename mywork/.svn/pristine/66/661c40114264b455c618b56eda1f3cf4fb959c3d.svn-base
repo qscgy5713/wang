@@ -1,0 +1,40 @@
+<?php
+/*
+ * 前台公告
+ */
+class CommonAnnouncementModel extends CommonModel {
+    /*
+     * 取得Client公告
+     */
+    public function getClientAnnouncementData(){
+        $sql = "SELECT * FROM `common_announcement`
+                WHERE `announcement_belong` = '1' AND `announcement_enabled` = '1';";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        $returnArray = array();
+        $time = time();
+        foreach($return as $value){//判斷 上架時間 和 下架時間
+            if($time > $value['announcement_startTime'] && $time < $value['announcement_endTime']){
+                array_push($returnArray, $value);
+            }
+        }
+        return $returnArray;
+    }
+    /*
+     * 取得Agent公告
+     */
+    public function getAgentAnnouncementData(){
+        $sql = "SELECT `announcement_title`,`announcement_text` FROM `common_announcement`
+                WHERE `announcement_belong` = '2' AND `announcement_enabled` = '1';";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+    /*
+     * 取得Admin公告
+     */
+    public function getAdminAnnouncementData(){
+        $sql = "SELECT `announcement_title`,`announcement_text` FROM `common_announcement`
+                WHERE `announcement_belong` = '3' AND `announcement_enabled` = '1';";
+        $return = $this->cacheQuery($sql, 60);//緩存查詢 60秒內有效
+        return $return;
+    }
+}

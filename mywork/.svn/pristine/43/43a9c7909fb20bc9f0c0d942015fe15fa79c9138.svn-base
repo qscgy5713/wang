@@ -1,0 +1,759 @@
+<?php
+/**
+ * 會員Action
+ */
+class ApiAction extends CommonAction {
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function modelGetApiData($data,&$err = ""){
+        if(empty($data['operValue']) && $data['operValue'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['game_name']) && $data['game_name'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        $operValue= $data["operValue"];
+        $gameName = $data["game_name"];
+        
+        
+        switch($operValue){
+            case 3://取得遊戲餘額
+                $data = array(
+                    "game_name" => $gameName
+                );
+                $return = $this->getMemberBalance($data,$err);
+                if($return === false){
+                    return false;
+                }
+                return $return;
+                break;
+            case 4://對遊戲下點
+                $money = $data["money"];
+                $data = array(
+                    "game_name" => $gameName,
+                    "money" => $money
+                );
+                $return = $this->withdrawMemberBalance($data,$err);
+                if($return === false){
+                    return false;
+                }
+                return $return;
+                break;
+            case 5://對遊戲上點
+                $money = $data["money"];
+                $data = array(
+                    "game_name" => $gameName,
+                    "money" => $money
+                );
+                $return = $this->rechargeMemberBalance($data,$err);
+                if($return === false){
+                    return false;
+                }
+                return $return;
+                break;
+        }
+    }
+    /**
+     * 建立會員遊戲帳號
+     * @param array $data['game_name']遊戲名稱 ex:Dg
+     * @param string $err
+     * @return boolean
+     */
+    protected function createMember($data,&$err = ""){
+        
+        $gameName = $data["game_name"];
+        $memberId = $_SESSION['Member']['id'];
+        
+        $sietData = C('SIETDATA');
+        if($sietData == 'test'){
+            $addAccount = $gameName."tA".str_pad($memberId,3,"0",STR_PAD_LEFT);
+            $addPassword = $gameName."tP".str_pad($memberId,3,"0",STR_PAD_LEFT);
+        } else {
+            $addAccount = $gameName."dA".str_pad($memberId,3,"0",STR_PAD_LEFT);
+            $addPassword = $gameName."dP".str_pad($memberId,3,"0",STR_PAD_LEFT);
+        }
+        
+        
+        
+        
+        $gameModel = D('Game'.$gameName);//gameName 必須傳入 第一個字母大寫 後面小寫
+        switch($gameName){
+            case "Dg"://夢幻真人
+                $daily_win_limit = 30000;//每日限紅
+                $currency_id = 'TWD';//貨幣代碼(非必須)
+                $win_limit = 'E';//盤口
+                
+                $data = array(
+                    "user_name" => $addAccount,
+                    "password" => $addPassword,
+                    "daily_win_limit" => $daily_win_limit,
+                    "win_limit" => $win_limit,
+                    "currency_id" => $currency_id
+                );
+                break;
+            case "Sa"://沙龍真人
+                $currency_type = 'TWD';//貨幣代碼
+                
+                $data = array(
+                    'user_name' => $addAccount,
+                    'currency_type' => $currency_type,
+                );
+                break;
+            case "Ab"://歐博真人
+                $normal_handicap = '5,17,10';
+                $vip_handicap = '151';
+                $daily_max_win_limit = 300000;
+                $daily_max_lose_limit = 0;
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword,
+                    'normal_handicap' => $normal_handicap,
+                    'vip_handicap' => $vip_handicap,
+                    'daily_max_win_limit' => $daily_max_win_limit,
+                    'daily_max_lose_limit' => $daily_max_lose_limit
+                );
+                break;
+            case "Sb"://鑫寶體育
+                $nickname = $addAccount;
+                $agent = "";
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword,
+                    'nickname' => $nickname,
+                    'agent' => $agent
+                );
+                break;
+            case "Sp"://SP體育
+                $nickname = $addAccount;
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword,
+                    'nickname' => $nickname
+                );
+                break;
+            case "Pa"://平博體育
+                $data = array(
+                    'user_name' => $addAccount
+                    //建立一個新的遊戲帳號。注意PA會創造自己的遊戲帳號，所以傳入什麼名稱不影響。
+                );
+                break;
+            case "Bj"://北京賽車
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword,
+                );
+                break;
+            case "Xbs"://六合彩
+                $nickname = $addAccount;
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword,
+                    'nickname' => $nickname
+                );
+                break;
+            case "Bg"://賓果
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword
+                );
+                break;
+            case "Rtg"://RTG電子
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword
+                );
+                break;
+            case "Bng"://博狗
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword
+                );
+            case "Qt"://QT電子
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword
+                );
+                break;
+            case "Uc8"://Uc8手機電子
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword
+                );
+                break;
+            case "Gg"://Gg捕魚
+                $data = array(
+                    'user_name' => $addAccount,
+                    'password' => $addPassword
+                );
+                break;
+            default://未傳入館別
+                $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+                return false;
+                break;
+        }
+        
+        switch($gameName){
+            case "Pa"://平博體育
+                $addAccount = $return;
+                break;
+        }
+        
+        //先 寫入資料庫
+        $MemberInfo = D("Game".$gameName."MemberInfo");
+        $memberData = array(
+            "member_id"=>$_SESSION['Member']['id'],
+            "game_account"=>$addAccount,
+            "game_password"=>$addPassword,
+        );
+        $return = $MemberInfo->addMemberInfoData($memberData,$err);
+        if($return === false){
+            return false;
+        }
+        
+        //建立會員遊戲帳號 API
+        $return = $gameModel->createMember($data, $err);
+        if($return === false){
+            return false;
+        }
+        
+        
+        $return = array(
+            "gameAccount" =>$addAccount,
+            "gamePassword" =>$addPassword
+        );
+        return $return;
+    }
+    /**
+     * 登入取得遊戲連結
+     * @param array $data['game_name']遊戲名稱 ex:Dg
+     * @param string $err
+     * @return boolean| 遊戲連結
+     */
+    protected function loginMember($data,&$err = ""){
+        
+        $gameName = $data["game_name"];
+        $memberId = $_SESSION['Member']['id'];
+        $return = $this->getMemberInfoData($data,$err);
+        if($return === false){
+            return false;
+        }
+        $gameAccount = $return["gameAccount"];
+        $gamePassword = $return["gamePassword"];
+        
+        $gameLink = "";
+        $gameModel = D('Game'.$gameName);//gameName 必須傳入 第一個字母大寫 後面小寫
+        switch($gameName){
+            case "Dg"://夢幻真人
+                $is_mobile = "n";//手機板?(非必須)
+                $is_apk = "n";//用APP進行遊戲?(非必須)
+                $lang_code = "tw";//語系代碼(非必須)
+                
+                $data = array(
+                    "user_name" => $gameAccount,
+                    "password" => $gamePassword,
+                    'is_mobile' => $is_mobile,
+                    'is_apk' => $is_apk,
+                    'lang_code' => $lang_code
+                );
+                break;
+            case "Sa"://沙龍真人
+                $currency_type = 'TWD';//貨幣代碼
+                
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'currency_type' => $currency_type,
+                );
+                break;
+            case "Ab"://歐博真人
+                $data = array(
+                    "user_name" => $gameAccount,
+                    "password" => $gamePassword
+                );
+                break;
+            case "Sb"://鑫寶體育
+                $is_mobile = false;//手機板
+                $token = '';
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'password' => $gamePassword,
+                    'is_mobile' => $is_mobile,
+                    'token' => $token
+                );
+                break;
+            case "Sp"://SP體育
+                $data = array(
+                    "user_name" => $gameAccount,
+                    "password" => $gamePassword
+                );
+                break;
+            case "Pa"://平博體育
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Bj"://北京賽車
+                $data = array(
+                'user_name' => $gameAccount
+                );
+                break;
+            case "Xbs"://六合彩
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'password' => $gamePassword
+                );
+                break;
+            case "Bg"://賓果
+                $data = array(
+                'user_name' => $gameAccount
+                );
+                break;
+            case "Rtg"://RTG電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'mach_id' => $data['mach_id'],
+                    'game_id' => $data['game_id']
+                );
+                break;
+            case "Bng"://博狗
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'game_code' => $data['game_code']
+                );
+                break;
+            case "Qt"://Qt電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'game_id' => $data['game_id'],
+                    'is_mobile'=> $data['is_mobile']
+                );
+                break;
+            case "Uc8"://Uc8手機電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'is_mobile'=> $data['is_mobile']
+                );
+                break;
+            case "Gg"://Gg捕魚
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'password' => $gamePassword,
+                    'game_code' => $data['game_code']
+                );
+                break;
+            default://未傳入館別
+                return false;
+                break;
+        }
+        
+        $return = $gameModel->loginMember($data, $err);
+        if($return === false){
+            return false;
+        }
+        $gameLink= $return;
+        
+        return $gameLink;
+    }
+    /*
+     * 取得會員餘額
+     */
+    protected function getMemberBalance($data,&$err = ""){
+        
+        $gameName = $data["game_name"];
+        $memberId = $_SESSION['Member']['id'];
+        $return = $this->getMemberInfoData($data,$err);
+        if($return === false){
+            return false;
+        }
+        $gameAccount = $return["gameAccount"];
+        $gamePassword = $return["gamePassword"];
+        
+        $Balance = "";
+        $gameModel = D('Game'.$gameName);//gameName 必須傳入 第一個字母大寫 後面小寫
+        switch($gameName){
+            case "Dg"://夢幻真人
+                $data = array(
+                    "user_name" => $gameAccount
+                );
+                break;
+            case "Sa"://沙龍真人
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Ab"://歐博真人
+                $data = array(
+                    "user_name" => $gameAccount,
+                    "password" => $gamePassword
+                );
+                break;
+            case "Sb"://鑫寶體育
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Sp"://SP體育
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Pa"://平博體育
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Bj"://北京賽車
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Xbs"://六合彩
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Bg"://賓果
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Rtg"://RTG電子
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Bng"://博狗
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Qt"://Qt電子
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Uc8"://Uc8手機電子
+                $data = array(
+                    'user_name' => $gameAccount
+                );
+                break;
+            case "Gg"://Gg捕魚
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'password' => $gamePassword
+                );
+                break;
+            default://未傳入館別
+                return false;
+                break;
+        }
+        $return = $gameModel->getMemberBalance($data, $err);
+        if($return === false){
+            return false;
+        }
+        $Balance= $return;
+        
+        return $Balance;
+    }
+    /*
+     * 遊戲點數下點
+     */
+    protected function withdrawMemberBalance($data,&$err = ""){
+        $gameName = $data["game_name"];
+        $money = $data["money"];
+        $memberId = $_SESSION['Member']['id'];
+        
+        $return = $this->getMemberInfoData($data,$err);
+        if($return === false){
+            return false;
+        }
+        $gameAccount = $return["gameAccount"];
+        $gamePassword = $return["gamePassword"];
+        
+        $recharge = true;
+        $gameModel = D('Game'.$gameName);//gameName 必須傳入 第一個字母大寫 後面小寫
+        switch($gameName){
+            case "Dg"://夢幻真人
+                $data = array(
+                    "user_name" => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Sa"://沙龍真人
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Ab"://歐博真人
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Sb"://鑫寶體育
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Sp"://SP體育
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Pa"://平博體育
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Bj"://北京賽車
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Xbs"://六合彩
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Bg"://賓果
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Rtg"://RTG電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Bng"://博狗
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Qt"://Qt電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Uc8"://Uc8手機電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Gg"://Gg捕魚
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'password' => $gamePassword,
+                    'amount' => $money
+                );
+                break;
+            default://未傳入館別
+                return false;
+                break;
+        }
+        $return = $gameModel->withdrawMemberBalance($data, $err);
+        if($return === false){
+            return false;
+        }
+        
+        return $recharge;
+    }
+    
+    /*
+     * 遊戲點數上點
+     */
+    protected function rechargeMemberBalance($data,&$err = ""){
+        $gameName = $data["game_name"];
+        $money = $data["money"];
+        $memberId = $_SESSION['Member']['id'];
+        
+        $return = $this->getMemberInfoData($data,$err);
+        if($return === false){
+            return false;
+        }
+        $gameAccount = $return["gameAccount"];
+        $gamePassword = $return["gamePassword"];
+        
+        $recharge = true;
+        $gameModel = D('Game'.$gameName);//gameName 必須傳入 第一個字母大寫 後面小寫
+        switch($gameName){
+            case "Dg"://夢幻真人
+                $data = array(
+                    "user_name" => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Sa"://沙龍真人
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Ab"://歐博真人
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Sb"://鑫寶體育
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Sp"://SP體育
+                $data = array(
+                'user_name' => $gameAccount,
+                'amount' => $money
+                );
+                break;
+            case "Pa"://平博體育
+                $data = array(
+                'user_name' => $gameAccount,
+                'amount' => $money
+                );
+                break;
+            case "Bj"://北京賽車
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Xbs"://六合彩
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Bg"://賓果
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Rtg"://RTG電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Bng"://博狗
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Qt"://Qt電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Uc8"://Uc8手機電子
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'amount' => $money
+                );
+                break;
+            case "Gg"://Gg捕魚
+                $data = array(
+                    'user_name' => $gameAccount,
+                    'password' => $gamePassword,
+                    'amount' => $money
+                );
+                break;
+            default://未傳入館別
+                return false;
+                break;
+        }
+        $return = $gameModel->rechargeMemberBalance($data, $err);
+        if($return === false){
+            return false;
+        }
+        
+        return $recharge;
+    }
+    
+    /*
+     * 抓取注單報表
+     */
+    public function getGameRecord($data,&$err = ""){
+        return 123;
+    }
+    
+    
+    //---------------------------------------
+    /**
+     * 取得會員遊戲帳號密碼
+     * 如果沒有 會自動創建帳號密碼
+     * @param array $data
+     * @param string $err
+     * @return boolean|array[]
+     */
+    protected function getMemberInfoData($data,&$err = ""){
+        $gameName = $data["game_name"];
+        if(empty($_SESSION['Member']['id']) && $_SESSION['Member']['id'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        $memberId = $_SESSION['Member']['id'];
+        //$gameAccount = $_COOKIE['game_'.$gameName.'_account'];
+        //$gamePassword = $_COOKIE['game_'.$gameName.'_password'];
+        $gameAccount = "";
+        $gamePassword = "";
+        
+        if(empty($gameAccount) || empty($gamePassword)){//沒有紀錄帳密的COOKIE
+            //讀取 會員資料
+            $MemberInfo = D("Game".$gameName."MemberInfo");
+            $data = array(
+                "member_id" => $memberId
+            );
+            $return = $MemberInfo->getMemberInfoDataByMemberId($data,$err);
+            //var_dump($return);exit();
+            if($return === false){
+                return false;
+            }
+            //無遊戲帳號
+            if(empty($return["game_account"])){
+                $data = array(
+                    "game_name" => $gameName
+                );
+                $return = $this->createMember($data,$err);
+                if($return === false){
+                    return false;
+                }
+                $gameAccount = $return["game_account"];
+                $gamePassword = $return["game_password"];
+            } else {
+                $gameAccount = $return["game_account"];
+                $gamePassword = $return["game_password"];
+            }
+            
+            //cookie('account',$gameAccount,'expire=3600&prefix=game_'.$gameName.'_');
+            //cookie('password',$gamePassword,'expire=3600&prefix=game_'.$gameName.'_');
+        }
+        
+        $return = array(
+            "gameAccount" => $gameAccount,
+            "gamePassword" => $gamePassword,
+        );
+        return $return;
+    }
+    
+}

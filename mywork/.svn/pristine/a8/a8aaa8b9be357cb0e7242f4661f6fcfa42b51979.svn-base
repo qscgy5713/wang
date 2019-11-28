@@ -1,0 +1,7 @@
+<?php
+class OperatingRecordAction extends AgentAction {
+    //TODO:10 操作記錄
+    public function index(){
+        $this->display();
+    }
+}

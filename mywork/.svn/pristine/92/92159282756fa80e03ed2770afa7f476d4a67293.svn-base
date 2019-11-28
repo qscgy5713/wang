@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>專屬帳戶</title>
+</head>
+<body>
+<span> Test PrivateAccount Index </span>
+<div>
+	新增會員
+	<form method="post" action="__APP__/PrivateAccount/formAddPrivateatm">
+		會員帳號 : <input type="text" name="addAccount"><br>
+		銀行代碼 : <input type="text" name="addBankcode"><br>
+		銀行帳號 : <input type="text" name="addBankaccount"><br>
+		銀行名稱 : <input type="text" name="addBankname"><br>
+		<input type="submit" value="提交">
+	</form>
+</div>
+<div>
+	<form method="post" action="__APP__/PrivateAccount/index">
+		搜索帳號 : <input type="text" name="memberAccount" id="member_account" value="{$memberAccount}">
+		<input type="submit" value="查詢">
+	</form>
+</div>
+<table>
+	<tr>
+		<th>會員ID</th>
+		<th>會員帳號</th>
+		<th>銀行代碼</th>
+		<th>銀行帳號</th>
+		<th>銀行名稱</th>
+		<th>操作</th>
+		<th>開關</th>
+	</tr>
+	<VOLIST name="showArray" id="vo">
+		<tr>
+			<td>{$vo.id}</td>
+			<td>{$vo.account}</td>
+			<td>{$vo.bankcode}</td>
+			<td>{$vo.bankaccount}</td>
+			<td>{$vo.bankname}</td>
+			<td>{$vo.enabled}</td>
+			<td>
+				<if condition="$vo.enabled eq '停用中'">
+					<form method="post" action="__APP__/PrivateAccount/formStartPrivateatm">
+						<input type="hidden" name="startId" value="{$vo.ATMId}">
+						<input type="submit" value="開啟">
+					</form>
+				<elseif condition="$vo.enabled eq '啟用中'"/>
+					<form method="post" action="__APP__/PrivateAccount/formStopPrivateatm">
+						<input type="hidden" name="stopId" value="{$vo.ATMId}">
+						<input type="submit" value="關閉">
+					</form>
+				</if>
+				<form method="post" action="__APP__/PrivateAccount/formDelPrivateatm">
+					<input type="hidden" value="{$vo.ATMId}" name="delPrivateatmId">
+					<input type="submit" value="刪除">
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="6">
+				<form method="post" action="__APP__/PrivateAccount/formSetPrivateatm">
+					修改會員
+					<input type="hidden" value="{$vo.ATMId}" name="setPrivateatmId">
+					銀行代碼 : <input type="text" value="{$vo.bankcode}" name="setBankcode">
+					銀行代碼 : <input type="text" value="{$vo.bankaccount}" name="setBankaccount">
+					銀行代碼 : <input type="text" value="{$vo.bankname}" name="setBankname">
+					<input type="submit" value="修改">
+				</form>
+			</td>
+		</tr>
+	</VOLIST>
+</table>
+<include file="Common:footer"/>
+<script>
+$(document).ready(function(){
+  $('#member_account').typeahead({
+    ajax: {
+      url: '__URL__/searchMemberName',
+      timeout: 200
+    }
+  });
+});
+</script>
+</body>
+</html>

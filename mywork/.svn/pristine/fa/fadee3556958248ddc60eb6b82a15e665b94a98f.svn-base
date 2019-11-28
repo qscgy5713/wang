@@ -1,0 +1,23 @@
+<?php
+/*
+ * 遊戲菜單
+ */
+class GameRtgMenuModel extends MemberModel {
+    /*
+     * 取得 遊戲菜單資料 資料
+     */
+    public function getGameRtgMenuData(){
+        $sql = "SELECT
+                    `uniq_id`,`title_zhtw`, `title_enus`, `game_type`, `mach_id`, `game_id`, `is_flash`, `is_mobile`
+                FROM `game_rtg_menu`
+                WHERE
+                    ((is_flash=1) OR (is_mobile=1))
+		            AND is_active=1
+                ORDER BY
+                    game_type,
+            		game_id,
+            		mach_id;";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

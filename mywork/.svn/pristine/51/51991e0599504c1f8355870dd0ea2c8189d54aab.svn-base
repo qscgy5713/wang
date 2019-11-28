@@ -1,0 +1,317 @@
+<?php
+/*
+ * Dg夢幻真人抓帳
+ * 抓帳限制: 
+ *     每次長度: 每次呼叫抓回至多1000筆,但時間長度應無限制
+ *     每次間隔: 應無限制
+ *     最遠時間: 最後一筆被標記的注單起
+ */
+class ScriptGameReportDgAction extends ScriptGameReportAction {
+
+    const DG_REPORT_BETS_RETRIEVE_MAX_NUM = 1000;  //每次抓取注明細, 最多可能回傳的注數量
+    const DG_REPORT_REVOCATION_UNSETTLED_CODE = 0;  //尚未結算的代碼
+    protected $arrBets = array();  //用來儲存即將標記的注單
+    
+    protected function _initialize() {
+        $this->gameCode = 'Dg';
+        $request = $this->getRequest();
+        if (isset($request['startTime']) && isset($request['endTime'])) {
+            $this->startTime = $request['startTime'];
+            $this->endTime = $request['endTime'];
+        } else {  //沒給時的預設抓帳起始
+            $nowTs = time();
+            $this->startTime = $this->getBetDate($nowTs-60*60*24*1);
+            $this->endTime = $this->getBetDate($nowTs);
+        }
+        //parent::setTime($this->startTime, $this->endTime);
+
+        // 執行父類初始化
+        parent::_initialize();
+    }
+    
+    public function index() {
+        if (!$this->power) {exit();}
+
+        $GameReportData = D("GameReportData");
+        $GameModel = D("Game".$this->gameCode);
+        if (!method_exists($GameModel,'getGameRecord')) {
+            //紀錄錯誤到Db
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'無此代號(Err000)</span>');
+            $this->display();
+            exit();
+        }
+        
+        $this->getDgGameReportData($err);
+
+        //設定抓總結的起始時間
+        $this->reportStartTime = $this->getBetDate($this->startTime).' 00:00:00';
+        $this->reportEndTime = $this->getBetDate($this->endTime).' 23:59:59';
+
+        $return = $this->getReportApi();
+        if ($return === false) {
+            $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err002) Err=>'.$this->err.'</span>');
+            $this->display();
+        } else {  //儲存注單成功-->要標記他們, 不然下次會不停地抓進一樣的注單
+            $GameModel = D("Game".$this->gameCode);
+            $markRes = $this->_markBets($GameModel, $this->arrBets, $err);
+            if (!$markRes) {
+                $this->assign("status","<span style='color:red;'>".$this->gameCode.'markBet標記帳務發生錯誤(Err003) Err=>'.$err.'</span>');
+                $this->display();
+            }
+        }
+        
+        $this->assign("gameCode",$this->gameCode);//遊戲代號
+        $this->assign("timeStr",$this->timeStr);//執行時間區間
+        
+        $this->assign("detailNumber",count($this->allDetailArray));//更新總注單
+        $this->assign("allDetailArray",$this->allDetailArray);
+        
+        $this->assign("reportNumber",count($this->allReportArray));//更新總統整
+        $this->assign("allReportArray",$this->allReportArray);
+        
+        $this->assign("status","<span style='color:Blue;'>".$this->gameCode.$this->success.'</span>');
+        $this->display();
+    }
+    
+    /*
+     * 抓帳
+     */
+    protected function getDgGameReportData(&$err='') {
+        $this->timeStr .= ((!empty($this->timeStr))? '<BR>' : '').$this->startTime.' ~ '.$this->endTime;
+        
+        $GameModel = D("Game".$this->gameCode);
+
+        $round = 1;
+        $arrRawBets = array();
+        $isContinue = true;
+
+        do {
+            //echo "getGameRecord round {$round} <br/>";
+            $err = null;
+            $arrThisRoundBets = $GameModel->getGameRecord($err);
+            //var_dump($arrThisRoundBets);
+            if ((!is_array($arrThisRoundBets))||($arrThisRoundBets === false)) {
+                //紀錄錯誤到Db
+                $this->assign("status","<span style='color:red;'>".$this->gameCode.'抓帳發生錯誤(Err001) Err=>'.$err.'</span>');
+                $this->display();
+                $isContinue = false;
+                exit();
+            }
+            $numData = sizeof($arrThisRoundBets);
+
+            if ($numData) {
+                $arrRawBets = array_merge($arrRawBets, $arrThisRoundBets);
+            } else {
+                $isContinue = false;
+            }
+
+            if ( $numData < self::DG_REPORT_BETS_RETRIEVE_MAX_NUM ) {  //不足滿額
+                $isContinue = false;
+            }
+            ++$round;
+        } while ( $isContinue );
+
+        //var_dump($arrRawBets);
+        self::_preprocessBets($arrRawBets);  //處理注單明細格式
+
+        foreach ($arrRawBets as $bk => $bv) {
+            //把遊戲帳號 加入 搜尋會員帳號陣列 Start
+            if (!in_array($bv['userName'], $this->allMemberGameAccount)) {
+                array_push($this->allMemberGameAccount, $bv['userName']);
+            }
+            //把遊戲帳號 加入 搜尋會員帳號陣列 End
+
+            $this->arrBets[$bv['id']] = $bv;
+
+            $gameType = $bv['gameType'];
+            if ($gameType==1) {  //一般遊戲
+                $detail_id = $bv['id'];
+                $tableId = $bv['tableId'];
+                $shoeId = $bv['shoeId'];
+                $playId = $bv['playId'];
+                $lobbyId = $bv['lobbyId'];
+                $gameId = $bv['gameId'];
+                $memberId = $bv['memberId'];
+                $parentId = $bv['parentId'];
+                $createTime = $bv['betTime'];
+                $createTimeTs = strtotime($createTime);
+                $calTime = $bv['calTime'];
+                $surplus = $bv['winOrLoss'];
+                $balanceBefore = $bv['balanceBefore'];
+                $bettingMoney = $bv['betPoints'];
+                $effective = $bv['availableBet'];
+                $game_account = $bv['userName'];
+                $result = str_replace('"', '#', $bv['result']);
+                $betDetail = str_replace('"', '#', $bv['betDetail']);
+                $ip = $bv['ip'];
+                $ext = $bv['ext'];
+                $isRevocation = $bv['isRevocation'];
+                $currencyId = $bv['currencyId'];
+                $deviceType = $bv['deviceType'];
+            } elseif ($gameType==2) {  //紅包小費
+                $detail_id = $bv['id'];
+                $gameId = $bv['gameId'];
+                $memberId = $bv['memberId'];
+                $parentId = $bv['parentId'];
+                $createTime = $bv['betTime'];
+                $createTimeTs = strtotime($createTime);
+                $surplus = $bv['winOrLoss'];
+                $balanceBefore = $bv['balanceBefore'];
+                $bettingMoney = $bv['betPoints'];
+                $game_account = $bv['userName'];
+                $ip = $bv['ip'];
+                $isRevocation = $bv['isRevocation'];
+                $currencyId = $bv['currencyId'];
+
+                //紅包無以下key
+                $lobbyId = null;
+                $tableId = null;
+                $shoeId = null;
+                $playId = null;
+                $calTime = null;
+                $effective = 0;
+                $deviceType = null;
+                $result = null;
+                $resultStr = null;
+                $ext = null;
+                if (strlen(trim($betDetail))) {
+                    $betDetail = $bv['betDetail'];
+                } else {
+                    $betDetail = null;
+                }
+            }
+
+            //依照下注遊戲判斷是否需要返水
+            $detail_needBackWater = 0;
+            $arrBaccaratGameIds = array(
+                1,  //百家樂
+                2,  //保險百家樂
+                8,  //竟咪百家樂
+            );
+            if ($gameType==1 && in_array($gameId, $arrBaccaratGameIds) ) {  //一般遊戲 且 百家樂
+                if (strpos($betDetail, 'banker6') === false ) {  //banker6 = 莊 (免佣)
+                    $detail_needBackWater = 1;
+                }
+            }
+
+            $arr = array(
+                //'betId' => $betId,
+                'tableId' => $tableId,
+                'shoeId' => $shoeId,
+                'playId' => $playId,
+                'lobbyId' => $lobbyId,
+                'gameId' => $gameId,
+                'gameType' => $gameType,
+                'memberId' => $memberId,
+                'parentId' => $parentId,
+                //'betTime' => $betTime,
+                'calTime' => $calTime,
+                //'winOrLoss' => $winOrLoss,
+                'balanceBefore' => $balanceBefore,
+                //'betPoints' => $betPoints,
+                //'availableBet' => $availableBet,
+                //'userName' => $userName,
+                'result' => $result,
+                'betDetail' => $replacedBetDetail,
+                'ip' => $ip,
+                'ext' => $ext,
+                'isRevocation' => $isRevocation,
+                'currencyId' => $currencyId,
+                'deviceType' => $deviceType,
+            );
+            foreach ($arr as $ak => $av){
+                $arr[$ak] = dowith_sql($av);
+            }
+            $arrInJson = json_encode($arr, JSON_UNESCAPED_UNICODE);
+
+            $data = array(
+                "detail_id" => $detail_id,
+                "detail_gameAccount" => $game_account,
+                "detail_createTime" => $createTimeTs,
+                "detail_bettingMoney" => $bettingMoney,
+                "detail_surplus" => $surplus,
+                "detail_effective" => $effective,
+                "detail_needBackWater"=> $detail_needBackWater,
+                "detail_isBackWater" => 0,
+                "detail_dataInJson" => $arrInJson,  //json_encode($dataInJson, JSON_UNESCAPED_UNICODE),
+                "detail_subbetInJson" => null,
+            );
+            $data["detail_orderDate"] = strtotime($this->getBetDate($bv['betTime']).' 12:00:00');
+            array_push($this->allDetailArray, $data);
+        }
+    }
+
+    //-----------------------------------------------
+    //找出一個時間的歸帳日
+    public static function getBetDate($argTime) {
+        if (date('Y-m-d',strtotime($argTime))==$argTime) {
+            return $argTime;
+        }
+        $splitTimeS = '12:00:00';  //區分不同歸帳日的時間點
+        $orderDate = null;
+        if (is_int($argTime)&&($argTime >= strtotime('1970-01-01 00:00:00'))) {  //傳入timestamp
+            $dateTime = $argTime;
+        } else {  //傳入日期時間字串
+            $dateTime = strtotime($argTime);
+        }
+        $splitDatetime = date("Y-m-d {$splitTimeS}", $dateTime);
+        $splitTime = strtotime($splitDatetime);
+
+        if ($dateTime >= $splitTime) {  //若已經跨越區分不同歸帳日的時間點-->當日
+            $orderDate = date("Y-m-d", $splitTime);
+        } else {  //未跨越-->前一日
+            $orderDate = date("Y-m-d", $splitTime-60*60*24*1);
+        }
+        //echo "getBetDate({$argTime})={$orderDate}<br/>";
+        return $orderDate;
+    }  //--function getBetDate
+
+    //-----------------------------------------------
+    //把原始API抓回的注單格式處理轉換為我們的格式
+    protected function _preprocessBets(&$argBets) {
+        if ($argBets&&is_array($argBets)) {
+            foreach ($argBets as &$bet) {
+                $bet['userName'] = strtolower($bet['userName']);
+                if (array_key_exists('winOrLoss', $bet)) {
+                    $bet['winOrLoss'] = ( $bet['winOrLoss'] - $bet['availableBet'] );  //將輸贏扣除投注成為真正TS定義的輸贏
+                } else {  //紅包類沒有winOrLoss
+                    $bet['winOrLoss'] = null;
+                }
+            }
+        }
+    }  //--function _preprocessBets
+
+    //-----------------------------------------------
+    //將抓好存好的注單做標記,這樣就不會再被抓入
+    protected function _markBets(&$argDgGameModel, $argArrBets, &$argErr) {
+
+        return true;
+
+        $arrBetsIdToMark = array();
+        if (is_array($argArrBets)) {
+            foreach ($argArrBets as $bKey => $bet) {
+                $betId = $bet['id'];
+                $revoId = $bet['isRevocation'];
+                if ($revoId !== self::DG_REPORT_REVOCATION_UNSETTLED_CODE) {  //not to mark unsettled bets
+                    $arrBetsIdToMark[] = $betId;
+                }
+            }
+            $err = null;
+            $markRes = $argDgGameModel->markBets($arrBetsIdToMark, $err);
+            if ($markRes) {
+                $markedNum = sizeof($arrBetsIdToMark);
+                //echo "<h2>標記注單成功, 標記了:{$markedNum} 筆注單. <s>若要重新顯示這些注單請使用: initBetsByDatetimes() 功能.</s></h2>";
+                $argErr = null;
+                return true;
+            } else {
+                //echo "<h1><span style=\"color:#F00;\">markBets error: ";
+                //Dbgr::preout($err);
+                //echo "</span></h1>";
+            }
+        } else {
+            $err = "markBets error: argArrBets is not an array";
+        }
+        $argErr = $err;
+        return false;
+    }
+}

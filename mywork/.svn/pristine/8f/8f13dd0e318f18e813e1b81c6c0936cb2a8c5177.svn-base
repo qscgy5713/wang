@@ -1,0 +1,75 @@
+<?php
+ini_set('memory_limit','1M' );
+//BNG登入腳本
+class ScriptGameBngTokenAction extends ScriptAction {
+    public function index(){
+        $request = $this->getRequest();
+        $cfg_game_bng_vendorKey = 'LBQHj6SgTf';
+        $selfKey = '771939548f45eccac28d227f3856d78d';
+        $sessExpireSec = 60000;
+        
+        if ( (!isset($request['vendor_key'])) || ($request['vendor_key'] != $cfg_game_bng_vendorKey) ) {
+            $arrReply = array(
+                'error' => 1,
+                'message' => 'Invalid vendor key or IP not whitelisted',
+            );
+            echo json_encode($arrReply);
+            exit();
+        }
+        
+        if (isset($request['token'])) {
+            $arrToken = explode('-', $request['token']);
+            if (sizeof($arrToken) !== 3) {
+                $arrReply = array(
+                    'error' => 2,
+                    'message' => 'Invalid token',
+                    //'t' => time(),
+                );
+                echo json_encode($arrReply);
+                exit();
+            }
+        } else {
+            $arrReply = array(
+                'error' => 2,
+                'message' => 'Invalid token',
+                //'t' => time(),
+            );
+            echo json_encode($arrReply);
+        }
+        
+        $hash = $arrToken[0];
+        $time = $arrToken[1];
+        $username = $arrToken[2];
+        $nowTime = time();
+        if (abs($time-$nowTime) >= $sessExpireSec) {
+            $arrReply = array(
+                'error' => 3,
+                'message' => 'User session expired',
+                //'t' => time(),
+            );
+            echo json_encode($arrReply);
+            exit();
+        }
+        
+        $trueHash = hash('md5', "{$time}|{$username}|{$time}|{$selfKey}");
+        if ($trueHash != $hash) {
+            $arrReply = array(
+                'error' => 2,
+                'message' => 'Invalid token',
+                //'t' => time(),
+            );
+            echo json_encode($arrReply);
+            exit();
+        }
+        
+        $arrReply = array(
+            'error' => 0,
+            'message' => 'Success',
+            'username' => $username,
+            'currency' => 'TWD',
+            'ip' => getIp(),
+        );
+        echo json_encode($arrReply);
+        exit();
+    }
+}

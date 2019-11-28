@@ -1,0 +1,45 @@
+<?php
+/*
+ * 簡訊LOG
+ */
+class KotsmsLogModel extends MemberModel {
+    protected $tableName = "kotsms_log";
+    protected $tableId = "log_id";
+    
+    public function addKotsmsLogData($data){
+        
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return;
+    }
+    
+    public function getKotsmsNumberData($data){
+        
+        $sql = "SELECT COUNT(*) as totalNumber FROM `{$this->tableName}`
+                WHERE (`log_createTime` BETWEEN '{$data['startTime']}' AND '{$data['endTime']}')
+                AND `log_ip` = '{$data['log_ip']}'";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+}

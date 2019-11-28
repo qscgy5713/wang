@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FirstDepositwithdraw首頁</title>
+</head>
+<body>
+<span> Test FirstDepositwithdraw Index </span>
+	<BR>
+	<form id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+		<input id="agentTree" type='hidden' name='agentTree' value='{$comeAgentTree}'>
+		<input id="agentAccount" type='hidden' name='agentAccount' value='{$comeAgentAccount}'>
+	<input type="button" value="本日" onClick="formTime('regist','{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('regist','{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('regist','{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('regist','{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('regist','{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('regist','{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+		<input id="registStartTime" name="registStartTime" type="text" value="{$registStartTime}"/> 至
+		<input id="registEndTime"   name="registEndTime"   type="text" value="{$registEndTime}"/>
+		<input type='button' value='清除' onClick="clearTime('regist');">
+	<BR>
+	<input type="button" value="本日" onClick="formTime('profit','{$today} 00:00:00','{$today} 23:59:59')"/>
+	<input type="button" value="昨日" onClick="formTime('profit','{$yesterday} 00:00:00','{$yesterday} 23:59:59')"/>
+	<input type="button" value="本週" onClick="formTime('profit','{$thisWeekA} 00:00:00','{$thisWeekB} 23:59:59')"/>
+	<input type="button" value="上週" onClick="formTime('profit','{$lastWeekA} 00:00:00','{$lastWeekB} 23:59:59')"/>
+	<input type="button" value="本月" onClick="formTime('profit','{$thisMonthA} 00:00:00','{$thisMonthB} 23:59:59')"/>
+	<input type="button" value="上月" onClick="formTime('profit','{$lastMonthA} 00:00:00','{$lastMonthB} 23:59:59')"/>
+		<input id="profitStartTime" name="profitStartTime" type="text" value="{$profitStartTime}"/> 至
+		<input id="profitEndTime"   name="profitEndTime"   type="text" value="{$profitEndTime}"/>
+		<input type='button' value='清除' onClick="clearTime('profit');">
+		<input type='submit' value='查詢'>
+	</form>
+	<BR>
+	
+	<VOLIST name="loginArray" id="vo">
+		<input type='button' value='{$vo.agentAccount}' onclick="formAgent('{$vo.agentAccount}','{$vo.agentTree}')">
+	</VOLIST>
+	
+	
+</body>
+</html>
+
+<include file="Common:footer"/> 
+<script>
+$(function(){
+	
+});
+function formTime(idName,startTime,endTime){
+	$("#"+idName+"StartTime").val(startTime);
+	$("#"+idName+"EndTime").val(endTime);
+	$("#formInquire").submit();
+}
+function formAgent(agentAccount,agentTree){
+	$("#agentAccount").val(agentAccount);
+	$("#agentTree").val(agentTree);
+	$("#formInquire").submit();
+}
+function clearTime(idName){
+	$("#"+idName+"StartTime").val('');
+	$("#"+idName+"EndTime").val('');
+}
+</script>

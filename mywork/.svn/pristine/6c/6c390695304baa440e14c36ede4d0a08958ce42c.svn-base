@@ -1,0 +1,117 @@
+<?php
+/*
+ * 推廣網址
+ */
+class CommonAgentDomainPromotionsiteModel extends AgentModel {
+    /*
+     * 取得最大的創建編號
+     * By agent_id
+     */
+    public function getAgentDomainPromotionSiteNumberingByAgentId($data){
+        if(empty($data['agent_id']) && $data['agent_id'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT max(`promotionsite_siteNumbering`) as MaxNumber FROM `common_agent_domain_promotionsite`
+                WHERE `agent_id` = '".$data['agent_id']."' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 取得推廣網址資料
+     * By promotionsite_site
+     */
+    public function getPromotionsiteDataBySite($data){
+        if(empty($data['promotionsite_site']) && $data['promotionsite_site'] !== '0'){
+            return false;
+        }
+        $sql = "SELECT * FROM `common_agent_domain_promotionsite`
+                WHERE `promotionsite_site` = '".$data['promotionsite_site']."' LIMIT 1;";
+        $return = $this->query($sql);
+        if($return === false){
+            return false;
+        }
+        return $return[0];
+    }
+    /*
+     * 新增推廣網址資料
+     */
+    public function addDomainPromotionsiteData($data){
+        $sql = "INSERT INTO `common_agent_domain_promotionsite` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 刪除推廣網址
+     * By promotionsite_id
+     */
+    public function delAgentDomainPromotionSiteById($data){
+        if(empty($data['promotionsite_id']) && $data['promotionsite_id'] !== '0'){
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== '0'){
+            return false;
+        }
+        $sql = "DELETE `common_agent_domain_promotionsite` 
+                WHERE `promotionsite_id` = '".$data['promotionsite_id']."' AND `agent_id` = '".$data['agent_id']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改推廣網址
+     * By promotionsite_id
+     */
+    public function setAgentDomainPromotionSiteById($data){
+        if(empty($data['promotionsite_id']) && $data['promotionsite_id'] !== '0'){
+            return false;
+        }
+        if(empty($data['agent_id']) && $data['agent_id'] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == 'promotionsite_id'){continue;}
+            if($key == 'agent_id'){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_agent_domain_promotionsite` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `promotionsite_id` = '".$data['promotionsite_id']."' AND `agent_id` = '".$data['agent_id']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+    /*
+     * 修改推廣網址 註冊人數
+     * By promotionsite_site
+     */
+    public function setRegisteredUsersDataBySite($data,&$err){
+        if(empty($data['promotionsite_site']) && $data['promotionsite_site'] !== '0'){
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_01"));
+            return false;
+        }
+        $sql = "UPDATE `common_agent_domain_promotionsite` 
+                SET `promotionsite_registeredUsers` = `promotionsite_registeredUsers`+1 
+                WHERE `promotionsite_site` = '".$data['promotionsite_site']."';";
+        $return = $this->query($sql);
+        return $return;
+    }
+}

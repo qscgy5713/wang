@@ -1,0 +1,325 @@
+<?php
+set_time_limit( 10 );
+
+class GamePxAction extends CommonAction {
+  const API_NAME = 'Px 六合彩';
+  /*
+   * 如果有初始化 可以設定在初始化中
+   */
+  protected function _initialize() {
+    parent::_initialize();
+
+    $function_links = '';
+    $function_links .= "<a href=\"__URL__/index\" target=\"_self\">創新帳號</a> | ";
+    $function_links .= "<a href=\"__URL__/game_link\" target=\"_self\">遊戲連結</a> | ";
+    $function_links .= "<a href=\"__URL__/deposit\" target=\"_self\">上點</a> | ";
+    $function_links .= "<a href=\"__URL__/withdraw\" target=\"_self\">下點</a> | ";
+    $function_links .= "<a href=\"__URL__/balance\" target=\"_self\">查點</a> | ";
+    $function_links .= "<a href=\"__URL__/report\" target=\"_self\">報表</a> | ";
+    $function_links .= "<a href=\"__URL__/report2\" target=\"_self\">報表2</a>";
+    $this->assign('function_links', $function_links);
+
+    $this->assign('api_name', self::API_NAME);
+    $this->assign('op_desc', '輸入參數按下送出');
+  }
+
+  //1. 創新帳號
+  public function index(){
+
+    $account = 'test01';
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+      //檢查是否有 account 傳入 並且不為空
+      if (!isset($request['account']) || !strlen($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      //檢查是否有 acc_hierarchy_num 傳入 並且不為空
+      if (!isset($request['acc_hierarchy_num']) || !strlen($request['acc_hierarchy_num'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號類型為空，請重新輸入
+      }
+      $acc_hierarchy_num = $request['acc_hierarchy_num'];
+
+      $px = D('GamePx');
+
+      //$px->queryHandicap();
+
+      $err = null;
+      $res = $px->createMember(array(
+        'account' => $account,
+        'acc_hierarchy_num' => $acc_hierarchy_num,
+      ), $err);
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'createMember');
+    $this->assign('method_desc', '建立一個新的遊戲帳號');
+    $this->assign('account', $account);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //2. 取得遊戲連結
+  public function game_link(){
+
+    $account = 'test01';
+    //$language = 'tw';
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if (!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->loginMember(array(
+        'account' => $account,
+        //'language' => $language,
+      ), $err);
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'loginMember');
+    $this->assign('method_desc', '用現存遊戲帳號取得遊戲的連結');
+    $this->assign('account', $account);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //3. 取得會員餘額
+  public function balance(){
+
+    $account = 'test01';
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if (!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入
+      }
+      $account = $request['account'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->getMemberBalance(array(
+        'account' => $account,
+      ), $err);
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getMemberBalance');
+    $this->assign('method_desc', '取得會員的當前餘額');
+    $this->assign('account', $account);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //4. 上點
+  public function deposit(){
+
+    $account = 'test01';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if (!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+      }
+      $account = $request['account'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if (!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $px = D('GamePx');
+
+      $res = $px->rechargeMemberBalance(array(
+        'account' => $account,
+        'amount' => $amount,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'rechargeMemberBalance');
+    $this->assign('method_desc', '增加會員的點數餘額');
+    $this->assign('account', $account);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //5. 下點
+  public function withdraw(){
+
+    $account = 'test01';
+    $amount = 1;
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 account 傳入 並且不為空
+      if (!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+      }
+      $account = $request['account'];
+
+      //檢查是否有 amount 傳入 並且不為空
+      if (!isset($request['amount']) || empty($request['amount'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//帳號為空，請重新輸入帳號
+      }
+      $amount = $request['amount'];
+
+      $err = null;
+      $px = D('GamePx');
+
+      $res = $px->withdrawMemberBalance(array(
+        'account' => $account,
+        'amount' => $amount,
+      ), $err);
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'withdrawMemberBalance');
+    $this->assign('method_desc', '減少會員的點數餘額');
+    $this->assign('account', $account);
+    $this->assign('amount', $amount);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //6. 抓報表
+  public function report(){
+
+    $query_date = date('Y-m-d', time());
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+
+      //檢查是否有 query_date 傳入 並且不為空
+      if (!isset($request['query_date']) || empty($request['query_date'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//查詢日期為空，請重新輸入帳號
+      }
+      $query_date = $request['query_date'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->getGameRecordSum(array(
+        'query_date' => $query_date,
+      ), $err);
+
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getGameRecordSum');
+    $this->assign('method_desc', '抓取一指定日期的投注大綱。');
+    $this->assign('op_result', $op_result);
+    $this->assign('query_date', $query_date);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+  //7. 抓報表2
+  public function report2(){
+
+    $account = 'test01';
+    $game_id = 11;
+    $query_date = date('Y-m-d', time());
+
+    $request = $this->getRequest();
+
+    if (isset($request['go']) && (($request['go'])==1)){
+      //檢查是否有 account 傳入 並且不為空
+      if (!isset($request['account']) || empty($request['account'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//帳號為空，請重新輸入帳號
+      }
+      $account = $request['account'];
+
+      //檢查是否有 game_id 傳入 並且不為空
+      if (!isset($request['game_id']) || empty($request['game_id'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//game_id 為空，請重新輸入帳號
+      }
+      $game_id = $request['game_id'];
+
+      //檢查是否有 query_date 傳入 並且不為空
+      if (!isset($request['query_date']) || empty($request['query_date'])){
+        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//查詢日期為空，請重新輸入帳號
+      }
+      $query_date = $request['query_date'];
+
+      $px = D('GamePx');
+
+      $err = null;
+      $res = $px->getGameRecord(array(
+        'account' => $account,
+        'game_id' => $game_id,
+        'query_date' => $query_date,
+      ), $err);
+      if ($res === false) {
+        $op_result = $err;
+      } else {
+        $op_result = $res;
+      }
+    }
+
+    $this->assign('method_name', 'getGameRecord');
+    $this->assign('method_desc', '抓取一指定會員、遊戲、日期的投注明細。');
+    $this->assign('account', $account);
+    $this->assign('game_id', $game_id);
+    $this->assign('query_date', $query_date);
+    $this->assign('op_result', $op_result);
+    $this->assign('form_action', __FUNCTION__);
+    $this->display();
+  }
+
+}

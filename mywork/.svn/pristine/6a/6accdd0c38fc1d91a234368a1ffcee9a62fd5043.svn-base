@@ -1,0 +1,17 @@
+<?php
+/*
+ * 會員免費影城
+ */
+class CommonMemberMovieModel extends MemberModel {
+    /*
+     * 取得影城連結
+     */
+    function getMovieUrl(){
+        //取得會員帳號
+        //取得會員上級
+        //取得現在時間
+        //用 MemberModel 內的加密函數  AESencode(會員帳號.'&'.會員上級."&as5168&".現在時間);
+        //將加密的字串 用 urlencode 包裝
+        //回傳 http://av9453.co?Identify=加密的字串
+    }
+}

@@ -1,0 +1,158 @@
+<include file="Common:header"/>
+
+<div id="page-container" class="fade page-sidebar-fixed page-header-fixed">
+	<include file="Common:menu"/>
+	<include file="Common:menu2"/>
+	<div class="sidebar-bg"></div>
+	
+	<div id="content" class="content">
+	
+		<form class="form-inline m-b-20" id="formInquire" method="post" action='__APP__/{$Think.MODULE_NAME}/{$Think.ACTION_NAME}'>
+			<div class="row form-inline" style="width:100%;">
+                  
+				<div class="row col-lg-12 col-xl-7 p-r-5 p-l-5 m-r-0 m-l-0">
+                  <div class="col-7 col-md-2 col-xl-3 text-center p-0"><label class="p-5">會員名稱/電話/各館帳號:</label></div>
+                  
+                  <div class="col-12 col-md-7 col-xl-3 p-r-0 p-l-0 m-b-10">
+                    <input class="form-control" style="width:100%;" type="text" name="memberAccount" id="member_account" value='{$memberAccount}' >
+                  </div>
+                  
+                  <div class="row col-12 col-md-3 col-xl-1 p-r-0 p-l-0 m-r-0 m-l-0">
+                    <div class="col-md-12 col-xl-10 p-l-0 p-r-0 m-b-10"><input class="btn btn-pink p-r-0 p-l-0 m-r-5 m-l-5" style="width:100%;" type="submit" value="查詢"></div>
+                  </div>
+				</div>
+
+			</div>
+		</form>
+		
+		<IF condition='$MemberPointBool eq "true"'>
+			<div class="row">
+				<div class="col-lg-12 ui-sortable">
+					<!-- begin panel -->
+					<div class="panel panel-inverse">
+						<!-- begin panel-heading -->
+						<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+							<div class="panel-heading-btn">
+								<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+							</div>
+							<h4 class="panel-title f-s-15">會員點數</h4>
+						</div>
+						<!-- end panel-heading -->
+						
+						<!-- begin panel-body -->
+						<div class="panel-body container m-auto">
+							<!-- begin table-responsive -->
+							<div class="table-responsive">
+								<table class="table table-striped m-b-0">
+								   <thead>
+								   	  <tr>
+										<th style="width: 15%;">總金額:</th>
+										<th id="totalPoint"></th>
+									  </tr>
+									  <tr>
+										<th style="width: 15%;">電子錢包:</th>
+										<th>{$walletMoney}</th>
+									  </tr>
+					                </thead>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<VOLIST name="gameArray" id="classArray">
+				<div class="row">
+					<div class="col-lg-12 ui-sortable">
+						<!-- begin panel -->
+						<div class="panel panel-inverse">
+							<!-- begin panel-heading -->
+							<div class="panel-heading ui-sortable-handle" data-click="panel-collapse"> 
+								<div class="panel-heading-btn">
+									<a href="javascript:;" class="btn btn-xs btn-icon btn-circle btn-warning"><i class="fa fa-minus"></i></a>
+								</div>
+								<h4 class="panel-title f-s-15">{$key}</h4>
+							</div>
+							<!-- end panel-heading -->
+							
+							<!-- begin panel-body -->
+							<div class="panel-body">
+								<!-- begin table-responsive -->
+								<div class="table-responsive">
+									<table class="table table-striped m-b-0">
+									   <thead>
+					                      <tr>
+					                       <th>遊戲名稱</th>
+										   <th>餘額</th>
+					                      </tr>
+						                </thead>
+										<tbody>
+											<VOLIST name="classArray" id="vo">
+												<tr>
+													<td>{$vo.gameName}</td>
+													<IF condition="$vo.gameAccount eq ''">
+														<td id="{$key}point">無</td>
+													<ELSE />
+														<td id="{$key}point"></td>
+													</IF>
+												</tr>
+											</VOLIST>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</VOLIST>
+		</IF>
+		
+	</div>
+	<a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top fade" data-click="scroll-top"><i class="fa fa-angle-up"></i></a>
+</div>
+<include file="Common:footer"/> 
+<script>
+
+var searchArray = {$searchJson};
+var totalPoint = '{$walletMoney}';
+$(function(){
+	$("#totalPoint").html(totalPoint);
+	for(var i=0;i<searchArray.length;i++){
+		getMemberPoint(searchArray[i]);
+	}
+	
+	
+	$('#member_account').typeahead({
+        ajax: {
+            url: '__URL__/searchMemberName',
+            timeout: 200
+        }
+    });
+});
+function getMemberPoint(gameCode){
+	//alert(gameCode);return;
+	$.ajax({
+		type:"POST",
+        url:"__URL__/ajaxGetMemberPoint",
+        data : {
+        	gameCode : gameCode
+        },
+        dataType: "text",
+        success:function(data){
+        	//var dataObject = JSON.parse(data);
+        	if(data.indexOf("false")!=-1){
+        		var dataArray = data.split(";");
+        		$("#"+gameCode+"point").html("查詢點數失敗");
+        		console.log(dataArray[1]);
+        	} else {
+        		totalPoint = Number(totalPoint) + Number(data);
+        		$("#totalPoint").html(totalPoint);
+        		$("#"+gameCode+"point").html(data);
+        	}
+        },
+		error:function(){
+			alert("網路連線錯誤，請檢查您的網路狀況。");
+		}
+	});
+}
+</script>

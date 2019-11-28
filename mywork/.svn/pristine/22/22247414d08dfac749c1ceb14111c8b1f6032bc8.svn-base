@@ -1,0 +1,65 @@
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+<title>財神娛樂-運動彩卷,賓果遊戲,21點,線上麻將,澳門百家樂</title>
+<meta name="keywords" content="運動彩卷,賓果遊戲,21點,線上麻將,澳門百家樂,彩卷,賓果,麻將,百家樂,財神娛樂">
+<meta name="description" content="財神娛樂(ok6666.net)，業界第一的遊玩平台，最方便的遊戲大廳，最便利的超商儲值方式。馬上加入會員娛樂享受，我們還支援手機遊戲喔。周周返水，儲值送紅利。運動彩卷、賓果遊戲、21點、線上麻將、澳門百家樂。">
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77721352-2', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<style>
+body, html {
+border:0px solid #CCC;
+padding:0px;
+margin:0px;
+width:100%;
+height:100%;
+z-index:1;
+overflow-x:hidden;
+overflow-y:scroll;
+overflow:hidden;
+}
+#if {
+border:0px solid #CCC;
+padding:0px;
+margin:0px;
+width:100%;
+height:100%;
+z-index:1;
+overflow-x:hidden;
+overflow-y:scroll;
+overflow:hidden;
+}
+</style>
+</head>
+<body>
+	<script type="text/javascript">
+			//if (window.mobilecheck === true) {
+			if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+				//alert('發現你用手機哦!');
+				location.href='http://ok6666.net/m';
+			}
+		</script>
+<iframe id="if" src="http://ok6666.net" frameborder="0"></iframe>
+<div>
+<a href="http://ok6666.net" target="_blank" title="運動彩卷" alt="運動彩卷">運動彩卷</a>
+<a href="http://ok6666.net" target="_blank" title="賓果遊戲" alt="賓果遊戲">賓果遊戲</a>
+<a href="http://ok6666.net" target="_blank" title="21點" alt="21點">21點</a>
+<a href="http://ok6666.net" target="_blank" title="線上麻將" alt="線上麻將">線上麻將</a>
+<a href="http://ok6666.net" target="_blank" title="澳門百家樂" alt="澳門百家樂">澳門百家樂</a>
+<a href="http://ok6666.net" target="_blank" title="財神娛樂" alt="財神娛樂">財神娛樂</a>
+</div>
+</body>
+<html>/

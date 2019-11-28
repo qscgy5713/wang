@@ -1,0 +1,133 @@
+<?php
+/*
+ * 四星彩獎號
+ */
+class CommonEventLottofourModel extends AdminModel {
+    protected $tableName = "common_event_lottofour";
+    protected $tableId = "lottofour_id";
+    
+    /*
+     * 新增四星彩開獎獎號
+     */
+    public function addEventLottofourData($data,&$err = ""){
+        if(empty($data['lottofour_lotterTime']) && $data['lottofour_lotterTime'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01'));
+            return false;
+        }
+        if(empty($data['lottofour_lotteryNumber']) && $data['lottofour_lotteryNumber'] !== 0){
+            $err = L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02'));
+            return false;
+        }
+        //事務處理開始
+        $this->startTrans();
+        
+        $sql = "INSERT INTO `{$this->tableName}` ";
+        $keysql = "";
+        $valuesql = "";
+        foreach ($data as $key => $value) {
+            if(empty($keysql)){
+                $keysql = " (`{$key}`";
+            } else {
+                $keysql .= ",`{$key}`";
+            }
+            if(empty($valuesql)){
+                $valuesql = " ('{$value}'";
+            } else {
+                $valuesql .= ",'{$value}'";
+            }
+        }
+        $sql .= $keysql.") VALUES ".$valuesql.");";
+        $return = $this->query($sql);
+        if($return === false){
+            $this->rollback();//事務處理失敗 回退
+            $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_03"));
+            return $return;
+        }
+        //新增成功 回傳ID
+        $insertId = $this->getLastInsertId();
+        
+        $sql = "SELECT * FROM `common_event_lottofour_membernumber`
+                WHERE `memberNumber_lotterTime` = '{$data['lottofour_lotterTime']}';";
+        $return = $this->query($sql);
+        if(count($return) == 0){
+            $this->commit();//事務處理成功
+            return true;
+        }
+        //var_dump($return);
+        foreach($return as $key => $value){
+            $memberNumberManyStar = 0;
+            for($i=3;$i>=0;$i--){
+                if($data['lottofour_lotteryNumber'][$i] == $value['memberNumber_lottofour'][$i]){
+                    $memberNumberManyStar++;
+                } else {
+                    break;
+                }
+            }
+            $memberNumberStatus = 1;//會員彩獎狀態 0未開獎 1未中獎 2已中獎
+            if($memberNumberManyStar > 0){
+                $memberNumberStatus = 2;
+            }
+            $memberNumberResult = $this->getResultStr($memberNumberManyStar);
+            $data1 = array(
+                'memberNumber_id'=>$value['memberNumber_id'],
+                'memberNumber_status'=>$memberNumberStatus,
+                'lottofour_id'=>$insertId,
+                'memberNumber_manyStar'=>$memberNumberManyStar,
+                'memberNumber_result'=>$memberNumberResult,
+                'memberNumber_openLotteryTime'=>time()
+            );
+            $return = $this->setMemberNumberDataByMemberNumberId($data1);
+            if($return === false){
+                $this->rollback();//事務處理失敗 回退
+                $err = L(strtoupper("ERROR_" . __CLASS__ . "_" . __FUNCTION__ . "_04"));
+                return $return;
+            }
+        }
+        $this->commit();//事務處理成功
+        return true;
+    }
+    protected function setMemberNumberDataByMemberNumberId($data){
+        if(empty($data["memberNumber_id"]) && $data["memberNumber_id"] !== '0'){
+            return false;
+        }
+        $sql = "";
+        foreach ($data as $key => $value) {
+            if($key == "memberNumber_id"){continue;}
+            if(empty($sql)){
+                $sql = "UPDATE `common_event_lottofour_memberNumber` SET `{$key}` = '{$value}'";
+            } else {
+                $sql .= ",`{$key}` = '{$value}'";
+            }
+        }
+        $sql .= " WHERE `memberNumber_id` = '{$data['memberNumber_id']}';";
+        $return = $this->execute($sql);
+        if($return != 1){
+            return false;
+        }
+        return true;
+    }
+    protected function getResultStr($manyStar){
+        $str = "";
+        switch ($manyStar){
+            case 0:
+                $str = "銘謝惠顧";
+                break;
+            case 1:
+                $str = "1星";
+                break;
+            case 2:
+                $str = "2星";
+                break;
+            case 3:
+                $str = "3星";
+                break;
+            case 4:
+                $str = "4星";
+                break;
+            default:
+                $str = "開獎錯誤";
+                break;
+        }
+        return $str;
+    }
+}

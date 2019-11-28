@@ -1,0 +1,167 @@
+<?php
+/*
+ * 點數託售
+ */
+class PointWithdrawAction extends MemberAction {
+    protected $isBingding = false;
+    protected $bank_code = '';
+    protected $bank_account = '';
+    protected $bank_name = '';
+    protected $bank_branch = '';
+    
+    protected function _initialize() {
+        // 執行父類初始化
+        parent::_initialize();
+        $this->isMemberLoginShowErr();
+        
+        $this->isBingding = $this->isBankBindingCheck();
+        if($this->isBingding){
+            $CommonMemberBankdata = D("CommonMemberBankdata");
+            $data = array(
+                "member_id"=> $_SESSION['Member']['id']
+            );
+            $return = $CommonMemberBankdata->getMemberBankDataByMembeerId($data,$err);
+            if($return === false){
+                $this->error($err);
+            }
+            $this->bank_code = $return['bankdata_code'];
+            $this->bank_account = $return['bankdata_account'];
+            $this->bank_name = $return['bankdata_name'];
+            $this->bank_branch = $return['bankdata_branch'];
+            $CommonBankcode = D("CommonBankcode");
+            $return = $CommonBankcode->getBankCodeData();
+            if($return === false){
+                $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));
+            }
+            $this->assign("bankCodeArray",$return);
+        } else {
+            //未綁定銀行帳號
+            return;
+        }
+        
+        
+        
+    }
+    //TODO:10.點數託售頁面
+    public function index(){
+        if(!$this->isBingding){
+            $this->assign("waitSecond","0");
+            $this->assign("jumpUrl","__APP__/BankcodeBinding/index&returnUrl=PointWithdraw");
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));
+        }
+        $this->assign("bankCode",$this->bank_code);
+        $this->assign("bankAccount",$this->bank_account);
+        $this->display();
+    }
+    //TODO:託售開始
+    public function formPointRecharge(){
+        if(!$this->isBingding){
+            exit();
+        }
+        //使用 過濾方法 檢查傳入資料
+        $request = $this->getRequest();
+        if(!isset($request['addWithdraw']) || empty($request['addWithdraw'])){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_01')));//託售金額為空，請重新輸入金額。
+        }
+        
+        //取得會員錢包資料 開始
+        $memberWallet = $this->getMemberWalletMoney();
+        //取得會員錢包資料 結束
+        if($memberWallet < $request['addWithdraw']){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_02')));//超過電子錢包金額，無法託售。
+        }
+        
+        $CashflowInfo = D("CashflowInfo");
+        $withdrawArray = $CashflowInfo->getWithdrawData();
+        if($withdrawArray === false){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_04')));//資料庫錯誤，請聯繫客服。
+            return;
+        }
+        if($withdrawArray['cashflow_enabled'] == '0'){
+            $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_05')));//託售系統維護中，請聯繫客服。
+            return;
+        }
+        
+        
+        $CashflowWithdraw = D("CashflowWithdraw");
+        $data = array(
+            'startTime' => strtotime(date("Y/m/d 00:00:00")),
+            'endTime' => strtotime(date("Y/m/d 23:59:59")),
+            'member_id' => $_SESSION['Member']['id']
+        );
+        $return = $CashflowWithdraw->getMemberTodayWithdrawDataById($data,$err);
+        if($return === false){
+            $this->err($err);
+        }
+        if(!empty($return)){
+            $completeNumber = 0;
+            foreach($return as $value){
+                switch ($value['withdraw_status']){
+                    case '0'://訂單未處理
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//上筆託售訂單處理中，請稍後再申請。
+                        break;
+                    case '1'://訂單處理中
+                        $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_03')));//上筆託售訂單處理中，請稍後再申請。
+                        break;
+                    case '2'://完成訂單
+                        $completeNumber++;
+                        break;
+                    case '3'://訂單取消
+                        break;
+                }
+            }
+            if($withdrawArray['cashflow_limitNumber'] != 0){
+                if($withdrawArray['cashflow_limitNumber'] <= $completeNumber){
+                    $this->error(L(strtoupper('ERROR_' . __CLASS__ . '_' . __FUNCTION__ . '_06')));//已達本日託售上限。
+                }
+            }
+        }
+        $nowTime = time();//取得現在時間戳
+        $ip = getIp();
+        $ip = get_ip_inet_pton($ip);
+        $data = array(
+            "member_id" => $_SESSION['Member']['id'],
+            "member_account" => $_SESSION['Member']['account'],
+            "agent_id" => $_SESSION['Member']['agentId'],
+            "agent_account" => $_SESSION['Member']['agentAccount'],
+            "agent_tree" => $_SESSION['Member']['agentTree'],
+            "ratio_tree" => $_SESSION['Member']['agentRatio'],
+            "cashflow_handlingFee"=>$withdrawArray['cashflow_handlingFee'],
+            "withdraw_createTime" => $nowTime,
+            "withdraw_money" => $request["addWithdraw"],
+            "withdraw_bankcode" => $this->bank_code,
+            "withdraw_bankaccount" => $this->bank_account,
+            "withdraw_bankname" => $this->bank_name,
+            "withdraw_bankbranch" => $this->bank_branch,
+            "withdraw_memberIp" => $ip,
+        );
+        $return = $CashflowWithdraw->addWithdrawData($data,$err);
+        if($return === false){
+            $this->error($err);
+            return false;
+        }
+        redirect(__APP__.'/PointWithdraw/Completion');
+    }
+    //託售完成頁
+    public function Completion(){
+        $this->display();
+    }
+}
+
+/*
+ * 託售流程
+ * 判定是否綁定銀行卡
+ * 否-> 導入 綁定流程
+ * 是
+ * index
+ * 讀取會員電子錢包金額
+ * 銀行卡資料
+ * 
+ * formPointRecharge
+ * if 未綁定銀行卡exit()
+ * 接收託售金額
+ * 
+ * //創立託售單
+ * //扣點
+ * 
+ */
